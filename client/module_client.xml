@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<project name="module_client" default="compile.module.client">
+  <dirname property="module.client.basedir" file="${ant.file.module_client}"/>
+
+  <property name="client.output.dir" value="${module.client.basedir}/../out/production/client"/>
+  <property name="client.testoutput.dir" value="${module.client.basedir}/../out/test/client"/>
+
+  <path id="client.module.production.classpath">
+    <pathelement location="${common.output.dir}"/>
+    <pathelement location="common/lib/commons-cli-1.2.jar"/>
+    <pathelement location="common/lib/guava-12.0.jar"/>
+    <pathelement location="common/lib/mahout-core-0.7-SNAPSHOT.jar"/>
+    <pathelement location="common/lib/mahout-math-0.7-SNAPSHOT.jar"/>
+    <pathelement location="common/lib/slf4j-api-1.6.4.jar"/>
+    <pathelement location="common/lib/commons-math3-3.0.jar"/>
+  </path>
+
+  <path id="client.module.classpath">
+    <path refid="client.module.production.classpath"/>
+    <pathelement location="${client.output.dir}"/>
+    <pathelement location="${common.testoutput.dir}"/>
+    <pathelement location="common/lib/junit-4.10.jar"/>
+    <pathelement location="${web.testoutput.dir}"/>
+    <pathelement location="${web.output.dir}"/>
+  </path>
+
+  <target name="compile.module.client" depends="compile.module.client.production,compile.module.client.tests"/>
+
+  <target name="compile.module.client.production" depends="compile.module.common,compile.module.web">
+    <mkdir dir="${client.output.dir}"/>
+    <javac destdir="${client.output.dir}"
+           debug="${compiler.debug}"
+           optimize="${compiler.optimize}"
+           source="${compiler.level}"
+           target="${compiler.level}"
+           fork="true"
+           includeantruntime="false">
+      <classpath refid="client.module.production.classpath"/>
+      <src path="${module.client.basedir}/src"/>
+    </javac>
+  </target>
+
+  <target name="compile.module.client.tests" depends="compile.module.client.production" unless="skip.tests">
+    <mkdir dir="${client.testoutput.dir}"/>
+    <javac destdir="${client.testoutput.dir}"
+           debug="${compiler.debug}"
+           optimize="${compiler.optimize}"
+           source="${compiler.level}"
+           target="${compiler.level}"
+           fork="true"
+           includeantruntime="false">
+      <classpath refid="client.module.classpath"/>
+      <src path="${module.client.basedir}/test"/>
+    </javac>
+  </target>
+
+  <target name="clean.module.client">
+    <delete dir="${client.output.dir}"/>
+    <delete dir="${client.testoutput.dir}"/>
+  </target>
+</project>

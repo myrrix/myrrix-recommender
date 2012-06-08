@@ -1,0 +1,262 @@
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.2">
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<jsp:directive.page import="java.util.Map"/>
+<jsp:directive.page import="net.myrrix.common.JVMEnvironment"/>
+<jsp:directive.page import="net.myrrix.common.RunningStatistics"/>
+<jsp:directive.page contentType="text/html"/>
+<jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
+<html>
+<jsp:text><![CDATA[<!-- Copyright 2012 Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>
+<head>
+<title>Myrrix Serving Layer</title>
+
+<style type="text/css">
+  body {background-color:#202020}
+  body,p,th,td,h1,h2,h3 {font-family:Gill Sans,Helvetica,sans-serif;font-weight:300;color:white}
+  a {text-decoration:none}
+  table,th,td {border:1px dotted black}
+  th,td {padding:10px;white-space:nowrap;vertical-align:top}
+  td {text-align:right}
+  table.layout th,table.layout td,table.layout {border:0;padding:0}
+  table {border-collapse:collapse}
+  h1,h2,h3,a {color:#CCFF66}
+  h1,h2,h3 {text-transform:uppercase}
+  hr {margin:20px 0 10px 0}
+  input {width:70px}
+  a.arrow {line-height:100%;font-size:200%;margin-left:10px}
+</style>
+
+<script type="text/javascript"><![CDATA[
+function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
+
+  if (typeof(paramSuffixes) == "undefined") {
+    paramSuffixes = new Array();
+  }
+  if (typeof(postBodyElement) == "undefined") {
+    postBodyElement = null;
+  }
+
+  var httpmethod = isGet ? "GET" : "POST";
+  var pathElements = new Array();
+  pathElements.push(endpoint);
+  for (var i = 0; i < paramSuffixes.length; i++) {
+    var elementValue = document.getElementById(endpoint + "-" + paramSuffixes[i]).value;
+    pathElements.push(elementValue);
+  }
+  var path = pathElements.join("/");
+  var resultElement = document.getElementById("request-result");
+
+  resultElement.innerHTML = "[Querying...]";
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.onreadystatechange = function() {
+    if (xmlHttp.readyState == 4) {
+      var httpStatus = xmlHttp.status;
+      if (httpStatus == 200) {
+        var responseText = xmlHttp.responseText;
+        if (responseText.length == 0) {
+          responseText = "[HTTP Status " + httpStatus + "]";
+        }
+        resultElement.innerHTML = responseText;
+      } else {
+        resultElement.innerHTML = "[HTTP Error " + httpStatus + "]";
+      }
+    }
+  };
+  xmlHttp.open(httpmethod, path);
+  xmlHttp.setRequestHeader("Accept", "text/plain");
+  if (postBodyElement == null) {
+    xmlHttp.send(null);
+  } else {
+    xmlHttp.send(document.getElementById(postBodyElement).value);
+  }
+  return false;
+}
+]]></script>
+
+</head>
+
+<body>
+<div style="width:800px;margin-left:auto;margin-right:auto;padding:10px">
+
+<h1>Myrrix Serving Layer</h1>
+
+<hr/>
+
+<table class="layout" style="width:100%"><tr><td style="width:50%;text-align:left">
+
+<h2>Machine</h2>
+
+<jsp:scriptlet>
+pageContext.setAttribute("jvmEnv", new JVMEnvironment());
+</jsp:scriptlet>
+
+<ul>
+  <li>Host <code>${jvmEnv.hostName}</code></li>
+  <li>${jvmEnv.numProcessors} processors available</li>
+  <li>${jvmEnv.usedMemoryMB}MB used of ${jvmEnv.maxMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</li>
+</ul>
+
+</td><td style="width:50%;text-align:left">
+
+<h2>Recommender</h2>
+
+<jsp:scriptlet>
+pageContext.setAttribute("rec",
+                         application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.RECOMMENDER"));
+pageContext.setAttribute("localInputDir",
+                         application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.LOCAL_INPUT_DIR"));
+</jsp:scriptlet>
+
+<ul>
+  <li>Instance ID ${rec.instanceID}</li>
+  <li>Local Input Dir<br/><code>${localInputDir}</code></li>
+  <li>${rec.generationManager.currentGeneration.numUsers} users</li>
+  <li>${rec.generationManager.currentGeneration.numItems} items</li>
+</ul>
+
+</td></tr></table>
+
+<hr/>
+
+<h2>Service</h2>
+
+<jsp:scriptlet>
+Map&lt;String,RunningStatistics&gt; timings =
+        (Map&lt;String,RunningStatistics&gt;) application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.TIMINGS");
+</jsp:scriptlet>
+
+<table style="width:100%">
+  <tr>
+    <th>Service</th>
+    <th>Requests</th>
+    <th>Average (&amp;mu;s)</th>
+    <th>Max (&amp;mu;s)</th>
+    <th>Client Errors</th>
+    <th>Server Errors</th>
+  </tr>
+  <jsp:scriptlet>
+    for (Map.Entry&lt;String,RunningStatistics&gt; entry : timings.entrySet()) {
+      pageContext.setAttribute("entry", entry);
+  </jsp:scriptlet>
+    <tr>
+      <td style="font-family:Courier,monospace;text-align:left">${entry.key}</td>
+      <jsp:scriptlet>
+        pageContext.setAttribute("averageMicroSec", (int) entry.getValue().getAverage() / 1000);
+        pageContext.setAttribute("maxMicroSec", (int) entry.getValue().getMax() / 1000);
+        pageContext.setAttribute("clientErrors", entry.getValue().getNumClientErrors());
+        pageContext.setAttribute("serverErrors", entry.getValue().getNumServerErrors());
+      </jsp:scriptlet>
+      <td>${entry.value.count}</td>
+      <td>${averageMicroSec}</td>
+      <td>${maxMicroSec}</td>
+      <td>${clientErrors}</td>
+      <td>${serverErrors}</td>
+    </tr>
+  <jsp:scriptlet>
+    }
+  </jsp:scriptlet>
+</table>
+
+<hr/>
+
+<h2>Test</h2>
+
+<table class="layout" style="width:100%"><tr><td style="width:60%">
+
+<form action="#" style="padding:10px">
+<table class="layout">
+
+  <tr><td></td><td>User ID</td><td colspan="2"></td></tr>
+  <tr><td><code>/recommend</code></td>
+    <td><code>/</code><input type="text" id="recommend-userid"/></td>
+    <td></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('recommend',true,new Array('userid'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td></td><td>Item ID 1</td><td>Item ID 2</td><td></td></tr>
+  <tr><td><code>/recommendToAnonymous</code></td>
+    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1"/></td>
+    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('recommendToAnonymous',true,new Array('itemid1','itemid2'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td></td><td>Item ID 1</td><td>Item ID 2</td><td></td></tr>
+  <tr><td><code>/similarity</code></td>
+    <td><code>/</code><input type="text" id="similarity-itemid1"/></td>
+    <td><code>/</code><input type="text" id="similarity-itemid2"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('similarity',true,new Array('itemid1','itemid2'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td><code>/estimate</code></td>
+    <td><code>/</code><input type="text" id="estimate-userid"/></td>
+    <td><code>/</code><input type="text" id="estimate-itemid"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('estimate',true,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td><code>/because</code></td>
+    <td><code>/</code><input type="text" id="because-userid"/></td>
+    <td><code>/</code><input type="text" id="because-itemid"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('because',true,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td><code>/pref</code></td>
+    <td><code>/</code><input type="text" id="pref-userid"/></td>
+    <td><code>/</code><input type="text" id="pref-itemid"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('pref',false,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td><code>/ingest</code></td>
+    <td colspan="2">
+      <textarea rows="20" id="ingestData">userID,itemID[,value]...</textarea>
+    </td>
+    <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,new Array(),'ingestData')">&amp;rarr;</a></td>
+  </tr>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+  <tr><td><code>/refresh</code></td>
+    <td colspan="2"></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('refresh',false)">&amp;rarr;</a></td>
+  </tr>
+
+</table>
+</form>
+
+</td><td style="width:40%">
+
+<div style="background-color:#404040;padding:10px;min-height:300px;white-space:normal">
+<pre><code id="request-result">[]</code></pre>
+</div>
+
+</td></tr></table>
+
+<p>&amp;copy;2012 <a href="http://myrrix.com">Myrrix Ltd</a>, except for included third-party open source software.
+Full details of licensing at <a href="http://myrrix.com/legal/">http://myrrix.com/legal/</a></p>
+
+</div>
+</body>
+</html>
+</jsp:root>

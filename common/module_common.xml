@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<project name="module_common" default="compile.module.common">
+  <dirname property="module.common.basedir" file="${ant.file.module_common}"/>
+
+  <property name="common.output.dir" value="${module.common.basedir}/../out/production/common"/>
+  <property name="common.testoutput.dir" value="${module.common.basedir}/../out/test/common"/>
+
+  <path id="common.module.production.classpath">
+    <pathelement location="common/lib/commons-cli-1.2.jar"/>
+    <pathelement location="common/lib/guava-12.0.jar"/>
+    <pathelement location="common/lib/mahout-core-0.7-SNAPSHOT.jar"/>
+    <pathelement location="common/lib/mahout-math-0.7-SNAPSHOT.jar"/>
+    <pathelement location="common/lib/slf4j-api-1.6.4.jar"/>
+    <pathelement location="common/lib/commons-math3-3.0.jar"/>
+  </path>
+
+  <path id="common.runtime.production.module.classpath">
+    <path refid="common.module.production.classpath"/>
+    <pathelement location="${common.output.dir}"/>
+    <pathelement location="common/lib/mahout-collections-1.0.jar"/>
+    <pathelement location="common/lib/slf4j-simple-1.6.4.jar"/>
+    <pathelement location="common/lib/uncommons-maths-1.2.2.jar"/>
+  </path>
+
+  <path id="common.module.classpath">
+    <path refid="common.module.production.classpath"/>
+    <pathelement location="${common.output.dir}"/>
+    <pathelement location="common/lib/junit-4.10.jar"/>
+  </path>
+
+  <path id="common.runtime.module.classpath">
+    <path refid="common.module.production.module.classpath"/>
+    <pathelement location="${common.testoutput.dir}"/>
+    <pathelement location="common/lib/junit-4.10.jar"/>
+  </path>
+
+  <target name="compile.module.common" depends="compile.module.common.production,compile.module.common.tests"/>
+
+  <target name="compile.module.common.production">
+    <mkdir dir="${common.output.dir}"/>
+    <javac destdir="${common.output.dir}" debug="${compiler.debug}"
+           source="${compiler.level}" target="${compiler.level}" fork="true"
+           includeantruntime="false">
+      <classpath refid="common.module.production.classpath"/>
+      <src path="${module.common.basedir}/src"/>
+    </javac>
+  </target>
+
+  <target name="compile.module.common.tests" depends="compile.module.common.production" unless="skip.tests">
+    <mkdir dir="${common.testoutput.dir}"/>
+    <javac destdir="${common.testoutput.dir}" debug="${compiler.debug}"
+           source="${compiler.level}" target="${compiler.level}" fork="true"
+           includeantruntime="false">
+      <classpath refid="common.module.classpath"/>
+      <src path="${module.common.basedir}/test"/>
+    </javac>
+  </target>
+
+  <target name="clean.module.common">
+    <delete dir="${common.output.dir}"/>
+    <delete dir="${common.testoutput.dir}"/>
+  </target>
+</project>

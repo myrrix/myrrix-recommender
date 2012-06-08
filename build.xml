@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<project name="Myrrix">
+
+  <property file="build.properties"/>
+
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.optimize" value="on"/>
+  <property name="compiler.level" value="6"/>
+
+  <import file="common/module_common.xml"/>
+  <import file="online/module_online.xml"/>
+  <import file="online-local/module_online-local.xml"/>
+  <import file="web/module_web.xml"/>
+  <import file="client/module_client.xml"/>
+
+  <target name="clean" depends="clean.module.common, clean.module.online, clean.module.web, clean.module.client,clean.module.online-local">
+    <delete dir="__artifacts_temp"/>
+    <delete dir="out"/>
+    <delete dir=".">
+      <include name="*.jar"/>
+    </delete>
+  </target>
+
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="__artifacts_temp"/>
+    <property name="artifact.output.client" value="out/artifacts/client"/>
+    <property name="artifact.output.web" value="out/artifacts/web"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.client.jar" value="${artifacts.temp.dir}/client.jar"/>
+    <property name="temp.jar.path.web-local.jar" value="${artifacts.temp.dir}/web.jar"/>
+  </target>
+
+  <target name="artifact.client" depends="init.artifacts, compile.module.client, compile.module.common">
+    <property name="artifact.temp.output.client" value="${artifacts.temp.dir}/client"/>
+    <mkdir dir="${artifact.temp.output.client}"/>
+    <jar destfile="${temp.jar.path.client.jar}" duplicate="preserve">
+      <manifest>
+        <attribute name="Main-Class" value="net.myrrix.client.CLI"/>
+      </manifest>
+      <zipfileset dir="${client.output.dir}"/>
+      <zipfileset dir="${common.output.dir}"/>
+      <zipfileset src="common/lib/mahout-collections-1.0.jar"/>
+      <zipfileset src="common/lib/guava-12.0.jar"/>
+      <zipfileset src="common/lib/commons-cli-1.2.jar"/>
+      <zipfileset src="common/lib/mahout-core-0.7-SNAPSHOT.jar"/>
+      <zipfileset src="common/lib/mahout-math-0.7-SNAPSHOT.jar"/>
+      <zipfileset src="common/lib/slf4j-simple-1.6.4.jar"/>
+      <zipfileset src="common/lib/slf4j-api-1.6.4.jar"/>
+      <zipfileset src="common/lib/uncommons-maths-1.2.2.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.client.jar}" tofile="myrrix-client-${version}.jar"/>
+  </target>
+
+  <target name="artifact.web-local" depends="init.artifacts, compile.module.web, compile.module.online, compile.module.common, compile.module.online-local">
+    <property name="artifact.temp.output.web-local" value="${artifacts.temp.dir}/web-local"/>
+    <mkdir dir="${artifact.temp.output.web-local}"/>
+    <jar destfile="${temp.jar.path.web-local.jar}" duplicate="preserve">
+      <manifest>
+        <attribute name="Main-Class" value="net.myrrix.web.Runner"/>
+      </manifest>
+      <zipfileset dir="${web.output.dir}"/>
+      <zipfileset dir="${online.output.dir}"/>
+      <zipfileset dir="${common.output.dir}"/>
+      <zipfileset dir="${online-local.output.dir}"/>
+      <zipfileset src="common/lib/mahout-collections-1.0.jar"/>
+      <zipfileset src="common/lib/guava-12.0.jar"/>
+      <zipfileset src="common/lib/commons-cli-1.2.jar"/>
+      <zipfileset src="common/lib/mahout-core-0.7-SNAPSHOT.jar"/>
+      <zipfileset src="common/lib/mahout-math-0.7-SNAPSHOT.jar"/>
+      <zipfileset src="common/lib/slf4j-simple-1.6.4.jar"/>
+      <zipfileset src="common/lib/slf4j-api-1.6.4.jar"/>
+      <zipfileset src="common/lib/uncommons-maths-1.2.2.jar"/>
+      <zipfileset src="common/lib/commons-math3-3.0.jar"/>
+      <zipfileset src="web/lib/tomcat-embed-logging-juli.jar"/>
+      <zipfileset src="web/lib/tomcat-embed-jasper.jar"/>
+      <zipfileset src="web/lib/tomcat-embed-core.jar"/>
+    </jar>
+    <copy file="${temp.jar.path.web-local.jar}" tofile="myrrix-serving-${version}.jar"/>
+  </target>
+
+  <target name="artifact.web-local.war" depends="init.artifacts, compile.module.web, compile.module.online, compile.module.common, compile.module.online-local">
+    <war destfile="myrrix-serving-${version}.war" webxml="web/docs/WEB-INF/web.xml">
+      <classes dir="${web.output.dir}"/>
+      <classes dir="${common.output.dir}"/>
+      <classes dir="${online.output.dir}"/>
+      <classes dir="${online-local.output.dir}"/>
+      <lib dir="common/lib">
+        <include name="mahout-collections-1.0.jar"/>
+        <include name="guava-12.0.jar"/>
+        <include name="commons-cli-1.2.jar"/>
+        <include name="mahout-core-0.7-SNAPSHOT.jar"/>
+        <include name="mahout-math-0.7-SNAPSHOT.jar"/>
+        <include name="slf4j-simple-1.6.4.jar"/>
+        <include name="slf4j-api-1.6.4.jar"/>
+        <include name="uncommons-maths-1.2.2.jar"/>
+        <include name="commons-math3-3.0.jar"/>
+      </lib>
+    </war>
+  </target>
+
+</project>

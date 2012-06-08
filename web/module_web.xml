@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<project name="module_web" default="compile.module.web">
+  <dirname property="module.web.basedir" file="${ant.file.module_web}"/>
+
+  <property name="web.output.dir" value="${module.web.basedir}/../out/production/web"/>
+  <property name="web.testoutput.dir" value="${module.web.basedir}/../out/test/web"/>
+
+  <import file="${tomcat.home}/bin/catalina-tasks.xml"/>
+
+  <target name="compile.module.web" depends="compile.module.web.production,compile.module.web.tests"/>
+
+  <target name="compile.module.web.production" depends="compile.module.online">
+
+    <delete dir="${module.web.basedir}/gen" includes="**"/>
+    <jasper validateXml="false"
+            failonerror="true"
+            listerrors="true"
+            trimspaces="true"
+            uriroot="${module.web.basedir}/docs"
+            outputDir="${module.web.basedir}/gen"
+            package="net.myrrix.web"
+            xpoweredBy="false"/>
+
+    <mkdir dir="${web.output.dir}"/>
+    <javac destdir="${web.output.dir}"
+           debug="${compiler.debug}"
+           optimize="${compiler.optimize}"
+           source="${compiler.level}"
+           target="${compiler.level}"
+           fork="true"
+           includeantruntime="false">
+      <classpath>
+        <pathelement location="${online.output.dir}"/>
+        <pathelement location="${common.output.dir}"/>
+        <pathelement location="common/lib/commons-cli-1.2.jar"/>
+        <pathelement location="common/lib/guava-12.0.jar"/>
+        <pathelement location="common/lib/mahout-core-0.7-SNAPSHOT.jar"/>
+        <pathelement location="common/lib/mahout-math-0.7-SNAPSHOT.jar"/>
+        <pathelement location="common/lib/slf4j-api-1.6.4.jar"/>
+        <pathelement location="common/lib/commons-math3-3.0.jar"/>
+        <pathelement location="web/lib/tomcat-embed-core.jar"/>
+        <pathelement location="web/lib/tomcat-embed-jasper.jar"/>
+      </classpath>
+      <src path="${module.web.basedir}/src"/>
+      <src path="${module.web.basedir}/gen"/>
+    </javac>
+  </target>
+
+  <target name="compile.module.web.tests" depends="compile.module.web.production" unless="skip.tests"/>
+
+  <target name="clean.module.web">
+    <delete dir="${web.output.dir}"/>
+    <delete dir="${web.testoutput.dir}"/>
+  </target>
+</project>

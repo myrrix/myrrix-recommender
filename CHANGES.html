@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Myrrix Changes and Release Notes</title>
+<style type="text/css">
+body {background-color:#202020}
+body,p,h1,h2,h3 {font-family:Gill Sans,Helvetica,sans-serif;font-weight:300;color:white}
+h1,h2,h3,a {color:#CCFF66}
+h1,h2,h3 {text-transform:uppercase}
+hr {margin:20px 0 10px 0}
+</style>
+</head>
+<body>
+
+<h1>Version 0.4</h1>
+
+<p>June 10 2012</p>
+
+<h2>New Features</h2>
+
+<ul>
+  <li>Serving Layer may now be built as a WAR file for deployment in a servlet container.</li>
+  <li>Rescorer can now accept run-time arguments via URL parameter <code>rescorerParams=</code></li>
+  <li>Console page now supports ingest, setting pref, etc. -- all API methods</li>
+</ul>
+
+<h2>Other</h2>
+
+<ul>
+  <li>Minor improvements to ALS convergence</li>
+  <li>Computation Layer is now available, separately</li>
+  <li>Serving Layer and Java Client are available from Subversion repository on Google Code</li>
+</ul>
+
+<h1>Version 0.3</h1>
+
+<p>May 7 2012</p>
+
+<h2>New Features</h2>
+
+<ul>
+  <li>Now supports rescoring logic for recommend() and mostSimilarItems(). These are available in ServerRecommender
+    and also may be added to a Serving Layer instance by setting --rescorerProviderClass to an implementation
+    class which provides rescoring objects.</li>
+  <li>recommend() can now consider known items as candidates for recommendation, if desired</li>
+</ul>
+
+<h2>Fixes</h2>
+
+<ul>
+  <li>Java client was not able to configure SSL key or auth credentials in some cases.</li>
+</ul>
+
+<h2>Other</h2>
+
+<ul>
+  <li>Update to Guava 12.0</li>
+</ul>
+
+
+<h1>Version 0.2</h1>
+
+<p>April 23 2012</p>
+
+<h2>New Features</h2>
+
+<ul>
+  <li>Alternating-least-squares computation is now seeded with output of previous run, if available,
+    for faster model convergence</li>
+  <li>Added new estimatePreference() method and REST API method that can compute multiple estimates
+    in one call.</li>
+  <li>Now contains Ant build script for building the distributed code.</li>
+</ul>
+
+<h2>Fixes</h2>
+
+<ul>
+  <li>Java client result for <code>recommendToAnonymous</code> and <code>mostSimilarItems</code>
+    were swapped.</li>
+  <li>Several minor bug fixes.</li>
+</ul>
+
+<h2>Other</h2>
+
+<ul>
+  <li>Update to Apache Tomcat 7.0.27</li>
+  <li>Update to Apache Commons Math 3.0</li>
+</ul>
+
+<hr/>
+
+<h1>Version 0.1</h1>
+
+<p>April 3 2012</p>
+
+<p>Initial release.</p>
+
+</body>
+</html>

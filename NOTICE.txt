@@ -1,0 +1,2 @@
+Please see http://myrrix.com/legal/ for a complete NOTICE file covering third-party software contained
+in this project and accompanying this release.

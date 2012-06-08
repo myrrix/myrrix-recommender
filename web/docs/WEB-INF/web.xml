@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<web-app version="3.0"
+        xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.INSTANCE_ID</param-name>
+    <param-value>0</param-value>
+  </context-param>
+  <!--
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.RESCORER_PROVIDER_CLASS</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
+  <!--
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.LOCAL_INPUT_DIR</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
+  <!--
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.ALL_PARTITIONS_SPEC</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
+  <!--
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.PARTITION</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
+
+  <description>Myrrix Serving Layer web application</description>
+  <display-name>Myrrix</display-name>
+
+  <distributable/>
+
+  <listener>
+    <listener-class>net.myrrix.web.InitListener</listener-class>
+  </listener>
+
+  <servlet>
+    <servlet-name>PreferenceServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.PreferenceServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>IngestServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.IngestServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>RecommendServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.RecommendServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>RecommendToManyServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.RecommendToManyServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>RecommendToAnonymousServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.RecommendToAnonymousServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>SimilarityServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.SimilarityServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>EstimateServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.EstimateServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>BecauseServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.BecauseServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>RefreshServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.RefreshServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>index_jspx</servlet-name>
+    <servlet-class>net.myrrix.web.index_jspx</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>PreferenceServlet</servlet-name>
+    <url-pattern>/pref/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>IngestServlet</servlet-name>
+    <url-pattern>/ingest/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RecommendServlet</servlet-name>
+    <url-pattern>/recommend/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RecommendToManyServlet</servlet-name>
+    <url-pattern>/recommendToMany/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RecommendToAnonymousServlet</servlet-name>
+    <url-pattern>/recommendToAnonymous/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SimilarityServlet</servlet-name>
+    <url-pattern>/similarity/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EstimateServlet</servlet-name>
+    <url-pattern>/estimate/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>BecauseServlet</servlet-name>
+    <url-pattern>/because/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>RefreshServlet</servlet-name>
+    <url-pattern>/refresh/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>index_jspx</servlet-name>
+    <url-pattern>/index.jspx</url-pattern>
+  </servlet-mapping>
+
+  <welcome-file-list>
+    <welcome-file>index.jspx</welcome-file>
+  </welcome-file-list>
+
+</web-app>
