@@ -139,7 +139,7 @@
                 </goals>
                 <configuration>
                   <sources>
-                    <source>../common/src</source>
+                    <source>${basedir}/../common/src</source>
                 </sources>
                 </configuration>
             </execution>
