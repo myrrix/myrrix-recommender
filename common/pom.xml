@@ -25,7 +25,7 @@
   <groupId>net.myrrix</groupId>
   <artifactId>myrrix-common</artifactId>
   <packaging>jar</packaging>
-  <name>Myrrix Java Client</name>
+  <name>Myrrix Common</name>
   <version>0.4-SNAPSHOT</version>
   <description>Myrrix common code</description>
   <url>http://myrrix.com/documentation-java-client/</url>
