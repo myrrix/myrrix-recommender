@@ -50,6 +50,9 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.online.factorizer.MatrixFactorizer;
+import net.myrrix.online.factorizer.MatrixUtils;
+import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 
 /**
  * <p>Manages one generation of the underlying recommender model. Input is read from a local file system,
@@ -270,7 +273,7 @@ public final class DelegateGenerationManager implements GenerationManager {
         } else {
           value = 1.0f;
         }
-        AlternatingLeastSquares.addTo(userID, itemID, value, RbyRow, RbyColumn);
+        MatrixUtils.addTo(userID, itemID, value, RbyRow, RbyColumn);
         FastIDSet itemIDs = knownItemIDs.get(userID);
         if (itemIDs == null) {
           itemIDs = new FastIDSet();
@@ -294,12 +297,12 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     String featuresString = System.getProperty("model.features");
     int features = featuresString == null ?
-        AlternatingLeastSquares.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+        MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
     String iterationsString = System.getProperty("model.iterations");
     int iterations = iterationsString == null ?
-        AlternatingLeastSquares.DEFAULT_ITERATIONS : Integer.parseInt(iterationsString);
+        MatrixFactorizer.DEFAULT_ITERATIONS : Integer.parseInt(iterationsString);
 
-    AlternatingLeastSquares als = new AlternatingLeastSquares(RbyRow, RbyColumn, features, iterations);
+    MatrixFactorizer als = new AlternatingLeastSquares(RbyRow, RbyColumn, features, iterations);
 
     Generation currentGeneration = getCurrentGeneration();
     if (currentGeneration != null) {

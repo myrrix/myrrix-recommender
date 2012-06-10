@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
  * Encapsulates one generation of the underlying recommender's model. The data in this object is quite
@@ -38,7 +39,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * </ul>
  *
  * @author Sean Owen
- * @see AlternatingLeastSquares
+ * @see net.myrrix.online.factorizer.MatrixFactorizer
  */
 public final class Generation {
 
@@ -58,9 +59,9 @@ public final class Generation {
     this(knownItemIDs,
          null, // Not used yet
          X,
-         AlternatingLeastSquares.getLeftInverse(X),
+         MatrixUtils.getLeftInverse(X),
          Y,
-         AlternatingLeastSquares.getTransposeRightInverse(Y),
+         MatrixUtils.getTransposeRightInverse(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),

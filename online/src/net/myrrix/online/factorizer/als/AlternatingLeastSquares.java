@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package net.myrrix.online.generation;
+package net.myrrix.online.factorizer.als;
 
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,7 +26,6 @@ import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -41,6 +38,8 @@ import net.myrrix.common.JVMEnvironment;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.online.factorizer.MatrixFactorizer;
+import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
  * <p>Implements the Alternating Least Squares algorithm described in
@@ -56,7 +55,7 @@ import net.myrrix.common.collection.FastByIDMap;
  *
  * @author Sean Owen
  */
-public final class AlternatingLeastSquares implements Callable<Void> {
+public final class AlternatingLeastSquares implements MatrixFactorizer {
 
   private static final Logger log = LoggerFactory.getLogger(AlternatingLeastSquares.class);
 
@@ -64,24 +63,9 @@ public final class AlternatingLeastSquares implements Callable<Void> {
   public static final double DEFAULT_ALPHA = 40.0;
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.01;
-  /** Default number of iterations to run. */
-  public static final int DEFAULT_ITERATIONS = 3;
-  /** Default number of features to use when building the model. */
-  public static final int DEFAULT_FEATURES = 30;
+
 
   private static final int WORK_UNIT_SIZE = 100;
-
-  // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
-  private static final Field MATRIX_DATA_FIELD;
-  static {
-    try {
-      MATRIX_DATA_FIELD = Array2DRowRealMatrix.class.getDeclaredField("data");
-    } catch (NoSuchFieldException nsfe) {
-      log.error("Can't access Array2DRowRealMatrix.data", nsfe);
-      throw new IllegalStateException(nsfe);
-    }
-    MATRIX_DATA_FIELD.setAccessible(true);
-  }
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
@@ -123,34 +107,31 @@ public final class AlternatingLeastSquares implements Callable<Void> {
 
   }
 
-  /**
-   * Typically called after {@link #call()} has finished.
-   *
-   * @return the current user-feature matrix, X
-   */
+  @Override
   public FastByIDMap<float[]> getX() {
     return X;
   }
 
-  /**
-   * Typically called after {@link #call()} has finished.
-   *
-   * @return the current item-feature matrix, Y
-   */
+  @Override
   public FastByIDMap<float[]> getY() {
     return Y;
+  }
+
+  /**
+   * Does nothing.
+   */
+  @Override
+  public void setPreviousX(FastByIDMap<float[]> previousX) {
+    // do nothing
   }
 
   /**
    * Sets the initial state of Y used in the computation, typically the Y from a previous
    * computation. Call before {@link #call()}.
    */
+  @Override
   public void setPreviousY(FastByIDMap<float[]> previousY) {
     this.previousY = previousY;
-  }
-
-  public FastByIDMap<float[]> getPreviousY() {
-    return previousY;
   }
 
   private static double getAlpha() {
@@ -163,9 +144,6 @@ public final class AlternatingLeastSquares implements Callable<Void> {
     return lambdaProperty == null ? DEFAULT_LAMBDA: Double.parseDouble(lambdaProperty);
   }
 
-  /**
-   * Runs the ALS algorithm to completion.
-   */
   @Override
   public Void call() throws ExecutionException, InterruptedException {
 
@@ -192,8 +170,8 @@ public final class AlternatingLeastSquares implements Callable<Void> {
                                      new NamedThreadFactory(false, "AlternatingLeastSquares"));
     try {
       for (int i = 0; i < iterationsToRun; i++) {
-        iterateY(executor);
-        iterateX(executor);
+        iterateXFromY(executor);
+        iterateYFromX(executor);
         log.info("Finished iteration {} of {}", i + 1, iterationsToRun);
       }
     } finally {
@@ -242,11 +220,11 @@ public final class AlternatingLeastSquares implements Callable<Void> {
   }
 
   /**
-   * Runs one iteration to compute Y from X.
+   * Runs one iteration to compute X from Y.
    */
-  private void iterateY(ExecutorService executor) throws ExecutionException, InterruptedException {
+  private void iterateXFromY(ExecutorService executor) throws ExecutionException, InterruptedException {
 
-    YTY = transposeTimesSelf(Y);
+    YTY = MatrixUtils.transposeTimesSelf(Y);
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
@@ -268,18 +246,18 @@ public final class AlternatingLeastSquares implements Callable<Void> {
       count += WORK_UNIT_SIZE;
       if (count >= 1000) {
         total += count;
-        log.info("{} Y rows done ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
+        log.info("{} X rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
         count = 0;
       }
     }
   }
 
   /**
-   * Runs one iteration to compute X from Y.
+   * Runs one iteration to compute Y from X.
    */
-  private void iterateX(ExecutorService executor) throws ExecutionException, InterruptedException {
+  private void iterateYFromX(ExecutorService executor) throws ExecutionException, InterruptedException {
     
-    XTX = transposeTimesSelf(X);
+    XTX = MatrixUtils.transposeTimesSelf(X);
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
@@ -301,173 +279,10 @@ public final class AlternatingLeastSquares implements Callable<Void> {
       count += WORK_UNIT_SIZE;
       if (count >= 1000) {
         total += count;
-        log.info("{} X rows done ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
+        log.info("{} Y rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
         count = 0;
       }
     }
-  }
-
-  /**
-   * Efficiently increments an entry in two parallel, sparse matrices.
-   *
-   * @param row row to increment
-   * @param column column to increment
-   * @param value increment value
-   * @param RbyRow matrix R to update, keyed by row
-   * @param RbyColumn matrix R to update, keyed by column
-   */
-  public static void addTo(long row,
-                           long column,
-                           float value,
-                           FastByIDMap<FastByIDFloatMap> RbyRow,
-                           FastByIDMap<FastByIDFloatMap> RbyColumn) {
-
-    FastByIDFloatMap theRow = RbyRow.get(row);
-    if (theRow == null) {
-      theRow = new FastByIDFloatMap();
-      RbyRow.put(row, theRow);
-    }
-
-    float oldValue = theRow.get(column);
-    if (Float.isNaN(oldValue)) {
-      theRow.put(column, value);
-    } else {
-      theRow.put(column, value + oldValue);
-    }
-
-    FastByIDFloatMap theColumn = RbyColumn.get(column);
-    if (theColumn == null) {
-      theColumn = new FastByIDFloatMap();
-      RbyColumn.put(column, theColumn);
-    }
-
-    oldValue = theColumn.get(row);
-    if (Float.isNaN(oldValue)) {
-      theColumn.put(row, value);
-    } else {
-      theColumn.put(row, value + oldValue);
-    }
-  }
-
-  /**
-   * @param matrix an {@link Array2DRowRealMatrix}
-   * @return its "data" field -- not a copy
-   */
-  private static double[][] accessMatrixDataDirectly(RealMatrix matrix) {
-    try {
-      return (double[][]) MATRIX_DATA_FIELD.get(matrix);
-    } catch (IllegalAccessException iae) {
-      throw new IllegalStateException(iae);
-    }
-  }
-
-  /**
-   * Left-inverts a tall skinny matrix. The left inverse of M is ( (MT * M)^-1 * MT ).
-   *
-   * @param M tall skinny matrix to left-invert
-   * @return a left inverse of M
-   */
-  public static FastByIDMap<float[]> getLeftInverse(FastByIDMap<float[]> M) {
-    if (M.isEmpty()) {
-      return new FastByIDMap<float[]>();
-    }
-    RealMatrix MTM = transposeTimesSelf(M);
-    RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
-    return multiply(MTMinverse, M, null);
-  }
-
-  /**
-   * @see #getLeftInverse(FastByIDMap)
-   */
-  public static FastByIDMap<float[]> getTransposeRightInverse(FastByIDMap<float[]> M) {
-    if (M.isEmpty()) {
-      return new FastByIDMap<float[]>();
-    }
-    RealMatrix MTM = transposeTimesSelf(M);
-    RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
-    return multiply(M, MTMinverse, null);
-  }
-
-  /**
-   * @param S tall, skinny matrix
-   * @param M small {@link RealMatrix}
-   * @return S * M
-   */
-  public static FastByIDMap<float[]> multiply(FastByIDMap<float[]> S, RealMatrix M, FastByIDMap<float[]> result) {
-    if (result == null) {
-      result = new FastByIDMap<float[]>(S.size(), 1.2f);
-    } else {
-      result.clear();
-    }
-    double[][] matrixData = accessMatrixDataDirectly(M);
-    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
-      long id = entry.getKey();
-      float[] vector = entry.getValue();
-      float[] resultVector = matrixMultiply(matrixData, vector);
-      result.put(id, resultVector);
-    }
-    return result;
-  }
-
-  /**
-   * @param M small {@link RealMatrix}
-   * @param S tall, skinny matrix
-   * @return M * S
-   */
-  public static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S, FastByIDMap<float[]> result) {
-    if (result == null) {
-      result = new FastByIDMap<float[]>(S.size(), 1.2f);
-    } else {
-      result.clear();
-    }
-    double[][] matrixData = accessMatrixDataDirectly(M);
-    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
-      long id = entry.getKey();
-      float[] vector = entry.getValue();
-      float[] resultVector = matrixMultiply(matrixData, vector);
-      result.put(id, resultVector);
-    }
-    return result;
-  }
-
-  /**
-   * @return column vector M * V
-   */
-  private static float[] matrixMultiply(double[][] M, float[] V) {
-    int dimension = V.length;
-    float[] out = new float[dimension];
-    for (int i = 0; i < dimension; i++) {
-      double total = 0.0;
-      double[] matrixRow = M[i];
-      for (int j = 0; j < dimension; j++) {
-        total += V[j] * matrixRow[j];
-      }
-      out[i] = (float) total;
-    }
-    return out;
-  }
-
-  /**
-   * @param M tall, skinny matrix
-   * @return MT * M
-   */
-  public static RealMatrix transposeTimesSelf(FastByIDMap<float[]> M) {
-    RealMatrix result = null;
-    for (FastByIDMap<float[]>.MapEntry entry : M.entrySet()) {
-      float[] vector = entry.getValue();
-      int dimension = vector.length;
-      if (result == null) {
-        result = new Array2DRowRealMatrix(dimension, dimension);
-      }
-      for (int row = 0; row < dimension; row++) {
-        float rowValue = vector[row];
-        for (int col = 0; col < dimension; col++) {
-          result.addToEntry(row, col, rowValue * vector[col]);
-        }
-      }
-    }
-    Preconditions.checkState(result != null);
-    return result;
   }
 
   private final class YWorker implements Runnable {
@@ -500,7 +315,7 @@ public final class AlternatingLeastSquares implements Callable<Void> {
           Cupu.put(ruEntry.getKey(), (float) (1.0 + alpha * ruEntry.getValue()));
         }
 
-        multiply(Wu, Y, WuYT);
+        MatrixUtils.multiply(Wu, Y, WuYT);
         float[] xu = new float[features];
         for (int row = 0; row < features; row++) {
           double total = 0.0;
@@ -547,7 +362,7 @@ public final class AlternatingLeastSquares implements Callable<Void> {
           Cipi.put(riEntry.getKey(), (float) (1.0 + alpha * riEntry.getValue()));
         }
 
-        multiply(Wi, X, WiXT);
+        MatrixUtils.multiply(Wi, X, WiXT);
         float[] yi = new float[features];
         for (int row = 0; row < features; row++) {
           double total = 0.0;

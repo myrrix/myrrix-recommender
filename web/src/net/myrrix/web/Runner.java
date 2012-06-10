@@ -50,6 +50,8 @@ import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.online.factorizer.MatrixFactorizer;
+import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 import net.myrrix.web.servlets.BecauseServlet;
 import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
@@ -126,15 +128,15 @@ import net.myrrix.web.servlets.SimilarityServlet;
  * <ul>
  *   <li>{@code model.features}: The number of features used in building the underlying user-feature and
  *   item-feature matrices. Typical values are 30-100. Defaults to
- *   {@link net.myrrix.online.generation.AlternatingLeastSquares#DEFAULT_FEATURES}.</li>
+ *   {@link MatrixFactorizer#DEFAULT_FEATURES}.</li>
  *   <li>{@code model.iterations}: The number of iterations used to refine the model. Typical values are 3-10.
- *   Defaults to {@link net.myrrix.online.generation.AlternatingLeastSquares#DEFAULT_ITERATIONS}.</li>
+ *   Defaults to {@link MatrixFactorizer#DEFAULT_ITERATIONS}.</li>
  *   <li>{@code model.als.lambda}: Controls the lambda overfitting parameter in the ALS algorithm.
  *    Typical values are near 0.1. Do not change this, in general. Defaults to
- *    {@link net.myrrix.online.generation.AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
+ *    {@link AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
  *   <li>{@code model.als.alpha}: Controls the alpha scaling parameter in the ALS algorithm.
  *    Typical values are near 40. Do not change this, in general. Defaults to
- *    {@link net.myrrix.online.generation.AlternatingLeastSquares#DEFAULT_ALPHA}.</li>
+ *    {@link AlternatingLeastSquares#DEFAULT_ALPHA}.</li>
  * </ul>
  *
  * @author Sean Owen
