@@ -19,8 +19,8 @@ package net.myrrix.online;
 import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.Iterator;
@@ -29,6 +29,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -46,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.common.SimpleVectorMath;
@@ -66,7 +68,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   
   private static final Logger log = LoggerFactory.getLogger(ServerRecommender.class);
 
-  //private static final double RECENCY_BOOST = 3.0;
   private static final Splitter DELIMITER = Splitter.on(CharMatcher.anyOf(",\t"));
 
   private final GenerationManager generationManager;
@@ -96,7 +97,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new FileReader(file);
+      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);

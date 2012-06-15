@@ -19,6 +19,11 @@ package net.myrrix.common;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
 
 /**
  * Simple utility methods related to I/O.
@@ -35,6 +40,26 @@ public final class IOUtils {
    */
   public static void deleteRecursively(File dir) {
     new DeletingVisitor().accept(dir);
+  }
+
+  /**
+   * Opens an {@link InputStream} to the file. If it appears to be compressed, because its file name ends in
+   * ".gz" or ".zip", then it will be decompressed accordingly
+   *
+   * @param file file, possibly compressed, to open
+   * @return {@link InputStream} on uncompressed contents
+   * @throws IOException if the stream can't be opened or is invalid or can't be read
+   */
+  public static InputStream openMaybeDecompressing(File file) throws IOException {
+    String name = file.getName();
+    InputStream in = new FileInputStream(file);
+    if (name.endsWith(".gz")) {
+      return new GZIPInputStream(in);
+    }
+    if (name.endsWith(".zip")) {
+      return new ZipInputStream(in);
+    }
+    return in;
   }
 
   // This is from Mahout actually:

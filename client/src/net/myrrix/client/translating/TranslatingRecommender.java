@@ -106,11 +106,6 @@ public interface TranslatingRecommender {
    */
   List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany) throws TasteException;
 
-
-  /*
-  List<TranslatedRecommendedItem> topItemsByFeature(int feature, int howMany) throws TasteException;
-   */
-
   /**
    * @see net.myrrix.common.MyrrixRecommender#ingest(Reader)
    */

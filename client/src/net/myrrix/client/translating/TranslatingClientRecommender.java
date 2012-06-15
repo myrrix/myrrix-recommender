@@ -19,8 +19,8 @@ package net.myrrix.client.translating;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
@@ -42,6 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.client.ClientRecommender;
+import net.myrrix.common.IOUtils;
 
 /**
  * Default implementation of {@link TranslatingRecommender}. It delegates to an underlying {@link ClientRecommender}
@@ -173,13 +174,6 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     return translate(originals);
   }
 
-  /*
-  @Override
-  public List<TranslatedRecommendedItem> topItemsByFeature(int feature, int howMany) throws TasteException {
-    return translate(delegate.topItemsByFeature(feature, howMany));
-  }
-   */
-
   @Override
   public void ingest(Reader reader) throws TasteException {
     File tempFile = null;
@@ -229,7 +223,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new FileReader(file);
+      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);

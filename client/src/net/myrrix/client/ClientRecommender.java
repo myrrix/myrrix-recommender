@@ -19,7 +19,6 @@ package net.myrrix.client;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,6 +41,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -70,6 +70,7 @@ import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 
@@ -624,7 +625,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new FileReader(file);
+      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);
@@ -639,13 +640,14 @@ public final class ClientRecommender implements MyrrixRecommender {
       HttpURLConnection connection = makeConnection("/ingest", "POST", null);
       connection.setDoOutput(true);
       connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
+      connection.setRequestProperty("Content-Encoding", "gzip");
       if (!needAuthentication) {
         connection.setChunkedStreamingMode(0); // Use default buffer size
       }
       // Must buffer in memory if using authentication since it won't handle the authorization challenge
       // otherwise -- client will have to buffer all in memory
       try {
-        Writer out = new OutputStreamWriter(connection.getOutputStream(), Charsets.UTF_8);
+        Writer out = new OutputStreamWriter(new GZIPOutputStream(connection.getOutputStream()), Charsets.UTF_8);
         try {
           CharStreams.copy(reader, out);
           //out.flush();

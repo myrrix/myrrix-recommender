@@ -82,24 +82,6 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   float[] estimatePreferences(long userID, long... itemIDs) throws TasteException;
 
   /**
-   * <p>Computes the items that are most directly associated with the given feature in the underlying model.
-   * The feature number must be between 0 and (# features) - 1, where the number of features is the number
-   * that was used to compute the underlying model.</p>
-   *
-   * <p>It is in a sense just like {@link #mostSimilarItems(long, int)}, computing items most similar to
-   * some abstract item that precisely embodies exactly what this feature expresses.</p>
-   *
-   * @see #mostSimilarItems(long, int)
-   * @param feature feature number
-   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if feature does not exist
-   * @throws NotReadyException if the implementation has no usable model yet
-   */
-
-  /*
-  List<RecommendedItem> topItemsByFeature(int feature, int howMany) throws TasteException;
-   */
-
-  /**
    * Like {@link #ingest(File)}, but reads from a {@link Reader}.
    *
    * @param reader source of CSV data to ingest

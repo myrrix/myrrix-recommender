@@ -16,11 +16,15 @@
 
 package net.myrrix.web.servlets;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.zip.GZIPInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.MyrrixRecommender;
@@ -38,7 +42,20 @@ public final class IngestServlet extends AbstractMyrrixServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
     MyrrixRecommender recommender = getRecommender();
-    BufferedReader reader = request.getReader();
+
+    Reader reader;
+    String contentEncoding = request.getHeader("Content-Encoding");
+    if (contentEncoding == null) {
+      reader = request.getReader();
+    } else if ("gzip".equals(contentEncoding)) {
+      String charEncodingName = request.getCharacterEncoding();
+      Charset charEncoding = charEncodingName == null ? Charsets.UTF_8 : Charset.forName(charEncodingName);
+      reader = new InputStreamReader(new GZIPInputStream(request.getInputStream()), charEncoding);
+    } else {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, contentEncoding);
+      return;
+    }
+
     try {
       recommender.ingest(reader);
     } catch (NotReadyException nre) {
