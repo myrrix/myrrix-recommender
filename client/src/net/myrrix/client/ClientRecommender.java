@@ -98,6 +98,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   private static final Splitter COMMA = Splitter.on(',');
 
   private final MyrrixClientConfiguration config;
+  private final boolean needAuthentication;
   private final boolean closeConnection;
   private final List<List<Pair<String,Integer>>> partitions;
   private final Random random;
@@ -114,7 +115,8 @@ public final class ClientRecommender implements MyrrixRecommender {
 
     final String userName = config.getUserName();
     final String password = config.getPassword();
-    if (userName != null && password != null) {
+    needAuthentication = userName != null && password != null;
+    if (needAuthentication) {
       Authenticator.setDefault(new Authenticator() {
         @Override
         protected PasswordAuthentication getPasswordAuthentication() {
@@ -637,7 +639,11 @@ public final class ClientRecommender implements MyrrixRecommender {
       HttpURLConnection connection = makeConnection("/ingest", "POST", null);
       connection.setDoOutput(true);
       connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-      connection.setChunkedStreamingMode(0); // Use default buffer size
+      if (!needAuthentication) {
+        connection.setChunkedStreamingMode(0); // Use default buffer size
+      }
+      // Must buffer in memory if using authentication since it won't handle the authorization challenge
+      // otherwise -- client will have to buffer all in memory
       try {
         Writer out = new OutputStreamWriter(connection.getOutputStream(), Charsets.UTF_8);
         try {
