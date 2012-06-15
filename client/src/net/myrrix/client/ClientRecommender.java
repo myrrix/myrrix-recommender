@@ -262,7 +262,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } finally {
         connection.disconnect();
@@ -326,7 +326,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
         try {
@@ -399,7 +399,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         return consumeItems(connection);
       } finally {
@@ -480,7 +480,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         return consumeItems(connection);
       } finally {
@@ -511,7 +511,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         return consumeItems(connection);
       } finally {
@@ -554,7 +554,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         return consumeItems(connection);
       } finally {
@@ -606,7 +606,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
         return consumeItems(connection);
       } finally {
@@ -652,7 +652,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
-            throw new TasteException(String.valueOf(connection.getResponseMessage()));
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } finally {
         connection.disconnect();
