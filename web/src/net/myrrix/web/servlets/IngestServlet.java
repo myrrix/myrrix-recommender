@@ -33,7 +33,8 @@ import net.myrrix.common.NotReadyException;
 /**
  * <p>Responds to a POST request to {@code /ingest} and in turn calls
  * {@link MyrrixRecommender#ingest(java.io.Reader)}}. The content of the request body is
- * fed to this method.</p>
+ * fed to this method. Note that the content may be gzipped; if so, header "Content-Encoding"
+ * must have value "gzip".</p>
  *
  * @author Sean Owen
  */

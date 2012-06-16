@@ -92,9 +92,10 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   /**
    * "Uploads" a series of new associations to the recommender; this is like a bulk version of
    * {@link #setPreference(long, long, float)}. The input file should be in CSV format, where each
-   * line is of the form {@code userID,itemID,value}.
+   * line is of the form {@code userID,itemID,value}. Note that the file may be compressed. If it is
+   * make sure that its name reflects its compression -- gzip ending in ".gz", zip ending in ".zip".
    *
-   * @param file CSV file to ingest
+   * @param file CSV file to ingest, possibly compressed.
    * @throws NotReadyException if the implementation has no usable model yet
    */
   void ingest(File file) throws TasteException;
