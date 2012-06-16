@@ -108,6 +108,7 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
   <li>Host <code>${jvmEnv.hostName}</code></li>
   <li>${jvmEnv.numProcessors} processors available</li>
   <li>${jvmEnv.usedMemoryMB}MB used of ${jvmEnv.maxMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</li>
+  <li><a href="log.txt">View log messages</a></li>
 </ul>
 
 </td><td style="width:50%;text-align:left">
@@ -135,8 +136,8 @@ pageContext.setAttribute("localInputDir",
 <h2>Service</h2>
 
 <jsp:scriptlet>
-Map&lt;String,RunningStatistics&gt; timings =
-        (Map&lt;String,RunningStatistics&gt;) application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.TIMINGS");
+Map&lt;String,RunningStatistics&gt; timings = (Map&lt;String,RunningStatistics&gt;)
+    application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.TIMINGS");
 </jsp:scriptlet>
 
 <table style="width:100%">

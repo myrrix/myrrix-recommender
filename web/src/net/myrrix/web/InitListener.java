@@ -19,10 +19,12 @@ package net.myrrix.web;
 import java.io.Closeable;
 import java.io.File;
 import java.util.List;
+import java.util.logging.Handler;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import org.apache.mahout.common.Pair;
@@ -48,6 +50,7 @@ public final class InitListener implements ServletContextListener {
   private static final Logger log = LoggerFactory.getLogger(InitListener.class);
 
   private static final String KEY_PREFIX = InitListener.class.getName();
+  public static final String LOG_HANDLER = KEY_PREFIX + ".LOG_HANDLER";
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
   public static final String INSTANCE_ID_KEY = KEY_PREFIX + ".INSTANCE_ID";
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
@@ -60,6 +63,16 @@ public final class InitListener implements ServletContextListener {
   public void contextInitialized(ServletContextEvent event) {
     log.info("Initializing Myrrix in servlet context...");
     ServletContext context = event.getServletContext();
+
+    Handler logHandler = null;
+    for (Handler handler : java.util.logging.Logger.getLogger("").getHandlers()) {
+      if (handler instanceof MemoryHandler) {
+        logHandler = handler;
+        break;
+      }
+    }
+    Preconditions.checkState(logHandler != null);
+    context.setAttribute(LOG_HANDLER, logHandler);
 
     String localInputDirName = getAttributeOrParam(context, LOCAL_INPUT_DIR_KEY);
     File localInputDir;

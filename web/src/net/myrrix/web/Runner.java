@@ -55,6 +55,7 @@ import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 import net.myrrix.web.servlets.BecauseServlet;
 import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
+import net.myrrix.web.servlets.LogServlet;
 import net.myrrix.web.servlets.PreferenceServlet;
 import net.myrrix.web.servlets.RecommendServlet;
 import net.myrrix.web.servlets.RecommendToAnonymousServlet;
@@ -180,6 +181,10 @@ public final class Runner implements Callable<Boolean>, Closeable {
   }
 
   public static void main(String[] args) throws Exception {
+
+    // Collect logs from the first instant
+    java.util.logging.Logger.getLogger("").addHandler(new MemoryHandler());
+
     Options options = buildOptions();
     CommandLineParser parser = new PosixParser();
     RunnerConfiguration config;
@@ -298,6 +303,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new BecauseServlet(), "because");
     addServlet(context, new RefreshServlet(), "refresh");
     Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
+    Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 
     String bucket = config.getBucket();
     if (bucket != null) {

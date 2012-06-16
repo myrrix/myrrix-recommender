@@ -107,6 +107,11 @@
     <servlet-class>net.myrrix.web.index_jspx</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
+  <servlet>
+    <servlet-name>log.txt</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
 
   <servlet-mapping>
     <servlet-name>PreferenceServlet</servlet-name>
@@ -147,6 +152,10 @@
   <servlet-mapping>
     <servlet-name>index_jspx</servlet-name>
     <url-pattern>/index.jspx</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>log.txt</servlet-name>
+    <url-pattern>/log.txt</url-pattern>
   </servlet-mapping>
 
   <welcome-file-list>
