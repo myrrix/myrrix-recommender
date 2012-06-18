@@ -386,6 +386,12 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
       values[index] = value;
       return oldValue;
     }
+
+    @Override
+    public String toString() {
+      return getKey() + "=" + getValue();
+    }
+
   }
 
   private final class EntrySet extends AbstractSet<MapEntry> {

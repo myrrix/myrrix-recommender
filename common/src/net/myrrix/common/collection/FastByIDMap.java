@@ -523,6 +523,12 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       values[index] = value;
       return oldValue;
     }
+
+    @Override
+    public String toString() {
+      return getKey() + "=" + getValue();
+    }
+
   }
   
   private final class EntryIterator implements Iterator<MapEntry> {

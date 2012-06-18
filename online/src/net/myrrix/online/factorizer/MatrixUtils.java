@@ -17,14 +17,18 @@
 package net.myrrix.online.factorizer;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 
@@ -37,6 +41,8 @@ import net.myrrix.common.collection.FastByIDMap;
 public final class MatrixUtils {
 
   private static final Logger log = LoggerFactory.getLogger(MatrixUtils.class);
+
+  private static final int PRINT_COLUMN_WIDTH = 12;
 
   // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
   private static final Field MATRIX_DATA_FIELD;
@@ -107,11 +113,15 @@ public final class MatrixUtils {
     }
     RealMatrix MTM = transposeTimesSelf(M);
     RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
+    // Second argument is really MT. Passing M since it will be treated as MT.
     return multiply(MTMinverse, M, null);
   }
 
   /**
-   * @see #getLeftInverse(FastByIDMap)
+   * Right-inverts the transpose of a tall, skinny matrix. The right inverse of MT is ( M * (MT * M)^-1 ).
+   *
+   * @param M tall, skinny matrix to right-invert the transpose of
+   * @retrn a right inverse of MT
    */
   public static FastByIDMap<float[]> getTransposeRightInverse(FastByIDMap<float[]> M) {
     if (M.isEmpty()) {
@@ -119,33 +129,16 @@ public final class MatrixUtils {
     }
     RealMatrix MTM = transposeTimesSelf(M);
     RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
-    return multiply(M, MTMinverse, null);
-  }
-
-  /**
-   * @param S tall, skinny matrix
-   * @param M small {@link RealMatrix}
-   * @return S * M
-   */
-  public static FastByIDMap<float[]> multiply(FastByIDMap<float[]> S, RealMatrix M, FastByIDMap<float[]> result) {
-    if (result == null) {
-      result = new FastByIDMap<float[]>(S.size(), 1.2f);
-    } else {
-      result.clear();
-    }
-    double[][] matrixData = accessMatrixDataDirectly(M);
-    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
-      long id = entry.getKey();
-      float[] vector = entry.getValue();
-      float[] resultVector = matrixMultiply(matrixData, vector);
-      result.put(id, resultVector);
-    }
-    return result;
+    // Computing M * (MT * M)^-1, but instead, will compute the transpose of (MT * M)^-1 times transpose of M
+    // to end up with the transpose of the answer. But it doesn't matter since the same representation is used
+    // either way and is not ambiguous. Again passing M and second argument when it's conceptually MT as it
+    // will be treated correctly.
+    return multiply(MTMinverse.transpose(), M, null);
   }
 
   /**
    * @param M small {@link RealMatrix}
-   * @param S tall, skinny matrix
+   * @param S wide, short matrix
    * @return M * S
    */
   public static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S, FastByIDMap<float[]> result) {
@@ -165,6 +158,37 @@ public final class MatrixUtils {
   }
 
   /**
+   * @param X tall skinny matrix
+   * @param Y tall skinny matrix
+   * @param result sparse matrix to store result in or null to allocate new storage
+   * @return X * Y' as a sparse matrix representation
+   */
+  public static FastByIDMap<FastByIDFloatMap> multiply(FastByIDMap<float[]> X,
+                                                       FastByIDMap<float[]> Y,
+                                                       FastByIDMap<FastByIDFloatMap> result) {
+    if (result == null) {
+      result = new FastByIDMap<FastByIDFloatMap>(1000, 1.2f);
+    } else {
+      result.clear();
+    }
+    for (FastByIDMap<float[]>.MapEntry xEntry : X.entrySet()) {
+      long row = xEntry.getKey();
+      float[] xRow = xEntry.getValue();
+      for (FastByIDMap<float[]>.MapEntry yEntry : Y.entrySet()) {
+        long col = yEntry.getKey();
+        float[] yCol = yEntry.getValue();
+        FastByIDFloatMap resultRow = result.get(row);
+        if (resultRow == null) {
+          resultRow = new FastByIDFloatMap();
+          result.put(row, resultRow);
+        }
+        resultRow.put(col, (float) SimpleVectorMath.dot(xRow, yCol));
+      }
+    }
+    return result;
+  }
+
+  /**
    * @param matrix an {@link Array2DRowRealMatrix}
    * @return its "data" field -- not a copy
    */
@@ -177,15 +201,18 @@ public final class MatrixUtils {
   }
 
   /**
+   * @param M matrix
+   * @param V column vector
    * @return column vector M * V
    */
   private static float[] matrixMultiply(double[][] M, float[] V) {
-    int dimension = V.length;
-    float[] out = new float[dimension];
-    for (int i = 0; i < dimension; i++) {
+    int rows = M.length;
+    int cols = V.length;
+    float[] out = new float[rows];
+    for (int i = 0; i < rows; i++) {
       double total = 0.0;
       double[] matrixRow = M[i];
-      for (int j = 0; j < dimension; j++) {
+      for (int j = 0; j < cols; j++) {
         total += V[j] * matrixRow[j];
       }
       out[i] = (float) total;
@@ -195,7 +222,7 @@ public final class MatrixUtils {
 
   /**
    * @param M tall, skinny matrix
-   * @return MT * M
+   * @return MT * M as a dense matrix
    */
   public static RealMatrix transposeTimesSelf(FastByIDMap<float[]> M) {
     RealMatrix result = null;
@@ -214,6 +241,105 @@ public final class MatrixUtils {
     }
     Preconditions.checkState(result != null);
     return result;
+  }
+
+  /**
+   * @param M matrix to print
+   * @return a print-friendly rendering of a sparse matrix. Not useful for wide matrices.
+   */
+  public static String matrixToString(FastByIDMap<FastByIDFloatMap> M) {
+    StringBuilder result = new StringBuilder();
+    long[] colKeys = unionColumnKeysInOrder(M);
+    appendWithPadOrTruncate("", result);
+    for (long colKey : colKeys) {
+      result.append('\t');
+      appendWithPadOrTruncate(colKey, result);
+    }
+    result.append("\n\n");
+    long[] rowKeys = keysInOrder(M);
+    for (long rowKey : rowKeys) {
+      appendWithPadOrTruncate(rowKey, result);
+      FastByIDFloatMap row = M.get(rowKey);
+      for (long colKey : colKeys) {
+        result.append('\t');
+        float value = row.get(colKey);
+        if (Float.isNaN(value)) {
+          appendWithPadOrTruncate("", result);
+        } else {
+          appendWithPadOrTruncate(value, result);
+        }
+      }
+      result.append('\n');
+    }
+    result.append('\n');
+    return result.toString();
+  }
+
+  /**
+   * @param M matrix to print
+   * @return a print-friendly rendering of a dense, skinny matrix.
+   */
+  public static String featureMatrixToString(FastByIDMap<float[]> M) {
+    long[] rowKeys = keysInOrder(M);
+    StringBuilder result = new StringBuilder();
+    for (long rowKey : rowKeys) {
+      appendWithPadOrTruncate(rowKey, result);
+      for (float f : M.get(rowKey)) {
+        result.append('\t');
+        appendWithPadOrTruncate(f, result);
+      }
+      result.append('\n');
+    }
+    result.append('\n');
+    return result.toString();
+  }
+
+  private static long[] keysInOrder(FastByIDMap<?> map) {
+    FastIDSet keys = new FastIDSet(map.size(), 1.2f);
+    LongPrimitiveIterator it = map.keySetIterator();
+    while (it.hasNext()) {
+      keys.add(it.nextLong());
+    }
+    long[] keysArray = keys.toArray();
+    Arrays.sort(keysArray);
+    return keysArray;
+  }
+
+  private static long[] unionColumnKeysInOrder(FastByIDMap<FastByIDFloatMap> M) {
+    FastIDSet keys = new FastIDSet(1000, 1.2f);
+    for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : M.entrySet()) {
+      LongPrimitiveIterator it = entry.getValue().keySetIterator();
+      while (it.hasNext()) {
+        keys.add(it.nextLong());
+      }
+    }
+    long[] keysArray = keys.toArray();
+    Arrays.sort(keysArray);
+    return keysArray;
+  }
+
+  private static void appendWithPadOrTruncate(long value, StringBuilder to) {
+    appendWithPadOrTruncate(String.valueOf(value), to);
+  }
+
+  private static void appendWithPadOrTruncate(float value, StringBuilder to) {
+    String stringValue = String.valueOf(value);
+    if (value >= 0.0f) {
+      stringValue = ' ' + stringValue;
+    }
+    appendWithPadOrTruncate(stringValue, to);
+  }
+
+  private static void appendWithPadOrTruncate(CharSequence value, StringBuilder to) {
+    int length = value.length();
+    if (length >= PRINT_COLUMN_WIDTH) {
+      to.append(value, 0, PRINT_COLUMN_WIDTH);
+    } else {
+      for (int i = length; i < PRINT_COLUMN_WIDTH; i++) {
+        to.append(' ');
+      }
+      to.append(value);
+    }
   }
 
 }
