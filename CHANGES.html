@@ -30,6 +30,14 @@ hr {margin:20px 0 10px 0}
   <li>Java client and Serving Layer now use compression when receiving data to ingest</li>
 </ul>
 
+<h2>Other</h2>
+
+<ul>
+  <li>Computation Layer iterations are ~40% faster as three MapReduce jobs have been merged into one</li>
+  <li>Computation Layer workers no longer have to load the feature matrix into memory, and can deal with
+    feature matrices that don't fit in memory (at a performance cost).</li>
+</ul>
+
 <h1>Version 0.4</h1>
 
 <p>June 10 2012</p>
