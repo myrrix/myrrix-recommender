@@ -25,6 +25,9 @@ import java.util.logging.SimpleFormatter;
 
 import com.google.common.collect.Lists;
 
+/**
+ * Simple {@link Handler} that records recent log lines in memory.
+ */
 public final class MemoryHandler extends Handler {
 
   private static final int NUM_LINES = 1000;
@@ -57,7 +60,8 @@ public final class MemoryHandler extends Handler {
   }
 
   @Override
-  public void close() throws SecurityException {
+  public void close() {
     logLines.clear();
   }
+
 }

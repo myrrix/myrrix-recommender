@@ -100,15 +100,12 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
     if (allPartitions != null) {
       Integer partitionToServe = getPartitionToServe(request, allPartitions.size());
-      if (partitionToServe != null) {
-        if (!partitionToServe.equals(thisPartition)) {
-          String redirectURL = buildRedirectToPartitionURL(request, partitionToServe);
-          response.sendRedirect(redirectURL);
-          return;
-        }
-        // else, we are the right partition to serve
+      if (partitionToServe != null && !partitionToServe.equals(thisPartition)) {
+        String redirectURL = buildRedirectToPartitionURL(request, partitionToServe);
+        response.sendRedirect(redirectURL);
+        return;
       }
-      // else, no specific partition needed, so continue
+      // else, we are the right partition to serve or no specific partition needed, so continue
     }
 
     long start = System.nanoTime();

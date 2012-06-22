@@ -155,7 +155,7 @@ public final class Generation {
   }
 
   /**
-   * @return (X^-1), left-inverse of {@link #getX()}, such that (X^-1) * X = I
+   * @return Xinv, left-inverse of {@link #getX()}, such that Xinv * X = I
    */
   public FastByIDMap<float[]> getXLeftInverse() {
     return XLeftInverse;
@@ -169,7 +169,7 @@ public final class Generation {
   }
 
   /**
-   * @return (Y^-1), right-inverse of {@link #getY()}, such that Y * (Y^-1) = I
+   * @return Yinv, right-inverse of {@link #getY()}, such that Y * Yinv = I
    */
   public FastByIDMap<float[]> getYTRightInverse() {
     return YTRightInverse;

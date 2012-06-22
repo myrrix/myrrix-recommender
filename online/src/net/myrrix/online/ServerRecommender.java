@@ -169,7 +169,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
    * @throws NoSuchUserException if the user is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
-   * @throws TasteException if another error occurs
    */
   @Override
   public List<RecommendedItem> recommend(long userID,
@@ -288,7 +287,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @throws NoSuchUserException if the user is not known in the model
    * @throws NoSuchItemException if the item is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
-   * @throws TasteException if another error occurs
    */
   @Override
   public float estimatePreference(long userID, long itemID)
@@ -581,7 +579,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    *  interpretation may necessarily be applied.
    * @throws NoSuchItemException if any of the items is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
-   * @throws TasteException if another error occurs
    */
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany, Rescorer<LongPair> rescorer)
@@ -626,7 +623,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @throws NoSuchUserException if the user is not known in the model
    * @throws NoSuchItemException if the item is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
-   * @throws TasteException if another error occurs
    */
   @Override
   public List<RecommendedItem> recommendedBecause(long userID, long itemID, int howMany)

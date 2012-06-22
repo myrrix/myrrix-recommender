@@ -120,7 +120,7 @@ public final class MatrixUtils {
    * Right-inverts the transpose of a tall, skinny matrix. The right inverse of MT is ( M * (MT * M)^-1 ).
    *
    * @param M tall, skinny matrix to right-invert the transpose of
-   * @retrn a right inverse of MT
+   * @return a right inverse of MT
    */
   public static FastByIDMap<float[]> getTransposeRightInverse(FastByIDMap<float[]> M) {
     if (M.isEmpty()) {

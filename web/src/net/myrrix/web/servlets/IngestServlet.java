@@ -53,7 +53,7 @@ public final class IngestServlet extends AbstractMyrrixServlet {
       Charset charEncoding = charEncodingName == null ? Charsets.UTF_8 : Charset.forName(charEncodingName);
       reader = new InputStreamReader(new GZIPInputStream(request.getInputStream()), charEncoding);
     } else {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, contentEncoding);
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unsupported Content-Encoding");
       return;
     }
 

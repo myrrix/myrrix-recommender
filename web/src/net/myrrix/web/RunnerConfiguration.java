@@ -21,8 +21,6 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 
-import net.myrrix.online.RescorerProvider;
-
 /**
  * Configuration for a {@link Runner}. This configures the Serving Layer server instance that it runs.
  *
@@ -162,7 +160,7 @@ public final class RunnerConfiguration {
   }
 
   /**
-   * @return the name of an implementation of {@link RescorerProvider}, if one should be
+   * @return the name of an implementation of {@link net.myrrix.online.RescorerProvider}, if one should be
    *  used to modify the results of the recommendations and similarity computations, or {@code null} if
    *  none is to be used. The class must be made available on the server's classpath.
    */
