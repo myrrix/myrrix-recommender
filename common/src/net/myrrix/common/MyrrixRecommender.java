@@ -146,5 +146,11 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    */
   void removePreference(long userID, long itemID, float value) throws TasteException;
 
+  /**
+   * @return true if and only if the instance is ready to make recommendations; may be false for example
+   *  while the recommender is still building an initial model
+   */
+  boolean isReady() throws TasteException;
+
 
 }

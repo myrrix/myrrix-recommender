@@ -28,7 +28,6 @@ import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 
@@ -153,37 +152,6 @@ public final class MatrixUtils {
       float[] vector = entry.getValue();
       float[] resultVector = matrixMultiply(matrixData, vector);
       result.put(id, resultVector);
-    }
-    return result;
-  }
-
-  /**
-   * @param X tall skinny matrix
-   * @param Y tall skinny matrix
-   * @param result sparse matrix to store result in or null to allocate new storage
-   * @return X * Y' as a sparse matrix representation
-   */
-  public static FastByIDMap<FastByIDFloatMap> multiply(FastByIDMap<float[]> X,
-                                                       FastByIDMap<float[]> Y,
-                                                       FastByIDMap<FastByIDFloatMap> result) {
-    if (result == null) {
-      result = new FastByIDMap<FastByIDFloatMap>(1000, 1.2f);
-    } else {
-      result.clear();
-    }
-    for (FastByIDMap<float[]>.MapEntry xEntry : X.entrySet()) {
-      long row = xEntry.getKey();
-      float[] xRow = xEntry.getValue();
-      for (FastByIDMap<float[]>.MapEntry yEntry : Y.entrySet()) {
-        long col = yEntry.getKey();
-        float[] yCol = yEntry.getValue();
-        FastByIDFloatMap resultRow = result.get(row);
-        if (resultRow == null) {
-          resultRow = new FastByIDFloatMap();
-          result.put(row, resultRow);
-        }
-        resultRow.put(col, (float) SimpleVectorMath.dot(xRow, yCol));
-      }
     }
     return result;
   }

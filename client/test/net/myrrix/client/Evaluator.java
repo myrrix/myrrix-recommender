@@ -119,7 +119,15 @@ public final class Evaluator {
 
     try {
       runner.call();
-      return doEvaluate(new ClientRecommender(clientConfig));
+      ClientRecommender client = new ClientRecommender(clientConfig);
+      while (!client.isReady()) {
+        try {
+          Thread.sleep(5000L);
+        } catch (InterruptedException ie) {
+          // continue
+        }
+      }
+      return doEvaluate(client);
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     } finally {

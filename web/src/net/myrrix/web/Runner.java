@@ -57,6 +57,7 @@ import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
 import net.myrrix.web.servlets.LogServlet;
 import net.myrrix.web.servlets.PreferenceServlet;
+import net.myrrix.web.servlets.ReadyServlet;
 import net.myrrix.web.servlets.RecommendServlet;
 import net.myrrix.web.servlets.RecommendToAnonymousServlet;
 import net.myrrix.web.servlets.RecommendToManyServlet;
@@ -181,10 +182,6 @@ public final class Runner implements Callable<Boolean>, Closeable {
   }
 
   public static void main(String[] args) throws Exception {
-
-    // Collect logs from the first instant
-    java.util.logging.Logger.getLogger("").addHandler(new MemoryHandler());
-
     Options options = buildOptions();
     CommandLineParser parser = new PosixParser();
     RunnerConfiguration config;
@@ -285,6 +282,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
   @Override
   public Boolean call() throws IOException {
 
+    java.util.logging.Logger.getLogger("").addHandler(new MemoryHandler());
+
     Tomcat tomcat = new Tomcat();
     Connector connector = makeConnector();
     configureTomcat(tomcat, connector);
@@ -302,6 +301,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new EstimateServlet(), "estimate");
     addServlet(context, new BecauseServlet(), "because");
     addServlet(context, new RefreshServlet(), "refresh");
+    addServlet(context, new ReadyServlet(), "ready");
     Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
     Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 

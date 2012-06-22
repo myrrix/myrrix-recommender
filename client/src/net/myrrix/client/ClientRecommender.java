@@ -793,4 +793,25 @@ public final class ClientRecommender implements MyrrixRecommender {
     return mostSimilarItems(itemIDs, howMany);
   }
 
+  @Override
+  public boolean isReady() throws TasteException {
+    try {
+      HttpURLConnection connection = makeConnection("/ready", "HEAD", null);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            return true;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            return false;
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+      } finally {
+        connection.disconnect();
+      }
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
 }

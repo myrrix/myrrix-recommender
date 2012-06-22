@@ -246,6 +246,11 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     }
   }
 
+  @Override
+  public boolean isReady() throws TasteException {
+    return delegate.isReady();
+  }
+
   private List<TranslatedRecommendedItem> translate(Collection<RecommendedItem> originals) {
     List<TranslatedRecommendedItem> translated = Lists.newArrayListWithCapacity(originals.size());
     for (RecommendedItem original : originals) {

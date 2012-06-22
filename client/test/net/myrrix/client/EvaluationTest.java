@@ -39,7 +39,7 @@ public final class EvaluationTest extends MyrrixTest {
     Evaluator evaluator = new Evaluator(originalDataFiles[0], getTestTempDir(), 0.9, 0.1);
     IRStatistics stats = evaluator.evaluate();
     log.info(stats.toString());
-    assertTrue(stats.getPrecision() > 0.13);
+    assertTrue(stats.getPrecision() > 0.11);
   }
 
 }

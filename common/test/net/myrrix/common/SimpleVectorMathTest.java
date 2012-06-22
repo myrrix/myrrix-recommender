@@ -17,37 +17,32 @@
 
 package net.myrrix.common;
 
-import java.io.File;
+import org.junit.Test;
 
-import com.google.common.io.Files;
-import org.apache.mahout.common.RandomUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+public final class SimpleVectorMathTest extends MyrrixTest {
+  
+  private static final float[] VEC1 = {-1.0f, 2.5f, 3.0f};
+  private static final float[] VEC2 = {1.5f, -1.5f, 0.0f};
 
-public abstract class MyrrixTest extends Assert {
-
-  protected static final double EPSILON = 1.0e-6; // appropriate for float
-
-  private File testTempDir;
-
-  @Before
-  public void setUp() throws Exception {
-    testTempDir = null;
-    RandomUtils.useTestSeed();
+  @Test
+  public void testDot() {
+    assertEquals(-5.25, SimpleVectorMath.dot(VEC1, VEC2), EPSILON);
   }
 
-  @After
-  public void tearDown() throws Exception {
-    IOUtils.deleteRecursively(testTempDir);
+  @Test
+  public void testNorm() {
+    assertEquals(4.03112887414928, SimpleVectorMath.norm(VEC1), EPSILON);
+    assertEquals(2.12132034355964, SimpleVectorMath.norm(VEC2), EPSILON);
   }
 
-  protected final synchronized File getTestTempDir() {
-    if (testTempDir == null) {
-      testTempDir = Files.createTempDir();
-      testTempDir.deleteOnExit();
-    }
-    return testTempDir;
+  @Test
+  public void testCosine() {
+    assertEquals(-0.61394061351492, SimpleVectorMath.cosineMeasure(VEC1, VEC2), EPSILON);
+  }
+
+  @Test
+  public void testCorrelation() {
+    assertEquals(-0.802955068546966, SimpleVectorMath.correlation(VEC1, VEC2), EPSILON);
   }
 
 }

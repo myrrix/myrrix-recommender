@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.PatternFilenameFilter;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
@@ -66,12 +67,7 @@ public final class LoadTest extends AbstractClientTest {
     Set<Long> userIDsSet = Sets.newHashSet();
     Set<Long> itemIDsSet = Sets.newHashSet();
     Splitter comma = Splitter.on(',');
-    for (File f : getTestTempDir().listFiles(new FilenameFilter() {
-                                               @Override
-                                               public boolean accept(File file, String s) {
-                                                 return !"model.bin".equals(s);
-                                               }
-                                             })) {
+    for (File f : getTestTempDir().listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"))) {
       for (CharSequence line : new FileLineIterable(f)) {
         Iterator<String> it = comma.split(line).iterator();
         userIDsSet.add(Long.parseLong(it.next()));

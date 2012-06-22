@@ -17,37 +17,21 @@
 
 package net.myrrix.common;
 
-import java.io.File;
+import org.junit.Test;
 
-import com.google.common.io.Files;
-import org.apache.mahout.common.RandomUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+public final class RunningStatisticsTest extends MyrrixTest {
 
-public abstract class MyrrixTest extends Assert {
-
-  protected static final double EPSILON = 1.0e-6; // appropriate for float
-
-  private File testTempDir;
-
-  @Before
-  public void setUp() throws Exception {
-    testTempDir = null;
-    RandomUtils.useTestSeed();
-  }
-
-  @After
-  public void tearDown() throws Exception {
-    IOUtils.deleteRecursively(testTempDir);
-  }
-
-  protected final synchronized File getTestTempDir() {
-    if (testTempDir == null) {
-      testTempDir = Files.createTempDir();
-      testTempDir.deleteOnExit();
-    }
-    return testTempDir;
+  @Test
+  public void testInstantiate() {
+    RunningStatistics stats = new RunningStatistics();
+    assertTrue(Double.isNaN(stats.getMin()));
+    assertTrue(Double.isNaN(stats.getMax()));
+    stats.addDatum(Integer.MIN_VALUE);
+    assertEquals(Integer.MIN_VALUE, stats.getMin(), EPSILON);
+    assertEquals(Integer.MIN_VALUE, stats.getMax(), EPSILON);
+    stats.addDatum(Integer.MAX_VALUE);
+    assertEquals(Integer.MIN_VALUE, stats.getMin(), EPSILON);
+    assertEquals(Integer.MAX_VALUE, stats.getMax(), EPSILON);
   }
 
 }

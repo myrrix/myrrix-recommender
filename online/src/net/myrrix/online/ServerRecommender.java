@@ -723,4 +723,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     return mostSimilarItems(itemIDs, howMany);
   }
 
+  @Override
+  public boolean isReady() {
+    try {
+      getCurrentGeneration();
+      return true;
+    } catch (NotReadyException nre) {
+      return false;
+    }
+  }
+
 }

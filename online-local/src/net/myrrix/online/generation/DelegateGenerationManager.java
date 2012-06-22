@@ -164,7 +164,8 @@ public final class DelegateGenerationManager implements GenerationManager {
               newGeneration = readModel(modelFile);
             }
             if (newGeneration == null) {
-              newGeneration = rebuild(inputDir, modelFile);
+              newGeneration = computeModel(inputDir);
+              saveModel(newGeneration, modelFile);
             }
             currentGeneration = newGeneration;
 
@@ -182,16 +183,6 @@ public final class DelegateGenerationManager implements GenerationManager {
     } else {
       log.info("Refresh already in progress");
     }
-  }
-
-  /**
-   * Computes a new model based on data in the given input directory, and saves resulting model
-   * to the given model file.
-   */
-  private Generation rebuild(File inputDir, File modelFile) throws IOException {
-    Generation model = computeModel(inputDir);
-    saveModel(model, modelFile);
-    return model;
   }
 
   @Override

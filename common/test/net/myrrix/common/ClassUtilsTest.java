@@ -17,37 +17,26 @@
 
 package net.myrrix.common;
 
-import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.google.common.io.Files;
-import org.apache.mahout.common.RandomUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.Test;
 
-public abstract class MyrrixTest extends Assert {
+public final class ClassUtilsTest extends MyrrixTest {
 
-  protected static final double EPSILON = 1.0e-6; // appropriate for float
-
-  private File testTempDir;
-
-  @Before
-  public void setUp() throws Exception {
-    testTempDir = null;
-    RandomUtils.useTestSeed();
+  @Test
+  public void testInstantiate() {
+    Set<?> set = ClassUtils.loadInstanceOf(HashSet.class.getName(), Set.class);
+    assertTrue(set instanceof HashSet);
   }
 
-  @After
-  public void tearDown() throws Exception {
-    IOUtils.deleteRecursively(testTempDir);
-  }
-
-  protected final synchronized File getTestTempDir() {
-    if (testTempDir == null) {
-      testTempDir = Files.createTempDir();
-      testTempDir.deleteOnExit();
-    }
-    return testTempDir;
+  @Test
+  public void testInstantiateWithArgs() {
+    Number n = ClassUtils.loadInstanceOf(Integer.class.getName(),
+                                         Number.class,
+                                         new Class<?>[] {int.class},
+                                         new Object[] {3});
+    assertEquals(3, n.intValue());
   }
 
 }

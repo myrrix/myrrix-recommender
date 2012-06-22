@@ -57,7 +57,8 @@ public abstract class AbstractClientTest extends MyrrixTest {
 
     File tempDir = getTestTempDir();
     File testDataDir = new File(getTestDataPath());
-    Preconditions.checkState(testDataDir.exists() && testDataDir.isDirectory());
+    Preconditions.checkState(testDataDir.exists() && testDataDir.isDirectory(),
+                             "%s is not an existing directory", testDataDir.getAbsolutePath());
 
     if (savedModelFile == null) {
       File[] srcDataFiles = testDataDir.listFiles(new PatternFilenameFilter("[^.].*"));
@@ -77,7 +78,7 @@ public abstract class AbstractClientTest extends MyrrixTest {
     if (useSecurity()) {
       runnerConfig.setSecurePort(8443);
       runnerConfig.setKeystorePassword("changeit");
-      runnerConfig.setKeystoreFile(new File("web/keystore").getAbsoluteFile());
+      runnerConfig.setKeystoreFile(new File("testdata/keystore").getAbsoluteFile());
       runnerConfig.setUserName("foo");
       runnerConfig.setPassword("bar");
     }
@@ -97,6 +98,16 @@ public abstract class AbstractClientTest extends MyrrixTest {
     clientConfig.setUserName(runnerConfig.getUserName());
     clientConfig.setPassword(runnerConfig.getPassword());
     client = new ClientRecommender(clientConfig);
+
+    client.refresh(null);
+
+    while (!client.isReady()) {
+      try {
+        Thread.sleep(5000L);
+      } catch (InterruptedException e) {
+        // continue
+      }
+    }
   }
 
   @Override
@@ -110,8 +121,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
       savedModelFile = File.createTempFile("model-", ".bin");
       savedModelFile.deleteOnExit();
       File modelBinFile = new File(getTestTempDir(), "model.bin");
-      Preconditions.checkState(modelBinFile.exists(), "No model.bin created?");
-      Files.copy(modelBinFile, savedModelFile);
+      if (modelBinFile.exists()) {
+        Files.copy(modelBinFile, savedModelFile);
+      }
     }
 
     super.tearDown();
