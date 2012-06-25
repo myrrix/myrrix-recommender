@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -375,14 +376,15 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       xReadLock.unlock();
     }
 
-    //double boostedValue = value * RECENCY_BOOST;
-
     float[] userFoldIn = generation.getYTRightInverse().get(itemID);
     if (userFoldIn != null) {
         for (int i = 0; i < userFeatures.length; i++) {
         userFeatures[i] += value * userFoldIn[i];
       }
     }
+
+    System.out.println("New user features after set " + Arrays.toString(userFeatures));
+
     
     FastByIDMap<float[]> Y = generation.getY();
     
@@ -452,40 +454,98 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     removePreference(userID, itemID, 1.0f);
   }
 
-  /**
-   * Operates like the opposite of {@link #setPreference(long, long, float)}. Note that calling this method does
-   * make the item available for recommendation again to the user.
-   */
   @Override
   public void removePreference(long userID, long itemID, float value) throws NotReadyException {
 
     Generation generation = getCurrentGeneration();
-    FastByIDMap<float[]> X = generation.getX();
 
-    float[] userFeatures;
-    Lock xLock = generation.getXLock().readLock();
-    xLock.lock();
+    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
+
+    ReadWriteLock knownItemLock = generation.getKnownItemLock();
+
+    Lock knownItemReadLock = knownItemLock.readLock();
+    FastIDSet userKnownItemIDs;
+    knownItemReadLock.lock();
     try {
-      userFeatures = X.get(userID);
+      userKnownItemIDs = knownItemIDs.get(userID);
     } finally {
-      xLock.unlock();
+      knownItemReadLock.unlock();
     }
 
-    //double boostedValue = value * RECENCY_BOOST;
+    if (userKnownItemIDs == null) {
+      // Doesn't exist? So ignore this request
+      return;
+    }
 
-    if (userFeatures != null) {
+    boolean removeUser;
+    synchronized (userKnownItemIDs) {
+      if (!userKnownItemIDs.remove(itemID)) {
+        // Item unknown, so ignore this request
+        return;
+      }
+      removeUser = userKnownItemIDs.isEmpty();
+    }
+
+    // We can proceed with the request
+
+    try {
+      generationManager.append(userID, itemID, -value);
+    } catch (IOException ioe) {
+      log.warn("Could not append datum; continuing", ioe);
+    }
+
+    FastByIDMap<float[]> X = generation.getX();
+
+    ReadWriteLock xLock = generation.getXLock();
+
+    if (removeUser) {
+
+      Lock knownItemWriteLock = knownItemLock.writeLock();
+      knownItemWriteLock.lock();
+      try {
+        knownItemIDs.remove(userID);
+      } finally {
+        knownItemWriteLock.unlock();
+      }
+      Lock xWriteLock = xLock.writeLock();
+      xWriteLock.lock();
+      try {
+        X.remove(userID);
+      } finally {
+        xWriteLock.unlock();
+      }
+
+    } else {
+
+      Lock xReadLock = xLock.readLock();
+      float[] userFeatures;
+      xReadLock.lock();
+      try {
+        userFeatures = X.get(userID);
+      } finally {
+        xReadLock.unlock();
+      }
+
+      if (userFeatures == null) {
+        throw new IllegalStateException("User feature don't exist but known items do?");
+      }
       float[] userFoldIn = generation.getYTRightInverse().get(itemID);
       if (userFoldIn != null) {
         for (int i = 0; i < userFeatures.length; i++) {
           userFeatures[i] -= value * userFoldIn[i];
         }
       }
+
+      System.out.println("New user features after remove " + Arrays.toString(userFeatures));
+
     }
-    
+
+    // Items are different. We don't track users per item and so never remove items in the same way
+
     FastByIDMap<float[]> Y = generation.getY();
-    
-    float[] itemFeatures;
+
     Lock yLock = generation.getYLock().readLock();
+    float[] itemFeatures;
     yLock.lock();
     try {
       itemFeatures = Y.get(itemID);
@@ -502,22 +562,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     }
 
-    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
-
-    FastIDSet userKnownItemIDs;
-    Lock knownItemLock = generation.getKnownItemLock().readLock();
-    knownItemLock.lock();
-    try {
-      userKnownItemIDs = knownItemIDs.get(userID);
-    } finally {
-      knownItemLock.unlock();
-    }
-
-    if (userKnownItemIDs != null) {
-      synchronized (userKnownItemIDs) {
-        userKnownItemIDs.remove(itemID);
-      }
-    }
   }
 
   /**
@@ -670,6 +714,16 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
   }
 
+  @Override
+  public boolean isReady() {
+    try {
+      getCurrentGeneration();
+      return true;
+    } catch (NotReadyException nre) {
+      return false;
+    }
+  }
+
   /**
    * @throws UnsupportedOperationException
    * @deprecated do not call
@@ -717,16 +771,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throw new UnsupportedOperationException();
     }
     return mostSimilarItems(itemIDs, howMany);
-  }
-
-  @Override
-  public boolean isReady() {
-    try {
-      getCurrentGeneration();
-      return true;
-    } catch (NotReadyException nre) {
-      return false;
-    }
   }
 
 }

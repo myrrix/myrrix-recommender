@@ -117,7 +117,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * times for a user and item, as more actions are observed that associate the two. That is, this calls
    * <em>adds to</em> rather than <em>sets</em> the association.</p>
    *
-   * <p>To "undo" associations, see {@link #removePreference(long, long)}.</p>
+   * <p>To "undo" associations, call this method with negative values, or
+   * see {@link #removePreference(long, long)}.</p>
    *
    * <p>Value is <strong>not</strong> a rating, but a strength indicator. It may be negative.
    * Its magnitude should correspond to the degree to which an observed event suggests an association between
@@ -138,11 +139,14 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   void setPreference(long userID, long itemID, float value) throws TasteException;
 
   /**
-   * Undoes {@link #setPreference(long, long, float)}. It is the same as calling
-   * {@link #setPreference(long, long, float)} with the negative of {@code value}.
-   * However calling this method will make the item a candidate for recommendation again.
+   * <p>Operates like the opposite of {@link #setPreference(long, long, float)}. Calling this method with
+   * value {@code x} is like calling {@link #setPreference(long, long, float)} with value
+   * {@code -x}.</p>
    *
-   * @throws NotReadyException if the implementation has no usable model yet
+   * <p>However, this method will additionally remove the item from the user's set of known items,
+   * making it eligible for recommendation again. If the user has no more items, this method will remove
+   * the user too, such that new calls to {@link #recommend(long, int)} for example
+   * will fail with {@link org.apache.mahout.cf.taste.common.NoSuchUserException}.</p>
    */
   void removePreference(long userID, long itemID, float value) throws TasteException;
 

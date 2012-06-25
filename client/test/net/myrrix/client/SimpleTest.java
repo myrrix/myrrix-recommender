@@ -37,15 +37,6 @@ public final class SimpleTest extends AbstractClientTest {
   }
 
   @Test
-  public void testRemove() throws Exception {
-    ClientRecommender client = getClient();
-    client.setPreference(0, 151, 1.0f);
-    assertEquals(5, client.recommend(0, 5).size());
-    client.setPreference(0, 151, -1.0f);
-    assertEquals(0, client.recommend(0, 5).size());
-  }
-
-  @Test
   public void testIngest() throws Exception {
     StringReader reader = new StringReader("0,1\n0,2,3.0\n");
 
@@ -230,27 +221,49 @@ public final class SimpleTest extends AbstractClientTest {
   }
 
   @Test
-  public void testSetRemove() throws Exception {
-
+  public void testSet() throws Exception {
     ClientRecommender client = getClient();
 
     client.setPreference(0L, 1L);
-
     List<RecommendedItem> recs = client.recommend(0L, 1);
-    log.info("{}", recs);
     assertEquals(50L, recs.get(0).getItemID());
 
     client.setPreference(0L, 2L, 3.0f);
-
     recs = client.recommend(0L, 1);
-    log.info("{}", recs);
     assertEquals(449L, recs.get(0).getItemID());
+
+    client.setPreference(0L, 2L, -3.0f);
+    recs = client.recommend(0L, 1);
+    assertEquals(50L, recs.get(0).getItemID());
+
+    client.setPreference(0L, 1L, -1.0f);
+    // Don't really know/care what will be recommend at this point; the feature vec is nearly 0
+    assertEquals(1, client.recommend(0L, 1).size());
+  }
+
+  @Test
+  public void testSetRemove() throws Exception {
+    ClientRecommender client = getClient();
+
+    client.setPreference(0L, 1L);
+    List<RecommendedItem> recs = client.recommend(0L, 1);
+    assertEquals(50L, recs.get(0).getItemID());
+
+    client.setPreference(0L, 2L, 1.0f);
+    recs = client.recommend(0L, 1);
+    assertEquals(181L, recs.get(0).getItemID());
+
+    client.removePreference(0L, 2L);
+    recs = client.recommend(0L, 1);
+    assertEquals(50L, recs.get(0).getItemID());
 
     client.removePreference(0L, 1L);
-
-    recs = client.recommend(0L, 1);
-    log.info("{}", recs);
-    assertEquals(449L, recs.get(0).getItemID());
+    try {
+      client.recommend(0L, 1);
+      fail();
+    } catch (NoSuchUserException nsue) {
+      // good
+    }
   }
 
 }

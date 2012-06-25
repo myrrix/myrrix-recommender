@@ -245,9 +245,27 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public void setPreference(long userID, long itemID, float value) throws TasteException {
+    doSetOrRemove(userID, itemID, value, true);
+  }
+
+  /**
+   * Calls {@link #setPreference(long, long, float)} with value -1.0.
+   */
+  @Override
+  public void removePreference(long userID, long itemID) throws TasteException {
+    removePreference(userID, itemID, 1.0f);
+  }
+
+  @Override
+  public void removePreference(long userID, long itemID, float value) throws TasteException {
+    doSetOrRemove(userID, itemID, value, false);
+  }
+
+  private void doSetOrRemove(long userID, long itemID, float value, boolean set) throws TasteException {
     boolean sendValue = value != 1.0f;
     try {
-      HttpURLConnection connection = makeConnection("/pref/" + userID + '/' + itemID, "POST", userID);
+      String method = set ? "POST" : "DELETE";
+      HttpURLConnection connection = makeConnection("/pref/" + userID + '/' + itemID, method, userID);
       connection.setDoOutput(sendValue);
       try {
         if (sendValue) {
@@ -256,7 +274,6 @@ public final class ClientRecommender implements MyrrixRecommender {
           connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
           OutputStream out = connection.getOutputStream();
           out.write(bytes);
-          //out.flush();
           Closeables.closeQuietly(out);
         }
         switch (connection.getResponseCode()) {
@@ -273,23 +290,6 @@ public final class ClientRecommender implements MyrrixRecommender {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     }
-  }
-
-  /**
-   * Calls {@link #setPreference(long, long, float)} with value -1.0.
-   */
-  @Override
-  public void removePreference(long userID, long itemID) throws TasteException {
-    setPreference(userID, itemID, -1.0f);
-  }
-
-  /**
-   * Calls {@link #setPreference(long, long, float)} with a negated value. Note that calling this
-   * method does <em>not</em> make the item available for recommendation again.
-   */
-  @Override
-  public void removePreference(long userID, long itemID, float value) throws TasteException {
-    setPreference(userID, itemID, -value);
   }
 
   /**
