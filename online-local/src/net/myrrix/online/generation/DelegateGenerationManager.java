@@ -47,6 +47,7 @@ import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
@@ -122,6 +123,15 @@ public final class DelegateGenerationManager implements GenerationManager {
     if (--countdownToRebuild == 0) {
       countdownToRebuild = WRITES_BETWEEN_REBUILD;
       refresh(null);
+    }
+  }
+
+  @Override
+  public void remove(long userID, long itemID) throws IOException {
+    StringBuilder line = new StringBuilder(24);
+    line.append(userID).append(',').append(itemID).append(",\n");
+    synchronized (this) {
+      appender.append(line);
     }
   }
 
@@ -260,17 +270,36 @@ public final class DelegateGenerationManager implements GenerationManager {
         long itemID = Long.parseLong(it.next());
         float value;
         if (it.hasNext()) {
-          value = Float.parseFloat(it.next());
+          String valueToken = it.next().trim();
+          value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
         } else {
           value = 1.0f;
         }
-        MatrixUtils.addTo(userID, itemID, value, RbyRow, RbyColumn);
-        FastIDSet itemIDs = knownItemIDs.get(userID);
-        if (itemIDs == null) {
-          itemIDs = new FastIDSet();
-          knownItemIDs.put(userID, itemIDs);
+
+        if (Float.isNaN(value)) {
+          // Remove, not set
+          MatrixUtils.remove(userID, itemID, RbyRow, RbyColumn);
+        } else {
+          MatrixUtils.addTo(userID, itemID, value, RbyRow, RbyColumn);
         }
-        itemIDs.add(itemID);
+
+        FastIDSet itemIDs = knownItemIDs.get(userID);
+        if (Float.isNaN(value)) {
+          // Remove, not set
+          if (itemIDs != null) {
+            itemIDs.remove(itemID);
+            if (itemIDs.isEmpty()) {
+              knownItemIDs.remove(userID);
+            }
+          }
+        } else {
+          if (itemIDs == null) {
+            itemIDs = new FastIDSet();
+            knownItemIDs.put(userID, itemIDs);
+          }
+          itemIDs.add(itemID);
+        }
+
         if (++lines % 1000000 == 0) {
           log.info("Finished {} lines", lines);
         }

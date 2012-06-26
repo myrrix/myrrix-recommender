@@ -37,6 +37,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.RandomUtils;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.RunningStatistics;
 import net.myrrix.online.RescorerProvider;
@@ -222,7 +223,11 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
           if (valueString.startsWith("q=")) {
             valueString = valueString.substring(2);
           }
-          preference = Double.parseDouble(valueString);
+          try {
+            preference = LangUtils.parseDouble(valueString);
+          } catch (IllegalArgumentException iae) {
+            preference = 1.0;
+          }
           type = accept.substring(semiColon);
         }
         ResponseContentType parsedType = null;

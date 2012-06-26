@@ -71,6 +71,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.IOUtils;
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 
@@ -335,8 +336,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         try {
           float[] result = new float[itemIDs.length];
           for (int i = 0; i < itemIDs.length; i++) {
-            String line = reader.readLine();
-            result[i] = Float.parseFloat(line);
+            result[i] = LangUtils.parseFloat(reader.readLine());
           }
           return result;
         } finally {
@@ -422,7 +422,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       while ((line = reader.readLine()) != null) {
         Iterator<String> tokens = COMMA.split(line).iterator();
         long itemID = Long.parseLong(tokens.next());
-        float value = Float.parseFloat(tokens.next());
+        float value = LangUtils.parseFloat(tokens.next());
         result.add(new GenericRecommendedItem(itemID, value));
       }
     } finally {

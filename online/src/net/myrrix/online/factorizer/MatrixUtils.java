@@ -101,6 +101,28 @@ public final class MatrixUtils {
   }
 
   /**
+   * Efficiently removes an entry in two parallel, sparse matrices.
+   *
+   * @param row row to remove
+   * @param column column to remove
+   * @param RbyRow matrix R to update, keyed by row
+   * @param RbyColumn matrix R to update, keyed by column
+   */
+  public static void remove(long row,
+                            long column,
+                            FastByIDMap<FastByIDFloatMap> RbyRow,
+                            FastByIDMap<FastByIDFloatMap> RbyColumn) {
+    FastByIDFloatMap theRow = RbyRow.get(row);
+    if (theRow != null) {
+      theRow.remove(column);
+    }
+    FastByIDFloatMap theColumn = RbyColumn.get(column);
+    if (theColumn != null) {
+      theColumn.remove(row);
+    }
+  }
+
+  /**
    * Left-inverts a tall skinny matrix. The left inverse of M is ( (MT * M)^-1 * MT ).
    *
    * @param M tall skinny matrix to left-invert

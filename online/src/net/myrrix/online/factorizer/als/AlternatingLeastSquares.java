@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.JVMEnvironment;
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
@@ -136,12 +137,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
   private static double getAlpha() {
     String alphaProperty = System.getProperty("model.als.alpha");
-    return alphaProperty == null ? DEFAULT_ALPHA : Double.parseDouble(alphaProperty);
+    return alphaProperty == null ? DEFAULT_ALPHA : LangUtils.parseDouble(alphaProperty);
   }
 
   private static double getLambda() {
     String lambdaProperty = System.getProperty("model.als.lambda");
-    return lambdaProperty == null ? DEFAULT_LAMBDA: Double.parseDouble(lambdaProperty);
+    return lambdaProperty == null ? DEFAULT_LAMBDA: LangUtils.parseDouble(lambdaProperty);
   }
 
   @Override

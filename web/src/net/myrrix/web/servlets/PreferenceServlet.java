@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.TasteException;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 
@@ -47,7 +48,13 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
     long itemID = Long.parseLong(pathComponents.next());
-    float prefValue = readValue(request);
+    float prefValue;
+    try {
+      prefValue = readValue(request);
+    } catch (IllegalArgumentException iae) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Bad value");
+      return;
+    }
     MyrrixRecommender recommender = getRecommender();
     try {
       recommender.setPreference(userID, itemID, prefValue);
@@ -85,7 +92,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     } finally {
       Closeables.closeQuietly(reader);
     }
-    return line != null && !line.isEmpty() ? Float.parseFloat(line) : 1.0f;
+    return line != null && !line.isEmpty() ? LangUtils.parseFloat(line) : 1.0f;
   }
 
   @Override

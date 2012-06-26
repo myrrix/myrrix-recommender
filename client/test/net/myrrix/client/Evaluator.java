@@ -49,6 +49,7 @@ import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.web.Runner;
 import net.myrrix.web.RunnerConfiguration;
 
@@ -227,7 +228,8 @@ public final class Evaluator {
     return testData;
   }
 
-  private static Multimap<Long,RecommendedItem> readDataFile(File dataFile, double evaluationPercentage) throws IOException {
+  private static Multimap<Long,RecommendedItem> readDataFile(File dataFile,
+                                                             double evaluationPercentage) throws IOException {
     // evaluationPercentage filters per user and item, not per datum, since time scales with users and
     // items. We select sqrt(evaluationPercentage) of users and items to overall select about evaluationPercentage
     // of all data.
@@ -244,8 +246,15 @@ public final class Evaluator {
         if (itemIDString.hashCode() % 1000000 <= perMillion) {
           long userID = Long.parseLong(userIDString);
           long itemID = Long.parseLong(itemIDString);
-          float value = parts.hasNext() ? Float.parseFloat(parts.next()) : 1.0f;
-          data.put(userID, new GenericRecommendedItem(itemID, value));
+          if (parts.hasNext()) {
+            String token = parts.next().trim();
+            if (!token.isEmpty()) {
+              data.put(userID, new GenericRecommendedItem(itemID, LangUtils.parseFloat(token)));
+            }
+            // Ignore remove lines
+          } else {
+            data.put(userID, new GenericRecommendedItem(itemID, 1.0f));
+          }
         }
       }
       if (++count % 100000 == 0) {

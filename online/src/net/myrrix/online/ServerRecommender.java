@@ -49,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
 import net.myrrix.common.IOUtils;
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.common.SimpleVectorMath;
@@ -120,8 +121,16 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         Iterator<String> tokens = DELIMITER.split(line).iterator();
         long userID = Long.parseLong(tokens.next());
         long itemID = Long.parseLong(tokens.next());
-        float prefValue = tokens.hasNext() ? Float.parseFloat(tokens.next()) : 1.0f;
-        setPreference(userID, itemID, prefValue);
+        if (tokens.hasNext()) {
+          String token = tokens.next().trim();
+          if (token.isEmpty()) {
+            removePreference(userID, itemID);
+          } else {
+            setPreference(userID, itemID, LangUtils.parseFloat(tokens.next()));
+          }
+        } else {
+          setPreference(userID, itemID);
+        }
       }
     } catch (IOException ioe) {
       throw new TasteException(ioe);
@@ -382,9 +391,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         userFeatures[i] += value * userFoldIn[i];
       }
     }
-
-    System.out.println("New user features after set " + Arrays.toString(userFeatures));
-
     
     FastByIDMap<float[]> Y = generation.getY();
     
@@ -490,6 +496,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     try {
       generationManager.append(userID, itemID, -value);
+      generationManager.remove(userID, itemID);
     } catch (IOException ioe) {
       log.warn("Could not append datum; continuing", ioe);
     }
@@ -535,8 +542,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           userFeatures[i] -= value * userFoldIn[i];
         }
       }
-
-      System.out.println("New user features after remove " + Arrays.toString(userFeatures));
 
     }
 

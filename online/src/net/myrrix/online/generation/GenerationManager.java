@@ -42,12 +42,22 @@ public interface GenerationManager extends Closeable, Refreshable {
    * Sends a new user / item association to the component responsible for later recomputing
    * the model based on this, and other, updates.
    *
-   * @param userID user involved in new association, or preference
+   * @param userID user involved in new association
    * @param itemID item involved
    * @param value strength of the user/item association; must be positive
    * @throws IOException if an error occurs while sending the update
    */
   void append(long userID, long itemID, float value) throws IOException;
+
+  /**
+   * Records that the user-item association should be removed. This is different from recording a
+   * negative association.
+   *
+   * @param userID user involved in new association
+   * @param itemID item involved
+   * @throws IOException if an error occurs while sending the update
+   */
+  void remove(long userID, long itemID) throws IOException;
 
   /**
    * @return instance ID of the recommender system that this object is managing

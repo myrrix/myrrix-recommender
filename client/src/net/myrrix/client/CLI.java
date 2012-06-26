@@ -33,6 +33,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import net.myrrix.client.translating.TranslatedRecommendedItem;
 import net.myrrix.client.translating.TranslatingClientRecommender;
 import net.myrrix.client.translating.TranslatingRecommender;
+import net.myrrix.common.LangUtils;
 
 /**
  * <p>A basic command-line interface to the Java client. It is run like so:</p>
@@ -337,7 +338,7 @@ public final class CLI {
       if (programArgs.length == 3) {
         recommender.removePreference(userID, itemID);
       } else {
-        float value = Float.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(programArgs[3]);
         recommender.removePreference(userID, itemID, value);
       }
     } else {
@@ -346,7 +347,7 @@ public final class CLI {
       if (programArgs.length == 3) {
         translatingRecommender.removePreference(userID, itemID);
       } else {
-        float value = Float.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(programArgs[3]);
         translatingRecommender.removePreference(userID, itemID, value);
       }
     }
@@ -365,7 +366,7 @@ public final class CLI {
       if (programArgs.length == 3) {
         recommender.setPreference(userID, itemID);
       } else {
-        float value = Float.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(programArgs[3]);
         recommender.setPreference(userID, itemID, value);
       }
     } else {
@@ -374,7 +375,7 @@ public final class CLI {
       if (programArgs.length == 3) {
         translatingRecommender.setPreference(userID, itemID);
       } else {
-        float value = Float.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(programArgs[3]);
         translatingRecommender.setPreference(userID, itemID, value);
       }
     }
