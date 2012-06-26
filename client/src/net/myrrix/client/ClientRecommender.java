@@ -497,32 +497,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException {
-    StringBuilder urlPath = new StringBuilder();
-    urlPath.append("/recommendToAnonymous");
-    for (long itemID : itemIDs) {
-      urlPath.append('/').append(itemID);
-    }
-    urlPath.append("?howMany=").append(howMany);
-    try {
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", null);
-      try {
-        switch (connection.getResponseCode()) {
-          case HttpURLConnection.HTTP_OK:
-            break;
-          case HttpURLConnection.HTTP_NOT_FOUND:
-            throw new NoSuchItemException(Arrays.toString(itemIDs));
-          case HttpURLConnection.HTTP_UNAVAILABLE:
-            throw new NotReadyException();
-          default:
-            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
-        }
-        return consumeItems(connection);
-      } finally {
-        connection.disconnect();
-      }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
-    }
+    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous");
   }
 
   /**
@@ -540,8 +515,12 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException {
+    return anonymousOrSimilar(itemIDs, howMany, "/similarity");
+  }
+
+  private List<RecommendedItem> anonymousOrSimilar(long[] itemIDs, int howMany, String path) throws TasteException {
     StringBuilder urlPath = new StringBuilder();
-    urlPath.append("/similarity");
+    urlPath.append(path);
     for (long itemID : itemIDs) {
       urlPath.append('/').append(itemID);
     }
@@ -563,7 +542,6 @@ public final class ClientRecommender implements MyrrixRecommender {
       } finally {
         connection.disconnect();
       }
-
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     }
