@@ -68,7 +68,7 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
       if (httpStatus == 200) {
         var responseText = xmlHttp.responseText;
         if (responseText.length == 0) {
-          responseText = "[HTTP Status " + httpStatus + "]";
+          responseText = "[empty]";
         }
         resultElement.innerHTML = responseText;
       } else {

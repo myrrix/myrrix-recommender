@@ -126,7 +126,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           if (token.isEmpty()) {
             removePreference(userID, itemID);
           } else {
-            setPreference(userID, itemID, LangUtils.parseFloat(tokens.next()));
+            setPreference(userID, itemID, LangUtils.parseFloat(token));
           }
         } else {
           setPreference(userID, itemID);
