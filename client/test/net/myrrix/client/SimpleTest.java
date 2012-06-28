@@ -255,7 +255,7 @@ public final class SimpleTest extends AbstractClientTest {
 
     client.removePreference(0L, 2L);
     recs = client.recommend(0L, 1);
-    assertEquals(50L, recs.get(0).getItemID());
+    assertEquals(181L, recs.get(0).getItemID());
 
     client.removePreference(0L, 1L);
     try {

@@ -132,13 +132,6 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
-  public void removePreference(String userID, String itemID, float value) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
-    delegate.removePreference(longUserID, longItemID, value);
-  }
-
-  @Override
   public List<TranslatedRecommendedItem> mostSimilarItems(String itemID, int howMany) throws TasteException {
     long longItemID = itemTranslator.toLongID(itemID);
     List<RecommendedItem> originals = delegate.mostSimilarItems(longItemID, howMany);

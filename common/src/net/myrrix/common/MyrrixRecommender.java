@@ -139,16 +139,18 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   void setPreference(long userID, long itemID, float value) throws TasteException;
 
   /**
-   * <p>Operates like the opposite of {@link #setPreference(long, long, float)}. Calling this method with
-   * value {@code x} is like calling {@link #setPreference(long, long, float)} with value
-   * {@code -x}.</p>
-   *
-   * <p>However, this method will additionally remove the item from the user's set of known items,
+   * <p>This method will remove an item from the user's set of known items,
    * making it eligible for recommendation again. If the user has no more items, this method will remove
    * the user too, such that new calls to {@link #recommend(long, int)} for example
    * will fail with {@link org.apache.mahout.cf.taste.common.NoSuchUserException}.</p>
+   *
+   * <p>It does not affect any user-item association strengths.</p>
+   *
+   * <p>Contrast with calling {@link #setPreference(long, long, float)} with a negative value,
+   * which merely records a negative association between the user and item.</p>
    */
-  void removePreference(long userID, long itemID, float value) throws TasteException;
+  @Override
+  void removePreference(long userID, long itemID) throws TasteException;
 
   /**
    * @return true if and only if the instance is ready to make recommendations; may be false for example

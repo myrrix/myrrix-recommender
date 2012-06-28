@@ -36,7 +36,7 @@ import net.myrrix.common.NotReadyException;
  * the value is 1.0, otherwise the value in the request body's first line is used.</p>
  *
  * <p>Also responds to a DELETE request to the same path, with the same defaults. This corresponds
- * to calling {@link MyrrixRecommender#removePreference(long, long, float)} instead.</p>
+ * to calling {@link MyrrixRecommender#removePreference(long, long)} instead.</p>
  *
  * @author Sean Owen
  */
@@ -72,10 +72,9 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
     long itemID = Long.parseLong(pathComponents.next());
-    float prefValue = readValue(request);
     MyrrixRecommender recommender = getRecommender();
     try {
-      recommender.removePreference(userID, itemID, prefValue);
+      recommender.removePreference(userID, itemID);
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {

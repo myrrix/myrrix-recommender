@@ -249,17 +249,9 @@ public final class ClientRecommender implements MyrrixRecommender {
     doSetOrRemove(userID, itemID, value, true);
   }
 
-  /**
-   * Calls {@link #setPreference(long, long, float)} with value -1.0.
-   */
   @Override
   public void removePreference(long userID, long itemID) throws TasteException {
-    removePreference(userID, itemID, 1.0f);
-  }
-
-  @Override
-  public void removePreference(long userID, long itemID, float value) throws TasteException {
-    doSetOrRemove(userID, itemID, value, false);
+    doSetOrRemove(userID, itemID, 1.0f, false); // 1.0 is a dummy value that gets ignored
   }
 
   private void doSetOrRemove(long userID, long itemID, float value, boolean set) throws TasteException {

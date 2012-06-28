@@ -72,7 +72,7 @@ import net.myrrix.common.LangUtils;
  *
  * <ul>
  *   <li>{@code setPreference userID itemID [value]}</li>
- *   <li>{@code removePreference userID itemID [value]}</li>
+ *   <li>{@code removePreference userID itemID}</li>
  *   <li>{@code ingest csvFile}</li>
  *   <li>{@code estimatePreference userID itemID}</li>
  *   <li>{@code recommend userID howMany [considerKnownItems]}</li>
@@ -329,27 +329,17 @@ public final class CLI {
   private static boolean doRemovePreference(String[] programArgs,
                                             ClientRecommender recommender,
                                             TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length != 3 && programArgs.length != 4) {
+    if (programArgs.length != 3) {
       return false;
     }
     if (translatingRecommender == null) {
       long userID = Long.parseLong(programArgs[1]);
       long itemID = Long.parseLong(programArgs[2]);
-      if (programArgs.length == 3) {
-        recommender.removePreference(userID, itemID);
-      } else {
-        float value = LangUtils.parseFloat(programArgs[3]);
-        recommender.removePreference(userID, itemID, value);
-      }
+      recommender.removePreference(userID, itemID);
     } else {
       String userID = programArgs[1];
       String itemID = programArgs[2];
-      if (programArgs.length == 3) {
-        translatingRecommender.removePreference(userID, itemID);
-      } else {
-        float value = LangUtils.parseFloat(programArgs[3]);
-        translatingRecommender.removePreference(userID, itemID, value);
-      }
+      translatingRecommender.removePreference(userID, itemID);
     }
     return true;
   }

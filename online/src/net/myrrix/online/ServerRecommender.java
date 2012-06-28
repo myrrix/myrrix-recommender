@@ -452,16 +452,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
   }
 
-  /**
-   * Calls {@link #removePreference(long, long, float)} with value 1.0.
-   */
   @Override
   public void removePreference(long userID, long itemID) throws NotReadyException {
-    removePreference(userID, itemID, 1.0f);
-  }
-
-  @Override
-  public void removePreference(long userID, long itemID, float value) throws NotReadyException {
 
     Generation generation = getCurrentGeneration();
 
@@ -495,7 +487,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     // We can proceed with the request
 
     try {
-      generationManager.append(userID, itemID, -value);
       generationManager.remove(userID, itemID);
     } catch (IOException ioe) {
       log.warn("Could not append datum; continuing", ioe);
@@ -522,49 +513,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         xWriteLock.unlock();
       }
 
-    } else {
-
-      Lock xReadLock = xLock.readLock();
-      float[] userFeatures;
-      xReadLock.lock();
-      try {
-        userFeatures = X.get(userID);
-      } finally {
-        xReadLock.unlock();
-      }
-
-      if (userFeatures == null) {
-        throw new IllegalStateException("User feature don't exist but known items do?");
-      }
-      float[] userFoldIn = generation.getYTRightInverse().get(itemID);
-      if (userFoldIn != null) {
-        for (int i = 0; i < userFeatures.length; i++) {
-          userFeatures[i] -= value * userFoldIn[i];
-        }
-      }
-
-    }
-
-    // Items are different. We don't track users per item and so never remove items in the same way
-
-    FastByIDMap<float[]> Y = generation.getY();
-
-    Lock yLock = generation.getYLock().readLock();
-    float[] itemFeatures;
-    yLock.lock();
-    try {
-      itemFeatures = Y.get(itemID);
-    } finally {
-      yLock.unlock();
-    }
-    
-    if (itemFeatures != null) {
-      float[] itemFoldIn = generation.getXLeftInverse().get(userID);
-      if (itemFoldIn != null) {
-        for (int i = 0; i < itemFeatures.length; i++) {
-          itemFeatures[i] -= value * itemFoldIn[i];
-        }
-      }
     }
 
   }

@@ -81,11 +81,6 @@ public interface TranslatingRecommender {
   void removePreference(String userID, String itemID) throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#removePreference(long, long, float)
-   */
-  void removePreference(String userID, String itemID, float value) throws TasteException;
-
-  /**
    * @see net.myrrix.common.MyrrixRecommender#mostSimilarItems(long, int)
    */
   List<TranslatedRecommendedItem> mostSimilarItems(String itemID, int howMany) throws TasteException;
