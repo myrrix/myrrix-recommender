@@ -148,7 +148,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   @Override
   public Void call() throws ExecutionException, InterruptedException {
 
-    X = new FastByIDMap<float[]>(RbyRow.size(), 1.2f);
+    X = new FastByIDMap<float[]>(RbyRow.size(), 1.25f);
 
     int iterationsToRun;
     if (previousY == null ||
@@ -182,7 +182,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   }
 
   private FastByIDMap<float[]> constructInitialY() {
-    FastByIDMap<float[]> randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.2f);
+    FastByIDMap<float[]> randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
     Random random = RandomUtils.getRandom();
     for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyColumn.entrySet()) {
       float[] Yrow = new float[features];
@@ -298,7 +298,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     public void run() {
       double alpha = getAlpha();
       double lambda = getLambda() * alpha;
-      FastByIDMap<float[]> WuYT = new FastByIDMap<float[]>(10000, 1.2f);
+      FastByIDMap<float[]> WuYT = new FastByIDMap<float[]>(10000, 1.25f);
       for (Pair<Long,FastByIDFloatMap> work : workUnit) {
         FastByIDFloatMap ru = work.getSecond();
 
@@ -345,7 +345,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     public void run() {
       double alpha = getAlpha();
       double lambda = getLambda() * alpha;
-      FastByIDMap<float[]> WiXT = new FastByIDMap<float[]>(10000, 1.2f);
+      FastByIDMap<float[]> WiXT = new FastByIDMap<float[]>(10000, 1.25f);
       for (Pair<Long,FastByIDFloatMap> work : workUnit) {
         FastByIDFloatMap ri = work.getSecond();
 

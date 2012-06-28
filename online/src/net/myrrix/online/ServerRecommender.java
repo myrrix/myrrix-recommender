@@ -271,7 +271,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     }
 
-    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.2f);
+    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.25f);
     for (long itemID : itemIDs) {
       userKnownItemIDs.add(itemID);
     }
@@ -652,7 +652,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
       FastByIDMap<float[]> toFeatures;
       synchronized (userKnownItemIDs) {
-        toFeatures = new FastByIDMap<float[]>(userKnownItemIDs.size(), 1.2f);
+        toFeatures = new FastByIDMap<float[]>(userKnownItemIDs.size(), 1.25f);
         LongPrimitiveIterator it = userKnownItemIDs.iterator();
         while (it.hasNext()) {
           long fromItemID = it.nextLong();

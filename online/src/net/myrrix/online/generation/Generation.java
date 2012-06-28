@@ -113,26 +113,6 @@ public final class Generation {
                           knownItemLock);
   }
 
-  /*
-  private static FastByIDMap<FastIDSet> transpose(FastByIDMap<FastIDSet> from) {
-    FastByIDMap<FastIDSet> transposed = new FastByIDMap<FastIDSet>(1000, 1.2f);
-    for (FastByIDMap<FastIDSet>.MapEntry entry : from.entrySet()) {
-      long userID = entry.getKey();
-      LongPrimitiveIterator it = entry.getValue().iterator();
-      while (it.hasNext()) {
-        long itemID = it.nextLong();
-        FastIDSet set = transposed.get(itemID);
-        if (set == null) {
-          set = new FastIDSet();
-          transposed.put(itemID, set);
-        }
-        set.add(userID);
-      }
-    }
-    return transposed;
-  }
-   */
-
   /**
    * @return the number of "users" in the model (rows of {@link #getX()}
    */

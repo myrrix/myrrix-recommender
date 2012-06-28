@@ -66,11 +66,11 @@ public final class GenerationSerializer implements Serializable {
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     int knownItemIDsCount = in.readInt();
-    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.2f);
+    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
     for (int i = 0; i < knownItemIDsCount; i++) {
       long id = in.readLong();
       int setCount = in.readInt();
-      FastIDSet set = new FastIDSet(setCount, 1.2f);
+      FastIDSet set = new FastIDSet(setCount, 1.25f);
       for (int j = 0; j < setCount; j++) {
         set.add(in.readLong());
       }
@@ -86,7 +86,7 @@ public final class GenerationSerializer implements Serializable {
    */
   private static FastByIDMap<float[]> readMatrix(ObjectInputStream in) throws IOException {
     int count = in.readInt();
-    FastByIDMap<float[]> matrix = new FastByIDMap<float[]>(count, 1.2f);
+    FastByIDMap<float[]> matrix = new FastByIDMap<float[]>(count, 1.25f);
     for (int i = 0; i < count; i++) {
       long id = in.readLong();
       float[] features = new float[in.readInt()];
