@@ -16,12 +16,27 @@
 
 package net.myrrix.client.translating;
 
-public final class GenericTranslatedRecommendedItem implements TranslatedRecommendedItem {
+import java.io.Serializable;
+
+import com.google.common.base.Preconditions;
+import org.apache.mahout.common.RandomUtils;
+
+/**
+ * <p>A simple implementation of {@link TranslatedRecommendedItem}.</p>
+ *
+ * @author Sean Owen
+ */
+public final class GenericTranslatedRecommendedItem implements TranslatedRecommendedItem, Serializable {
 
   private final String itemID;
   private final float value;
 
+  /**
+   * @throws IllegalArgumentException if item is null or value is NaN or infinite
+   */
   public GenericTranslatedRecommendedItem(String itemID, float value) {
+    Preconditions.checkNotNull(itemID);
+    Preconditions.checkArgument(!Float.isNaN(value) && !Float.isInfinite(value));
     this.itemID = itemID;
     this.value = value;
   }
@@ -34,6 +49,25 @@ public final class GenericTranslatedRecommendedItem implements TranslatedRecomme
   @Override
   public float getValue() {
     return value;
+  }
+
+  @Override
+  public String toString() {
+    return "GenericTranslatedRecommendedItem[item:" + itemID + ", value:" + value + ']';
+  }
+
+  @Override
+  public int hashCode() {
+    return itemID.hashCode() ^ RandomUtils.hashFloat(value);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (!(o instanceof GenericTranslatedRecommendedItem)) {
+      return false;
+    }
+    GenericTranslatedRecommendedItem other = (GenericTranslatedRecommendedItem) o;
+    return itemID.equals(other.getItemID()) && value == other.getValue();
   }
   
 }
