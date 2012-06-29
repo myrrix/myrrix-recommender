@@ -16,12 +16,12 @@
 
 package net.myrrix.client.translating;
 
-final class GenericTranslatedRecommendedItem implements TranslatedRecommendedItem {
+public final class GenericTranslatedRecommendedItem implements TranslatedRecommendedItem {
 
   private final String itemID;
   private final float value;
 
-  GenericTranslatedRecommendedItem(String itemID, float value) {
+  public GenericTranslatedRecommendedItem(String itemID, float value) {
     this.itemID = itemID;
     this.value = value;
   }
