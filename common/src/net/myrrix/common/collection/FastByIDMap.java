@@ -506,7 +506,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       
     private int index;
     
-    private void setIndex(int index) {
+    void setIndex(int index) {
       this.index = index;
     }
     

@@ -26,6 +26,8 @@ import java.net.UnknownHostException;
  */
 public final class JVMEnvironment {
 
+  private static final String UNKNOWN_HOST = "Unknown";
+
   private final Runtime runtime;
   private String hostName;
 
@@ -59,12 +61,11 @@ public final class JVMEnvironment {
   }
 
   public String getHostName() {
-    if (hostName == null) {
+    if (hostName == null || UNKNOWN_HOST.equals(hostName)) {
       try {
         hostName = InetAddress.getLocalHost().getHostName();
       } catch (UnknownHostException uhe) {
-        // Can't happen
-        throw new IllegalStateException(uhe);
+        hostName = UNKNOWN_HOST;
       }
     }
     return hostName;

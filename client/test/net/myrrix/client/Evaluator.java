@@ -212,7 +212,7 @@ public final class Evaluator {
 
         int numTraining = (int) (trainPercentage * userPrefs.size());
         for (RecommendedItem rec : userPrefs.subList(0, numTraining)) {
-          trainingOut.write(String.valueOf(userID) + DELIMITER + rec.getItemID() + DELIMITER + rec.getValue() + '\n');
+          trainingOut.write(Long.toString(userID) + DELIMITER + rec.getItemID() + DELIMITER + rec.getValue() + '\n');
         }
         // Highest ratings are at end -- take those as test
         for (RecommendedItem rec : userPrefs.subList(numTraining, userPrefs.size())) {

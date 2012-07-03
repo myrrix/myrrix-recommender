@@ -17,13 +17,12 @@
 
 package net.myrrix.common;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-import com.google.common.collect.Lists;
-import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 /**
@@ -44,17 +43,19 @@ public final class TopN {
   public static List<RecommendedItem> selectTopN(Iterable<RecommendedItem> values, int n) {
 
     // Holding n+2 entries, to compute n+1 top items first
-    Queue<RecommendedItem> topN = new PriorityQueue<RecommendedItem>(n + 2, ByValueAscComparator.INSTANCE);
+    Queue<MutableRecommendedItem> topN =
+        new PriorityQueue<MutableRecommendedItem>(n + 2, ByValueAscComparator.INSTANCE);
     for (RecommendedItem value : values) {
       if (value != null) {
         long itemID = value.getItemID();
         if (topN.size() <= n) {
-          topN.add(new GenericRecommendedItem(itemID, value.getValue()));
+          topN.add(new MutableRecommendedItem(itemID, value.getValue()));
         } else {
           float valueScore = value.getValue();
           if (valueScore > topN.peek().getValue()) {
-            topN.add(new GenericRecommendedItem(itemID, valueScore));
-            topN.poll();
+            MutableRecommendedItem recycled = topN.poll();
+            recycled.set(itemID, valueScore);
+            topN.add(recycled);
           }
         }
       }
@@ -64,17 +65,19 @@ public final class TopN {
       return Collections.emptyList();
     }
 
-    RecommendedItem minimum = topN.poll(); // pick off n+1th largest element
-    // ... and anything equal
-    while (!topN.isEmpty() && ByValueAscComparator.INSTANCE.compare(topN.peek(), minimum) <= 0) {
-      topN.poll();
+    if (topN.size() > n) {
+      RecommendedItem minimum = topN.poll(); // pick off n+1th largest element
+      // ... and anything equal
+      while (!topN.isEmpty() && ByValueAscComparator.INSTANCE.compare(topN.peek(), minimum) <= 0) {
+        topN.poll();
+      }
     }
 
     if (topN.isEmpty()) {
       return Collections.emptyList();
     }
 
-    List<RecommendedItem> result = Lists.newArrayList(topN);
+    List<RecommendedItem> result = new ArrayList<RecommendedItem>(topN);
     Collections.sort(result, Collections.reverseOrder(ByValueAscComparator.INSTANCE));
     return result;
   }

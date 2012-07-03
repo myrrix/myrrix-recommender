@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -31,6 +30,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -74,8 +74,30 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private final GenerationManager generationManager;
 
+  /**
+   * Calls {@link #ServerRecommender(long, File, int, int)} with instance ID 0, and no partitions (partition 0 of
+   * 1 total).
+   */
+  public ServerRecommender(File localInputDir) {
+    this(0L, localInputDir, 0, 1);
+  }
+
+  /**
+   *
+   * @param instanceID instance ID that the Serving Layer is serving. May be 0 for local mode.
+   * @param localInputDir local input and model file directory
+   * @param partition partition number in a partitioned distributed mode. 0 if not partitioned.
+   * @param numPartitions total partitions in partitioned distributed mode. 1 if not partitioned.
+   */
   public ServerRecommender(long instanceID, File localInputDir, int partition, int numPartitions) {
-    log.info("Creating ServingRecommender for instance {} and with local work dir {}", instanceID, localInputDir);
+    Preconditions.checkArgument(instanceID >= 0L);
+    Preconditions.checkNotNull(localInputDir);
+    Preconditions.checkArgument(numPartitions > 0);
+    Preconditions.checkArgument(partition >= 0 && partition < numPartitions);
+
+    log.info("Creating ServingRecommender for instance {} and with local work dir {}, partition {} of {}",
+             new Object[] { instanceID, localInputDir, partition, numPartitions });
+
     generationManager = ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
                                                   GenerationManager.class,
                                                   new Class<?>[] { long.class, File.class, int.class, int.class },

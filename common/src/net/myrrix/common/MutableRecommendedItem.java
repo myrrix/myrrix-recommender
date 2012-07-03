@@ -16,6 +16,8 @@
 
 package net.myrrix.common;
 
+import java.io.Serializable;
+
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 /**
@@ -24,7 +26,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
  *
  * @author Sean Owen
  */
-public final class MutableRecommendedItem implements RecommendedItem {
+public final class MutableRecommendedItem implements RecommendedItem, Serializable {
 
   private long itemID;
   private float value;
@@ -37,6 +39,16 @@ public final class MutableRecommendedItem implements RecommendedItem {
   @Override
   public float getValue() {
     return value;
+  }
+
+  public MutableRecommendedItem() {
+    this.itemID = Long.MIN_VALUE;
+    this.value = Float.NaN;
+  }
+
+  public MutableRecommendedItem(long itemID, float value) {
+    this.itemID = itemID;
+    this.value = value;
   }
   
   public void set(long itemID, float value) {

@@ -262,9 +262,9 @@ public final class ClientRecommender implements MyrrixRecommender {
       connection.setDoOutput(sendValue);
       try {
         if (sendValue) {
-          byte[] bytes = String.valueOf(value).getBytes(Charsets.UTF_8);
+          byte[] bytes = Float.toString(value).getBytes(Charsets.UTF_8);
           connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-          connection.setRequestProperty("Content-Length", String.valueOf(bytes.length));
+          connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
           OutputStream out = connection.getOutputStream();
           out.write(bytes);
           Closeables.closeQuietly(out);

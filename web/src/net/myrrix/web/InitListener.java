@@ -100,7 +100,7 @@ public final class InitListener implements ServletContextListener {
       context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
     }
 
-    int numPartitions = 0;
+    int numPartitions = 1;
     String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
     if (allPartitionsSpecString != null) {
       List<List<Pair<String,Integer>>> allPartitions =

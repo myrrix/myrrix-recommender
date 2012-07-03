@@ -135,7 +135,7 @@ public final class MatrixUtils {
     RealMatrix MTM = transposeTimesSelf(M);
     RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
     // Second argument is really MT. Passing M since it will be treated as MT.
-    return multiply(MTMinverse, M, null);
+    return multiply(MTMinverse, M);
   }
 
   /**
@@ -154,28 +154,36 @@ public final class MatrixUtils {
     // to end up with the transpose of the answer. But it doesn't matter since the same representation is used
     // either way and is not ambiguous. Again passing M and second argument when it's conceptually MT as it
     // will be treated correctly.
-    return multiply(MTMinverse.transpose(), M, null);
+    return multiply(MTMinverse.transpose(), M);
   }
 
   /**
    * @param M small {@link RealMatrix}
    * @param S wide, short matrix
-   * @return M * S
+   * @return M * S as a newly allocated matrix
+   * @see #multiply(RealMatrix, FastByIDMap, FastByIDMap)
    */
-  public static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S, FastByIDMap<float[]> result) {
-    if (result == null) {
-      result = new FastByIDMap<float[]>(S.size(), 1.25f);
-    } else {
-      result.clear();
-    }
+  public static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S) {
+    FastByIDMap<float[]> result = new FastByIDMap<float[]>(S.size(), 1.25f);
     double[][] matrixData = accessMatrixDataDirectly(M);
     for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
-      long id = entry.getKey();
-      float[] vector = entry.getValue();
-      float[] resultVector = matrixMultiply(matrixData, vector);
-      result.put(id, resultVector);
+      result.put(entry.getKey(), matrixMultiply(matrixData, entry.getValue()));
     }
     return result;
+  }
+
+  /**
+   * @param M small {@link RealMatrix}
+   * @param S wide, short matrix
+   * @param result existing matrix to clear and fill with M * S
+   * @see #multiply(RealMatrix, FastByIDMap)
+   */
+  public static void multiply(RealMatrix M, FastByIDMap<float[]> S, FastByIDMap<float[]> result) {
+    result.clear();
+    double[][] matrixData = accessMatrixDataDirectly(M);
+    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
+      result.put(entry.getKey(), matrixMultiply(matrixData, entry.getValue()));
+    }
   }
 
   /**
@@ -309,11 +317,11 @@ public final class MatrixUtils {
   }
 
   private static void appendWithPadOrTruncate(long value, StringBuilder to) {
-    appendWithPadOrTruncate(String.valueOf(value), to);
+    appendWithPadOrTruncate(Long.toString(value), to);
   }
 
   private static void appendWithPadOrTruncate(float value, StringBuilder to) {
-    String stringValue = String.valueOf(value);
+    String stringValue = Float.toString(value);
     if (value >= 0.0f) {
       stringValue = ' ' + stringValue;
     }

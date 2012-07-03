@@ -75,8 +75,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private FastByIDMap<float[]> X;
   private FastByIDMap<float[]> Y;
   private FastByIDMap<float[]> previousY;
-  private RealMatrix XTX;
-  private RealMatrix YTY;
 
   /**
    * Uses default number of feature and iterations.
@@ -135,16 +133,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     this.previousY = previousY;
   }
 
-  private static double getAlpha() {
-    String alphaProperty = System.getProperty("model.als.alpha");
-    return alphaProperty == null ? DEFAULT_ALPHA : LangUtils.parseDouble(alphaProperty);
-  }
-
-  private static double getLambda() {
-    String lambdaProperty = System.getProperty("model.als.lambda");
-    return lambdaProperty == null ? DEFAULT_LAMBDA: LangUtils.parseDouble(lambdaProperty);
-  }
-
   @Override
   public Void call() throws ExecutionException, InterruptedException {
 
@@ -163,12 +151,16 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       iterationsToRun = iterations;
     }
 
-    log.info("Starting {} iterations...", iterationsToRun);
-
     // This will be used to compute rows/columns in parallel during iteration
+
+    String threadsString = System.getProperty("model.threads");
+    int numThreads =
+        threadsString == null ? Runtime.getRuntime().availableProcessors() : Integer.parseInt(threadsString);
     ExecutorService executor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new NamedThreadFactory(false, "AlternatingLeastSquares"));
+        Executors.newFixedThreadPool(numThreads, new NamedThreadFactory(false, "AlternatingLeastSquares"));
+
+    log.info("Starting {} iterations with {} threads", iterationsToRun, numThreads);
+
     try {
       for (int i = 0; i < iterationsToRun; i++) {
         iterateXFromY(executor);
@@ -184,14 +176,15 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private FastByIDMap<float[]> constructInitialY() {
     FastByIDMap<float[]> randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
     Random random = RandomUtils.getRandom();
+    // The expected length of a vector from origin to random point in the unit f-dimensional hypercube is
+    // sqrt(f/3). We've picked a vector to a point in the "half" hypercube (bounds at 0.5 not 1). Expected
+    // length is sqrt(f/12). We expected actual feature vectors to converge to unit vectors. So start off
+    // by making the expected random vector length 1.
+    int features = this.features;
+    double normalization = Math.sqrt(features / 12.0);
     for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyColumn.entrySet()) {
       float[] Yrow = new float[features];
       for (int col = 0; col < features; col++) {
-      // The expected length of a vector from origin to random point in the unit f-dimensional hypercube is
-      // sqrt(f/3). We've picked a vector to a point in the "half" hypercube (bounds at 0.5 not 1). Expected
-      // length is sqrt(f/12). We expected actual feature vectors to converge to unit vectors. So start off
-      // by making the expected random vector length 1.
-      double normalization = Math.sqrt(features / 12.0);
         Yrow[col] = (float) ((random.nextDouble() - 0.5) / normalization);
       }
       randomY.put(entry.getKey(), Yrow);
@@ -200,44 +193,23 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   }
 
   /**
-   * @param M tall, skinny matrix (sparse rows, dense columns)
-   * @param D sparse diagonal matrix
-   * @return MT * D * M
-   */
-  private RealMatrix multiplySparseMiddleDiagonal(FastByIDMap<float[]> M, FastByIDFloatMap D) {
-    double alpha = getAlpha();
-    RealMatrix result = new OpenMapRealMatrix(features, features);
-    for (int row = 0; row < features; row++) {
-      for (int col = 0; col < features; col++) {
-        double total = 0.0;
-        for (FastByIDFloatMap.MapEntry entry : D.entrySet()) {
-          float[] leftVec = M.get(entry.getKey());
-          total += alpha * entry.getValue() * leftVec[row] * leftVec[col];
-        }
-        result.setEntry(row, col, total);
-      }
-    }
-    return result;
-  }
-
-  /**
    * Runs one iteration to compute X from Y.
    */
   private void iterateXFromY(ExecutorService executor) throws ExecutionException, InterruptedException {
 
-    YTY = MatrixUtils.transposeTimesSelf(Y);
+    RealMatrix YTY = MatrixUtils.transposeTimesSelf(Y);
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
     for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyRow.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new YWorker(workUnit)));
+        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new YWorker(workUnit)));
+      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
     }
 
     int count = 0;
@@ -257,20 +229,20 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
    * Runs one iteration to compute Y from X.
    */
   private void iterateYFromX(ExecutorService executor) throws ExecutionException, InterruptedException {
-    
-    XTX = MatrixUtils.transposeTimesSelf(X);
+
+    RealMatrix XTX = MatrixUtils.transposeTimesSelf(X);
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
     for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyColumn.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new XWorker(workUnit)));
+        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new XWorker(workUnit)));
+      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
     }
 
     int count = 0;
@@ -286,11 +258,23 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     }
   }
 
-  private final class YWorker implements Runnable {
+  private static final class Worker implements Runnable {
 
+    private final int features;
+    private final FastByIDMap<float[]> Y;
+    private final RealMatrix YTY;
+    private final FastByIDMap<float[]> X;
     private final List<Pair<Long,FastByIDFloatMap>> workUnit;
 
-    private YWorker(List<Pair<Long,FastByIDFloatMap>> workUnit) {
+    private Worker(int features,
+                   FastByIDMap<float[]> Y,
+                   RealMatrix YTY,
+                   FastByIDMap<float[]> X,
+                   List<Pair<Long,FastByIDFloatMap>> workUnit) {
+      this.features = features;
+      this.Y = Y;
+      this.YTY = YTY;
+      this.X = X;
       this.workUnit = workUnit;
     }
 
@@ -298,84 +282,107 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     public void run() {
       double alpha = getAlpha();
       double lambda = getLambda() * alpha;
+      int features = this.features;
+      // Reuse this data structure for speed:
       FastByIDMap<float[]> WuYT = new FastByIDMap<float[]>(10000, 1.25f);
+
+      // Each worker has a batch of rows to compute:
       for (Pair<Long,FastByIDFloatMap> work : workUnit) {
+
+        // Row (column) in original R matrix containing total association value. For simplicity we will
+        // talk about users and rows only in the comments and variables. It's symmetric for columns / items.
+        // This is Ru:
         FastByIDFloatMap ru = work.getSecond();
 
-        RealMatrix YTCuY = multiplySparseMiddleDiagonal(Y, ru);
+        // Cu vector elements are defined by: cu = 1 + alpha * ru . Note this is a dense vector.
+        // This computes YT * Cu * Y, but by computing YTY + YT * (Cu - I) * Y.
+        // Note that Cu - I is as sparse as Ru -- it is equal to Ru * alpha.
+
+        // First compute YT * (Cu - I) * Y. This is a small dense matrix.
+        // This method takes Y as parameter (of course), and takes Ru instead of Cu as argument. Internally
+        // it will use Ru * alpha which is the same as Cu - I.
+        RealMatrix YTCuY = computeYTCuIY(features, Y, ru);
+        // Now add YTY to really get YT * Cu * Y:
         YTCuY = YTCuY.add(YTY);
 
+        // Next we construct, from the original paper, (YT * (Cu - I) * Y) + (lambda * I).
+        // It seems that lambda really needs to be scaled up by the cardinality of Ru.
+        // So it is this that is added to each diagonal element:
         float cuFactor = (float) (ru.size() * lambda);
         for (int x = 0; x < features; x++) {
           YTCuY.addToEntry(x, x, cuFactor);
         }
+
+        // The result is inverted. This term is called Wu:
         RealMatrix Wu = new LUDecomposition(YTCuY).getSolver().getInverse();
 
-        FastByIDFloatMap Cupu = new FastByIDFloatMap();
-        for (FastByIDFloatMap.MapEntry ruEntry : ru.entrySet()) {
-          Cupu.put(ruEntry.getKey(), (float) (1.0 + alpha * ruEntry.getValue()));
+        // Next the term Cu * pu is computed. pu is 1 and 0, and is 1 anywhere Ru has an element. So this
+        // is just Cu, but retaining only terms where Ru has a value. cu = 1 + alpha * ru.
+        FastByIDFloatMap Cupu = ru.clone();
+        for (FastByIDFloatMap.MapEntry entry : Cupu.entrySet()) {
+          entry.setValue((float) (1.0 + alpha * entry.getValue()));
         }
 
+        // Next Wu * YT is computed:
         MatrixUtils.multiply(Wu, Y, WuYT);
-        float[] xu = new float[features];
-        for (int row = 0; row < features; row++) {
-          double total = 0.0;
-          for (FastByIDFloatMap.MapEntry cupuEntry : Cupu.entrySet()) {
-            total += cupuEntry.getValue() * WuYT.get(cupuEntry.getKey())[row];
-          }
-          xu[row] = (float) total;
-        }
 
+        // The overall result is finally computed as Wu * YT, times Cupu. Use Cupu's sparseness:
+        float[] xu = computeRow(features, WuYT, Cupu);
+
+        // Store result:
         synchronized (X) {
           X.put(work.getFirst(), xu);
         }
+
+        // Process is identical for computing Y from X. Swap X in for Y, Y for X, i for u, etc.
       }
     }
-  }
 
-  private final class XWorker implements Runnable {
-
-    private final List<Pair<Long,FastByIDFloatMap>> workUnit;
-
-    private XWorker(List<Pair<Long,FastByIDFloatMap>> workUnit) {
-      this.workUnit = workUnit;
+    private float[] computeRow(int features, FastByIDMap<float[]> wuYT, FastByIDFloatMap cupu) {
+      float[] xu = new float[features];
+      for (int row = 0; row < features; row++) {
+        double total = 0.0;
+        for (FastByIDFloatMap.MapEntry cupuEntry : cupu.entrySet()) {
+          total += cupuEntry.getValue() * wuYT.get(cupuEntry.getKey())[row];
+        }
+        xu[row] = (float) total;
+      }
+      return xu;
     }
 
-    @Override
-    public void run() {
+    /**
+     * @param M tall, skinny matrix (sparse rows, dense columns)
+     * @param D sparse diagonal matrix
+     * @return MT * (alpha * D) * M
+     */
+    private static RealMatrix computeYTCuIY(int features, FastByIDMap<float[]> M, FastByIDFloatMap D) {
       double alpha = getAlpha();
-      double lambda = getLambda() * alpha;
-      FastByIDMap<float[]> WiXT = new FastByIDMap<float[]>(10000, 1.25f);
-      for (Pair<Long,FastByIDFloatMap> work : workUnit) {
-        FastByIDFloatMap ri = work.getSecond();
-
-        RealMatrix XTCiX = multiplySparseMiddleDiagonal(X, ri);
-        XTCiX = XTCiX.add(XTX);
-
-        float ciFactor = (float) (ri.size() * lambda);
-        for (int x = 0; x < features; x++) {
-          XTCiX.addToEntry(x, x, ciFactor);
-        }
-        RealMatrix Wi = new LUDecomposition(XTCiX).getSolver().getInverse();
-
-        FastByIDFloatMap Cipi = new FastByIDFloatMap();
-        for (FastByIDFloatMap.MapEntry riEntry : ri.entrySet()) {
-          Cipi.put(riEntry.getKey(), (float) (1.0 + alpha * riEntry.getValue()));
-        }
-
-        MatrixUtils.multiply(Wi, X, WiXT);
-        float[] yi = new float[features];
-        for (int row = 0; row < features; row++) {
+      RealMatrix result = new OpenMapRealMatrix(features, features);
+      for (int row = 0; row < features; row++) {
+        for (int col = 0; col < features; col++) {
           double total = 0.0;
-          for (FastByIDFloatMap.MapEntry cipiEntry : Cipi.entrySet()) {
-            total += cipiEntry.getValue() * WiXT.get(cipiEntry.getKey())[row];
+          for (FastByIDFloatMap.MapEntry entry : D.entrySet()) {
+            // This vector is both a column vector of MT (the left multiplicand) and a row vector
+            // of M, the right multiplicand.
+            float[] leftVec = M.get(entry.getKey());
+            total += alpha * entry.getValue() * leftVec[row] * leftVec[col];
           }
-          yi[row] = (float) total;
-        }
-        synchronized (Y) {
-          Y.put(work.getFirst(), yi);
+          result.setEntry(row, col, total);
         }
       }
+      return result;
     }
+
+    private static double getAlpha() {
+      String alphaProperty = System.getProperty("model.als.alpha");
+      return alphaProperty == null ? DEFAULT_ALPHA : LangUtils.parseDouble(alphaProperty);
+    }
+
+    private static double getLambda() {
+      String lambdaProperty = System.getProperty("model.als.lambda");
+      return lambdaProperty == null ? DEFAULT_LAMBDA : LangUtils.parseDouble(lambdaProperty);
+    }
+
   }
+
 }

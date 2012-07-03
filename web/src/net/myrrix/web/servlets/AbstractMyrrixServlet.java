@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentMap;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -69,6 +70,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private List<List<Pair<String,Integer>>> allPartitions;
   private Integer thisPartition;
   private Random random;
+  private ConcurrentMap<String,ResponseContentType> responseTypeCache;
 
   @Override
   public final void init(ServletConfig config) throws ServletException {
@@ -80,6 +82,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     allPartitions = (List<List<Pair<String,Integer>>>) context.getAttribute(ALL_PARTITIONS_KEY);
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
     random = RandomUtils.getRandom();
+    responseTypeCache = Maps.newConcurrentMap();
 
     Map<String,RunningStatistics> timings = (Map<String,RunningStatistics>) context.getAttribute(TIMINGS_KEY);
     if (timings == null) {
@@ -171,9 +174,9 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return Boolean.valueOf(request.getParameter("considerKnownItems"));
   }
 
-  protected static void output(HttpServletRequest request,
-                               ServletResponse response,
-                               Iterable<RecommendedItem> items) throws IOException {
+  protected void output(HttpServletRequest request,
+                        ServletResponse response,
+                        Iterable<RecommendedItem> items) throws IOException {
 
     PrintWriter writer = response.getWriter();
     switch (determineResponseType(request)) {
@@ -187,18 +190,18 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
             writer.write(',');
           }
           writer.write('[');
-          writer.write(String.valueOf(item.getItemID()));
+          writer.write(Long.toString(item.getItemID()));
           writer.write(',');
-          writer.write(String.valueOf(item.getValue()));
+          writer.write(Float.toString(item.getValue()));
           writer.write(']');
         }
         writer.write(']');
         break;
       case CSV:
         for (RecommendedItem item : items) {
-          writer.write(String.valueOf(item.getItemID()));
+          writer.write(Long.toString(item.getItemID()));
           writer.write(',');
-          writer.write(String.valueOf(item.getValue()));
+          writer.write(Float.toString(item.getValue()));
           writer.write('\n');
         }
         break;
@@ -207,9 +210,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  private static ResponseContentType determineResponseType(HttpServletRequest request) {
-    SortedMap<Double,ResponseContentType> types = Maps.newTreeMap();
+  private ResponseContentType determineResponseType(HttpServletRequest request) {
+
     String acceptHeader = request.getHeader("Accept");
+    ResponseContentType cached = responseTypeCache.get(acceptHeader);
+    if (cached != null) {
+      return cached;
+    }
+
+    SortedMap<Double,ResponseContentType> types = Maps.newTreeMap();
     if (acceptHeader != null) {
       for (String accept : COMMA.split(acceptHeader)) {
         double preference;
@@ -246,6 +255,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     if (!types.isEmpty()) {
       finalType = types.values().iterator().next();
     }
+
+    responseTypeCache.putIfAbsent(acceptHeader, finalType);
     return finalType;
   }
 

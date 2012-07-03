@@ -36,7 +36,8 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see RecommendedBecauseIterator
  * @see RecommendIterator
  */
-final class MostSimilarItemIterator implements Iterable<RecommendedItem> {
+final class MostSimilarItemIterator
+    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] itemFeatures;
@@ -57,47 +58,45 @@ final class MostSimilarItemIterator implements Iterable<RecommendedItem> {
 
   @Override
   public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(Y.entrySet().iterator(), new DotFunction());
+    return Iterators.transform(Y.entrySet().iterator(), this);
   }
 
-  private final class DotFunction implements Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
-    @Override
-    public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
-      long itemID = entry.getKey();
-      for (long l : toItemIDs) {
-        if (l == itemID) {
-          return null;
-        }
+  @Override
+  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+    long itemID = entry.getKey();
+    for (long l : toItemIDs) {
+      if (l == itemID) {
+        return null;
       }
+    }
 
-      Rescorer<LongPair> rescorer = MostSimilarItemIterator.this.rescorer;
-      float[] candidateFeatures = entry.getValue();
-      double total = 0.0;
+    Rescorer<LongPair> rescorer = this.rescorer;
+    float[] candidateFeatures = entry.getValue();
+    double total = 0.0;
 
-      int length = itemFeatures.length;
-      for (int i = 0; i < length; i++) {
-        long toItemID = toItemIDs[i];
-        if (rescorer != null && rescorer.isFiltered(new LongPair(itemID, toItemID))) {
-          return null;
-        }
-        float[] features = itemFeatures[i];
-        double correlation = SimpleVectorMath.correlation(candidateFeatures, features);
+    int length = itemFeatures.length;
+    for (int i = 0; i < length; i++) {
+      long toItemID = toItemIDs[i];
+      if (rescorer != null && rescorer.isFiltered(new LongPair(itemID, toItemID))) {
+        return null;
+      }
+      float[] features = itemFeatures[i];
+      double correlation = SimpleVectorMath.correlation(candidateFeatures, features);
+      if (Double.isNaN(correlation)) {
+        return null;
+      }
+      if (rescorer != null) {
+        correlation = rescorer.rescore(new LongPair(itemID, toItemID), correlation);
         if (Double.isNaN(correlation)) {
           return null;
         }
-        if (rescorer != null) {
-          correlation = rescorer.rescore(new LongPair(itemID, toItemID), correlation);
-          if (Double.isNaN(correlation)) {
-            return null;
-          }
-        }
-        total += correlation;
       }
-
-      double estimate = total / length;
-      delegate.set(itemID, (float) estimate);
-      return delegate;
+      total += correlation;
     }
+
+    double estimate = total / length;
+    delegate.set(itemID, (float) estimate);
+    return delegate;
   }
 
 }

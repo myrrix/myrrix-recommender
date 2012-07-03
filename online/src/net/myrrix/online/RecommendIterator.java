@@ -37,7 +37,8 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see MostSimilarItemIterator
  * @see RecommendedBecauseIterator
  */
-final class RecommendIterator implements Iterable<RecommendedItem> {
+final class RecommendIterator
+    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] features;
@@ -56,40 +57,38 @@ final class RecommendIterator implements Iterable<RecommendedItem> {
 
   @Override
   public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(Y.entrySet().iterator(), new DotFunction());
+    return Iterators.transform(Y.entrySet().iterator(), this);
   }
 
-  private final class DotFunction implements Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
-    @Override
-    public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
-      long itemID = entry.getKey();
-      FastIDSet theKnownItemIDs = knownItemIDs;
-      if (theKnownItemIDs != null) {
-        synchronized (theKnownItemIDs) {
-          if (theKnownItemIDs.contains(itemID)) {
-            return null;
-          }
+  @Override
+  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+    long itemID = entry.getKey();
+    FastIDSet theKnownItemIDs = knownItemIDs;
+    if (theKnownItemIDs != null) {
+      synchronized (theKnownItemIDs) {
+        if (theKnownItemIDs.contains(itemID)) {
+          return null;
         }
       }
-      IDRescorer rescorer = RecommendIterator.this.rescorer;
-      if (rescorer != null && rescorer.isFiltered(itemID)) {
-        return null;
-      }
-
-      double sum = 0.0;
-      int count = 0;
-      for (float[] oneUserFeatures : features) {
-        double dot = SimpleVectorMath.dot(entry.getValue(), oneUserFeatures);
-        if (rescorer != null) {
-          dot = rescorer.rescore(itemID, dot);
-        }
-        sum += dot;
-        count++;
-      }
-
-      delegate.set(itemID, (float) (sum / count));
-      return delegate;
     }
+    IDRescorer rescorer = this.rescorer;
+    if (rescorer != null && rescorer.isFiltered(itemID)) {
+      return null;
+    }
+
+    double sum = 0.0;
+    int count = 0;
+    for (float[] oneUserFeatures : features) {
+      double dot = SimpleVectorMath.dot(entry.getValue(), oneUserFeatures);
+      if (rescorer != null) {
+        dot = rescorer.rescore(itemID, dot);
+      }
+      sum += dot;
+      count++;
+    }
+
+    delegate.set(itemID, (float) (sum / count));
+    return delegate;
   }
 
 }

@@ -34,7 +34,8 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see MostSimilarItemIterator
  * @see RecommendIterator
  */
-final class RecommendedBecauseIterator implements Iterable<RecommendedItem> {
+final class RecommendedBecauseIterator
+    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[] features;
@@ -48,22 +49,19 @@ final class RecommendedBecauseIterator implements Iterable<RecommendedItem> {
 
   @Override
   public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(toFeatures.entrySet().iterator(), new DotFunction());
+    return Iterators.transform(toFeatures.entrySet().iterator(), this);
   }
   
-  private final class DotFunction implements Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
-    @Override
-    public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
-      long itemID = entry.getKey();
-      float[] candidateFeatures = entry.getValue();
-      double estimate = SimpleVectorMath.correlation(candidateFeatures, features);
-      if (Double.isNaN(estimate)) {
-        return null;
-      }
-      delegate.set(itemID, (float) estimate);
-      return delegate;
+  @Override
+  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+    long itemID = entry.getKey();
+    float[] candidateFeatures = entry.getValue();
+    double estimate = SimpleVectorMath.correlation(candidateFeatures, features);
+    if (Double.isNaN(estimate)) {
+      return null;
     }
+    delegate.set(itemID, (float) estimate);
+    return delegate;
   }
-
 
 }

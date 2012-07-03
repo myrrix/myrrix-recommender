@@ -249,7 +249,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     for (RecommendedItem original : originals) {
       long id = original.getItemID();
       String untranslation = itemTranslator.toStringID(id);
-      String translatedItemID = untranslation == null ? String.valueOf(id) : untranslation;
+      String translatedItemID = untranslation == null ? Long.toString(id) : untranslation;
       translated.add(new GenericTranslatedRecommendedItem(translatedItemID, original.getValue()));
     }
     return translated;
