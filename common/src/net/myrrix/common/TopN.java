@@ -19,6 +19,7 @@ package net.myrrix.common;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -40,12 +41,13 @@ public final class TopN {
    * @param n how many top values to choose
    * @return the top N values (at most), ordered by value descending.
    */
-  public static List<RecommendedItem> selectTopN(Iterable<RecommendedItem> values, int n) {
+  public static List<RecommendedItem> selectTopN(Iterator<RecommendedItem> values, int n) {
 
     // Holding n+2 entries, to compute n+1 top items first
     Queue<MutableRecommendedItem> topN =
         new PriorityQueue<MutableRecommendedItem>(n + 2, ByValueAscComparator.INSTANCE);
-    for (RecommendedItem value : values) {
+    while (values.hasNext()) {
+      RecommendedItem value = values.next();
       if (value != null) {
         long itemID = value.getItemID();
         if (topN.size() <= n) {

@@ -18,8 +18,6 @@ package net.myrrix.online;
 
 import java.util.Iterator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.common.MutableRecommendedItem;
@@ -34,26 +32,26 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see MostSimilarItemIterator
  * @see RecommendIterator
  */
-final class RecommendedBecauseIterator
-    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
+final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[] features;
-  private final FastByIDMap<float[]> toFeatures;
+  private final Iterator<FastByIDMap<float[]>.MapEntry> toFeaturesIterator;
 
-  RecommendedBecauseIterator(FastByIDMap<float[]> toFeatures, float[] features) {
+  RecommendedBecauseIterator(Iterator<FastByIDMap<float[]>.MapEntry> toFeaturesIterator, float[] features) {
     delegate = new MutableRecommendedItem();
     this.features = features;
-    this.toFeatures = toFeatures;
+    this.toFeaturesIterator = toFeaturesIterator;
   }
 
   @Override
-  public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(toFeatures.entrySet().iterator(), this);
+  public boolean hasNext() {
+    return toFeaturesIterator.hasNext();
   }
-  
+
   @Override
-  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+  public RecommendedItem next() {
+    FastByIDMap<float[]>.MapEntry entry = toFeaturesIterator.next();
     long itemID = entry.getKey();
     float[] candidateFeatures = entry.getValue();
     double estimate = SimpleVectorMath.correlation(candidateFeatures, features);
@@ -62,6 +60,14 @@ final class RecommendedBecauseIterator
     }
     delegate.set(itemID, (float) estimate);
     return delegate;
+  }
+
+  /**
+   * @throws UnsupportedOperationException
+   */
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -29,7 +29,7 @@ public final class TopNTest extends MyrrixTest {
   @Test
   public void testEmpty() {
     List<RecommendedItem> empty = Collections.emptyList();
-    List<RecommendedItem> top2 = TopN.selectTopN(empty, 2);
+    List<RecommendedItem> top2 = TopN.selectTopN(empty.iterator(), 2);
     assertNotNull(top2);
     assertEquals(0, top2.size());
   }
@@ -37,7 +37,7 @@ public final class TopNTest extends MyrrixTest {
   @Test
   public void testTopExactly() {
     List<RecommendedItem> candidates = makeNCandidates(3);
-    List<RecommendedItem> top3 = TopN.selectTopN(candidates, 3);
+    List<RecommendedItem> top3 = TopN.selectTopN(candidates.iterator(), 3);
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(3L, top3.get(0).getItemID());
@@ -49,7 +49,7 @@ public final class TopNTest extends MyrrixTest {
   @Test
   public void testTopPlusOne() {
     List<RecommendedItem> candidates = makeNCandidates(4);
-    List<RecommendedItem> top3 = TopN.selectTopN(candidates, 3);
+    List<RecommendedItem> top3 = TopN.selectTopN(candidates.iterator(), 3);
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(4L, top3.get(0).getItemID());
@@ -61,7 +61,7 @@ public final class TopNTest extends MyrrixTest {
   @Test
   public void testTopOfMany() {
     List<RecommendedItem> candidates = makeNCandidates(20);
-    List<RecommendedItem> top3 = TopN.selectTopN(candidates, 3);
+    List<RecommendedItem> top3 = TopN.selectTopN(candidates.iterator(), 3);
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(20L, top3.get(0).getItemID());

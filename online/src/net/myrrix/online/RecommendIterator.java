@@ -18,9 +18,7 @@ package net.myrrix.online;
 
 import java.util.Iterator;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterators;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -37,31 +35,34 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see MostSimilarItemIterator
  * @see RecommendedBecauseIterator
  */
-final class RecommendIterator
-    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
+final class RecommendIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] features;
-  private final FastByIDMap<float[]> Y;
+  private final Iterator<FastByIDMap<float[]>.MapEntry> Yiterator;
   private final FastIDSet knownItemIDs;
   private final IDRescorer rescorer;
 
-  RecommendIterator(float[][] features, FastByIDMap<float[]> Y, FastIDSet knownItemIDs, IDRescorer rescorer) {
+  RecommendIterator(float[][] features,
+                    Iterator<FastByIDMap<float[]>.MapEntry> Yiterator,
+                    FastIDSet knownItemIDs,
+                    IDRescorer rescorer) {
     Preconditions.checkArgument(features.length > 0);
     delegate = new MutableRecommendedItem();
     this.features = features;
-    this.Y = Y;
+    this.Yiterator = Yiterator;
     this.knownItemIDs = knownItemIDs;
     this.rescorer = rescorer;
   }
 
   @Override
-  public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(Y.entrySet().iterator(), this);
+  public boolean hasNext() {
+    return Yiterator.hasNext();
   }
 
   @Override
-  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+  public RecommendedItem next() {
+    FastByIDMap<float[]>.MapEntry entry = Yiterator.next();
     long itemID = entry.getKey();
     FastIDSet theKnownItemIDs = knownItemIDs;
     if (theKnownItemIDs != null) {
@@ -71,8 +72,8 @@ final class RecommendIterator
         }
       }
     }
-    IDRescorer rescorer = this.rescorer;
-    if (rescorer != null && rescorer.isFiltered(itemID)) {
+    IDRescorer rescorer1 = this.rescorer;
+    if (rescorer1 != null && rescorer1.isFiltered(itemID)) {
       return null;
     }
 
@@ -80,8 +81,8 @@ final class RecommendIterator
     int count = 0;
     for (float[] oneUserFeatures : features) {
       double dot = SimpleVectorMath.dot(entry.getValue(), oneUserFeatures);
-      if (rescorer != null) {
-        dot = rescorer.rescore(itemID, dot);
+      if (rescorer1 != null) {
+        dot = rescorer1.rescore(itemID, dot);
       }
       sum += dot;
       count++;
@@ -89,6 +90,14 @@ final class RecommendIterator
 
     delegate.set(itemID, (float) (sum / count));
     return delegate;
+  }
+
+  /**
+   * @throws UnsupportedOperationException
+   */
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
   }
 
 }

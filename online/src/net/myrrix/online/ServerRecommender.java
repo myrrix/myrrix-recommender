@@ -268,7 +268,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
-      return TopN.selectTopN(new RecommendIterator(userFeatures, Y, usersKnownItemIDs, rescorer), howMany);
+      return TopN.selectTopN(new RecommendIterator(userFeatures,
+                                                   Y.entrySet().iterator(),
+                                                   usersKnownItemIDs,
+                                                   rescorer),
+                             howMany);
     } finally {
       yLock.unlock();
     }
@@ -303,7 +307,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
-      return TopN.selectTopN(new RecommendIterator(new float[][] { anonymousUserFeatures }, Y, userKnownItemIDs, null), howMany);
+      return TopN.selectTopN(new RecommendIterator(new float[][] { anonymousUserFeatures },
+                                                   Y.entrySet().iterator(),
+                                                   userKnownItemIDs,
+                                                   null),
+                             howMany);
     } finally {
       yLock.unlock();
     }
@@ -567,10 +575,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         throw new NoSuchItemException(itemID);
       }
 
-      return TopN.selectTopN(new MostSimilarItemIterator(Y,
+      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(),
                                                          new long[] { itemID },
                                                          new float[][] { itemFeatures },
-                                                         rescorer), howMany);
+                                                         rescorer),
+                             howMany);
     } finally {
       yLock.unlock();
     }
@@ -620,7 +629,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         itemFeatures[i] = features;
       }
 
-      return TopN.selectTopN(new MostSimilarItemIterator(Y, itemIDs, itemFeatures, rescorer), howMany);
+      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(), itemIDs, itemFeatures, rescorer),
+                             howMany);
     } finally {
       yLock.unlock();
     }
@@ -683,7 +693,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         }
       }
 
-      return TopN.selectTopN(new RecommendedBecauseIterator(toFeatures, features), howMany);
+      return TopN.selectTopN(new RecommendedBecauseIterator(toFeatures.entrySet().iterator(), features), howMany);
     } finally {
       yLock.unlock();
     }

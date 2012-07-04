@@ -18,8 +18,6 @@ package net.myrrix.online;
 
 import java.util.Iterator;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Iterators;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
@@ -36,33 +34,33 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see RecommendedBecauseIterator
  * @see RecommendIterator
  */
-final class MostSimilarItemIterator
-    implements Iterable<RecommendedItem>, Function<FastByIDMap<float[]>.MapEntry,RecommendedItem> {
+final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] itemFeatures;
-  private final FastByIDMap<float[]> Y;
+  private final Iterator<FastByIDMap<float[]>.MapEntry> Yiterator;
   private final long[] toItemIDs;
   private final Rescorer<LongPair> rescorer;
 
-  MostSimilarItemIterator(FastByIDMap<float[]> Y,
+  MostSimilarItemIterator(Iterator<FastByIDMap<float[]>.MapEntry> Yiterator,
                           long[] toItemIDs,
                           float[][] itemFeatures,
                           Rescorer<LongPair> rescorer) {
     delegate = new MutableRecommendedItem();
     this.toItemIDs = toItemIDs;
     this.itemFeatures = itemFeatures;
-    this.Y = Y;
+    this.Yiterator = Yiterator;
     this.rescorer = rescorer;
   }
 
   @Override
-  public Iterator<RecommendedItem> iterator() {
-    return Iterators.transform(Y.entrySet().iterator(), this);
+  public boolean hasNext() {
+    return Yiterator.hasNext();
   }
 
   @Override
-  public MutableRecommendedItem apply(FastByIDMap<float[]>.MapEntry entry) {
+  public RecommendedItem next() {
+    FastByIDMap<float[]>.MapEntry entry = Yiterator.next();
     long itemID = entry.getKey();
     for (long l : toItemIDs) {
       if (l == itemID) {
@@ -70,14 +68,14 @@ final class MostSimilarItemIterator
       }
     }
 
-    Rescorer<LongPair> rescorer = this.rescorer;
+    Rescorer<LongPair> rescorer1 = this.rescorer;
     float[] candidateFeatures = entry.getValue();
     double total = 0.0;
 
     int length = itemFeatures.length;
     for (int i = 0; i < length; i++) {
       long toItemID = toItemIDs[i];
-      if (rescorer != null && rescorer.isFiltered(new LongPair(itemID, toItemID))) {
+      if (rescorer1 != null && rescorer1.isFiltered(new LongPair(itemID, toItemID))) {
         return null;
       }
       float[] features = itemFeatures[i];
@@ -85,8 +83,8 @@ final class MostSimilarItemIterator
       if (Double.isNaN(correlation)) {
         return null;
       }
-      if (rescorer != null) {
-        correlation = rescorer.rescore(new LongPair(itemID, toItemID), correlation);
+      if (rescorer1 != null) {
+        correlation = rescorer1.rescore(new LongPair(itemID, toItemID), correlation);
         if (Double.isNaN(correlation)) {
           return null;
         }
@@ -97,6 +95,14 @@ final class MostSimilarItemIterator
     double estimate = total / length;
     delegate.set(itemID, (float) estimate);
     return delegate;
+  }
+
+  /**
+   * @throws UnsupportedOperationException
+   */
+  @Override
+  public void remove() {
+    throw new UnsupportedOperationException();
   }
 
 }
