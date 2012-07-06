@@ -163,7 +163,7 @@ public final class MatrixUtils {
    * @return M * S as a newly allocated matrix
    * @see #multiply(RealMatrix, FastByIDMap, FastByIDMap)
    */
-  public static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S) {
+  private static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S) {
     FastByIDMap<float[]> result = new FastByIDMap<float[]>(S.size(), 1.25f);
     double[][] matrixData = accessMatrixDataDirectly(M);
     for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {

@@ -174,9 +174,9 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return Boolean.valueOf(request.getParameter("considerKnownItems"));
   }
 
-  protected void output(HttpServletRequest request,
-                        ServletResponse response,
-                        Iterable<RecommendedItem> items) throws IOException {
+  protected final void output(HttpServletRequest request,
+                              ServletResponse response,
+                              Iterable<RecommendedItem> items) throws IOException {
 
     PrintWriter writer = response.getWriter();
     switch (determineResponseType(request)) {

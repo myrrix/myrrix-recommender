@@ -66,7 +66,7 @@ public final class GenericTranslatedRecommendedItem implements TranslatedRecomme
     if (!(o instanceof GenericTranslatedRecommendedItem)) {
       return false;
     }
-    GenericTranslatedRecommendedItem other = (GenericTranslatedRecommendedItem) o;
+    TranslatedRecommendedItem other = (TranslatedRecommendedItem) o;
     return itemID.equals(other.getItemID()) && value == other.getValue();
   }
   
