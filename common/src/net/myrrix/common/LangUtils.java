@@ -36,6 +36,7 @@ public final class LangUtils {
    * @return floating-point value in the {@link String}
    * @throws IllegalArgumentException if input does not parse as a floating-point value, or is infinite or
    *  {@link Float#NaN}
+   * @see #parseDouble(String)
    */
   public static float parseFloat(String s) {
     float value = Float.parseFloat(s);
@@ -45,7 +46,7 @@ public final class LangUtils {
   }
 
   /**
-   * @see {@link #parseFloat(String)}
+   * @see #parseFloat(String)
    */
   public static double parseDouble(String s) {
     double value = Double.parseDouble(s);
