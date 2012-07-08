@@ -25,23 +25,23 @@ public final class SimpleVectorMathTest extends MyrrixTest {
 
   @Test
   public void testDot() {
-    assertEquals(-5.25, SimpleVectorMath.dot(VEC1, VEC2), EPSILON);
+    assertEquals(-5.25, SimpleVectorMath.dot(VEC1, VEC2));
   }
 
   @Test
   public void testNorm() {
-    assertEquals(4.03112887414928, SimpleVectorMath.norm(VEC1), EPSILON);
-    assertEquals(2.12132034355964, SimpleVectorMath.norm(VEC2), EPSILON);
+    assertEquals(4.03112887414928, SimpleVectorMath.norm(VEC1));
+    assertEquals(2.12132034355964, SimpleVectorMath.norm(VEC2));
   }
 
   @Test
   public void testCosine() {
-    assertEquals(-0.61394061351492, SimpleVectorMath.cosineMeasure(VEC1, VEC2), EPSILON);
+    assertEquals(-0.61394061351492, SimpleVectorMath.cosineMeasure(VEC1, VEC2));
   }
 
   @Test
   public void testCorrelation() {
-    assertEquals(-0.802955068546966, SimpleVectorMath.correlation(VEC1, VEC2), EPSILON);
+    assertEquals(-0.802955068546966, SimpleVectorMath.correlation(VEC1, VEC2));
   }
 
 }

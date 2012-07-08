@@ -28,6 +28,7 @@ import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 
@@ -115,20 +116,30 @@ public final class MatrixUtils {
     FastByIDFloatMap theRow = RbyRow.get(row);
     if (theRow != null) {
       theRow.remove(column);
+      if (theRow.isEmpty()) {
+        RbyRow.remove(row);
+      }
     }
     FastByIDFloatMap theColumn = RbyColumn.get(column);
     if (theColumn != null) {
       theColumn.remove(row);
+      if (theColumn.isEmpty()) {
+        RbyColumn.remove(column);
+      }
     }
   }
 
   /**
-   * Left-inverts a tall skinny matrix. The left inverse of M is ( (MT * M)^-1 * MT ).
+   * <p>Pseudo-inverts a tall skinny matrix M. The result can be used as a left-inverse of M or
+   * right-inverse of MT:</p>
    *
-   * @param M tall skinny matrix to left-invert
-   * @return a left inverse of M
+   * <p>{@code ((MT * M)^-1 * MT) * M = I}</p>
+   * <p>{@code MT * (M * (MT * M)^-1) = I}</p>
+   *
+   * @param M tall skinny matrix
+   * @return a pseudo-inverse of M
    */
-  public static FastByIDMap<float[]> getLeftInverse(FastByIDMap<float[]> M) {
+  public static FastByIDMap<float[]> getPseudoInverse(FastByIDMap<float[]> M) {
     if (M.isEmpty()) {
       return new FastByIDMap<float[]>();
     }
@@ -139,29 +150,9 @@ public final class MatrixUtils {
   }
 
   /**
-   * Right-inverts the transpose of a tall, skinny matrix. The right inverse of MT is ( M * (MT * M)^-1 ).
-   *
-   * @param M tall, skinny matrix to right-invert the transpose of
-   * @return a right inverse of MT
-   */
-  public static FastByIDMap<float[]> getTransposeRightInverse(FastByIDMap<float[]> M) {
-    if (M.isEmpty()) {
-      return new FastByIDMap<float[]>();
-    }
-    RealMatrix MTM = transposeTimesSelf(M);
-    RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
-    // Computing M * (MT * M)^-1, but instead, will compute the transpose of (MT * M)^-1 times transpose of M
-    // to end up with the transpose of the answer. But it doesn't matter since the same representation is used
-    // either way and is not ambiguous. Again passing M and second argument when it's conceptually MT as it
-    // will be treated correctly.
-    return multiply(MTMinverse.transpose(), M);
-  }
-
-  /**
    * @param M small {@link RealMatrix}
    * @param S wide, short matrix
    * @return M * S as a newly allocated matrix
-   * @see #multiply(RealMatrix, FastByIDMap, FastByIDMap)
    */
   private static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S) {
     FastByIDMap<float[]> result = new FastByIDMap<float[]>(S.size(), 1.25f);
@@ -172,18 +163,16 @@ public final class MatrixUtils {
     return result;
   }
 
-  /**
-   * @param M small {@link RealMatrix}
-   * @param S wide, short matrix
-   * @param result existing matrix to clear and fill with M * S
-   * @see #multiply(RealMatrix, FastByIDMap)
-   */
-  public static void multiply(RealMatrix M, FastByIDMap<float[]> S, FastByIDMap<float[]> result) {
-    result.clear();
-    double[][] matrixData = accessMatrixDataDirectly(M);
-    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
-      result.put(entry.getKey(), matrixMultiply(matrixData, entry.getValue()));
+  public static RealMatrix multiplyXYT(FastByIDMap<float[]> X, FastByIDMap<float[]> Y) {
+    int Ysize = Y.size();
+    int Xsize = X.size();
+    RealMatrix result = new Array2DRowRealMatrix(Xsize, Ysize);
+    for (int row = 0; row < Xsize; row++) {
+      for (int col = 0; col < Ysize; col++) {
+        result.setEntry(row, col, SimpleVectorMath.dot(X.get(row), Y.get(col)));
+      }
     }
+    return result;
   }
 
   /**
@@ -197,6 +186,24 @@ public final class MatrixUtils {
       throw new IllegalStateException(iae);
     }
   }
+
+  /*
+  public static double[] matrixMultiply(RealMatrix matrix, float[] V) {
+    double[][] M = accessMatrixDataDirectly(matrix);
+    int rows = M.length;
+    int cols = V.length;
+    double[] out = new double[rows];
+    for (int i = 0; i < rows; i++) {
+      double total = 0.0;
+      double[] matrixRow = M[i];
+      for (int j = 0; j < cols; j++) {
+        total += V[j] * matrixRow[j];
+      }
+      out[i] = total;
+    }
+    return out;
+  }
+   */
 
   /**
    * @param M matrix

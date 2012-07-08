@@ -27,19 +27,60 @@ import org.junit.Before;
 
 public abstract class MyrrixTest extends Assert {
 
-  protected static final double EPSILON = 1.0e-6; // appropriate for float
+  private static final float FLOAT_EPSILON = 1.0e-6f;
+  private static final double DOUBLE_EPSILON = 1.0e-12;
 
   private File testTempDir;
 
+  public static void assertEquals(float expected, float actual) {
+    Assert.assertEquals(expected, actual, FLOAT_EPSILON);
+  }
+
+  public static void assertEquals(String message, float expected, float actual) {
+    Assert.assertEquals(message, expected, actual, FLOAT_EPSILON);
+  }
+
+  public static void assertArrayEquals(float[] expecteds, float[] actuals) {
+    Assert.assertArrayEquals(expecteds, actuals, FLOAT_EPSILON);
+  }
+
+  public static void assertArrayEquals(String message, float[] expecteds, float[] actuals) {
+    Assert.assertArrayEquals(message, expecteds, actuals, FLOAT_EPSILON);
+  }
+
+  public static void assertEquals(double expected, double actual) {
+    Assert.assertEquals(expected, actual, DOUBLE_EPSILON);
+  }
+
+  public static void assertEquals(String message, double expected, double actual) {
+    Assert.assertEquals(message, expected, actual, DOUBLE_EPSILON);
+  }
+
+  public static void assertArrayEquals(double[] expecteds, double[] actuals) {
+    Assert.assertArrayEquals(expecteds, actuals, DOUBLE_EPSILON);
+  }
+
+  public static void assertArrayEquals(String message, double[] expecteds, double[] actuals) {
+    Assert.assertArrayEquals(message, expecteds, actuals, DOUBLE_EPSILON);
+  }
+
   @Before
-  public void setUp() throws Exception {
+  public synchronized void setUp() throws Exception {
     testTempDir = null;
     RandomUtils.useTestSeed();
   }
 
   @After
-  public void tearDown() throws Exception {
+  public synchronized void tearDown() throws Exception {
     IOUtils.deleteRecursively(testTempDir);
+  }
+
+  protected static void assertNaN(double d) {
+    assertTrue("Expected NaN but got " + d, Double.isNaN(d));
+  }
+
+  protected static void assertNaN(float f) {
+    assertTrue("Expected NaN but got " + f, Float.isNaN(f));
   }
 
   protected final synchronized File getTestTempDir() {

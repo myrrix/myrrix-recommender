@@ -16,21 +16,18 @@
 
 package net.myrrix.common;
 
+import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.junit.Test;
 
-public final class RunningStatisticsTest extends MyrrixTest {
+public final class ByValueAscComparatorTest extends MyrrixTest {
 
   @Test
-  public void testInstantiate() {
-    RunningStatistics stats = new RunningStatistics();
-    assertNaN(stats.getMin());
-    assertNaN(stats.getMax());
-    stats.addDatum(Integer.MIN_VALUE);
-    assertEquals(Integer.MIN_VALUE, stats.getMin());
-    assertEquals(Integer.MIN_VALUE, stats.getMax());
-    stats.addDatum(Integer.MAX_VALUE);
-    assertEquals(Integer.MIN_VALUE, stats.getMin());
-    assertEquals(Integer.MAX_VALUE, stats.getMax());
+  public void testCompare() {
+    RecommendedItem a = new SimpleRecommendedItem(1L, 2.0f);
+    RecommendedItem b = new SimpleRecommendedItem(5L, 1.0f);
+    assertTrue(ByValueAscComparator.INSTANCE.compare(a, b) > 0);
+    assertTrue(ByValueAscComparator.INSTANCE.compare(b, a) < 0);
+    assertEquals(0, ByValueAscComparator.INSTANCE.compare(a, a));
   }
 
 }

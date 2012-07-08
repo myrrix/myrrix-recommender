@@ -60,11 +60,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", recs);
 
     assertEquals(421L, recs.get(0).getItemID());
-    assertEquals(1.213831, recs.get(0).getValue(), EPSILON);
+    assertEquals(1.2138306f, recs.get(0).getValue());
     assertEquals(919L, recs.get(1).getItemID());
-    assertEquals(1.1859218, recs.get(1).getValue(), EPSILON);
+    assertEquals(1.1859218f, recs.get(1).getValue());
     assertEquals(477L, recs.get(2).getItemID());
-    assertEquals(1.1580302, recs.get(2).getValue(), EPSILON);
+    assertEquals(1.1580302f, recs.get(2).getValue());
 
     try {
       client.recommend(0L, 3);
@@ -81,11 +81,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", recs);
 
     assertEquals(421L, recs.get(0).getItemID());
-    assertEquals(1.213831, recs.get(0).getValue(), EPSILON);
+    assertEquals(1.2138310f, recs.get(0).getValue());
     assertEquals(919L, recs.get(1).getItemID());
-    assertEquals(1.1859218, recs.get(1).getValue(), EPSILON);
+    assertEquals(1.1859218f, recs.get(1).getValue());
     assertEquals(477L, recs.get(2).getItemID());
-    assertEquals(1.1580302, recs.get(2).getValue(), EPSILON);
+    assertEquals(1.1580302f, recs.get(2).getValue());
   }
 
   @Test
@@ -100,11 +100,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", recs);
 
     assertEquals(270L, recs.get(0).getItemID());
-    assertEquals(1.04264355, recs.get(0).getValue(), EPSILON);
+    assertEquals(1.04264355f, recs.get(0).getValue());
     assertEquals(302L, recs.get(1).getItemID());
-    assertEquals(1.01923978, recs.get(1).getValue(), EPSILON);
+    assertEquals(1.01923978f, recs.get(1).getValue());
     assertEquals(288L, recs.get(2).getItemID());
-    assertEquals(1.00474751, recs.get(2).getValue(), EPSILON);
+    assertEquals(1.00474751f, recs.get(2).getValue());
   }
 
   @Test
@@ -119,11 +119,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", similar);
 
     assertEquals(181L, similar.get(0).getItemID());
-    assertEquals(0.991110, similar.get(0).getValue(), EPSILON);
+    assertEquals(0.99111050f, similar.get(0).getValue());
     assertEquals(50L, similar.get(1).getItemID());
-    assertEquals(0.99030477, similar.get(1).getValue(), EPSILON);
+    assertEquals(0.99030477f, similar.get(1).getValue());
     assertEquals(100L, similar.get(2).getItemID());
-    assertEquals(0.99001956, similar.get(2).getValue(), EPSILON);
+    assertEquals(0.99001956f, similar.get(2).getValue());
 
     try {
       client.mostSimilarItems(0L, 3);
@@ -144,9 +144,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info(Arrays.toString(estimates));
 
-    assertEquals(0.69640088, estimates[0], EPSILON);
-    assertEquals(0.88412833, estimates[1], EPSILON);
-    assertEquals(0.90590358, estimates[2], EPSILON);
+    assertEquals(0.69640088f, estimates[0]);
+    assertEquals(0.88412833f, estimates[1]);
+    assertEquals(0.90590358f, estimates[2]);
 
     try {
       client.estimatePreference(0L, 90L);
@@ -174,11 +174,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", because);
 
     assertEquals(269L, because.get(0).getItemID());
-    assertEquals(0.9306520, because.get(0).getValue(), EPSILON);
+    assertEquals(0.9306520f, because.get(0).getValue());
     assertEquals(258L, because.get(1).getItemID());
-    assertEquals(0.8802528, because.get(1).getValue(), EPSILON);
+    assertEquals(0.8802528f, because.get(1).getValue());
     assertEquals(245L, because.get(2).getItemID());
-    assertEquals(0.8760198, because.get(2).getValue(), EPSILON);
+    assertEquals(0.8760198f, because.get(2).getValue());
 
     try {
       client.recommendedBecause(0L, 222L, 3);
@@ -206,11 +206,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", recs);
 
     assertEquals(286L, recs.get(0).getItemID());
-    assertEquals(0.010693396, recs.get(0).getValue(), EPSILON);
+    assertEquals(0.0106933960f, recs.get(0).getValue());
     assertEquals(258L, recs.get(1).getItemID());
-    assertEquals(0.0104582328, recs.get(1).getValue(), EPSILON);
+    assertEquals(0.0104582328f, recs.get(1).getValue());
     assertEquals(288L, recs.get(2).getItemID());
-    assertEquals(0.0103372922, recs.get(2).getValue(), EPSILON);
+    assertEquals(0.0103372922f, recs.get(2).getValue());
 
     try {
       client.recommendToAnonymous(new long[]{0L}, 3);

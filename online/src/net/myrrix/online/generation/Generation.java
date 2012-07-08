@@ -59,9 +59,9 @@ public final class Generation {
     this(knownItemIDs,
          null, // Not used yet
          X,
-         MatrixUtils.getLeftInverse(X),
+         MatrixUtils.getPseudoInverse(X),
          Y,
-         MatrixUtils.getTransposeRightInverse(Y),
+         MatrixUtils.getPseudoInverse(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),

@@ -26,8 +26,8 @@ import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
-import org.apache.commons.math3.linear.OpenMapRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.RandomUtils;
@@ -217,7 +217,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 1000) {
+      if (count >= 10000) {
         total += count;
         log.info("{} X rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
         count = 0;
@@ -250,7 +250,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 1000) {
+      if (count >= 10000) {
         total += count;
         log.info("{} Y rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
         count = 0;
@@ -283,9 +283,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       double alpha = getAlpha();
       double lambda = getLambda() * alpha;
       int features = this.features;
-      // Reuse this data structure for speed:
-      FastByIDMap<float[]> WuYT = new FastByIDMap<float[]>(10000, 1.25f);
-
       // Each worker has a batch of rows to compute:
       for (Pair<Long,FastByIDFloatMap> work : workUnit) {
 
@@ -294,40 +291,48 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         // This is Ru:
         FastByIDFloatMap ru = work.getSecond();
 
-        // Cu vector elements are defined by: cu = 1 + alpha * ru . Note this is a dense vector.
-        // This computes YT * Cu * Y, but by computing YTY + YT * (Cu - I) * Y.
-        // Note that Cu - I is as sparse as Ru -- it is equal to Ru * alpha.
+        RealMatrix Wu = new Array2DRowRealMatrix(features, features);
+        double[] YTCupu = new double[features];
 
-        // First compute YT * (Cu - I) * Y. This is a small dense matrix.
-        // This method takes Y as parameter (of course), and takes Ru instead of Cu as argument. Internally
-        // it will use Ru * alpha which is the same as Cu - I.
-        RealMatrix YTCuY = computeYTCuIY(features, Y, ru);
-        // Now add YTY to really get YT * Cu * Y:
-        YTCuY = YTCuY.add(YTY);
+        for (FastByIDFloatMap.MapEntry entry : ru.entrySet()) {
 
-        // Next we construct, from the original paper, (YT * (Cu - I) * Y) + (lambda * I).
-        // It seems that lambda really needs to be scaled up by the cardinality of Ru.
-        // So it is this that is added to each diagonal element:
-        float cuFactor = (float) (ru.size() * lambda);
+          double alphaTimesValue = alpha * entry.getValue();
+          float[] vector = Y.get(entry.getKey());
+
+          // Wu
+
+          for (int row = 0; row < features; row++) {
+            double rowValue = vector[row] * alphaTimesValue;
+            for (int col = 0; col < features; col++) {
+              Wu.addToEntry(row, col, rowValue * vector[col]);
+            }
+          }
+
+          // YTCupu
+
+          double onePlusAlphaCount = 1.0 + alphaTimesValue;
+          for (int i = 0; i < features; i++) {
+            YTCupu[i] += vector[i] * onePlusAlphaCount;
+          }
+
+        }
+
+        Wu = Wu.add(YTY);
+        double lambdaTimesCount = lambda * ru.size();
         for (int x = 0; x < features; x++) {
-          YTCuY.addToEntry(x, x, cuFactor);
+          Wu.addToEntry(x, x, lambdaTimesCount);
         }
+        Wu = new LUDecomposition(Wu).getSolver().getInverse();
 
-        // The result is inverted. This term is called Wu:
-        RealMatrix Wu = new LUDecomposition(YTCuY).getSolver().getInverse();
-
-        // Next the term Cu * pu is computed. pu is 1 and 0, and is 1 anywhere Ru has an element. So this
-        // is just Cu, but retaining only terms where Ru has a value. cu = 1 + alpha * ru.
-        FastByIDFloatMap Cupu = ru.clone();
-        for (FastByIDFloatMap.MapEntry entry : Cupu.entrySet()) {
-          entry.setValue((float) (1.0 + alpha * entry.getValue()));
+        float[] xu = new float[features];
+        for (int row = 0; row < features; row++) {
+          double[] wuRow = Wu.getRow(row);
+          double total = 0.0;
+          for (int col = 0; col < features; col++) {
+            total += wuRow[col] * YTCupu[col];
+          }
+          xu[row] = (float) total;
         }
-
-        // Next Wu * YT is computed:
-        MatrixUtils.multiply(Wu, Y, WuYT);
-
-        // The overall result is finally computed as Wu * YT, times Cupu. Use Cupu's sparseness:
-        float[] xu = computeRow(features, WuYT, Cupu);
 
         // Store result:
         synchronized (X) {
@@ -336,41 +341,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
         // Process is identical for computing Y from X. Swap X in for Y, Y for X, i for u, etc.
       }
-    }
-
-    private float[] computeRow(int features, FastByIDMap<float[]> wuYT, FastByIDFloatMap cupu) {
-      float[] xu = new float[features];
-      for (int row = 0; row < features; row++) {
-        double total = 0.0;
-        for (FastByIDFloatMap.MapEntry cupuEntry : cupu.entrySet()) {
-          total += cupuEntry.getValue() * wuYT.get(cupuEntry.getKey())[row];
-        }
-        xu[row] = (float) total;
-      }
-      return xu;
-    }
-
-    /**
-     * @param M tall, skinny matrix (sparse rows, dense columns)
-     * @param D sparse diagonal matrix
-     * @return MT * (alpha * D) * M
-     */
-    private static RealMatrix computeYTCuIY(int features, FastByIDMap<float[]> M, FastByIDFloatMap D) {
-      double alpha = getAlpha();
-      RealMatrix result = new OpenMapRealMatrix(features, features);
-      for (int row = 0; row < features; row++) {
-        for (int col = 0; col < features; col++) {
-          double total = 0.0;
-          for (FastByIDFloatMap.MapEntry entry : D.entrySet()) {
-            // This vector is both a column vector of MT (the left multiplicand) and a row vector
-            // of M, the right multiplicand.
-            float[] leftVec = M.get(entry.getKey());
-            total += alpha * entry.getValue() * leftVec[row] * leftVec[col];
-          }
-          result.setEntry(row, col, total);
-        }
-      }
-      return result;
     }
 
     private static double getAlpha() {

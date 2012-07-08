@@ -41,9 +41,9 @@ public final class TopNTest extends MyrrixTest {
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(3L, top3.get(0).getItemID());
-    assertEquals(3.0f, top3.get(0).getValue(), EPSILON);
+    assertEquals(3.0f, top3.get(0).getValue());
     assertEquals(1L, top3.get(2).getItemID());
-    assertEquals(1.0f, top3.get(2).getValue(), EPSILON);
+    assertEquals(1.0f, top3.get(2).getValue());
   }
 
   @Test
@@ -53,9 +53,9 @@ public final class TopNTest extends MyrrixTest {
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(4L, top3.get(0).getItemID());
-    assertEquals(4.0f, top3.get(0).getValue(), EPSILON);
+    assertEquals(4.0f, top3.get(0).getValue());
     assertEquals(2L, top3.get(2).getItemID());
-    assertEquals(2.0f, top3.get(2).getValue(), EPSILON);
+    assertEquals(2.0f, top3.get(2).getValue());
   }
 
   @Test
@@ -65,9 +65,9 @@ public final class TopNTest extends MyrrixTest {
     assertNotNull(top3);
     assertEquals(3, top3.size());
     assertEquals(20L, top3.get(0).getItemID());
-    assertEquals(20.0f, top3.get(0).getValue(), EPSILON);
+    assertEquals(20.0f, top3.get(0).getValue());
     assertEquals(18L, top3.get(2).getItemID());
-    assertEquals(18.0f, top3.get(2).getValue(), EPSILON);
+    assertEquals(18.0f, top3.get(2).getValue());
   }
 
   private static List<RecommendedItem> makeNCandidates(int n) {
