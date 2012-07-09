@@ -26,7 +26,7 @@
   <artifactId>myrrix-online-local</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Online Local</name>
-  <version>0.5-SNAPSHOT</version>
+  <version>0.5</version>
   <description>Bindings for Serving Layer standalone mode, for local storage and computation</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <inceptionYear>2012</inceptionYear>
@@ -38,9 +38,9 @@
     </license>
   </licenses>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/online-local</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/online-local</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/online-local</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-local-0.5</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-local-0.5</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-local-0.5</developerConnection>
   </scm>
   <developers>
     <developer>
@@ -57,7 +57,7 @@
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-online</artifactId>
-      <version>0.5-SNAPSHOT</version>
+      <version>0.5</version>
     </dependency>
   </dependencies>
 
