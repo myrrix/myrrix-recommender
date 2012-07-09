@@ -33,13 +33,15 @@ public final class EvaluationTest extends MyrrixTest {
 
   @Test
   public void testEval() throws Exception {
-    File originalDataFileDir = new File("testdata/grouplens1M");
+    File originalDataFileDir = new File("testdata/grouplens10M").getAbsoluteFile();
     File[] originalDataFiles = originalDataFileDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
-    Preconditions.checkState(originalDataFiles.length == 1);
+    Preconditions.checkState(originalDataFiles != null && originalDataFiles.length == 1,
+                             "Expected one input file in %s", originalDataFileDir);
     Evaluator evaluator = new Evaluator(originalDataFiles[0], getTestTempDir(), 0.9, 0.1);
     IRStatistics stats = evaluator.evaluate();
     log.info(stats.toString());
-    assertTrue(stats.getPrecision() > 0.11);
+    assertTrue(stats.getPrecision() > 0.12);
+    assertTrue(stats.getRecall() > 0.12);
   }
 
 }

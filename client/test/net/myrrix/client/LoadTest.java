@@ -52,7 +52,7 @@ public final class LoadTest extends AbstractClientTest {
 
   @Override
   protected String getTestDataPath() {
-    return "testdata/grouplens1M";
+    return "testdata/grouplens10M";
   }
 
   @Override
@@ -124,14 +124,10 @@ public final class LoadTest extends AbstractClientTest {
           }
 
           int stepsFinished = count.incrementAndGet();
-          if (stepsFinished % 100 == 0) {
+          if (stepsFinished % 1000 == 0) {
             log.info("Finished {} load steps", stepsFinished);
           }
-          /*
-          if (stepsFinished == ITERATIONS / 2) {
-            client.refresh(null);
-          }
-           */
+
           return null;
         }
       }));
@@ -149,6 +145,8 @@ public final class LoadTest extends AbstractClientTest {
 
     long end = System.currentTimeMillis();
     log.info("Finished {} steps in {}ms", ITERATIONS, end - start);
+
+    assertTrue(end - start < 400000L);
 
     log.info("recommendedBecause: {}", recommendedBecause);
     log.info("setPreference: {}", setPreference);

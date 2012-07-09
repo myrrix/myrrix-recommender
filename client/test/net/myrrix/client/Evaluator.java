@@ -257,7 +257,7 @@ public final class Evaluator {
           }
         }
       }
-      if (++count % 100000 == 0) {
+      if (++count % 1000000 == 0) {
         log.info("Finished {} lines", count);
       }
     }

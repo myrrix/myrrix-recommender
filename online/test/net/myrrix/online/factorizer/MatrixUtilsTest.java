@@ -67,19 +67,6 @@ public final class MatrixUtilsTest extends MyrrixTest {
     assertArrayEquals(new float[] {0.8571429f, -0.2142857f, 0.1428571f}, Minv.get(3L));
   }
 
-  /*
-  @Test
-  public void testMatrixMultiply() {
-    RealMatrix M = new Array2DRowRealMatrix(new double[][] {
-      {4.0,  0.0, -1.0},
-      {0.0,  2.0,  3.0},
-    });
-    float[] vec = { 1.0f, 2.0f, 3.0f };
-    double[] product = MatrixUtils.matrixMultiply(M, vec);
-    assertArrayEquals(new double[] {1.0, 13.0}, product);
-  }
-   */
-
   @Test
   public void testTransposeTimesSelf() {
     FastByIDMap<float[]> M = new FastByIDMap<float[]>();
