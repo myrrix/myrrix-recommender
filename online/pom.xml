@@ -26,7 +26,7 @@
   <artifactId>myrrix-online</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Online</name>
-  <version>0.5</version>
+  <version>0.6-SNAPSHOT</version>
   <description>Generic online recommender core of the Myrrix Serving Layer, for embedding</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <inceptionYear>2012</inceptionYear>
@@ -38,9 +38,9 @@
     </license>
   </licenses>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.5</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.5</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.5</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/online</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/online</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/online</developerConnection>
   </scm>
   <developers>
     <developer>
