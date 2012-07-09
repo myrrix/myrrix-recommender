@@ -92,7 +92,11 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     int hashSize = RandomUtils.nextTwinPrime((int) (loadFactor * size));
     keys = new long[hashSize];
     Arrays.fill(keys, NULL);
-    values = (V[]) new Object[hashSize];
+
+    @SuppressWarnings("unchecked")
+    V[] theValues = (V[]) new Object[hashSize];
+    values = theValues;
+
     this.maxSize = maxSize;
     this.countingAccesses = maxSize != Integer.MAX_VALUE;
     this.recentlyAccessed = countingAccesses ? new BitSet(hashSize) : null;
@@ -289,7 +293,11 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     keys = new long[newHashSize];
     Arrays.fill(keys, NULL);
-    values = (V[]) new Object[newHashSize];
+
+    @SuppressWarnings("unchecked")
+    V[] theValues = (V[]) new Object[newHashSize];
+    values = theValues;
+
     int length = oldKeys.length;
     for (int i = 0; i < length; i++) {
       long key = oldKeys[i];
@@ -313,7 +321,9 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
   public FastByIDMap<V> clone() {
     FastByIDMap<V> clone;
     try {
-      clone = (FastByIDMap<V>) super.clone();
+      @SuppressWarnings("unchecked")
+      FastByIDMap<V> theClone = (FastByIDMap<V>) super.clone();
+      clone = theClone;
     } catch (CloneNotSupportedException cnse) {
       throw new AssertionError(cnse);
     }
@@ -360,6 +370,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     if (!(other instanceof FastByIDMap)) {
       return false;
     }
+    @SuppressWarnings("unchecked")
     FastByIDMap<V> otherMap = (FastByIDMap<V>) other;
     long[] otherKeys = otherMap.keys;
     V[] otherValues = otherMap.values;

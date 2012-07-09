@@ -48,10 +48,12 @@ public abstract class MyrrixTest extends Assert {
     Assert.assertArrayEquals(message, expecteds, actuals, FLOAT_EPSILON);
   }
 
+  @SuppressWarnings("deprecation")
   public static void assertEquals(double expected, double actual) {
     Assert.assertEquals(expected, actual, DOUBLE_EPSILON);
   }
 
+  @SuppressWarnings("deprecation")
   public static void assertEquals(String message, double expected, double actual) {
     Assert.assertEquals(message, expected, actual, DOUBLE_EPSILON);
   }

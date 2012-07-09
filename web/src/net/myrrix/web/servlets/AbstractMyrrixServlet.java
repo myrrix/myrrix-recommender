@@ -79,11 +79,17 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     ServletContext context = config.getServletContext();
     recommender = (MyrrixRecommender) context.getAttribute(RECOMMENDER_KEY);
     rescorerProvider = (RescorerProvider) context.getAttribute(RESCORER_PROVIDER_KEY);
-    allPartitions = (List<List<Pair<String,Integer>>>) context.getAttribute(ALL_PARTITIONS_KEY);
+
+    @SuppressWarnings("unchecked")
+    List<List<Pair<String,Integer>>> theAllPartitions =
+        (List<List<Pair<String,Integer>>>) context.getAttribute(ALL_PARTITIONS_KEY);
+    allPartitions = theAllPartitions;
+
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
     random = RandomUtils.getRandom();
     responseTypeCache = Maps.newConcurrentMap();
 
+    @SuppressWarnings("unchecked")
     Map<String,RunningStatistics> timings = (Map<String,RunningStatistics>) context.getAttribute(TIMINGS_KEY);
     if (timings == null) {
       timings = Maps.newHashMap();
