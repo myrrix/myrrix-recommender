@@ -15,14 +15,14 @@ hr {margin:20px 0 10px 0}
 
 <h1>Version 0.5</h1>
 
-<p>July XX 2012</p>
+<p>July 9 2012</p>
 
 <h2>New Features</h2>
 
 <ul>
   <li>Log output now available on Serving Layer console</li>
   <li><code>/ready</code> endpoint in Serving Layer tells whether it is ready to answer requests</li>
-  <li>removePreference now exposed in the REST API</li>
+  <li><code>removePreference</code> now exposed in the REST API</li>
 </ul>
 
 <h2>Fixes</h2>
@@ -38,16 +38,10 @@ hr {margin:20px 0 10px 0}
 
 <ul>
   <li>Radically faster model building in Serving Layer standalone mode -- usually minutes instead of hours now.</li>
-  <li>Update to Tomcat 7.0.29</li>
-</ul>
-
-<h2>Other</h2>
-
-<ul>
   <li>Computation Layer iterations are ~40% faster as three MapReduce jobs have been merged into one</li>
   <li>Computation Layer workers no longer have to load the feature matrix into memory, and can deal with
     feature matrices that don't fit in memory (at a performance cost).</li>
-  <li>Update to Tomcat 7.0.28</li>
+  <li>Update to Tomcat 7.0.29</li>
 </ul>
 
 <h1>Version 0.4</h1>
