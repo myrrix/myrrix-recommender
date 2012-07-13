@@ -22,6 +22,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 /**
  * Defines an ordering on {@link RecommendedItem}s that sorts by value, ascending.
+ * (And breaks ties by sorting by item ID, descending then.)
  *
  * @author Sean Owen
  */
@@ -40,6 +41,15 @@ final class ByValueAscComparator implements Comparator<RecommendedItem> {
       return -1;
     }
     if (aValue > bValue) {
+      return 1;
+    }
+    // Break ties by item ID, *de*scending. It's rare but at least gives predictable ordering.
+    long aItem = a.getItemID();
+    long bItem = b.getItemID();
+    if (aItem > bItem) {
+      return -1;
+    }
+    if (aItem < bItem) {
       return 1;
     }
     return 0;

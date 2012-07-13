@@ -30,4 +30,13 @@ public final class ByValueAscComparatorTest extends MyrrixTest {
     assertEquals(0, ByValueAscComparator.INSTANCE.compare(a, a));
   }
 
+  @Test
+  public void testSameValue() {
+    RecommendedItem a = new SimpleRecommendedItem(1L, 2.0f);
+    RecommendedItem b = new SimpleRecommendedItem(5L, 2.0f);
+    assertTrue(ByValueAscComparator.INSTANCE.compare(a, b) > 0);
+    assertTrue(ByValueAscComparator.INSTANCE.compare(b, a) < 0);
+    assertEquals(0, ByValueAscComparator.INSTANCE.compare(a, a));
+  }
+
 }
