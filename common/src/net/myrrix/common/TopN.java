@@ -66,17 +66,8 @@ public final class TopN {
     if (topN.isEmpty()) {
       return Collections.emptyList();
     }
-
-    if (topN.size() > n) {
-      RecommendedItem minimum = topN.poll(); // pick off n+1th largest element
-      // ... and anything equal
-      while (!topN.isEmpty() && ByValueAscComparator.INSTANCE.compare(topN.peek(), minimum) <= 0) {
-        topN.poll();
-      }
-    }
-
-    if (topN.isEmpty()) {
-      return Collections.emptyList();
+    while (topN.size() > n) {
+      topN.poll();
     }
 
     List<RecommendedItem> result = new ArrayList<RecommendedItem>(topN);
