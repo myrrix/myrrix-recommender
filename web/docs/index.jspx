@@ -26,7 +26,7 @@
 
 <style type="text/css">
   body {background-color:#202020}
-  body,p,th,td,h1,h2,h3 {font-family:Gill Sans,Helvetica,sans-serif;font-weight:300;color:white}
+  body,p,th,td,h1,h2,h3 {font-family:"Gill Sans","Gill Sans MT",Helvetica,sans-serif;font-weight:300;color:white}
   a {text-decoration:none}
   table,th,td {border:1px dotted black}
   th,td {padding:10px;white-space:nowrap;vertical-align:top}
@@ -156,8 +156,8 @@ Map&lt;String,RunningStatistics&gt; timings = (Map&lt;String,RunningStatistics&g
     <tr>
       <td style="font-family:Courier,monospace;text-align:left">${entry.key}</td>
       <jsp:scriptlet>
-        pageContext.setAttribute("averageMicroSec", (int) entry.getValue().getAverage() / 1000);
-        pageContext.setAttribute("maxMicroSec", (int) entry.getValue().getMax() / 1000);
+        pageContext.setAttribute("averageMicroSec", (long) entry.getValue().getAverage() / 1000L);
+        pageContext.setAttribute("maxMicroSec", (long) entry.getValue().getMax() / 1000L);
         pageContext.setAttribute("clientErrors", entry.getValue().getNumClientErrors());
         pageContext.setAttribute("serverErrors", entry.getValue().getNumServerErrors());
       </jsp:scriptlet>
