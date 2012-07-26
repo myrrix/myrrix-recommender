@@ -30,7 +30,7 @@ import org.apache.mahout.common.LongPair;
  * <p>Implementations of this class are factories. An implementation creates and configures the
  * rescoring objects and returns them for use by the framework.</p>
  *
- * <p>The factory methods, like {@link #getRecommendRescorer(String...)}, takes an optional argument. These
+ * <p>The factory methods, like {@link #getRecommendRescorer(long[], String...)}, takes an optional argument. These
  * are passed from the REST API, as a {@code String}, from URL parameter {@code rescorerParams}. The
  * implementation may need this information to initialize its rescoring logic. For example, the argument
  * may be the user's current location, used to filter results by location.</p>
@@ -40,13 +40,14 @@ import org.apache.mahout.common.LongPair;
 public interface RescorerProvider {
 
   /**
+   * @param userIDs user(s) for which recommendations are being made, which may be needed in the rescoring logic.
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
    * @return {@link IDRescorer} to use with {@link ServerRecommender#recommend(long, int, IDRescorer)}
    *  or null if none should be used
    */
-  IDRescorer getRecommendRescorer(String... args);
+  IDRescorer getRecommendRescorer(long[] userIDs, String... args);
 
   /**
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional

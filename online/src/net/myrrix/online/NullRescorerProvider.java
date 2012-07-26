@@ -30,7 +30,7 @@ public final class NullRescorerProvider implements RescorerProvider {
    * @return {@link NullRescorer#getUserInstance()}
    */
   @Override
-  public IDRescorer getRecommendRescorer(String... args) {
+  public IDRescorer getRecommendRescorer(long[] userIDs, String... args) {
     return NullRescorer.getUserInstance();
   }
 
