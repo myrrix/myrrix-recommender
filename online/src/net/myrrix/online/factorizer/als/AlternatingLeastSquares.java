@@ -182,7 +182,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     // by making the expected random vector length 1.
     int features = this.features;
     double normalization = Math.sqrt(features / 12.0);
-    for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyColumn.entrySet()) {
+    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
       float[] Yrow = new float[features];
       for (int col = 0; col < features; col++) {
         Yrow[col] = (float) ((random.nextDouble() - 0.5) / normalization);
@@ -201,7 +201,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-    for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyRow.entrySet()) {
+    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyRow.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
         futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
@@ -234,7 +234,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     Collection<Future<?>> futures = Lists.newArrayList();
 
     List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-    for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : RbyColumn.entrySet()) {
+    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
         futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));

@@ -39,12 +39,12 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] features;
-  private final Iterator<FastByIDMap<float[]>.MapEntry> Yiterator;
+  private final Iterator<FastByIDMap.MapEntry<float[]>> Yiterator;
   private final FastIDSet knownItemIDs;
   private final IDRescorer rescorer;
 
   RecommendIterator(float[][] features,
-                    Iterator<FastByIDMap<float[]>.MapEntry> Yiterator,
+                    Iterator<FastByIDMap.MapEntry<float[]>> Yiterator,
                     FastIDSet knownItemIDs,
                     IDRescorer rescorer) {
     Preconditions.checkArgument(features.length > 0);
@@ -62,7 +62,7 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
 
   @Override
   public RecommendedItem next() {
-    FastByIDMap<float[]>.MapEntry entry = Yiterator.next();
+    FastByIDMap.MapEntry<float[]> entry = Yiterator.next();
     long itemID = entry.getKey();
     FastIDSet theKnownItemIDs = knownItemIDs;
     if (theKnownItemIDs != null) {
@@ -72,8 +72,8 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
         }
       }
     }
-    IDRescorer rescorer1 = this.rescorer;
-    if (rescorer1 != null && rescorer1.isFiltered(itemID)) {
+    IDRescorer rescorer = this.rescorer;
+    if (rescorer != null && rescorer.isFiltered(itemID)) {
       return null;
     }
 
@@ -81,8 +81,8 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
     int count = 0;
     for (float[] oneUserFeatures : features) {
       double dot = SimpleVectorMath.dot(entry.getValue(), oneUserFeatures);
-      if (rescorer1 != null) {
-        dot = rescorer1.rescore(itemID, dot);
+      if (rescorer != null) {
+        dot = rescorer.rescore(itemID, dot);
       }
       sum += dot;
       count++;

@@ -270,7 +270,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     return new KeyIterator();
   }
   
-  public Set<MapEntry> entrySet() {
+  public Set<MapEntry<V>> entrySet() {
     return new EntrySet();
   }
   
@@ -459,7 +459,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     
   }
   
-  private final class EntrySet extends AbstractSet<MapEntry> {
+  private final class EntrySet extends AbstractSet<MapEntry<V>> {
     
     @Override
     public int size() {
@@ -477,12 +477,12 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     
     @Override
-    public Iterator<MapEntry> iterator() {
+    public Iterator<MapEntry<V>> iterator() {
       return new EntryIterator();
     }
     
     @Override
-    public boolean add(MapEntry t) {
+    public boolean add(MapEntry<V> t) {
       throw new UnsupportedOperationException();
     }
     
@@ -492,7 +492,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     
     @Override
-    public boolean addAll(Collection<? extends MapEntry> ts) {
+    public boolean addAll(Collection<? extends MapEntry<V>> ts) {
       throw new UnsupportedOperationException();
     }
     
@@ -512,8 +512,13 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     
   }
+
+  public interface MapEntry<V> {
+    long getKey();
+    V getValue();
+  }
   
-  public final class MapEntry {
+  private final class MapEntryImpl implements MapEntry<V> {
       
     private int index;
     
@@ -521,10 +526,12 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       this.index = index;
     }
     
+    @Override
     public long getKey() {
       return keys[index];
     }
     
+    @Override
     public V getValue() {
       return values[index];
     }
@@ -542,11 +549,11 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
 
   }
   
-  private final class EntryIterator implements Iterator<MapEntry> {
+  private final class EntryIterator implements Iterator<MapEntry<V>> {
     
     private int position;
     private int lastNext = -1;
-    private final MapEntry entry = new MapEntry();
+    private final MapEntryImpl entry = new MapEntryImpl();
     
     @Override
     public boolean hasNext() {
@@ -555,7 +562,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     
     @Override
-    public MapEntry next() {
+    public MapEntry<V> next() {
       goToNext();
       lastNext = position;
       if (position >= keys.length) {

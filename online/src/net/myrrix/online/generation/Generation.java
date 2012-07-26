@@ -23,6 +23,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.online.candidate.CandidateFilter;
+import net.myrrix.online.candidate.LocationSensitiveHash;
 import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
@@ -49,6 +51,7 @@ public final class Generation {
   private final FastByIDMap<float[]> XLeftInverse;
   private final FastByIDMap<float[]> Y;
   private final FastByIDMap<float[]> YTRightInverse;
+  private final CandidateFilter candidateFilter;
   private final int numFeatures;
   private final ReadWriteLock xLock;
   private final ReadWriteLock yLock;
@@ -62,6 +65,7 @@ public final class Generation {
          MatrixUtils.getPseudoInverse(X),
          Y,
          MatrixUtils.getPseudoInverse(Y),
+         new LocationSensitiveHash(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
@@ -71,7 +75,7 @@ public final class Generation {
   }
 
   private static int countFeatures(FastByIDMap<float[]> X) {
-    Iterator<FastByIDMap<float[]>.MapEntry> it = X.entrySet().iterator();
+    Iterator<FastByIDMap.MapEntry<float[]>> it = X.entrySet().iterator();
     return it.hasNext() ? it.next().getValue().length : 0;
   }
 
@@ -81,6 +85,7 @@ public final class Generation {
                      FastByIDMap<float[]> XLeftInverse,
                      FastByIDMap<float[]> Y,
                      FastByIDMap<float[]> YTRightInverse,
+                     CandidateFilter candidateFilter,
                      int numFeatures,
                      ReadWriteLock xLock,
                      ReadWriteLock yLock,
@@ -92,6 +97,7 @@ public final class Generation {
     this.XLeftInverse = XLeftInverse;
     this.Y = Y;
     this.YTRightInverse = YTRightInverse;
+    this.candidateFilter = candidateFilter;
     this.numFeatures = numFeatures;
     this.xLock = xLock;
     this.yLock = yLock;
@@ -106,6 +112,7 @@ public final class Generation {
                           YTRightInverse,
                           X,
                           XLeftInverse,
+                          new LocationSensitiveHash(X),
                           numFeatures,
                           yLock,
                           xLock,
@@ -168,6 +175,10 @@ public final class Generation {
    */
   public FastByIDMap<FastIDSet> getKnownUserIDs() {
     return knownUserIDs;
+  }
+
+  public CandidateFilter getCandidateFilter() {
+    return candidateFilter;
   }
 
   /**

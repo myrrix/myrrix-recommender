@@ -38,11 +38,11 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] itemFeatures;
-  private final Iterator<FastByIDMap<float[]>.MapEntry> Yiterator;
+  private final Iterator<FastByIDMap.MapEntry<float[]>> Yiterator;
   private final long[] toItemIDs;
   private final Rescorer<LongPair> rescorer;
 
-  MostSimilarItemIterator(Iterator<FastByIDMap<float[]>.MapEntry> Yiterator,
+  MostSimilarItemIterator(Iterator<FastByIDMap.MapEntry<float[]>> Yiterator,
                           long[] toItemIDs,
                           float[][] itemFeatures,
                           Rescorer<LongPair> rescorer) {
@@ -60,7 +60,7 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
 
   @Override
   public RecommendedItem next() {
-    FastByIDMap<float[]>.MapEntry entry = Yiterator.next();
+    FastByIDMap.MapEntry<float[]> entry = Yiterator.next();
     long itemID = entry.getKey();
     for (long l : toItemIDs) {
       if (l == itemID) {

@@ -157,7 +157,7 @@ public final class MatrixUtils {
   private static FastByIDMap<float[]> multiply(RealMatrix M, FastByIDMap<float[]> S) {
     FastByIDMap<float[]> result = new FastByIDMap<float[]>(S.size(), 1.25f);
     double[][] matrixData = accessMatrixDataDirectly(M);
-    for (FastByIDMap<float[]>.MapEntry entry : S.entrySet()) {
+    for (FastByIDMap.MapEntry<float[]> entry : S.entrySet()) {
       result.put(entry.getKey(), matrixMultiply(matrixData, entry.getValue()));
     }
     return result;
@@ -231,7 +231,7 @@ public final class MatrixUtils {
    */
   public static RealMatrix transposeTimesSelf(FastByIDMap<float[]> M) {
     RealMatrix result = null;
-    for (FastByIDMap<float[]>.MapEntry entry : M.entrySet()) {
+    for (FastByIDMap.MapEntry<float[]> entry : M.entrySet()) {
       float[] vector = entry.getValue();
       int dimension = vector.length;
       if (result == null) {
@@ -312,7 +312,7 @@ public final class MatrixUtils {
 
   private static long[] unionColumnKeysInOrder(FastByIDMap<FastByIDFloatMap> M) {
     FastIDSet keys = new FastIDSet(1000, 1.25f);
-    for (FastByIDMap<FastByIDFloatMap>.MapEntry entry : M.entrySet()) {
+    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : M.entrySet()) {
       LongPrimitiveIterator it = entry.getValue().keySetIterator();
       while (it.hasNext()) {
         keys.add(it.nextLong());

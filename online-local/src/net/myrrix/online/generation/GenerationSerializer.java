@@ -51,7 +51,7 @@ public final class GenerationSerializer implements Serializable {
   private void writeObject(ObjectOutputStream out) throws IOException {
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
     out.writeInt(knownItemIDs.size());
-    for (FastByIDMap<FastIDSet>.MapEntry entry : knownItemIDs.entrySet()) {
+    for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {
       out.writeLong(entry.getKey());
       FastIDSet itemIDs = entry.getValue();
       out.writeInt(itemIDs.size());
@@ -104,7 +104,7 @@ public final class GenerationSerializer implements Serializable {
   private static void writeMatrix(FastByIDMap<float[]> matrix,
                                   ObjectOutputStream out) throws IOException {
     out.writeInt(matrix.size());
-    for (FastByIDMap<float[]>.MapEntry entry : matrix.entrySet()) {
+    for (FastByIDMap.MapEntry<float[]> entry : matrix.entrySet()) {
       out.writeLong(entry.getKey());
       float[] features = entry.getValue();
       out.writeInt(features.length);

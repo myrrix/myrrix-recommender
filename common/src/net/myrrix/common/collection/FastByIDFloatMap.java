@@ -365,7 +365,12 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
 
   }
 
-  public final class MapEntry {
+  public interface MapEntry {
+    long getKey();
+    float getValue();
+  }
+
+  private final class MapEntryImpl implements MapEntry {
 
     private int index;
 
@@ -373,10 +378,12 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
       this.index = index;
     }
 
+    @Override
     public long getKey() {
       return keys[index];
     }
 
+    @Override
     public float getValue() {
       return values[index];
     }
@@ -452,7 +459,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
 
     private int position;
     private int lastNext = -1;
-    private final MapEntry entry = new MapEntry();
+    private final MapEntryImpl entry = new MapEntryImpl();
 
     @Override
     public boolean hasNext() {

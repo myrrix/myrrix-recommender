@@ -55,6 +55,7 @@ import net.myrrix.common.NotReadyException;
 import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.TopN;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.online.candidate.CandidateFilter;
 import net.myrrix.online.generation.Generation;
 import net.myrrix.online.generation.GenerationManager;
 
@@ -263,13 +264,13 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     }
 
-    FastByIDMap<float[]> Y = generation.getY();
+    CandidateFilter candidateFilter = generation.getCandidateFilter();
 
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
       return TopN.selectTopN(new RecommendIterator(userFeatures,
-                                                   Y.entrySet().iterator(),
+                                                   candidateFilter.getCandidateIterator(userFeatures),
                                                    usersKnownItemIDs,
                                                    rescorer),
                              howMany);
@@ -302,13 +303,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       userKnownItemIDs.add(itemID);
     }
 
-    FastByIDMap<float[]> Y = generation.getY();
+    CandidateFilter candidateFilter = generation.getCandidateFilter();
+    float[][] anonymousFeaturesAsArray = { anonymousUserFeatures };
 
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
-      return TopN.selectTopN(new RecommendIterator(new float[][] { anonymousUserFeatures },
-                                                   Y.entrySet().iterator(),
+      return TopN.selectTopN(new RecommendIterator(anonymousFeaturesAsArray,
+                                                   candidateFilter.getCandidateIterator(anonymousFeaturesAsArray),
                                                    userKnownItemIDs,
                                                    null),
                              howMany);
