@@ -50,6 +50,8 @@ import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.web.servlets.AllItemIDsServlet;
+import net.myrrix.web.servlets.AllUserIDsServlet;
 import net.myrrix.web.servlets.BecauseServlet;
 import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
@@ -300,6 +302,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new BecauseServlet(), "because");
     addServlet(context, new RefreshServlet(), "refresh");
     addServlet(context, new ReadyServlet(), "ready");
+    addServlet(context, new AllUserIDsServlet(), "user/allIDs");
+    addServlet(context, new AllItemIDsServlet(), "item/allIDs");
     Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
     Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 

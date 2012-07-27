@@ -17,6 +17,7 @@
 package net.myrrix.client;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Locale;
 
 import org.apache.commons.cli.CommandLine;
@@ -28,6 +29,8 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.client.translating.TranslatedRecommendedItem;
@@ -80,6 +83,9 @@ import net.myrrix.common.LangUtils;
  *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...] howMany}</li>
  *   <li>{@code recommendedBecause userID itemID howMany}</li>
  *   <li>{@code refresh}</li>
+ *   <li>{@code isReady}</li>
+ *   <li>{@code getAllUserIDs}</li>
+ *   <li>{@code getAllItemIDs}</li>
  * </ul>
  *
  * <p>Methods that return {@code void} in {@link net.myrrix.common.MyrrixRecommender} produce no output. Methods
@@ -196,12 +202,54 @@ public final class CLI {
       case REFRESH:
         success = doRefresh(programArgs, recommender);
         break;
+      case ISREADY:
+        success = doIsReady(programArgs, recommender);
+        break;
+      case GETALLUSERIDS:
+        success = doGetAllIDs(programArgs, recommender, translatingRecommender, true);
+        break;
+      case GETALLITEMIDS:
+        success = doGetAllIDs(programArgs, recommender, translatingRecommender, false);
+        break;
     }
 
     if (!success) {
       printHelp(options);
     }
 
+  }
+
+  private static boolean doGetAllIDs(String[] programArgs,
+                                     ClientRecommender recommender,
+                                     TranslatingRecommender translatingRecommender,
+                                     boolean isUser) throws TasteException {
+    if (programArgs.length != 1) {
+      return false;
+    }
+    if (translatingRecommender == null) {
+      FastIDSet ids = isUser ? recommender.getAllUserIDs() : recommender.getAllItemIDs();
+      LongPrimitiveIterator it = ids.iterator();
+      while (it.hasNext()) {
+        System.out.println(Long.toString(it.nextLong()));
+      }
+    } else {
+      if (isUser) {
+        throw new UnsupportedOperationException();
+      }
+      Collection<String> ids = translatingRecommender.getAllItemIDs();
+      for (String id : ids) {
+        System.out.println(id);
+      }
+    }
+    return true;
+  }
+
+  private static boolean doIsReady(String[] programArgs, ClientRecommender recommender) throws TasteException {
+    if (programArgs.length != 1) {
+      return false;
+    }
+    System.out.println(recommender.isReady());
+    return true;
   }
 
   private static boolean doRefresh(String[] programArgs, ClientRecommender recommender) {

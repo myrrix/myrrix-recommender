@@ -18,6 +18,7 @@ package net.myrrix.client.translating;
 
 import java.io.File;
 import java.io.Reader;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.mahout.cf.taste.common.TasteException;
@@ -132,5 +133,10 @@ public interface TranslatingRecommender {
    *  while the recommender is still building an initial model
    */
   boolean isReady() throws TasteException;
+
+  /**
+   * @return all item IDs currently in the model
+   */
+  Collection<String> getAllItemIDs() throws TasteException;
 
 }

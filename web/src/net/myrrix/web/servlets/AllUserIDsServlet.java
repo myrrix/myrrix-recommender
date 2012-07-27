@@ -14,26 +14,13 @@
  * limitations under the License.
  */
 
-package net.myrrix.client;
+package net.myrrix.web.servlets;
 
-/**
- * Enumerates supported commands from {@link CLI}.
- *
- * @author Sean Owen
- */
-public enum CLICommand {
+public final class AllUserIDsServlet extends AbstractAllIDsServlet {
 
-  SETPREFERENCE,
-  REMOVEPREFERENCE,
-  INGEST,
-  ESTIMATEPREFERENCE,
-  RECOMMEND,
-  RECOMMENDTOANONYMOUS,
-  MOSTSIMILARITEMS,
-  RECOMMENDEDBECAUSE,
-  REFRESH,
-  ISREADY,
-  GETALLUSERIDS,
-  GETALLITEMIDS,
+  @Override
+  protected boolean isUserIDs() {
+    return true;
+  }
 
 }

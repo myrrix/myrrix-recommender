@@ -59,6 +59,7 @@ import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
@@ -781,6 +782,78 @@ public final class ClientRecommender implements MyrrixRecommender {
       }
     } catch (IOException ioe) {
       throw new TasteException(ioe);
+    }
+  }
+
+  @Override
+  public FastIDSet getAllUserIDs() throws TasteException {
+    try {
+      FastIDSet result = new FastIDSet();
+      int numPartitions = partitions.size();
+      for (int i = 0; i < numPartitions; i++) {
+        getAllUserIDsFromPartition(i, result);
+      }
+      return result;
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
+  private void getAllUserIDsFromPartition(int partition, FastIDSet result) throws IOException, TasteException {
+    HttpURLConnection connection = makeConnection("/user/allIDs", "GET", (long) partition);
+    try {
+      switch (connection.getResponseCode()) {
+        case HttpURLConnection.HTTP_OK:
+          break;
+        case HttpURLConnection.HTTP_UNAVAILABLE:
+          throw new NotReadyException();
+        default:
+          throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+      }
+      consumeIDs(connection, result);
+    } finally {
+      connection.disconnect();
+    }
+  }
+
+  @Override
+  public FastIDSet getAllItemIDs() throws TasteException {
+    try {
+      HttpURLConnection connection = makeConnection("/item/allIDs", "GET", null);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        return consumeIDs(connection);
+      } finally {
+        connection.disconnect();
+      }
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
+
+  private static FastIDSet consumeIDs(HttpURLConnection connection) throws IOException {
+    FastIDSet result = new FastIDSet();
+    consumeIDs(connection, result);
+    return result;
+  }
+
+  private static void consumeIDs(HttpURLConnection connection, FastIDSet result) throws IOException {
+    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+    try {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        result.add(Long.parseLong(line));
+      }
+    } finally {
+      Closeables.closeQuietly(reader);
     }
   }
 

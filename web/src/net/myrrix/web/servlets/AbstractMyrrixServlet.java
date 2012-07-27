@@ -216,7 +216,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  private ResponseContentType determineResponseType(HttpServletRequest request) {
+  protected ResponseContentType determineResponseType(HttpServletRequest request) {
 
     String acceptHeader = request.getHeader("Accept");
     ResponseContentType cached = responseTypeCache.get(acceptHeader);
@@ -266,7 +266,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return finalType;
   }
 
-  private enum ResponseContentType {
+  protected enum ResponseContentType {
     JSON,
     CSV,
   }

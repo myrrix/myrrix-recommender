@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -34,6 +35,17 @@ public final class SimpleTest extends AbstractClientTest {
   @Override
   protected String getTestDataPath() {
     return "testdata/grouplens100K";
+  }
+
+  @Test
+  public void testAllIDs() throws Exception {
+    ClientRecommender client = getClient();
+    FastIDSet allUserIDs = client.getAllUserIDs();
+    FastIDSet allItemIDs = client.getAllItemIDs();
+    assertEquals(943, allUserIDs.size());
+    assertTrue(allUserIDs.contains(1L));
+    assertEquals(1682, allItemIDs.size());
+    assertTrue(allItemIDs.contains(421L));
   }
 
   @Test

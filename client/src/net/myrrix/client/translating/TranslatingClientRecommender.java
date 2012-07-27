@@ -34,6 +34,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -242,6 +244,17 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   @Override
   public boolean isReady() throws TasteException {
     return delegate.isReady();
+  }
+
+  @Override
+  public Collection<String> getAllItemIDs() throws TasteException {
+    FastIDSet itemIDs = delegate.getAllItemIDs();
+    Collection<String> result = Lists.newArrayListWithCapacity(itemIDs.size());
+    LongPrimitiveIterator it = itemIDs.iterator();
+    while (it.hasNext()) {
+      result.add(itemTranslator.toStringID(it.nextLong()));
+    }
+    return result;
   }
 
   private List<TranslatedRecommendedItem> translate(Collection<RecommendedItem> originals) {

@@ -21,6 +21,7 @@ import java.io.Reader;
 import java.util.List;
 
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.ItemBasedRecommender;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -158,5 +159,14 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    */
   boolean isReady() throws TasteException;
 
+  /**
+   * @return all user IDs currently in the model
+   */
+  FastIDSet getAllUserIDs() throws TasteException;
+
+  /**
+   * @return all item IDs currently in the model
+   */
+  FastIDSet getAllItemIDs() throws TasteException;
 
 }

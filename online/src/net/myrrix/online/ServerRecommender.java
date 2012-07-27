@@ -711,6 +711,32 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
   }
 
+  @Override
+  public FastIDSet getAllUserIDs() throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    return getIDsFromKeys(generation.getX(), generation.getXLock().readLock());
+  }
+
+  @Override
+  public FastIDSet getAllItemIDs() throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    return getIDsFromKeys(generation.getY(), generation.getYLock().readLock());
+  }
+
+  private static FastIDSet getIDsFromKeys(FastByIDMap<float[]> map, Lock readLock) {
+    readLock.lock();
+    try {
+      FastIDSet ids = new FastIDSet(map.size(), 1.25f);
+      LongPrimitiveIterator it = map.keySetIterator();
+      while (it.hasNext()) {
+        ids.add(it.nextLong());
+      }
+      return ids;
+    } finally {
+      readLock.unlock();
+    }
+  }
+
   /**
    * @throws UnsupportedOperationException
    * @deprecated do not call
