@@ -54,7 +54,7 @@
       </manifest>
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
-      <zipfileset src="common/lib/guava-12.0.jar"/>
+      <zipfileset src="common/lib/guava-13.0-rc2.jar"/>
       <zipfileset src="common/lib/commons-cli-1.2.jar"/>
       <zipfileset src="common/lib/mahout-core-0.7.jar"/>
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
@@ -76,7 +76,7 @@
       <zipfileset dir="${online.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset dir="${online-local.output.dir}"/>
-      <zipfileset src="common/lib/guava-12.0.jar"/>
+      <zipfileset src="common/lib/guava-13.0-rc2.jar"/>
       <zipfileset src="common/lib/commons-cli-1.2.jar"/>
       <zipfileset src="common/lib/mahout-core-0.7.jar"/>
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
@@ -98,7 +98,7 @@
       <classes dir="${online.output.dir}"/>
       <classes dir="${online-local.output.dir}"/>
       <lib dir="common/lib">
-        <include name="guava-12.0.jar"/>
+        <include name="guava-13.0-rc2.jar"/>
         <include name="commons-cli-1.2.jar"/>
         <include name="mahout-core-0.7.jar"/>
         <include name="mahout-math-0.7.jar"/>
