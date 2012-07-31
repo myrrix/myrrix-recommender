@@ -21,6 +21,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.candidate.CandidateFilter;
@@ -45,6 +47,10 @@ import net.myrrix.online.factorizer.MatrixUtils;
  */
 public final class Generation {
 
+  private static final Logger log = LoggerFactory.getLogger(Generation.class);
+
+  private static final String NO_INVERSE_KEY = "model.noInverse";
+
   private final FastByIDMap<FastIDSet> knownItemIDs;
   private final FastByIDMap<FastIDSet> knownUserIDs;
   private final FastByIDMap<float[]> X;
@@ -62,9 +68,9 @@ public final class Generation {
     this(knownItemIDs,
          null, // Not used yet
          X,
-         MatrixUtils.getPseudoInverse(X),
+         maybeBuildInverse(X),
          Y,
-         MatrixUtils.getPseudoInverse(Y),
+         maybeBuildInverse(Y),
          new LocationSensitiveHash(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
@@ -72,6 +78,14 @@ public final class Generation {
          new ReentrantReadWriteLock(),
          null // not used yet
          );
+  }
+
+  private static FastByIDMap<float[]> maybeBuildInverse(FastByIDMap<float[]> matrix) {
+    log.info("Computing inverse");
+    FastByIDMap<float[]> inverse =
+        Boolean.valueOf(System.getProperty(NO_INVERSE_KEY)) ? null : MatrixUtils.getPseudoInverse(matrix);
+    log.info("Done computing inverse");
+    return inverse;
   }
 
   private static int countFeatures(FastByIDMap<float[]> X) {

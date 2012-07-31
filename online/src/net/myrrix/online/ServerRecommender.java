@@ -288,13 +288,15 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     float[] anonymousUserFeatures = new float[generation.getNumFeatures()];
     FastByIDMap<float[]> ytRightInverse = generation.getYTRightInverse();
 
-    for (long itemID : itemIDs) {
-      float[] userFoldIn = ytRightInverse.get(itemID);
-      if (userFoldIn == null) {
-        throw new NoSuchItemException(itemID);
-      }
-      for (int i = 0; i < anonymousUserFeatures.length; i++) {
-        anonymousUserFeatures[i] += userFoldIn[i];
+    if (ytRightInverse != null) { // If not disabled ...
+      for (long itemID : itemIDs) {
+        float[] userFoldIn = ytRightInverse.get(itemID);
+        if (userFoldIn == null) {
+          throw new NoSuchItemException(itemID);
+        }
+        for (int i = 0; i < anonymousUserFeatures.length; i++) {
+          anonymousUserFeatures[i] += userFoldIn[i];
+        }
       }
     }
 
@@ -417,13 +419,16 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       xReadLock.unlock();
     }
 
-    float[] userFoldIn = generation.getYTRightInverse().get(itemID);
-    if (userFoldIn != null) {
+    FastByIDMap<float[]> ytRightInverse = generation.getYTRightInverse();
+    if (ytRightInverse != null) { // If not disabled...
+      float[] userFoldIn = ytRightInverse.get(itemID);
+      if (userFoldIn != null) {
         for (int i = 0; i < userFeatures.length; i++) {
-        userFeatures[i] += value * userFoldIn[i];
+          userFeatures[i] += value * userFoldIn[i];
+        }
       }
     }
-    
+
     FastByIDMap<float[]> Y = generation.getY();
     
     float[] itemFeatures;
@@ -447,11 +452,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     } finally {
       yReadLock.unlock();
     }
-    
-    float[] itemFoldIn = generation.getXLeftInverse().get(userID);
-    if (itemFoldIn != null) {
-      for (int i = 0; i < itemFeatures.length; i++) {
-        itemFeatures[i] += value * itemFoldIn[i];
+
+    FastByIDMap<float[]> xLeftInverse = generation.getXLeftInverse();
+    if (xLeftInverse != null) { // If not disabled...
+      float[] itemFoldIn = xLeftInverse.get(userID);
+      if (itemFoldIn != null) {
+        for (int i = 0; i < itemFeatures.length; i++) {
+          itemFeatures[i] += value * itemFoldIn[i];
+        }
       }
     }
 
