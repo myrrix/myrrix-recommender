@@ -19,9 +19,7 @@ package net.myrrix.client;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,9 +29,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.RandomUtils;
@@ -63,8 +61,8 @@ public final class LoadTest extends AbstractClientTest {
   @Test
   public void testLoad() throws Exception {
 
-    Set<Long> userIDsSet = Sets.newHashSet();
-    Set<Long> itemIDsSet = Sets.newHashSet();
+    FastIDSet userIDsSet = new FastIDSet();
+    FastIDSet itemIDsSet = new FastIDSet();
     Splitter comma = Splitter.on(',');
     for (File f : getTestTempDir().listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"))) {
       for (CharSequence line : new FileLineIterable(f)) {
@@ -73,8 +71,8 @@ public final class LoadTest extends AbstractClientTest {
         itemIDsSet.add(Long.parseLong(it.next()));
       }
     }
-    List<Long> uniqueUserIDs = Lists.newArrayList(userIDsSet);
-    List<Long> uniqueItemIDs = Lists.newArrayList(itemIDsSet);
+    long[] uniqueUserIDs = userIDsSet.toArray();
+    long[] uniqueItemIDs = itemIDsSet.toArray();
 
     Random random = RandomUtils.getRandom();
     final ClientRecommender client = getClient();
@@ -95,8 +93,8 @@ public final class LoadTest extends AbstractClientTest {
 
     for (int i = 0; i < ITERATIONS; i++) {
       final double r = random.nextDouble();
-      final long userID = uniqueUserIDs.get(random.nextInt(uniqueUserIDs.size()));
-      final long itemID = uniqueItemIDs.get(random.nextInt(uniqueItemIDs.size()));
+      final long userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
+      final long itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
       final float value = (float) random.nextInt(10);
       futures.add(executor.submit(new Callable<Void>() {
         @Override
