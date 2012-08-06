@@ -49,7 +49,8 @@ public final class Generation {
 
   private static final Logger log = LoggerFactory.getLogger(Generation.class);
 
-  private static final String NO_INVERSE_KEY = "model.noInverse";
+  public static final String NO_INVERSE_KEY = "model.noInverse";
+  public static final String NO_KNOWN_ITEMS_KEY = "model.noKnownItems";
 
   private final FastByIDMap<FastIDSet> knownItemIDs;
   private final FastByIDMap<FastIDSet> knownUserIDs;
@@ -81,9 +82,11 @@ public final class Generation {
   }
 
   private static FastByIDMap<float[]> maybeBuildInverse(FastByIDMap<float[]> matrix) {
+    if (Boolean.valueOf(System.getProperty(NO_INVERSE_KEY))) {
+      return null;
+    }
     log.info("Computing inverse");
-    FastByIDMap<float[]> inverse =
-        Boolean.valueOf(System.getProperty(NO_INVERSE_KEY)) ? null : MatrixUtils.getPseudoInverse(matrix);
+    FastByIDMap<float[]> inverse = MatrixUtils.getPseudoInverse(matrix);
     log.info("Done computing inverse");
     return inverse;
   }

@@ -234,9 +234,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       xLock.unlock();
     }
 
+    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
+    if (knownItemIDs == null && !considerKnownItems) {
+      throw new UnsupportedOperationException("Can't ignore known items because no known items available");
+    }
     FastIDSet usersKnownItemIDs = null;
     if (!considerKnownItems) {
-      FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
       Lock knownItemLock = generation.getKnownItemLock().readLock();
       knownItemLock.lock();
       try {
@@ -464,31 +467,32 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
 
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
-
-    FastIDSet userKnownItemIDs;
-    ReadWriteLock knownItemLock = generation.getKnownItemLock();
-    Lock knownItemReadLock = knownItemLock.readLock();
-    knownItemReadLock.lock();
-    try {
-      userKnownItemIDs = knownItemIDs.get(userID);
-      if (userKnownItemIDs == null) {
-        userKnownItemIDs = new FastIDSet();
-        Lock knownItemWriteLock = knownItemLock.writeLock();
-        knownItemReadLock.unlock();
-        knownItemWriteLock.lock();
-        try {
-          knownItemIDs.put(userID, userKnownItemIDs);
-        } finally {
-          knownItemReadLock.lock();
-          knownItemWriteLock.unlock();
+    if (knownItemIDs != null) {
+      FastIDSet userKnownItemIDs;
+      ReadWriteLock knownItemLock = generation.getKnownItemLock();
+      Lock knownItemReadLock = knownItemLock.readLock();
+      knownItemReadLock.lock();
+      try {
+        userKnownItemIDs = knownItemIDs.get(userID);
+        if (userKnownItemIDs == null) {
+          userKnownItemIDs = new FastIDSet();
+          Lock knownItemWriteLock = knownItemLock.writeLock();
+          knownItemReadLock.unlock();
+          knownItemWriteLock.lock();
+          try {
+            knownItemIDs.put(userID, userKnownItemIDs);
+          } finally {
+            knownItemReadLock.lock();
+            knownItemWriteLock.unlock();
+          }
         }
+      } finally {
+        knownItemReadLock.unlock();
       }
-    } finally {
-      knownItemReadLock.unlock();
-    }
 
-    synchronized (userKnownItemIDs) {
-      userKnownItemIDs.add(itemID);
+      synchronized (userKnownItemIDs) {
+        userKnownItemIDs.add(itemID);
+      }
     }
   }
 
@@ -496,32 +500,33 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public void removePreference(long userID, long itemID) throws NotReadyException {
 
     Generation generation = getCurrentGeneration();
-
-    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
-
     ReadWriteLock knownItemLock = generation.getKnownItemLock();
 
-    Lock knownItemReadLock = knownItemLock.readLock();
-    FastIDSet userKnownItemIDs;
-    knownItemReadLock.lock();
-    try {
-      userKnownItemIDs = knownItemIDs.get(userID);
-    } finally {
-      knownItemReadLock.unlock();
-    }
+    boolean removeUser = false;
+    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
+    if (knownItemIDs != null) {
 
-    if (userKnownItemIDs == null) {
-      // Doesn't exist? So ignore this request
-      return;
-    }
+      Lock knownItemReadLock = knownItemLock.readLock();
+      FastIDSet userKnownItemIDs;
+      knownItemReadLock.lock();
+      try {
+        userKnownItemIDs = knownItemIDs.get(userID);
+      } finally {
+        knownItemReadLock.unlock();
+      }
 
-    boolean removeUser;
-    synchronized (userKnownItemIDs) {
-      if (!userKnownItemIDs.remove(itemID)) {
-        // Item unknown, so ignore this request
+      if (userKnownItemIDs == null) {
+        // Doesn't exist? So ignore this request
         return;
       }
-      removeUser = userKnownItemIDs.isEmpty();
+
+      synchronized (userKnownItemIDs) {
+        if (!userKnownItemIDs.remove(itemID)) {
+          // Item unknown, so ignore this request
+          return;
+        }
+        removeUser = userKnownItemIDs.isEmpty();
+      }
     }
 
     // We can proceed with the request
@@ -538,13 +543,16 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (removeUser) {
 
-      Lock knownItemWriteLock = knownItemLock.writeLock();
-      knownItemWriteLock.lock();
-      try {
-        knownItemIDs.remove(userID);
-      } finally {
-        knownItemWriteLock.unlock();
+      if (knownItemIDs != null) {
+        Lock knownItemWriteLock = knownItemLock.writeLock();
+        knownItemWriteLock.lock();
+        try {
+          knownItemIDs.remove(userID);
+        } finally {
+          knownItemWriteLock.unlock();
+        }
       }
+
       Lock xWriteLock = xLock.writeLock();
       xWriteLock.lock();
       try {
@@ -669,6 +677,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     Generation generation = getCurrentGeneration();
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
+    if (knownItemIDs == null) {
+      throw new UnsupportedOperationException("No known item IDs available");
+    }
 
     Lock knownItemLock = generation.getKnownItemLock().readLock();
     FastIDSet userKnownItemIDs;

@@ -253,7 +253,12 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     log.info("Computing model from input in {}", inputDir);
 
-    FastByIDMap<FastIDSet> knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
+    FastByIDMap<FastIDSet> knownItemIDs;
+    if (Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))) {
+      knownItemIDs = null;
+    } else {
+      knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
+    }
     Splitter comma = Splitter.on(',');
     FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
@@ -283,21 +288,23 @@ public final class DelegateGenerationManager implements GenerationManager {
           MatrixUtils.addTo(userID, itemID, value, RbyRow, RbyColumn);
         }
 
-        FastIDSet itemIDs = knownItemIDs.get(userID);
-        if (Float.isNaN(value)) {
-          // Remove, not set
-          if (itemIDs != null) {
-            itemIDs.remove(itemID);
-            if (itemIDs.isEmpty()) {
-              knownItemIDs.remove(userID);
+        if (knownItemIDs != null) {
+          FastIDSet itemIDs = knownItemIDs.get(userID);
+          if (Float.isNaN(value)) {
+            // Remove, not set
+            if (itemIDs != null) {
+              itemIDs.remove(itemID);
+              if (itemIDs.isEmpty()) {
+                knownItemIDs.remove(userID);
+              }
             }
+          } else {
+            if (itemIDs == null) {
+              itemIDs = new FastIDSet();
+              knownItemIDs.put(userID, itemIDs);
+            }
+            itemIDs.add(itemID);
           }
-        } else {
-          if (itemIDs == null) {
-            itemIDs = new FastIDSet();
-            knownItemIDs.put(userID, itemIDs);
-          }
-          itemIDs.add(itemID);
         }
 
         if (++lines % 1000000 == 0) {
@@ -308,7 +315,7 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
       // No data yet
-      return new Generation(new FastByIDMap<FastIDSet>(),
+      return new Generation(null,
                             new FastByIDMap<float[]>(),
                             new FastByIDMap<float[]>());
     }

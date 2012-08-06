@@ -50,14 +50,18 @@ public final class GenerationSerializer implements Serializable {
 
   private void writeObject(ObjectOutputStream out) throws IOException {
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
-    out.writeInt(knownItemIDs.size());
-    for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {
-      out.writeLong(entry.getKey());
-      FastIDSet itemIDs = entry.getValue();
-      out.writeInt(itemIDs.size());
-      LongPrimitiveIterator it = itemIDs.iterator();
-      while (it.hasNext()) {
-        out.writeLong(it.nextLong());
+    if (knownItemIDs == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(knownItemIDs.size());
+      for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {
+        out.writeLong(entry.getKey());
+        FastIDSet itemIDs = entry.getValue();
+        out.writeInt(itemIDs.size());
+        LongPrimitiveIterator it = itemIDs.iterator();
+        while (it.hasNext()) {
+          out.writeLong(it.nextLong());
+        }
       }
     }
     writeMatrix(generation.getX(), out);
@@ -66,15 +70,20 @@ public final class GenerationSerializer implements Serializable {
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     int knownItemIDsCount = in.readInt();
-    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
-    for (int i = 0; i < knownItemIDsCount; i++) {
-      long id = in.readLong();
-      int setCount = in.readInt();
-      FastIDSet set = new FastIDSet(setCount, 1.25f);
-      for (int j = 0; j < setCount; j++) {
-        set.add(in.readLong());
+    FastByIDMap<FastIDSet> newKnownItemIDs;
+    if (knownItemIDsCount == 0) {
+      newKnownItemIDs = null;
+    } else {
+      newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
+      for (int i = 0; i < knownItemIDsCount; i++) {
+        long id = in.readLong();
+        int setCount = in.readInt();
+        FastIDSet set = new FastIDSet(setCount, 1.25f);
+        for (int j = 0; j < setCount; j++) {
+          set.add(in.readLong());
+        }
+        newKnownItemIDs.put(id, set);
       }
-      newKnownItemIDs.put(id, set);
     }
     FastByIDMap<float[]> newX = readMatrix(in);
     FastByIDMap<float[]> newY = readMatrix(in);
