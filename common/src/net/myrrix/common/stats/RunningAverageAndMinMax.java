@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.stats;
+
+import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 
 /**
  * Implementations of this class also record a min and max observed value.
@@ -22,7 +24,7 @@ package net.myrrix.common;
  * @see org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev
  * @author Sean Owen
  */
-public interface RunningAverageAndMinMax {
+public interface RunningAverageAndMinMax extends RunningAverage {
 
   double getMin();
 

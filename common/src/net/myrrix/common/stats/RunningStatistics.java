@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.stats;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.Serializable;
 
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
 import org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev;
@@ -26,13 +26,11 @@ import org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev;
  *
  * @author Sean Owen
  */
-public final class RunningStatistics implements RunningAverageAndStdDev, RunningAverageAndMinMax {
+public final class RunningStatistics implements RunningAverageAndStdDev, RunningAverageAndMinMax, Serializable {
 
   private final RunningAverageAndStdDev delegate;
   private double min;
   private double max;
-  private final AtomicInteger numClientErrors;
-  private final AtomicInteger numServerErrors;
 
   public RunningStatistics() {
     this(new FullRunningAverageAndStdDev(), Double.NaN, Double.NaN);
@@ -42,8 +40,6 @@ public final class RunningStatistics implements RunningAverageAndStdDev, Running
     this.delegate = delegate;
     this.min = min;
     this.max = max;
-    numClientErrors = new AtomicInteger();
-    numServerErrors = new AtomicInteger();
   }
 
   @Override
@@ -98,25 +94,12 @@ public final class RunningStatistics implements RunningAverageAndStdDev, Running
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * @throws UnsupportedOperationException
+   */
   @Override
   public RunningAverageAndStdDev inverse() {
-    return new RunningStatistics(delegate.inverse(), -max, -min);
-  }
-
-  public int getNumClientErrors() {
-    return numClientErrors.get();
-  }
-
-  public void incrementClientErrors() {
-    numClientErrors.incrementAndGet();
-  }
-
-  public int getNumServerErrors() {
-    return numServerErrors.get();
-  }
-
-  public void incrementServerErrors() {
-    numServerErrors.incrementAndGet();
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -40,8 +40,8 @@ import org.apache.mahout.common.RandomUtils;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
-import net.myrrix.common.RunningStatistics;
 import net.myrrix.online.RescorerProvider;
+import net.myrrix.web.common.stats.ServletStats;
 
 /**
  * Superclass of {@link HttpServlet}s used in the application.
@@ -66,7 +66,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
   private MyrrixRecommender recommender;
   private RescorerProvider rescorerProvider;
-  private RunningStatistics timing;
+  private ServletStats timing;
   private List<List<Pair<String,Integer>>> allPartitions;
   private Integer thisPartition;
   private Random random;
@@ -90,15 +90,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     responseTypeCache = Maps.newConcurrentMap();
 
     @SuppressWarnings("unchecked")
-    Map<String,RunningStatistics> timings = (Map<String,RunningStatistics>) context.getAttribute(TIMINGS_KEY);
+    Map<String,ServletStats> timings = (Map<String,ServletStats>) context.getAttribute(TIMINGS_KEY);
     if (timings == null) {
       timings = Maps.newHashMap();
       context.setAttribute(TIMINGS_KEY, timings);
     }
     String key = getClass().getSimpleName();
-    RunningStatistics theTiming = timings.get(key);
+    ServletStats theTiming = timings.get(key);
     if (theTiming == null) {
-      theTiming = new RunningStatistics();
+      theTiming = new ServletStats();
       timings.put(key, theTiming);
     }
     timing = theTiming;
@@ -120,7 +120,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
     long start = System.nanoTime();
     super.service(request, response);
-    timing.addDatum(System.nanoTime() - start);
+    timing.addTiming(System.nanoTime() - start);
 
     int status = response.getStatus();
     if (status >= 400) {
@@ -162,7 +162,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return rescorerProvider;
   }
 
-  public final RunningStatistics getTiming() {
+  public final ServletStats getTiming() {
     return timing;
   }
 

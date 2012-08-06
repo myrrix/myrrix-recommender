@@ -15,8 +15,10 @@
  limitations under the License.
  -->
 <jsp:directive.page import="java.util.Map"/>
-<jsp:directive.page import="net.myrrix.common.JVMEnvironment"/>
-<jsp:directive.page import="net.myrrix.common.RunningStatistics"/>
+<jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
+<jsp:directive.page import="net.myrrix.web.common.stats.ServletStats"/>
+<jsp:directive.page import="net.myrrix.common.stats.RunningStatistics"/>
+<jsp:directive.page import="net.myrrix.common.stats.RunningStatisticsPerTime"/>
 <jsp:directive.page contentType="text/html"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
@@ -136,34 +138,38 @@ pageContext.setAttribute("localInputDir",
 <h2>Service</h2>
 
 <jsp:scriptlet>
-Map&lt;String,RunningStatistics&gt; timings = (Map&lt;String,RunningStatistics&gt;)
+Map&lt;String,ServletStats&gt; timings = (Map&lt;String,ServletStats&gt;)
     application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.TIMINGS");
 </jsp:scriptlet>
 
 <table style="width:100%">
   <tr>
     <th>Service</th>
-    <th>Requests</th>
-    <th>Average (&amp;mu;s)</th>
-    <th>Max (&amp;mu;s)</th>
+    <th>Requests<br/>(last hour)</th>
+    <th>Average (&amp;mu;s)<br/>(last hour)</th>
+    <th>Max (&amp;mu;s)<br/>(last hour)</th>
     <th>Client Errors</th>
     <th>Server Errors</th>
   </tr>
   <jsp:scriptlet>
-    for (Map.Entry&lt;String,RunningStatistics&gt; entry : timings.entrySet()) {
+    for (Map.Entry&lt;String,ServletStats&gt; entry : timings.entrySet()) {
       pageContext.setAttribute("entry", entry);
   </jsp:scriptlet>
     <tr>
       <td style="font-family:Courier,monospace;text-align:left">${entry.key}</td>
       <jsp:scriptlet>
-        pageContext.setAttribute("averageMicroSec", (long) entry.getValue().getAverage() / 1000L);
-        pageContext.setAttribute("maxMicroSec", (long) entry.getValue().getMax() / 1000L);
+        RunningStatistics allTime = entry.getValue().getAllTime();
+        pageContext.setAttribute("averageMicroSec", (long) allTime.getAverage() / 1000L);
+        pageContext.setAttribute("maxMicroSec", (long) allTime.getMax() / 1000L);
+        RunningStatisticsPerTime lastHour = entry.getValue().getLastHour();
+        pageContext.setAttribute("averageLastHourMicroSec", (long) lastHour.getAverage() / 1000L);
+        pageContext.setAttribute("maxLastHourMicroSec", (long) lastHour.getMax() / 1000L);
         pageContext.setAttribute("clientErrors", entry.getValue().getNumClientErrors());
         pageContext.setAttribute("serverErrors", entry.getValue().getNumServerErrors());
       </jsp:scriptlet>
-      <td>${entry.value.count}</td>
-      <td>${averageMicroSec}</td>
-      <td>${maxMicroSec}</td>
+      <td>${entry.value.allTime.count}<br/>${entry.value.lastHour.count}</td>
+      <td>${averageMicroSec}<br/>${averageLastHourMicroSec}</td>
+      <td>${maxMicroSec}<br/>${maxLastHourMicroSec}</td>
       <td>${clientErrors}</td>
       <td>${serverErrors}</td>
     </tr>

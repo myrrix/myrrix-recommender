@@ -34,7 +34,7 @@ import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.JVMEnvironment;
+import net.myrrix.common.stats.JVMEnvironment;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;

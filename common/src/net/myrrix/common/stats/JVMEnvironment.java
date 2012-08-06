@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.stats;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
