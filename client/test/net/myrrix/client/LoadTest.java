@@ -61,6 +61,8 @@ public final class LoadTest extends AbstractClientTest {
   @Test
   public void testLoad() throws Exception {
 
+    log.info("Reading IDs...");
+
     FastIDSet userIDsSet = new FastIDSet();
     FastIDSet itemIDsSet = new FastIDSet();
     Splitter comma = Splitter.on(',');
@@ -81,8 +83,6 @@ public final class LoadTest extends AbstractClientTest {
                                                             new NamedThreadFactory(true, "LoadTest"));
     Collection<Future<?>> futures = Lists.newArrayList();
 
-    long start = System.currentTimeMillis();
-
     final RunningAverage recommendedBecause = new FullRunningAverage();
     final RunningAverage setPreference = new FullRunningAverage();
     final RunningAverage estimatePreference = new FullRunningAverage();
@@ -90,6 +90,10 @@ public final class LoadTest extends AbstractClientTest {
     final RunningAverage recommend = new FullRunningAverage();
 
     final AtomicInteger count = new AtomicInteger();
+
+    log.info("Starting load test...");
+
+    long start = System.currentTimeMillis();
 
     for (int i = 0; i < ITERATIONS; i++) {
       final double r = random.nextDouble();

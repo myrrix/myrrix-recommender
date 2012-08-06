@@ -24,12 +24,16 @@ import com.google.common.io.PatternFilenameFilter;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixTest;
 import net.myrrix.web.Runner;
 import net.myrrix.web.RunnerConfiguration;
 
 public abstract class AbstractClientTest extends MyrrixTest {
+
+  private static final Logger log = LoggerFactory.getLogger(AbstractClientTest.class);
 
   private static File savedModelFile = null;
 
@@ -60,6 +64,8 @@ public abstract class AbstractClientTest extends MyrrixTest {
     Preconditions.checkState(testDataDir.exists() && testDataDir.isDirectory(),
                              "%s is not an existing directory", testDataDir.getAbsolutePath());
 
+    log.info("Copying files to {}", tempDir);
+
     if (savedModelFile == null) {
       File[] srcDataFiles = testDataDir.listFiles(new PatternFilenameFilter("[^.].*"));
       if (srcDataFiles != null) {
@@ -71,6 +77,8 @@ public abstract class AbstractClientTest extends MyrrixTest {
     } else {
       Files.copy(savedModelFile, new File(tempDir, "model.bin"));
     }
+
+    log.info("Configuring recommender...");
 
     RunnerConfiguration runnerConfig = new RunnerConfiguration();
     runnerConfig.setInstanceID(0L);
@@ -100,6 +108,8 @@ public abstract class AbstractClientTest extends MyrrixTest {
     client = new ClientRecommender(clientConfig);
 
     client.refresh(null);
+
+    log.info("Waiting for client...");
 
     while (!client.isReady()) {
       try {
