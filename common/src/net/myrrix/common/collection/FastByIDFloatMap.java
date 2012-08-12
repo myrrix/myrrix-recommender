@@ -368,6 +368,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
   public interface MapEntry {
     long getKey();
     float getValue();
+    float setValue(float value);
   }
 
   private final class MapEntryImpl implements MapEntry {
@@ -388,6 +389,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
       return values[index];
     }
 
+    @Override
     public float setValue(float value) {
       float oldValue = values[index];
       values[index] = value;
