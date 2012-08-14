@@ -16,6 +16,8 @@
 
 package net.myrrix.web;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -28,6 +30,8 @@ import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.Rescorer;
+import org.apache.mahout.common.LongPair;
 
 import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
@@ -80,23 +84,24 @@ public final class AllItemSimilarities implements Callable<Object> {
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();
     final int howMany = config.getHowMany();
+    final PrintStream out = System.out;
 
     LongPrimitiveIterator it = recommender.getAllUserIDs().iterator();
     while (it.hasNext()) {
-      final long userID = it.nextLong();
+      final long itemID = it.nextLong();
       futures.add(executorService.submit(new Callable<Void>() {
         @Override
         public Void call() throws Exception {
-          IDRescorer rescorer =
-              rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID});
-          List<RecommendedItem> recs = recommender.recommend(userID, howMany, rescorer);
+          Rescorer<LongPair> rescorer =
+              rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer();
+          List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
           StringBuilder line = new StringBuilder(30);
-          synchronized (System.out) {
-            System.out.println(Long.toString(userID));
-            for (RecommendedItem rec : recs) {
+          synchronized (out) {
+            out.println(Long.toString(itemID));
+            for (RecommendedItem sim : similar) {
               line.setLength(0);
-              line.append(Long.toString(rec.getItemID())).append(',').append(Float.toString(rec.getValue()));
-              System.out.println(line);
+              line.append(Long.toString(sim.getItemID())).append(',').append(Float.toString(sim.getValue()));
+              out.println(line);
             }
           }
           return null;

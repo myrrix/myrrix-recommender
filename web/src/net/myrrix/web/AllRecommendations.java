@@ -16,6 +16,7 @@
 
 package net.myrrix.web;
 
+import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -80,6 +81,7 @@ public final class AllRecommendations implements Callable<Object> {
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();
     final int howMany = config.getHowMany();
+    final PrintStream out = System.out;
 
     LongPrimitiveIterator it = recommender.getAllUserIDs().iterator();
     while (it.hasNext()) {
@@ -91,12 +93,12 @@ public final class AllRecommendations implements Callable<Object> {
               rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID});
           List<RecommendedItem> recs = recommender.recommend(userID, howMany, rescorer);
           StringBuilder line = new StringBuilder(30);
-          synchronized (System.out) {
-            System.out.println(Long.toString(userID));
+          synchronized (out) {
+            out.println(Long.toString(userID));
             for (RecommendedItem rec : recs) {
               line.setLength(0);
               line.append(Long.toString(rec.getItemID())).append(',').append(Float.toString(rec.getValue()));
-              System.out.println(line);
+              out.println(line);
             }
           }
           return null;
