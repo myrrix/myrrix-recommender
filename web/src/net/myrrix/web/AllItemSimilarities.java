@@ -34,28 +34,28 @@ import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 
 /**
- * <p>A simple command-line program that will compute recommendations for all users. It does not start
+ * <p>A simple command-line program that will compute most similar items for all items. It does not start
  * an instance of the Serving Layer that responds to requests via HTTP. Instead it performs all computations
  * locally, in bulk. This may be useful to create a simple batch recommendation process when that is
  * all that's needed.</p>
  *
- * <p>Results are written to {@link System#out}. Each user ID is written on line to start.
- * Following that, recommendations are written in {@code item,value} format on subsequent lines. The next
- * user ID follows and so on.</p>
+ * <p>Results are written to {@link System#out}. Each item ID is written on line to start.
+ * Following that, similar items are written in {@code item,value} format on subsequent lines. The next
+ * item ID follows and so on.</p>
  *
  * <p>Example usage:</p>
  *
- * <p>{@code java -Xmx2g -cp myrrix-serving-x.y.jar net.myrrix.web.AllRecommendations
- *   --localInputDir=[work dir] --howMany=[# recs] --rescorerProviderClass=[your class]}</p>
+ * <p>{@code java -Xmx2g -cp myrrix-serving-x.y.jar net.myrrix.web.AllItemSimilarities
+ *   --localInputDir=[work dir] --howMany=[# similar items] --rescorerProviderClass=[your class]}</p>
  *
  * @author Sean Owen
- * @see AllItemSimilarities
+ * @see AllRecommendations
  */
-public final class AllRecommendations implements Callable<Object> {
+public final class AllItemSimilarities implements Callable<Object> {
 
   private final AllConfig config;
 
-  public AllRecommendations(AllConfig config) {
+  public AllItemSimilarities(AllConfig config) {
     Preconditions.checkNotNull(config);
     this.config = config;
   }
@@ -63,7 +63,7 @@ public final class AllRecommendations implements Callable<Object> {
   public static void main(String[] args) throws Exception {
     AllConfig config = AllConfig.build(args);
     if (config != null) {
-      new AllRecommendations(config).call();
+      new AllItemSimilarities(config).call();
     }
   }
 
