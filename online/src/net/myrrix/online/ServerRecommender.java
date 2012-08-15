@@ -33,6 +33,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -56,6 +57,7 @@ import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.TopN;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.candidate.CandidateFilter;
+import net.myrrix.online.factorizer.MatrixUtils;
 import net.myrrix.online.generation.Generation;
 import net.myrrix.online.generation.GenerationManager;
 
@@ -289,17 +291,26 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     Generation generation = getCurrentGeneration();
     float[] anonymousUserFeatures = new float[generation.getNumFeatures()];
-    FastByIDMap<float[]> ytRightInverse = generation.getYTRightInverse();
 
-    if (ytRightInverse != null) { // If not disabled ...
-      for (long itemID : itemIDs) {
-        float[] userFoldIn = ytRightInverse.get(itemID);
-        if (userFoldIn == null) {
-          throw new NoSuchItemException(itemID);
-        }
-        for (int i = 0; i < anonymousUserFeatures.length; i++) {
-          anonymousUserFeatures[i] += userFoldIn[i];
-        }
+    FastByIDMap<float[]> Y = generation.getY();
+    RealMatrix ytyInv = generation.getYTYInverse();
+
+    Lock yLock = generation.getYLock().readLock();
+
+    for (long itemID : itemIDs) {
+      float[] itemFeatures;
+      yLock.lock();
+      try {
+        itemFeatures = Y.get(itemID);
+      } finally {
+        yLock.unlock();
+      }
+      if (itemFeatures == null) {
+        throw new NoSuchItemException(itemID);
+      }
+      double[] userFoldIn = MatrixUtils.multiply(ytyInv, itemFeatures);
+      for (int i = 0; i < anonymousUserFeatures.length; i++) {
+        anonymousUserFeatures[i] += userFoldIn[i];
       }
     }
 
@@ -311,7 +322,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     CandidateFilter candidateFilter = generation.getCandidateFilter();
     float[][] anonymousFeaturesAsArray = { anonymousUserFeatures };
 
-    Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
       return TopN.selectTopN(new RecommendIterator(anonymousFeaturesAsArray,
@@ -422,16 +432,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       xReadLock.unlock();
     }
 
-    FastByIDMap<float[]> ytRightInverse = generation.getYTRightInverse();
-    if (ytRightInverse != null) { // If not disabled...
-      float[] userFoldIn = ytRightInverse.get(itemID);
-      if (userFoldIn != null) {
-        for (int i = 0; i < userFeatures.length; i++) {
-          userFeatures[i] += value * userFoldIn[i];
-        }
-      }
-    }
-
     FastByIDMap<float[]> Y = generation.getY();
     
     float[] itemFeatures;
@@ -456,14 +456,22 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       yReadLock.unlock();
     }
 
-    FastByIDMap<float[]> xLeftInverse = generation.getXLeftInverse();
-    if (xLeftInverse != null) { // If not disabled...
-      float[] itemFoldIn = xLeftInverse.get(userID);
-      if (itemFoldIn != null) {
-        for (int i = 0; i < itemFeatures.length; i++) {
-          itemFeatures[i] += value * itemFoldIn[i];
-        }
-      }
+    // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
+    // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
+    // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
+    // we scale by 'value' to complete the multiplication of the fold-in and add it in.
+    double[] itemFoldIn = MatrixUtils.multiply(generation.getXTXInverse(), userFeatures);
+    for (int i = 0; i < itemFeatures.length; i++) {
+      itemFeatures[i] += (float) (value * itemFoldIn[i]);
+    }
+
+    // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
+    // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
+    // the same method above to carry out the multiply; the result is conceptually a row vector.
+    // The result is scaled by 'value' and added in.
+    double[] userFoldIn = MatrixUtils.multiply(generation.getYTYInverse(), itemFeatures);
+    for (int i = 0; i < userFeatures.length; i++) {
+      userFeatures[i] += (float) (value * userFoldIn[i]);
     }
 
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();

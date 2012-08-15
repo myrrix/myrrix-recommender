@@ -20,9 +20,8 @@ import java.util.Iterator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.candidate.CandidateFilter;
@@ -47,17 +46,14 @@ import net.myrrix.online.factorizer.MatrixUtils;
  */
 public final class Generation {
 
-  private static final Logger log = LoggerFactory.getLogger(Generation.class);
-
-  public static final String NO_INVERSE_KEY = "model.noInverse";
   public static final String NO_KNOWN_ITEMS_KEY = "model.noKnownItems";
 
   private final FastByIDMap<FastIDSet> knownItemIDs;
   private final FastByIDMap<FastIDSet> knownUserIDs;
   private final FastByIDMap<float[]> X;
-  private final FastByIDMap<float[]> XLeftInverse;
+  private final RealMatrix XTXinv;
   private final FastByIDMap<float[]> Y;
-  private final FastByIDMap<float[]> YTRightInverse;
+  private final RealMatrix YTYinv;
   private final CandidateFilter candidateFilter;
   private final int numFeatures;
   private final ReadWriteLock xLock;
@@ -69,9 +65,9 @@ public final class Generation {
     this(knownItemIDs,
          null, // Not used yet
          X,
-         maybeBuildInverse(X),
+         MatrixUtils.getTransposeTimesSelfInverse(X),
          Y,
-         maybeBuildInverse(Y),
+         MatrixUtils.getTransposeTimesSelfInverse(Y),
          new LocationSensitiveHash(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
@@ -79,16 +75,6 @@ public final class Generation {
          new ReentrantReadWriteLock(),
          null // not used yet
          );
-  }
-
-  private static FastByIDMap<float[]> maybeBuildInverse(FastByIDMap<float[]> matrix) {
-    if (Boolean.valueOf(System.getProperty(NO_INVERSE_KEY))) {
-      return null;
-    }
-    log.info("Computing inverse");
-    FastByIDMap<float[]> inverse = MatrixUtils.getPseudoInverse(matrix);
-    log.info("Done computing inverse");
-    return inverse;
   }
 
   private static int countFeatures(FastByIDMap<float[]> X) {
@@ -99,9 +85,9 @@ public final class Generation {
   private Generation(FastByIDMap<FastIDSet> knownItemIDs,
                      FastByIDMap<FastIDSet> knownUserIDs,
                      FastByIDMap<float[]> X,
-                     FastByIDMap<float[]> XLeftInverse,
+                     RealMatrix XTXinv,
                      FastByIDMap<float[]> Y,
-                     FastByIDMap<float[]> YTRightInverse,
+                     RealMatrix YTYinv,
                      CandidateFilter candidateFilter,
                      int numFeatures,
                      ReadWriteLock xLock,
@@ -111,9 +97,9 @@ public final class Generation {
     this.knownItemIDs = knownItemIDs;
     this.knownUserIDs = knownUserIDs;
     this.X = X;
-    this.XLeftInverse = XLeftInverse;
+    this.XTXinv = XTXinv;
     this.Y = Y;
-    this.YTRightInverse = YTRightInverse;
+    this.YTYinv = YTYinv;
     this.candidateFilter = candidateFilter;
     this.numFeatures = numFeatures;
     this.xLock = xLock;
@@ -126,9 +112,9 @@ public final class Generation {
     return new Generation(knownUserIDs,
                           knownItemIDs,
                           Y,
-                          YTRightInverse,
+                          YTYinv,
                           X,
-                          XLeftInverse,
+                          XTXinv,
                           new LocationSensitiveHash(X),
                           numFeatures,
                           yLock,
@@ -159,10 +145,10 @@ public final class Generation {
   }
 
   /**
-   * @return Xinv, left-inverse of {@link #getX()}, such that Xinv * X = I
+   * @return the inverse of X' * X
    */
-  public FastByIDMap<float[]> getXLeftInverse() {
-    return XLeftInverse;
+  public RealMatrix getXTXInverse() {
+    return XTXinv;
   }
 
   /**
@@ -173,10 +159,10 @@ public final class Generation {
   }
 
   /**
-   * @return Yinv, right-inverse of {@link #getY()}, such that Y * Yinv = I
+   * @return the inverse of Y' * Y
    */
-  public FastByIDMap<float[]> getYTRightInverse() {
-    return YTRightInverse;
+  public RealMatrix getYTYInverse() {
+    return YTYinv;
   }
 
   /**

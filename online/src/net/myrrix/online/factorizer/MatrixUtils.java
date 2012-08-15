@@ -140,13 +140,16 @@ public final class MatrixUtils {
    * @return a pseudo-inverse of M
    */
   public static FastByIDMap<float[]> getPseudoInverse(FastByIDMap<float[]> M) {
+    // Second argument is really MT. Passing M since it will be treated as MT.
+    return multiply(getTransposeTimesSelfInverse(M), M);
+  }
+
+  public static RealMatrix getTransposeTimesSelfInverse(FastByIDMap<float[]> M) {
     if (M.isEmpty()) {
-      return new FastByIDMap<float[]>();
+      return new Array2DRowRealMatrix(0, 0);
     }
     RealMatrix MTM = transposeTimesSelf(M);
-    RealMatrix MTMinverse = new LUDecomposition(MTM).getSolver().getInverse();
-    // Second argument is really MT. Passing M since it will be treated as MT.
-    return multiply(MTMinverse, M);
+    return new LUDecomposition(MTM).getSolver().getInverse();
   }
 
   /**
@@ -187,8 +190,7 @@ public final class MatrixUtils {
     }
   }
 
-  /*
-  public static double[] matrixMultiply(RealMatrix matrix, float[] V) {
+  public static double[] multiply(RealMatrix matrix, float[] V) {
     double[][] M = accessMatrixDataDirectly(matrix);
     int rows = M.length;
     int cols = V.length;
@@ -203,7 +205,6 @@ public final class MatrixUtils {
     }
     return out;
   }
-   */
 
   /**
    * @param M matrix
