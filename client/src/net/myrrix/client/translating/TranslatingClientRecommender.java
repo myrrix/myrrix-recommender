@@ -61,15 +61,43 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   private final MemoryIDMigrator itemTranslator;
   private final ClientRecommender delegate;
 
+  /**
+   * @param delegate underlying {@link ClientRecommender} to use with translation
+   */
   public TranslatingClientRecommender(ClientRecommender delegate) {
-    userTranslator = new OneWayMigrator();
-    itemTranslator = new MemoryIDMigrator();
+    this(delegate, new OneWayMigrator(), new MemoryIDMigrator());
+  }
+
+  /**
+   * @param delegate underlying {@link ClientRecommender} to use with translation
+   * @param userTranslator {@link IDMigrator} that translates users (need not translate back), or null to disable
+   *   user translation
+   * @param itemTranslator {@link MemoryIDMigrator} to use to translate items and back, or null to disable item
+   *   translation
+   */
+  public TranslatingClientRecommender(ClientRecommender delegate,
+                                      IDMigrator userTranslator,
+                                      MemoryIDMigrator itemTranslator) {
     this.delegate = delegate;
+    this.userTranslator = userTranslator;
+    this.itemTranslator = itemTranslator;
+  }
+
+  private long translateUser(String userID) {
+    return userTranslator == null ? Long.parseLong(userID) : userTranslator.toLongID(userID);
+  }
+
+  private long translateItem(String itemID) {
+    return itemTranslator == null ? Long.parseLong(itemID) : itemTranslator.toLongID(itemID);
+  }
+
+  private String untranslateItem(long itemID) {
+    return itemTranslator == null ? Long.toString(itemID) : itemTranslator.toStringID(itemID);
   }
 
   @Override
   public List<TranslatedRecommendedItem> recommend(String userID, int howMany) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
+    long longUserID = translateUser(userID);
     List<RecommendedItem> originals = delegate.recommend(longUserID, howMany);
     return translate(originals);
   }
@@ -78,7 +106,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   public List<TranslatedRecommendedItem> recommend(String userID,
                                                    int howMany,
                                                    boolean considerKnownItems) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
+    long longUserID = translateUser(userID);
     List<RecommendedItem> originals = delegate.recommend(longUserID, howMany, considerKnownItems, null);
     return translate(originals);
   }
@@ -89,7 +117,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
                                                          boolean considerKnownItems) throws TasteException {
     long[] longUserIDs = new long[userIDs.length];
     for (int i = 0; i < userIDs.length; i++) {
-      longUserIDs[i] = userTranslator.toLongID(userIDs[i]);
+      longUserIDs[i] = translateUser(userIDs[i]);
     }
     List<RecommendedItem> originals = delegate.recommendToMany(longUserIDs, howMany, considerKnownItems, null);
     return translate(originals);
@@ -97,45 +125,45 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public float estimatePreference(String userID, String itemID) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longUserID = translateUser(userID);
+    long longItemID = translateItem(itemID);
     return delegate.estimatePreference(longUserID, longItemID);
   }
 
   @Override
   public float[] estimatePreferences(String userID, String... itemIDs) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
+    long longUserID = translateUser(userID);
     long[] longItemIDs = new long[itemIDs.length];
     for (int i = 0; i < itemIDs.length; i++) {
-      longItemIDs[i] = itemTranslator.toLongID(itemIDs[i]);
+      longItemIDs[i] = translateItem(itemIDs[i]);
     }
     return delegate.estimatePreferences(longUserID, longItemIDs);
   }
 
   @Override
   public void setPreference(String userID, String itemID) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longUserID = translateUser(userID);
+    long longItemID = translateItem(itemID);
     delegate.setPreference(longUserID, longItemID);
   }
 
   @Override
   public void setPreference(String userID, String itemID, float value) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longUserID = translateUser(userID);
+    long longItemID = translateItem(itemID);
     delegate.setPreference(longUserID, longItemID, value);
   }
 
   @Override
   public void removePreference(String userID, String itemID) throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longUserID = translateUser(userID);
+    long longItemID = translateItem(itemID);
     delegate.removePreference(longUserID, longItemID);
   }
 
   @Override
   public List<TranslatedRecommendedItem> mostSimilarItems(String itemID, int howMany) throws TasteException {
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longItemID = translateItem(itemID);
     List<RecommendedItem> originals = delegate.mostSimilarItems(longItemID, howMany);
     return translate(originals);
   }
@@ -144,7 +172,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   public List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany) throws TasteException {
     long[] longItemIDs = new long[itemIDs.length];
     for (int i = 0; i < itemIDs.length; i++) {
-      longItemIDs[i] = itemTranslator.toLongID(itemIDs[i]);
+      longItemIDs[i] = translateItem(itemIDs[i]);
     }
     List<RecommendedItem> originals = delegate.mostSimilarItems(longItemIDs, howMany);
     return translate(originals);
@@ -153,8 +181,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   @Override
   public List<TranslatedRecommendedItem> recommendedBecause(String userID, String itemID, int howMany)
       throws TasteException {
-    long longUserID = userTranslator.toLongID(userID);
-    long longItemID = itemTranslator.toLongID(itemID);
+    long longUserID = translateUser(userID);
+    long longItemID = translateItem(itemID);
     List<RecommendedItem> originals = delegate.recommendedBecause(longUserID, longItemID, howMany);
     return translate(originals);
   }
@@ -163,7 +191,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   public List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany) throws TasteException {
     long[] longItemIDs = new long[itemIDs.length];
     for (int i = 0; i < itemIDs.length; i++) {
-      longItemIDs[i] = itemTranslator.toLongID(itemIDs[i]);
+      longItemIDs[i] = translateItem(itemIDs[i]);
     }
     List<RecommendedItem> originals = delegate.recommendToAnonymous(longItemIDs, howMany);
     return translate(originals);
@@ -196,8 +224,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
         Iterator<String> it = COMMA_SPLIT.split(line).iterator();
         String userIDString = it.next();
         String itemIDString = it.next();
-        long longUserID = userTranslator.toLongID(userIDString);
-        long longItemID = itemTranslator.toLongID(itemIDString);
+        long longUserID = translateUser(userIDString);
+        long longItemID = translateItem(itemIDString);
         String translatedLine;
         if (it.hasNext()) {
           String valueString = it.next();
@@ -229,7 +257,9 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public void addItemIDs(Iterable<String> ids) {
-    itemTranslator.initialize(ids);
+    if (itemTranslator != null) {
+      itemTranslator.initialize(ids);
+    }
   }
 
   @Override
@@ -252,7 +282,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     Collection<String> result = Lists.newArrayListWithCapacity(itemIDs.size());
     LongPrimitiveIterator it = itemIDs.iterator();
     while (it.hasNext()) {
-      result.add(itemTranslator.toStringID(it.nextLong()));
+      result.add(untranslateItem(it.nextLong()));
     }
     return result;
   }
@@ -261,7 +291,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     List<TranslatedRecommendedItem> translated = Lists.newArrayListWithCapacity(originals.size());
     for (RecommendedItem original : originals) {
       long id = original.getItemID();
-      String untranslation = itemTranslator.toStringID(id);
+      String untranslation = untranslateItem(id);
       String translatedItemID = untranslation == null ? Long.toString(id) : untranslation;
       translated.add(new GenericTranslatedRecommendedItem(translatedItemID, original.getValue()));
     }

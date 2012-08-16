@@ -31,8 +31,11 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
+import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
+import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.client.translating.OneWayMigrator;
 import net.myrrix.client.translating.TranslatedRecommendedItem;
 import net.myrrix.client.translating.TranslatingClientRecommender;
 import net.myrrix.client.translating.TranslatingRecommender;
@@ -59,11 +62,13 @@ import net.myrrix.common.LangUtils;
  * <p>"options" may include one additional flag:</p>
  *
  * <ul>
- *   <li>{@code --translate [file]}: Sets the client to use String IDs instead of numeric, and to translate
- *   to/from numeric IDs when contacting the server. This may be used to avoid sending sensitive IDs to
+ *   <li>{@code --translateItem [file]}: Sets the client to use String item IDs instead of numeric, and to translate
+ *   to/from numeric item IDs when contacting the server. This may be used to avoid sending sensitive IDs to
  *   an external server, while still using them locally for convenience. The optional file argument names
  *   a file containing all known item IDs. This is needed so that the client can reverse translate any
  *   value from the server.</li>
+ *   <li>{@code --translateUser}: Same as above, but controls translating user IDs. Since they need never be
+ *   translated back, no list of values is required.</li>
  * </ul>
  *
  * <p>"command" may be any value of {@link CLICommand}, in lower case if you like; "estimatePreference" and
@@ -108,7 +113,8 @@ import net.myrrix.common.LangUtils;
  *
  * <p>If using string IDs, it might look more like:</p>
  *
- * <p>{@code java -jar myrrix-client-X.Y.jar --host=example.com --port=8080 --translate ids.txt recommend Jane 3}</p>
+ * <p>{@code java -jar myrrix-client-X.Y.jar --host=example.com --port=8080
+ *   --translateUser --translateItem ids.txt recommend Jane 3}</p>
  *
  * <p>... and output might be:</p>
  *
@@ -123,6 +129,8 @@ import net.myrrix.common.LangUtils;
 public final class CLI {
 
   private static final String TRANSLATE_FLAG = "translate";
+  private static final String TRANSLATE_USER_FLAG = "translateUser";
+  private static final String TRANSLATE_ITEM_FLAG = "translateItem";
   private static final String HOST_FLAG = "host";
   private static final String ALL_PARTITIONS_FLAG = "allPartitions";
   private static final String PORT_FLAG = "port";
@@ -163,10 +171,24 @@ public final class CLI {
     MyrrixClientConfiguration config = buildConfiguration(commandLine);
     ClientRecommender recommender = new ClientRecommender(config);
 
-    TranslatingRecommender translatingRecommender = null;
+    boolean translateUser = commandLine.hasOption(TRANSLATE_USER_FLAG);
+    boolean translateItem = commandLine.hasOption(TRANSLATE_ITEM_FLAG);
     if (commandLine.hasOption(TRANSLATE_FLAG)) {
-      translatingRecommender = new TranslatingClientRecommender(recommender);
-      String translateFileName = commandLine.getOptionValue(TRANSLATE_FLAG);
+      System.err.println("--" + TRANSLATE_FLAG + " is deprecated. Use --" + TRANSLATE_USER_FLAG +
+                         " or --" + TRANSLATE_ITEM_FLAG);
+      translateUser = true;
+      translateItem = true;
+    }
+
+    TranslatingRecommender translatingRecommender = null;
+    if (translateUser || translateItem) {
+      IDMigrator userTranslator = translateUser ? new OneWayMigrator() : null;
+      MemoryIDMigrator itemTranslator = translateItem ? new MemoryIDMigrator() : null;
+      translatingRecommender = new TranslatingClientRecommender(recommender, userTranslator, itemTranslator);
+      String translateFileName = commandLine.getOptionValue(TRANSLATE_ITEM_FLAG);
+      if (translateFileName == null) {
+        translateFileName = commandLine.getOptionValue(TRANSLATE_FLAG);
+      }
       if (translateFileName != null) {
         File translateFile = new File(translateFileName);
         translatingRecommender.addItemIDs(translateFile);
@@ -478,8 +500,12 @@ public final class CLI {
     addOption(options, "Password to authenticate to Serving Layer", PASSWORD_FLAG, true, false);
     addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true, false);
     addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true, false);
-    addOption(options, "Use String IDs in client API. Optional file argument contains list of all known item IDs",
+    // TODO remove:
+    addOption(options, "Deprecated. Use --" + TRANSLATE_USER_FLAG + " and --" + TRANSLATE_ITEM_FLAG,
               TRANSLATE_FLAG, true, true);
+    addOption(options, "Use String user IDs in client API.", TRANSLATE_USER_FLAG, false, true);
+    addOption(options, "Use String item IDs in client API. Optional file argument contains list of all known item IDs",
+              TRANSLATE_ITEM_FLAG, true, true);
     addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081)",
               ALL_PARTITIONS_FLAG, true, false);
     return options;
