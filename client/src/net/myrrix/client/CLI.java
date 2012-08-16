@@ -471,7 +471,7 @@ public final class CLI {
 
   private static Options buildOptions() {
     Options options = new Options();
-    addOption(options, "Serving Layer port number", HOST_FLAG, true, false);
+    addOption(options, "Serving Layer host name", HOST_FLAG, true, false);
     addOption(options, "Serving Layer port number", PORT_FLAG, true, false);
     addOption(options, "If set, use HTTPS instead of HTTP", SECURE_FLAG, false, true);
     addOption(options, "User name to authenticate to Serving Layer", USER_NAME_FLAG, true, false);
