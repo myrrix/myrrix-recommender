@@ -82,7 +82,7 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
-    return Math.abs((int) (userID % numPartitions));
+    return numPartitions == 1 ? 0 : ((int) (userID % numPartitions) + numPartitions) % numPartitions;
   }
 
 }

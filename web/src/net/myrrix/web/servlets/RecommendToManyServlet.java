@@ -88,7 +88,8 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
     Integer partitionToServe = null;
     while (pathComponents.hasNext()) {
       long userID = Long.parseLong(pathComponents.next());
-      int nextPartitionToServe = Math.abs((int) (userID % numPartitions));
+      int nextPartitionToServe =
+          numPartitions == 1 ? 0 : ((int) (userID % numPartitions) + numPartitions) % numPartitions;
       if (partitionToServe == null) {
         partitionToServe = nextPartitionToServe;
       } else {

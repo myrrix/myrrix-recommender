@@ -234,7 +234,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private int partition(long id) {
     int numPartitions = partitions.size();
-    return numPartitions == 1 ? 0 : Math.abs((int) (id % numPartitions));
+    return numPartitions == 1 ? 0 : ((int) (id % numPartitions) + numPartitions) % numPartitions;
   }
 
   /**
