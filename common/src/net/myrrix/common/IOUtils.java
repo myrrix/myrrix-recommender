@@ -22,6 +22,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
@@ -44,7 +45,7 @@ public final class IOUtils {
 
   /**
    * Opens an {@link InputStream} to the file. If it appears to be compressed, because its file name ends in
-   * ".gz" or ".zip", then it will be decompressed accordingly
+   * ".gz" or ".zip" or ".deflate", then it will be decompressed accordingly
    *
    * @param file file, possibly compressed, to open
    * @return {@link InputStream} on uncompressed contents
@@ -58,6 +59,9 @@ public final class IOUtils {
     }
     if (name.endsWith(".zip")) {
       return new ZipInputStream(in);
+    }
+    if (name.endsWith(".deflate")) {
+      return new DeflaterInputStream(in);
     }
     return in;
   }
