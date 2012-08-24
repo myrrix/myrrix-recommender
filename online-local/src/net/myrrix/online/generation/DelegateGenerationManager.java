@@ -166,8 +166,8 @@ public final class DelegateGenerationManager implements GenerationManager {
 
             synchronized (DelegateGenerationManager.this) {
               closeAppender();
-              appender =
-                  new BufferedWriter(new OutputStreamWriter(new FileOutputStream(appendFile, false), Charsets.UTF_8));
+              appender = new BufferedWriter(
+                  new OutputStreamWriter(new FileOutputStream(appendFile, false), Charsets.UTF_8), 512);
             }
             Generation newGeneration = null;
             if (currentGeneration == null && modelFile.exists()) {
