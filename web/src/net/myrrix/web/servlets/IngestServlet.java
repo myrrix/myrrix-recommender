@@ -28,7 +28,6 @@ import com.google.common.base.Charsets;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.MyrrixRecommender;
-import net.myrrix.common.NotReadyException;
 
 /**
  * <p>Responds to a POST request to {@code /ingest} and in turn calls
@@ -59,8 +58,6 @@ public final class IngestServlet extends AbstractMyrrixServlet {
 
     try {
       recommender.ingest(reader);
-    } catch (NotReadyException nre) {
-      response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);

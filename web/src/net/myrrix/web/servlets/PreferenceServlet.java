@@ -28,7 +28,6 @@ import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
-import net.myrrix.common.NotReadyException;
 
 /**
  * <p>Responds to a POST request to {@code /pref/[userID]/[itemID]} and in turn calls
@@ -58,8 +57,6 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     try {
       recommender.setPreference(userID, itemID, prefValue);
-    } catch (NotReadyException nre) {
-      response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
@@ -75,8 +72,6 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     try {
       recommender.removePreference(userID, itemID);
-    } catch (NotReadyException nre) {
-      response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);

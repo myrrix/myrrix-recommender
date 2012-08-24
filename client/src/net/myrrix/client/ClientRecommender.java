@@ -270,13 +270,9 @@ public final class ClientRecommender implements MyrrixRecommender {
           out.write(bytes);
           Closeables.closeQuietly(out);
         }
-        switch (connection.getResponseCode()) {
-          case HttpURLConnection.HTTP_OK:
-            break;
-          case HttpURLConnection.HTTP_UNAVAILABLE:
-            throw new NotReadyException();
-          default:
-            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        // Should not be able to return Not Available status
+        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+          throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } finally {
         connection.disconnect();
@@ -625,13 +621,9 @@ public final class ClientRecommender implements MyrrixRecommender {
         } finally {
           Closeables.closeQuietly(out);
         }
-        switch (connection.getResponseCode()) {
-          case HttpURLConnection.HTTP_OK:
-            break;
-          case HttpURLConnection.HTTP_UNAVAILABLE:
-            throw new NotReadyException();
-          default:
-            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        // Should not be able to return Not Available status
+        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+          throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } finally {
         connection.disconnect();

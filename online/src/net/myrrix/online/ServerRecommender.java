@@ -394,20 +394,28 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * Calls {@link #setPreference(long, long, float)} with value 1.0.
    */
   @Override
-  public void setPreference(long userID, long itemID) throws NotReadyException {
+  public void setPreference(long userID, long itemID) {
     setPreference(userID, itemID, 1.0f);
   }
 
   @Override
-  public void setPreference(long userID, long itemID, float value) throws NotReadyException {
+  public void setPreference(long userID, long itemID, float value) {
 
+    // Record datum
     try {
       generationManager.append(userID, itemID, value);
     } catch (IOException ioe) {
       log.warn("Could not append datum; continuing", ioe);
     }
 
-    Generation generation = getCurrentGeneration();
+    Generation generation;
+    try {
+      generation = getCurrentGeneration();
+    } catch (NotReadyException nre) {
+      // Corner case -- no model ready so all we can do is record (above). Don't fail the request.
+      return;
+    }
+
     FastByIDMap<float[]> X = generation.getX();
 
     float[] userFeatures;
@@ -505,9 +513,23 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   }
 
   @Override
-  public void removePreference(long userID, long itemID) throws NotReadyException {
+  public void removePreference(long userID, long itemID) {
 
-    Generation generation = getCurrentGeneration();
+    // Record datum
+    try {
+      generationManager.remove(userID, itemID);
+    } catch (IOException ioe) {
+      log.warn("Could not append datum; continuing", ioe);
+    }
+
+    Generation generation;
+    try {
+      generation = getCurrentGeneration();
+    } catch (NotReadyException nre) {
+      // Corner case -- no model ready so all we can do is record (above). Don't fail the request.
+      return;
+    }
+
     ReadWriteLock knownItemLock = generation.getKnownItemLock();
 
     boolean removeUser = false;
@@ -538,12 +560,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
 
     // We can proceed with the request
-
-    try {
-      generationManager.remove(userID, itemID);
-    } catch (IOException ioe) {
-      log.warn("Could not append datum; continuing", ioe);
-    }
 
     FastByIDMap<float[]> X = generation.getX();
 
