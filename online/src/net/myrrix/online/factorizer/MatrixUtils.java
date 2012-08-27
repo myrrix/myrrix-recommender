@@ -79,26 +79,14 @@ public final class MatrixUtils {
       theRow = new FastByIDFloatMap();
       RbyRow.put(row, theRow);
     }
-
-    float oldValue = theRow.get(column);
-    if (Float.isNaN(oldValue)) {
-      theRow.put(column, value);
-    } else {
-      theRow.put(column, value + oldValue);
-    }
+    theRow.increment(column, value);
 
     FastByIDFloatMap theColumn = RbyColumn.get(column);
     if (theColumn == null) {
       theColumn = new FastByIDFloatMap();
       RbyColumn.put(column, theColumn);
     }
-
-    oldValue = theColumn.get(row);
-    if (Float.isNaN(oldValue)) {
-      theColumn.put(row, value);
-    } else {
-      theColumn.put(row, value + oldValue);
-    }
+    theColumn.increment(row, value);
   }
 
   /**

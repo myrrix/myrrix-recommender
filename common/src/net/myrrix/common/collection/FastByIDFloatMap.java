@@ -124,6 +124,19 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
     return values[index];
   }
 
+  // Added:
+
+  public void increment(long key, float delta) {
+    Preconditions.checkArgument(key != KEY_NULL && key != REMOVED);
+    int index = find(key);
+    float currentValue = values[index];
+    if (Float.isNaN(currentValue)) {
+      put(key, delta);
+    } else {
+      values[index] = currentValue + delta;
+    }
+  }
+
   public int size() {
     return numEntries;
   }
