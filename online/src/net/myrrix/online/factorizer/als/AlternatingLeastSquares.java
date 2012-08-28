@@ -219,7 +219,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       count += WORK_UNIT_SIZE;
       if (count >= 10000) {
         total += count;
-        log.info("{} X rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
+        JVMEnvironment env = new JVMEnvironment();
+        log.info("{} X rows computed ({}MB heap)", total, env.getUsedMemoryMB());
+        if (env.getPercentUsedMemory() > 95) {
+          log.warn("Memory is low. Increase heap size with -Xmx, decrease new generation size with larger " +
+                   "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
+        }
         count = 0;
       }
     }

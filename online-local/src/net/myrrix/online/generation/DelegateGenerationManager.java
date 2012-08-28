@@ -169,13 +169,20 @@ public final class DelegateGenerationManager implements GenerationManager {
               appender = new BufferedWriter(
                   new OutputStreamWriter(new FileOutputStream(appendFile, false), Charsets.UTF_8), 512);
             }
+
             Generation newGeneration = null;
-            if (currentGeneration == null && modelFile.exists()) {
-              newGeneration = readModel(modelFile);
-            }
-            if (newGeneration == null) {
-              newGeneration = computeModel(inputDir);
-              saveModel(newGeneration, modelFile);
+            try {
+              if (currentGeneration == null && modelFile.exists()) {
+                newGeneration = readModel(modelFile);
+              }
+              if (newGeneration == null) {
+                newGeneration = computeModel(inputDir);
+                saveModel(newGeneration, modelFile);
+              }
+            } catch (OutOfMemoryError oome) {
+              log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
+                       "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
+              throw oome;
             }
             currentGeneration = newGeneration;
 
