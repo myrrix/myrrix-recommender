@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package net.myrrix.client;
+package net.myrrix.client.eval;
+
+import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
 import org.apache.mahout.cf.taste.eval.IRStatistics;
 
-final class IRStatisticsImpl implements IRStatistics {
+final class IRStatisticsImpl implements IRStatistics, EvaluationResult, Serializable {
 
   private final double precision;
   private final double recall;
@@ -32,6 +34,11 @@ final class IRStatisticsImpl implements IRStatistics {
     this.precision = precision;
     this.recall = recall;
     this.nDCG = nDCG;
+  }
+
+  @Override
+  public double getScore() {
+    return getPrecision();
   }
 
   @Override
