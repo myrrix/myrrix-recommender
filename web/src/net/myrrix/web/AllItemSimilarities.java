@@ -17,7 +17,6 @@
 package net.myrrix.web;
 
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -28,7 +27,6 @@ import java.util.concurrent.Future;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;

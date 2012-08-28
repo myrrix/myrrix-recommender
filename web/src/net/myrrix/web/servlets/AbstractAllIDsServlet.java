@@ -43,7 +43,7 @@ public abstract class AbstractAllIDsServlet extends AbstractMyrrixServlet {
   protected abstract boolean isUserIDs();
 
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected final void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     MyrrixRecommender recommender = getRecommender();
     try {
       FastIDSet ids = isUserIDs() ? recommender.getAllUserIDs() : recommender.getAllItemIDs();

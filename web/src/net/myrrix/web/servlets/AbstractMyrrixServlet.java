@@ -216,7 +216,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  protected ResponseContentType determineResponseType(HttpServletRequest request) {
+  protected final ResponseContentType determineResponseType(HttpServletRequest request) {
 
     String acceptHeader = request.getHeader("Accept");
     ResponseContentType cached = responseTypeCache.get(acceptHeader);
