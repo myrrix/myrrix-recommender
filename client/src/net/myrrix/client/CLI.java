@@ -151,6 +151,7 @@ public final class CLI {
     try {
       commandLine = parser.parse(options, args);
     } catch (MissingOptionException moe) {
+      printHelp(options);
       return;
     }
     String[] programArgs = commandLine.getArgs();
