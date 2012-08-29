@@ -81,7 +81,7 @@ import net.myrrix.common.LangUtils;
  * <ul>
  *   <li>{@code setPreference userID itemID [value]}</li>
  *   <li>{@code removePreference userID itemID}</li>
- *   <li>{@code ingest csvFile}</li>
+ *   <li>{@code ingest csvFile [csvFile2 ...]}</li>
  *   <li>{@code estimatePreference userID itemID}</li>
  *   <li>{@code recommend userID howMany [considerKnownItems]}</li>
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...] howMany}</li>
@@ -385,14 +385,16 @@ public final class CLI {
   private static boolean doIngest(String[] programArgs,
                                   ClientRecommender recommender,
                                   TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length != 2) {
+    if (programArgs.length < 2) {
       return false;
     }
-    File ingestFile = new File(programArgs[1]);
-    if (translatingRecommender == null) {
-      recommender.ingest(ingestFile);
-    } else {
-      translatingRecommender.ingest(ingestFile);
+    for (int i = 1; i < programArgs.length; i++) {
+      File ingestFile = new File(programArgs[i]);
+      if (translatingRecommender == null) {
+        recommender.ingest(ingestFile);
+      } else {
+        translatingRecommender.ingest(ingestFile);
+      }
     }
     return true;
   }
