@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 
-package net.myrrix.client.eval;
+package net.myrrix.online.eval;
 
+/**
+ * Implementations of this interface encapsulate the result of an evaluation process. The details may vary
+ * across processes, but all are guaranteed to provide at least one score, where bigger is better.
+ *
+ * @author Sean Owen
+ */
 public interface EvaluationResult {
 
+  /**
+=   * @return some value, whose nature depends on the implementation, which quantifies the evaluation. Bigger
+   *  is better.
+   */
   double getScore();
 
 }

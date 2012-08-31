@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package net.myrrix.client.eval;
+package net.myrrix.online.eval;
 
 import java.io.File;
 
-import com.google.common.base.Preconditions;
-import com.google.common.io.PatternFilenameFilter;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,21 +33,12 @@ public final class EstimatedStrengthEvaluationTest extends MyrrixTest {
 
   private static final Logger log = LoggerFactory.getLogger(EstimatedStrengthEvaluationTest.class);
 
-  private final File dataDir;
-
-  public EstimatedStrengthEvaluationTest() {
-    this.dataDir = new File("testdata/grouplens10M");
-  }
-
   @Test
   public void testEval() throws Exception {
-    File[] originalDataFiles = dataDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
-    Preconditions.checkState(originalDataFiles != null && originalDataFiles.length == 1,
-                             "Expected one input file in %s", dataDir);
-    EstimatedStrengthEvaluator evaluator = new EstimatedStrengthEvaluator(originalDataFiles[0], getTestTempDir(), 0.9, 0.1);
-    EvaluationResult stats = evaluator.evaluate();
+    EstimatedStrengthEvaluator evaluator = new EstimatedStrengthEvaluator();
+    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"), 0.9, 0.5);
     log.info(stats.toString());
-    assertTrue(stats.getScore() > 0.5);
+    assertTrue(stats.getScore() > 0.56);
   }
 
 }

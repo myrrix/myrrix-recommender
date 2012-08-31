@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.client.eval;
+package net.myrrix.online.eval;
 
 import java.io.Serializable;
 

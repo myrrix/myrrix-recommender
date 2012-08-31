@@ -30,6 +30,14 @@ public final class ClassUtils {
   private ClassUtils() {
   }
 
+  public static <T> T loadInstanceOf(Class<T> clazz) {
+    return loadInstanceOf(clazz.getName(), clazz);
+  }
+
+  public static <T> T loadInstanceOf(Class<T> clazz, Class<?>[] constructorTypes, Object[] constructorArgs) {
+    return loadInstanceOf(clazz.getName(), clazz, constructorTypes, constructorArgs);
+  }
+
   /**
    * Like {@link #loadInstanceOf(String, Class, Class[], Object[])} for no-arg constructors.
    */
