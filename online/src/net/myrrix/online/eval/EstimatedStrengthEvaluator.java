@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.MyrrixRecommender;
 
 /**
- * An alternate evaluation  which computes the estimated strength score (see
+ * An alternate evaluation  which computes the average "error" in estimated strength score (see
  * {@link org.apache.mahout.cf.taste.recommender.Recommender#estimatePreference(long, long)}) for each test
- * datum. It simply reports the average -- a weighted average, weighted by the test datum's value.
+ * datum. It simply reports the average -- a weighted average, weighted by the test datum's value -- of the
+ * difference between 1.0 and the estimate. An estimate of 1.0 would be good, producing an error of 0.0.
+ * We allow the difference to be negative.
  *
  * @author Sean Owen
  */
@@ -59,7 +61,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
       try {
         float estimate = recommender.estimatePreference(userID, itemPref.getItemID());
         Preconditions.checkState(!Float.isNaN(estimate));
-        score.addDatum(estimate, itemPref.getValue());
+        score.addDatum(1.0f - estimate, itemPref.getValue());
       } catch (NoSuchItemException nsie) {
         unknownItems++;
         // continue

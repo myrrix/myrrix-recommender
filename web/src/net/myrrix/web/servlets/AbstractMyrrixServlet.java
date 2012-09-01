@@ -73,7 +73,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private ConcurrentMap<String,ResponseContentType> responseTypeCache;
 
   @Override
-  public final void init(ServletConfig config) throws ServletException {
+  public void init(ServletConfig config) throws ServletException {
     super.init(config);
 
     ServletContext context = config.getServletContext();

@@ -19,12 +19,17 @@ package net.myrrix.web.servlets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.io.Closeables;
+import org.apache.mahout.cf.taste.common.NoSuchItemException;
+import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -41,8 +46,20 @@ import net.myrrix.common.MyrrixRecommender;
  */
 public final class PreferenceServlet extends AbstractMyrrixServlet {
 
+  public static final String AVG_ESTIMATE_ERROR_KEY = PreferenceServlet.class.getName() + ".AVG_ESTIMATE_ERROR";
+
+  private WeightedRunningAverage avgEstimateError;
+
+  @Override
+  public void init(ServletConfig config) throws ServletException {
+    super.init(config);
+    avgEstimateError = new WeightedRunningAverage();
+    config.getServletContext().setAttribute(AVG_ESTIMATE_ERROR_KEY, avgEstimateError);
+  }
+
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
@@ -54,9 +71,27 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Bad value");
       return;
     }
+
     MyrrixRecommender recommender = getRecommender();
     try {
+
+      // Experimental: see what the recommender thought before adding the datum, whether it would
+      // have expected this. Closer to 1.0 is better. Weight by pref value.
+      // For now... punt on the issue of handling negative weights
+      if (prefValue > 0.0f) {
+        try {
+          float estimate = recommender.estimatePreference(userID, itemID);
+          avgEstimateError.addDatum(1.0f - estimate, prefValue);
+        } catch (NoSuchUserException nsue) {
+          // continue
+        } catch (NoSuchItemException nsie) {
+          // continue
+        }
+      }
+
+      // Now set value
       recommender.setPreference(userID, itemID, prefValue);
+
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
