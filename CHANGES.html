@@ -14,7 +14,7 @@ hr {margin:20px 0 10px 0}
 
 <h1>Version 0.6</h1>
 
-<p>September XX 2012</p>
+<p>September 3 2012</p>
 
 <h2>New Features</h2>
 
@@ -24,16 +24,18 @@ hr {margin:20px 0 10px 0}
   <code>AllItemSimilarities</code>, which will recommendations for all users / similar items for all items,
   respectively, in bulk. This may be useful to create a simple batch recommendation process when that is
   all that's needed.</li>
-  <li>New optional parameters can suppress loading of known items, saving memory but meaning any item
+  <li>Serving Layer console has simple online quality estimate: average estimation error</li>
+  <li>New optional parameter can suppress loading of known items, saving memory but meaning any item
   may be recommended, even ones existing in the input already for a user</li>
   <li>New <code>PeriodicRunner</code> in Computation Layer for continuous execution</li>
+  <li>Computation Layer has experimental feature to merge models from other instances</li>
 </ul>
 
 <h2>Other</h2>
 
 <ul>
   <li>Better parallelization and performance in Computation Layer recommend and similar item computations</li>
-  <li>Improved evaluation framework</li>
+  <li>Improved evaluation framework, including AUC and precision/recall test</li>
   <li>Java client: <code>--translate</code> command line flag has become <code>--translateUser</code> and
     <code>--translateItem</code></li>
   <li>Update to Guava 13</li>
