@@ -128,13 +128,16 @@ public final class MatrixUtils {
    * @return a pseudo-inverse of M
    */
   public static FastByIDMap<float[]> getPseudoInverse(FastByIDMap<float[]> M) {
+    if (M == null || M.isEmpty()) {
+      return M;
+    }
     // Second argument is really MT. Passing M since it will be treated as MT.
     return multiply(getTransposeTimesSelfInverse(M), M);
   }
 
   public static RealMatrix getTransposeTimesSelfInverse(FastByIDMap<float[]> M) {
-    if (M.isEmpty()) {
-      return new Array2DRowRealMatrix(0, 0);
+    if (M == null || M.isEmpty()) {
+      return null;
     }
     RealMatrix MTM = transposeTimesSelf(M);
     return new LUDecomposition(MTM).getSolver().getInverse();
