@@ -53,8 +53,6 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
     WeightedRunningAverage score = new WeightedRunningAverage();
     int count = 0;
-    int unknownItems = 0;
-    int unknownUsers = 0;
     for (Map.Entry<Long,RecommendedItem> entry : testData.entries()) {
       long userID = entry.getKey();
       RecommendedItem itemPref = entry.getValue();
@@ -63,18 +61,15 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
         Preconditions.checkState(!Float.isNaN(estimate));
         score.addDatum(1.0f - estimate, itemPref.getValue());
       } catch (NoSuchItemException nsie) {
-        unknownItems++;
         // continue
       } catch (NoSuchUserException nsue) {
-        unknownUsers++;
         // continue
       }
-      if (++count % 10000 == 0) {
+      if (++count % 100000 == 0) {
         log.info("Score: {}", score);
       }
     }
     log.info("Score: {}", score);
-    log.info("{} unknown items, {} unknown users", unknownItems, unknownUsers); // TODO
     return new EvaluationResultImpl(score.getAverage());
   }
 
