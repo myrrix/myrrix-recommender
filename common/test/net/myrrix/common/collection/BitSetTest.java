@@ -17,6 +17,9 @@
 
 package net.myrrix.common.collection;
 
+import java.util.Random;
+
+import org.apache.mahout.common.RandomUtils;
 import org.junit.Test;
 
 import net.myrrix.common.MyrrixTest;
@@ -64,6 +67,74 @@ public final class BitSetTest extends MyrrixTest {
     bitSet.clear();
     for (int i = 0; i < NUM_BITS; i++) {
       assertFalse(bitSet.get(i));
+    }
+  }
+
+  @Test
+  public void testSize() {
+    BitSet bitSet = new BitSet(NUM_BITS);
+    assertEquals(128, bitSet.size());
+  }
+
+  @Test
+  public void testCardinality() {
+    BitSet bitSet = new BitSet(NUM_BITS);
+    assertEquals(0, bitSet.cardinality());
+    bitSet.set(0);
+    assertEquals(1, bitSet.cardinality());
+    bitSet.set(0);
+    assertEquals(1, bitSet.cardinality());
+    bitSet.set(1);
+    assertEquals(2, bitSet.cardinality());
+    bitSet.set(63);
+    assertEquals(3, bitSet.cardinality());
+    bitSet.set(64);
+    assertEquals(4, bitSet.cardinality());
+    bitSet.set(NUM_BITS - 1);
+    assertEquals(5, bitSet.cardinality());
+    bitSet.clear(0);
+    assertEquals(4, bitSet.cardinality());
+  }
+
+  @Test
+  public void testNextSetBit() {
+    BitSet bitSet = new BitSet(NUM_BITS);
+    assertEquals(-1, bitSet.nextSetBit(0));
+
+    bitSet.set(3);
+    assertEquals(3, bitSet.nextSetBit(0));
+    assertEquals(3, bitSet.nextSetBit(2));
+    assertEquals(3, bitSet.nextSetBit(3));
+    assertEquals(-1, bitSet.nextSetBit(4));
+
+    bitSet.set(5);
+    bitSet.set(7);
+    assertEquals(5, bitSet.nextSetBit(4));
+    assertEquals(5, bitSet.nextSetBit(5));
+    assertEquals(7, bitSet.nextSetBit(6));
+
+    bitSet.set(64);
+    assertEquals(64, bitSet.nextSetBit(8));
+    assertEquals(64, bitSet.nextSetBit(63));
+    assertEquals(64, bitSet.nextSetBit(64));
+    assertEquals(-1, bitSet.nextSetBit(65));
+    assertEquals(-1, bitSet.nextSetBit(NUM_BITS - 1));
+  }
+
+  @Test
+  public void testNextBitSetRandom() {
+    Random random = RandomUtils.getRandom();
+    for (int i = 0; i < 100; i++) {
+      BitSet bitSet = new BitSet(NUM_BITS);
+      for (int j = 0; j < 20 + random.nextInt(50); j++) {
+        bitSet.set(random.nextInt(NUM_BITS));
+      }
+      int from = random.nextInt(NUM_BITS);
+      int nextSet = bitSet.nextSetBit(from);
+      for (int j = from; j < nextSet; j++) {
+        assertFalse(bitSet.get(j));
+      }
+      assertTrue(bitSet.get(nextSet));
     }
   }
 

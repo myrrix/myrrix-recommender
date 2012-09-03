@@ -24,11 +24,11 @@ import java.io.Serializable;
  *
  * @author Sean Owen, Mahout
  */
-final class BitSet implements Serializable, Cloneable {
+public final class BitSet implements Serializable, Cloneable {
   
   private final long[] bits;
   
-  BitSet(int numBits) {
+  public BitSet(int numBits) {
     int numLongs = numBits >>> 6;
     if ((numBits & 0x3F) != 0) {
       numLongs++;
@@ -40,26 +40,59 @@ final class BitSet implements Serializable, Cloneable {
     this.bits = bits;
   }
   
-  boolean get(int index) {
+  public boolean get(int index) {
     // skipping range check for speed
     return (bits[index >>> 6] & 1L << (index & 0x3F)) != 0L;
   }
   
-  void set(int index) {
+  public void set(int index) {
     // skipping range check for speed
     bits[index >>> 6] |= 1L << (index & 0x3F);
   }
-  
-  void clear(int index) {
+
+  public void set(int from, int to) {
+    // Not optimized
+    for (int i = from; i < to; i++) {
+      set(i);
+    }
+  }
+
+  public void clear(int index) {
     // skipping range check for speed
     bits[index >>> 6] &= ~(1L << (index & 0x3F));
   }
   
-  void clear() {
+  public void clear() {
     int length = bits.length;
     for (int i = 0; i < length; i++) {
       bits[i] = 0L;
     }
+  }
+
+  public int size() {
+    return bits.length << 6;
+  }
+
+  public int cardinality() {
+    int sum = 0;
+    for (long l : bits) {
+      sum += Long.bitCount(l);
+    }
+    return sum;
+  }
+
+  public int nextSetBit(int index) {
+    int offset = index >>> 6;
+    int offsetInLong = index & 0x3F;
+    long mask = ~((1L << offsetInLong) - 1);
+    while (offset < bits.length && (bits[offset] & mask) == 0) {
+      offset++;
+      mask = -1L;
+    }
+    if (offset == bits.length) {
+      return -1;
+    }
+    return (offset << 6) + Long.numberOfTrailingZeros(bits[offset] & mask);
   }
   
   @Override
