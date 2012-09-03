@@ -28,6 +28,7 @@ import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 
@@ -85,7 +86,7 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
-    return numPartitions == 1 ? 0 : ((int) (userID % numPartitions) + numPartitions) % numPartitions;
+    return LangUtils.mod(userID, numPartitions);
   }
 
 }

@@ -50,4 +50,22 @@ public final class LangUtilsTest extends MyrrixTest {
     assertEquals(3.1f, LangUtils.parseFloat("3.1"));
   }
 
+  @Test
+  public void testMod() {
+    assertEquals(0, LangUtils.mod(0, 1));
+    assertEquals(0, LangUtils.mod(1, 1));
+    assertEquals(0, LangUtils.mod(2, 1));
+
+    assertEquals(1, LangUtils.mod(-1, 2));
+    assertEquals(0, LangUtils.mod(0, 2));
+    assertEquals(1, LangUtils.mod(1, 2));
+
+    assertEquals(3, LangUtils.mod(7, 4));
+    assertEquals(3, LangUtils.mod(-12, 5));
+
+    assertEquals(0, LangUtils.mod(Long.MIN_VALUE, 64));
+    assertEquals(0, LangUtils.mod(0, 64));
+    assertEquals(63, LangUtils.mod(Long.MAX_VALUE, 64));
+  }
+
 }

@@ -28,6 +28,7 @@ import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
@@ -88,8 +89,7 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
     Integer partitionToServe = null;
     while (pathComponents.hasNext()) {
       long userID = Long.parseLong(pathComponents.next());
-      int nextPartitionToServe =
-          numPartitions == 1 ? 0 : ((int) (userID % numPartitions) + numPartitions) % numPartitions;
+      int nextPartitionToServe = LangUtils.mod(userID, numPartitions);
       if (partitionToServe == null) {
         partitionToServe = nextPartitionToServe;
       } else {

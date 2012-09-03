@@ -129,7 +129,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID = Long.parseLong(pathComponents.next());
-    return numPartitions == 1 ? 0 : ((int) (userID % numPartitions) + numPartitions) % numPartitions;
+    return LangUtils.mod(userID, numPartitions);
   }
 
 }

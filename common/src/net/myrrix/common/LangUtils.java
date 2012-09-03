@@ -55,4 +55,16 @@ public final class LangUtils {
     return value;
   }
 
+  /**
+   * Computes {@code l mod m}, such that the result is always in [0,m-1], for any {@code long}
+   * value including negative values.
+   *
+   * @param l long value
+   * @param m modulus
+   * @return {@code l % m} if l is nonnegative, {@code (l % m) + m} otherwise
+   */
+  public static int mod(long l, int m) {
+    return ((int) (l % m) + m) % m;
+  }
+
 }
