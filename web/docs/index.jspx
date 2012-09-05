@@ -103,6 +103,7 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
 <h2>Machine</h2>
 
 <jsp:scriptlet>
+System.gc();
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 </jsp:scriptlet>
 
