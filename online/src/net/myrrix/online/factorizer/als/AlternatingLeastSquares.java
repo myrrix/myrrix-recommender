@@ -217,7 +217,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 10000) {
+      if (count >= 100000) {
         total += count;
         JVMEnvironment env = new JVMEnvironment();
         log.info("{} X rows computed ({}MB heap)", total, env.getUsedMemoryMB());
