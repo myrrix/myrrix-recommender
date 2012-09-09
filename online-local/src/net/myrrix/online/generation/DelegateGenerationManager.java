@@ -271,7 +271,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
 
     File[] inputFiles = inputDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
-    Arrays.sort(inputFiles, new ByLastModifiedComparator());
+    Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
 
     int lines = 0;
     for (File inputFile : inputFiles) {

@@ -304,7 +304,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           double alphaTimesValue = alpha * entry.getValue();
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {
-            throw new IllegalStateException("No feature vector for " + entry.getKey());
+            log.warn("No vector for {}. This should not happen. Continuing...", entry.getKey());
+            continue;
           }
 
           // Wu

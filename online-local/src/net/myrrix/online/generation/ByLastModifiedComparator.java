@@ -28,6 +28,11 @@ import java.util.Comparator;
  */
 final class ByLastModifiedComparator implements Comparator<File>, Serializable {
 
+  static final ByLastModifiedComparator INSTANCE = new ByLastModifiedComparator();
+
+  private ByLastModifiedComparator() {
+  }
+
   @Override
   public int compare(File a, File b) {
     long aModified = a.lastModified();

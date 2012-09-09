@@ -32,7 +32,7 @@ PORT=8080
 # Set any system properties here
 #SYS_PROPS=-Dfoo=bar
 
-# Distribute-mode settings
+# -------- Distributed-mode settings
 
 # Set these to the instance and bucket from which to read a model
 #INSTANCE_ID=123
@@ -42,6 +42,25 @@ PORT=8080
 # and specify which partition this is with PARTITION
 #PARTITION=1
 #ALL_PARTITIONS=foo:80,foo2:8080;bar:8080;baz2:80,baz3:80
+
+# -------- JVM settings
+
+# Set to a value that can be used with the -Xmx flag, like 1200m or 4G or 4g
+HEAP_SIZE=4g
+
+# Unset if on a 32-bit machine
+SIXTYFOUR_BIT_OPTS="-d64 -XX:+UseCompressedOops"
+
+# -------- Apache Hadoop-specific settings
+
+# If using an Apache Hadoop cluster, set HADOOP_HOME here (if it is not already set in the environment)
+#export HADOOP_HOME=/path/to/hadoop
+
+# -------- Amazon EMR settings
+
+# Set your AWS access key and secret key here
+#AWS_ACCESS_KEY=...
+#AWS_SECRET_KEY=...
 
 # ----- Nothing to set below here -------
 
@@ -93,15 +112,17 @@ if [ -n "${OTHER_ARGS}" ]; then
   ALL_ARGS="${ALL_ARGS} ${OTHER_ARGS}"
 fi
 
+ALL_SYS_PROPS="";
+if [ -n "${AWS_ACCESS_KEY}" ]; then
+  ALL_SYS_PROPS="${ALL_SYS_PROPS} -Dstore.aws.accessKey=${AWS_ACCESS_KEY} -Dstore.aws.secretKey=${AWS_SECRET_KEY}"
+fi
+if [ -n "${SYS_PROPS}" ]; then
+  ALL_SYS_PROPS="${ALL_SYS_PROPS} ${SYS_PROPS}"
+fi
+
 
 SERVING_JAR=`ls myrrix-serving-*.jar`
 
-# Set to a value that can be used with the -Xmx flag, like 1200m or 4G or 4g
-HEAP_SIZE=4g
-
-# Unset if on a 32-bit machine
-SIXTYFOUR_BIT_OPTS="-d64 -XX:+UseCompressedOops"
-
-java ${SYS_PROPS} -server -da -dsa -Xmx${HEAP_SIZE} ${SIXTYFOUR_BIT_OPTS}\
+java ${ALL_SYS_PROPS} -server -da -dsa -Xmx${HEAP_SIZE} ${SIXTYFOUR_BIT_OPTS}\
  -XX:NewRatio=12 -XX:+UseParallelGC -XX:+UseParallelOldGC\
  ${ADDITIONAL_CLASSPATH} -jar ${SERVING_JAR} ${ALL_ARGS} $@
