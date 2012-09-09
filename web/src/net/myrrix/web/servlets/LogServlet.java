@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.myrrix.web.InitListener;
-import net.myrrix.web.MemoryHandler;
+import net.myrrix.common.log.MemoryHandler;
 
 /**
  * Prints recent log messages to the response.

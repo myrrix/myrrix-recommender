@@ -35,6 +35,7 @@ import net.myrrix.common.ClassUtils;
 import net.myrrix.common.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.PartitionsUtils;
+import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 import net.myrrix.web.servlets.AbstractMyrrixServlet;

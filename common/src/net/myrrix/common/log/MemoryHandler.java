@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.web;
+package net.myrrix.common.log;
 
 import java.util.Collection;
 import java.util.Queue;

@@ -51,6 +51,7 @@ import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.web.servlets.AllItemIDsServlet;
 import net.myrrix.web.servlets.AllUserIDsServlet;
 import net.myrrix.web.servlets.BecauseServlet;
