@@ -31,6 +31,7 @@ import org.apache.catalina.Host;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.Server;
 import org.apache.catalina.Wrapper;
+import org.apache.catalina.authenticator.DigestAuthenticator;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.JasperListener;
 import org.apache.catalina.core.JreMemoryLeakPreventionListener;
@@ -453,9 +454,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
         everythingConstraint.addAuthRole(InMemoryRealm.AUTH_ROLE);
 
         context.addSecurityRole(InMemoryRealm.AUTH_ROLE);
-        MyrrixDigestAuthenticator authenticator = new MyrrixDigestAuthenticator();
+        DigestAuthenticator authenticator = new DigestAuthenticator();
         authenticator.setNonceValidity(10 * 1000L); // Shorten from 5 minutes to 10 seconds
-        authenticator.setCnonceCacheSize(20000); // Increase from 1000 to 20000
+        authenticator.setNonceCacheSize(20000); // Increase from 1000 to 20000
         context.getPipeline().addValve(authenticator);
       }
 
