@@ -294,6 +294,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     FastByIDMap<float[]> Y = generation.getY();
     RealMatrix ytyInv = generation.getYTYInverse();
+    if (ytyInv == null) {
+      throw new NotReadyException();
+    }
 
     Lock yLock = generation.getYLock().readLock();
 

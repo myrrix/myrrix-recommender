@@ -17,6 +17,7 @@
 package net.myrrix.online.generation;
 
 import java.util.Iterator;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -51,9 +52,9 @@ public final class Generation {
   private final FastByIDMap<FastIDSet> knownItemIDs;
   private final FastByIDMap<FastIDSet> knownUserIDs;
   private final FastByIDMap<float[]> X;
-  private final RealMatrix XTXinv;
+  private RealMatrix XTXinv;
   private final FastByIDMap<float[]> Y;
-  private final RealMatrix YTYinv;
+  private RealMatrix YTYinv;
   private final CandidateFilter candidateFilter;
   private final int numFeatures;
   private final ReadWriteLock xLock;
@@ -71,9 +72,9 @@ public final class Generation {
     this(knownItemIDs,
          null, // Not used yet
          X,
-         MatrixUtils.getTransposeTimesSelfInverse(X),
+         null,
          Y,
-         MatrixUtils.getTransposeTimesSelfInverse(Y),
+         null,
          new LocationSensitiveHash(Y),
          countFeatures(X),
          new ReentrantReadWriteLock(),
@@ -81,6 +82,7 @@ public final class Generation {
          new ReentrantReadWriteLock(),
          null // not used yet
          );
+    recomputeInverses();
   }
 
   private static int countFeatures(FastByIDMap<float[]> X) {
@@ -127,6 +129,26 @@ public final class Generation {
                           xLock,
                           knownUserLock,
                           knownItemLock);
+  }
+
+  /**
+   * Normally only called from specialized {@code DelegateGenerationManager} methods.
+   */
+  void recomputeInverses() {
+    Lock readLock = xLock.readLock();
+    readLock.lock();
+    try {
+      XTXinv = MatrixUtils.getTransposeTimesSelfInverse(X);
+    } finally {
+      readLock.unlock();
+    }
+    readLock = yLock.readLock();
+    readLock.lock();
+    try {
+      YTYinv = MatrixUtils.getTransposeTimesSelfInverse(Y);
+    } finally {
+      readLock.unlock();
+    }
   }
 
   /**
