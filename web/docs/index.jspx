@@ -19,6 +19,8 @@
 <jsp:directive.page import="net.myrrix.web.common.stats.ServletStats"/>
 <jsp:directive.page import="net.myrrix.common.stats.RunningStatistics"/>
 <jsp:directive.page import="net.myrrix.common.stats.RunningStatisticsPerTime"/>
+<jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
+<jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
 <jsp:directive.page contentType="text/html"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
@@ -46,14 +48,14 @@
 function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
 
   if (typeof(paramSuffixes) == "undefined") {
-    paramSuffixes = new Array();
+    paramSuffixes = [];
   }
   if (typeof(postBodyElement) == "undefined") {
     postBodyElement = null;
   }
 
   var httpmethod = isGet ? "GET" : "POST";
-  var pathElements = new Array();
+  var pathElements = [];
   pathElements.push(endpoint);
   for (var i = 0; i < paramSuffixes.length; i++) {
     var elementValue = document.getElementById(endpoint + "-" + paramSuffixes[i]).value;
@@ -103,7 +105,7 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
 <h2>Machine</h2>
 
 <jsp:scriptlet>
-System.gc();
+System.gc(); // Helps make the heap reported more reliable:
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 </jsp:scriptlet>
 
@@ -111,7 +113,7 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
   <li>Host <code>${jvmEnv.hostName}</code></li>
   <li>${jvmEnv.numProcessors} processors available</li>
   <li>${jvmEnv.usedMemoryMB}MB used of ${jvmEnv.maxMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</li>
-  <li><a href="log.txt">View log messages</a></li>
+  <li><a href="log.txt" target="_blank">View log messages</a></li>
 </ul>
 
 </td><td style="width:50%;text-align:left">
@@ -119,12 +121,9 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 <h2>Recommender</h2>
 
 <jsp:scriptlet>
-pageContext.setAttribute("rec",
-                         application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.RECOMMENDER"));
-pageContext.setAttribute("localInputDir",
-                         application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.LOCAL_INPUT_DIR"));
-pageContext.setAttribute("avgEstimateError",
-                         application.getAttribute("net.myrrix.web.servlets.PreferenceServlet.AVG_ESTIMATE_ERROR"));
+pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
+pageContext.setAttribute("localInputDir", application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
+pageContext.setAttribute("avgEstimateError", application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY));
 </jsp:scriptlet>
 
 <ul>
@@ -142,8 +141,8 @@ pageContext.setAttribute("avgEstimateError",
 <h2>Service</h2>
 
 <jsp:scriptlet>
-Map&lt;String,ServletStats&gt; timings = (Map&lt;String,ServletStats&gt;)
-    application.getAttribute("net.myrrix.web.servlets.AbstractMyrrixServlet.TIMINGS");
+Map&lt;String,ServletStats&gt; timings =
+    (Map&lt;String,ServletStats&gt;) application.getAttribute(AbstractMyrrixServlet.TIMINGS_KEY);
 </jsp:scriptlet>
 
 <table style="width:100%">
@@ -243,7 +242,7 @@ Map&lt;String,ServletStats&gt; timings = (Map&lt;String,ServletStats&gt;)
     <td colspan="2">
       <textarea rows="20" id="ingestData">userID,itemID[,value]...</textarea>
     </td>
-    <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,new Array(),'ingestData')">&amp;rarr;</a></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,[],'ingestData')">&amp;rarr;</a></td>
   </tr>
 
   <tr><td colspan="4"><hr/></td></tr>
@@ -264,8 +263,8 @@ Map&lt;String,ServletStats&gt; timings = (Map&lt;String,ServletStats&gt;)
 
 </td></tr></table>
 
-<p>&amp;copy;2012 <a href="http://myrrix.com">Myrrix Ltd</a>, except for included third-party open source software.
-Full details of licensing at <a href="http://myrrix.com/legal/">http://myrrix.com/legal/</a></p>
+<p>&amp;copy;2012 <a href="http://myrrix.com" target="_blank">Myrrix Ltd</a>, except for included third-party open source software.
+Full details of licensing at <a href="http://myrrix.com/legal/" target="_blank">http://myrrix.com/legal/</a></p>
 
 </div>
 </body>
