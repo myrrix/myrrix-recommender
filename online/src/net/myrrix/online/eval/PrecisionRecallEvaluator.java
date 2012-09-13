@@ -96,12 +96,12 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
           (precision.getAverage() + recall.getAverage());
 
       if (++count % 1000 == 0) {
-        log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", new Object[] {precision, recall, ndcg, f1});
+        log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", precision, recall, ndcg, f1);
       }
     }
     double f1 = 2.0 * precision.getAverage() * recall.getAverage() /
         (precision.getAverage() + recall.getAverage());
-    log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", new Object[] {precision, recall, ndcg, f1});
+    log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", precision, recall, ndcg, f1);
 
     return new IRStatisticsImpl(precision.getAverage(), recall.getAverage(), ndcg.getAverage());
   }

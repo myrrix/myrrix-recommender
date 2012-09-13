@@ -99,7 +99,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Preconditions.checkArgument(partition >= 0 && partition < numPartitions);
 
     log.info("Creating ServingRecommender for instance {} and with local work dir {}, partition {} of {}",
-             new Object[] { instanceID, localInputDir, partition, numPartitions });
+             instanceID, localInputDir, partition, numPartitions);
 
     generationManager = ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
                                                   GenerationManager.class,
