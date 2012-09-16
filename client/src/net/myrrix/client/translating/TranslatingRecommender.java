@@ -135,6 +135,11 @@ public interface TranslatingRecommender {
   boolean isReady() throws TasteException;
 
   /**
+   * Blocks until {@link #isReady()} returns {@code true}.
+   */
+  void await() throws TasteException;
+
+  /**
    * @return all item IDs currently in the model
    */
   Collection<String> getAllItemIDs() throws TasteException;

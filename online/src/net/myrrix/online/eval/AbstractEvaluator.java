@@ -109,13 +109,7 @@ public abstract class AbstractEvaluator {
           split(originalDataDir, trainingFile, trainingPercentage, evaluationPercentage);
 
       recommender = new ServerRecommender(trainingDataDir);
-      while (!recommender.isReady()) {
-        try {
-          Thread.sleep(1000L);
-        } catch (InterruptedException ie) {
-          // continue
-        }
-      }
+      recommender.await();
 
       return evaluate(recommender, testData);
 

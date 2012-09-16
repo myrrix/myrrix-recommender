@@ -764,6 +764,17 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   }
 
   @Override
+  public void await() {
+    while (!isReady()) {
+      try {
+        Thread.sleep(1000L);
+      } catch (InterruptedException e) {
+        // continue
+      }
+    }
+  }
+
+  @Override
   public FastIDSet getAllUserIDs() throws NotReadyException {
     Generation generation = getCurrentGeneration();
     return getIDsFromKeys(generation.getX(), generation.getXLock().readLock());

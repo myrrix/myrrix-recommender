@@ -30,6 +30,7 @@ import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
@@ -72,11 +73,11 @@ public final class AllRecommendations implements Callable<Object> {
   public Object call() throws InterruptedException, NotReadyException, ExecutionException {
 
     final ServerRecommender recommender = new ServerRecommender(config.getLocalInputDir());
-    while (!recommender.isReady()) {
-      Thread.sleep(1000L);
-    }
+    recommender.await();
 
-    ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    ExecutorService executorService =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+                                     new NamedThreadFactory(false, "AllRecommnedations"));
     List<Future<?>> futures = Lists.newArrayList();
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();

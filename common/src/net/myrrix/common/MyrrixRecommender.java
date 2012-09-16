@@ -161,6 +161,11 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   boolean isReady() throws TasteException;
 
   /**
+   * Blocks until {@link #isReady()} returns {@code true}.
+   */
+  void await() throws TasteException;
+
+  /**
    * @return all user IDs currently in the model
    */
   FastIDSet getAllUserIDs() throws TasteException;

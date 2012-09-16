@@ -277,6 +277,11 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
+  public void await() throws TasteException {
+    delegate.await();
+  }
+
+  @Override
   public Collection<String> getAllItemIDs() throws TasteException {
     FastIDSet itemIDs = delegate.getAllItemIDs();
     Collection<String> result = Lists.newArrayListWithCapacity(itemIDs.size());

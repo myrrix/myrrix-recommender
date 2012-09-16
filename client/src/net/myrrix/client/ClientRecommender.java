@@ -777,6 +777,17 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   @Override
+  public void await() throws TasteException {
+    while (!isReady()) {
+      try {
+        Thread.sleep(1000L);
+      } catch (InterruptedException e) {
+        // continue
+      }
+    }
+  }
+
+  @Override
   public FastIDSet getAllUserIDs() throws TasteException {
     try {
       FastIDSet result = new FastIDSet();
