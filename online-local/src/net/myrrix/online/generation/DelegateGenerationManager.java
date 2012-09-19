@@ -320,6 +320,9 @@ public final class DelegateGenerationManager implements GenerationManager {
       }
     }
 
+    removeNonpositive(RbyRow);
+    removeNonpositive(RbyColumn);
+
     if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
       // No data yet
       return new Generation(null,
@@ -357,6 +360,17 @@ public final class DelegateGenerationManager implements GenerationManager {
     log.info("Factorization complete");
 
     return new Generation(knownItemIDs, als.getX(), als.getY());
+  }
+
+  private static void removeNonpositive(FastByIDMap<FastByIDFloatMap> matrix) {
+    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : matrix.entrySet()) {
+      for (Iterator<FastByIDFloatMap.MapEntry> it = entry.getValue().entrySet().iterator(); it.hasNext();) {
+        FastByIDFloatMap.MapEntry entry2 = it.next();
+        if (entry2.getValue() <= 0.0f) {
+          it.remove();
+        }
+      }
+    }
   }
 
 }
