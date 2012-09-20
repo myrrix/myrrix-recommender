@@ -307,6 +307,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new AllUserIDsServlet(), "user/allIDs");
     addServlet(context, new AllItemIDsServlet(), "item/allIDs");
     Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
+    Tomcat.addServlet(context, "status_jspx", new status_jspx()).addMapping("/status.jspx");
     Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 
     String bucket = config.getBucket();

@@ -1,0 +1,40 @@
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.2">
+<!--
+ Copyright Myrrix Ltd
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ -->
+<jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
+<jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
+<jsp:directive.page contentType="application/xml"/>
+<jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8"?>]]></jsp:text>
+<jsp:scriptlet>
+System.gc(); // Helps make the heap reported more reliable:
+pageContext.setAttribute("jvmEnv", new JVMEnvironment());
+pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
+</jsp:scriptlet>
+<status>
+  <machine>
+    <maxMemory>${jvmEnv.maxMemory}</maxMemory>
+    <usedMemory>${jvmEnv.usedMemory}</usedMemory>
+  </machine>
+  <configuration>
+    <instanceID>${rec.instanceID}</instanceID>
+  </configuration>
+  <recommender>
+    <ready>${rec.ready}</ready>
+    <users>${rec.generationManager.currentGeneration.numUsers}</users>
+    <items>${rec.generationManager.currentGeneration.numItems}</items>
+  </recommender>
+</status>
+</jsp:root>
