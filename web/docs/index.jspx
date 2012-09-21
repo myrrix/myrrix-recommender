@@ -21,6 +21,7 @@
 <jsp:directive.page import="net.myrrix.common.stats.RunningStatisticsPerTime"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
+<jsp:directive.page import="org.apache.mahout.cf.taste.impl.common.RunningAverage"/>
 <jsp:directive.page contentType="text/html"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
@@ -111,7 +112,7 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 
 <ul>
   <li>Host <code>${jvmEnv.hostName}</code></li>
-  <li>${jvmEnv.numProcessors} processors available</li>
+  <li>${jvmEnv.numProcessors} cores available</li>
   <li>${jvmEnv.usedMemoryMB}MB used of ${jvmEnv.maxMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</li>
   <li><a href="log.txt" target="_blank">View log messages</a></li>
 </ul>
@@ -123,7 +124,12 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 <jsp:scriptlet>
 pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
 pageContext.setAttribute("localInputDir", application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
-pageContext.setAttribute("avgEstimateError", application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY));
+RunningAverage estimateError = (RunningAverage) application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY);
+float avgEstimateError = estimateError == null ? 0.0f : (float) estimateError.getAverage();
+if (Float.isNaN(avgEstimateError)) {
+  avgEstimateError = 0.0f;
+}
+pageContext.setAttribute("avgEstimateError", avgEstimateError);
 </jsp:scriptlet>
 
 <ul>
@@ -131,7 +137,7 @@ pageContext.setAttribute("avgEstimateError", application.getAttribute(Preference
   <li>Local Input Dir<br/><code>${localInputDir}</code></li>
   <li>${rec.generationManager.currentGeneration.numUsers} users</li>
   <li>${rec.generationManager.currentGeneration.numItems} items</li>
-  <li>${avgEstimateError.average} avg. estimation error <em>(beta)</em></li>
+  <li>${avgEstimateError} avg. estimation error <em>(beta)</em></li>
 </ul>
 
 </td></tr></table>
