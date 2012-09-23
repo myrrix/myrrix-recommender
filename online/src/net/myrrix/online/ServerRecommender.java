@@ -78,33 +78,39 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private final GenerationManager generationManager;
 
   /**
-   * Calls {@link #ServerRecommender(long, File, int, int)} with instance ID 0, and no partitions (partition 0 of
-   * 1 total).
+   * Calls {@link #ServerRecommender(String, long, File, int, int)} for simple local mode, with no bucket,
+   * instance ID 0, and no partitions (partition 0 of 1 total).
    */
   public ServerRecommender(File localInputDir) {
-    this(0L, localInputDir, 0, 1);
+    this(null, 0L, localInputDir, 0, 1);
   }
 
   /**
-   *
+   * @param bucket bucket that Serving Layer is using for instances
    * @param instanceID instance ID that the Serving Layer is serving. May be 0 for local mode.
    * @param localInputDir local input and model file directory
    * @param partition partition number in a partitioned distributed mode. 0 if not partitioned.
    * @param numPartitions total partitions in partitioned distributed mode. 1 if not partitioned.
    */
-  public ServerRecommender(long instanceID, File localInputDir, int partition, int numPartitions) {
-    Preconditions.checkArgument(instanceID >= 0L);
-    Preconditions.checkNotNull(localInputDir);
-    Preconditions.checkArgument(numPartitions > 0);
-    Preconditions.checkArgument(partition >= 0 && partition < numPartitions);
+  public ServerRecommender(String bucket,
+                           long instanceID,
+                           File localInputDir,
+                           int partition,
+                           int numPartitions) {
+    Preconditions.checkNotNull(bucket, "No bucket");
+    Preconditions.checkArgument(instanceID >= 0L, "Bad instance ID %s", instanceID);
+    Preconditions.checkNotNull(localInputDir, "No local dir");
+    Preconditions.checkArgument(numPartitions > 0, "Bad num partitions %s", numPartitions);
+    Preconditions.checkArgument(partition >= 0 && partition < numPartitions, "Bad partition %s", partition);
 
-    log.info("Creating ServingRecommender for instance {} and with local work dir {}, partition {} of {}",
-             instanceID, localInputDir, partition, numPartitions);
+    log.info("Creating ServingRecommender for bucket {}, instance {} and with local work dir {}, partition {} of {}",
+             bucket, instanceID, localInputDir, partition, numPartitions);
 
-    generationManager = ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
-                                                  GenerationManager.class,
-                                                  new Class<?>[] { long.class, File.class, int.class, int.class },
-                                                  new Object[] { instanceID, localInputDir, partition, numPartitions });
+    generationManager =
+        ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
+                                  GenerationManager.class,
+                                  new Class<?>[] { String.class, long.class, File.class, int.class, int.class },
+                                  new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
   }
 
   public long getInstanceID() {

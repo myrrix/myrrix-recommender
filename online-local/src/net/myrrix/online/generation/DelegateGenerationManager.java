@@ -67,7 +67,6 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final int WRITES_BETWEEN_REBUILD = 10000000;
 
-  private final long instanceID;
   private final File inputDir;
   private final File modelFile;
   private final File appendFile;
@@ -77,8 +76,13 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final ExecutorService refreshExecutor;
   private final Semaphore refreshSemaphore;
 
+  public DelegateGenerationManager(File localInputDir) throws IOException {
+    this(null, 0L, localInputDir, 0, 0);
+  }
+
   /**
-   * @param instanceID not used in local mode
+   * @param bucket not used in local mode; required for API compatibility internally
+   * @param instanceID not used in local mode; required for API compatibility internally
    * @param localInputDir local work directory from which input is read,
    *  and to which additional input is written. The model file is stored here too. Input in CSV format can
    *  be placed in this directory at any time. The file name should end in ".csv" and the file should
@@ -86,9 +90,13 @@ public final class DelegateGenerationManager implements GenerationManager {
    * @param partition not used; required for API compatibility internally
    * @param numPartitions not used; required for API compatibility internally
    */
-  public DelegateGenerationManager(long instanceID, File localInputDir, int partition, int numPartitions)
-      throws IOException {
-    this.instanceID = instanceID;
+  public DelegateGenerationManager(String bucket,
+                                   long instanceID,
+                                   File localInputDir,
+                                   int partition,
+                                   int numPartitions) throws IOException {
+
+    // Arguments above are unused but here for compatibility with other DelegateGenerationManager
 
     log.info("Using local computation, and data in {}", localInputDir);
     inputDir = localInputDir;
@@ -106,11 +114,13 @@ public final class DelegateGenerationManager implements GenerationManager {
   }
 
   /**
-   * Not used, but implemented.
+   * Not used.
+   *
+   * @return 0
    */
   @Override
   public long getInstanceID() {
-    return instanceID;
+    return 0L;
   }
 
   @Override

@@ -310,11 +310,6 @@ public final class Runner implements Callable<Boolean>, Closeable {
     Tomcat.addServlet(context, "status_jspx", new status_jspx()).addMapping("/status.jspx");
     Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 
-    String bucket = config.getBucket();
-    if (bucket != null) {
-      System.setProperty("store.bucket", bucket);
-    }
-
     try {
       tomcat.start();
     } catch (LifecycleException le) {
@@ -427,6 +422,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     ServletContext servletContext = context.getServletContext();
     servletContext.setAttribute(InitListener.INSTANCE_ID_KEY, config.getInstanceID());
+    servletContext.setAttribute(InitListener.BUCKET_KEY, config.getBucket());
     servletContext.setAttribute(InitListener.RESCORER_PROVIDER_CLASS_KEY, config.getRescorerProviderClassName());
     servletContext.setAttribute(InitListener.LOCAL_INPUT_DIR_KEY, config.getLocalInputDir());
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());

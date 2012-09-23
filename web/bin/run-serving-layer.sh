@@ -53,8 +53,9 @@ SIXTYFOUR_BIT_OPTS="-d64 -XX:+UseCompressedOops"
 
 # -------- Apache Hadoop-specific settings
 
-# If using an Apache Hadoop cluster, set HADOOP_HOME here (if it is not already set in the environment)
-#export HADOOP_HOME=/path/to/hadoop
+# If using an Apache Hadoop cluster, set HADOOP_CONF_DIR here (if it is not already set in the environment)
+# HADOOP_HOME also works.
+#export HADOOP_CONF_DIR=/path/to/hadoop/conf
 
 # -------- Amazon EMR settings
 

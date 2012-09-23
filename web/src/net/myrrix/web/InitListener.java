@@ -53,6 +53,7 @@ public final class InitListener implements ServletContextListener {
   private static final String KEY_PREFIX = InitListener.class.getName();
   public static final String LOG_HANDLER = KEY_PREFIX + ".LOG_HANDLER";
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
+  public static final String BUCKET_KEY = KEY_PREFIX + ".BUCKET";
   public static final String INSTANCE_ID_KEY = KEY_PREFIX + ".INSTANCE_ID";
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
   public static final String ALL_PARTITIONS_SPEC_KEY = KEY_PREFIX + ".ALL_PARTITIONS_SPEC";
@@ -120,9 +121,11 @@ public final class InitListener implements ServletContextListener {
       context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
     }
 
+    String bucket = getAttributeOrParam(context, BUCKET_KEY);
     long instanceID = Long.parseLong(getAttributeOrParam(context, INSTANCE_ID_KEY));
 
-    MyrrixRecommender recommender = new ServerRecommender(instanceID, localInputDir, partition, numPartitions);
+    MyrrixRecommender recommender =
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, numPartitions);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
 
     log.info("Myrrix is initialized");
