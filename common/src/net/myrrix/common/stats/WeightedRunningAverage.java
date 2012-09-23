@@ -27,7 +27,7 @@ import org.apache.mahout.cf.taste.impl.common.RunningAverage;
  *
  * @author Mahout
  */
-public class WeightedRunningAverage implements RunningAverage, Serializable {
+public final class WeightedRunningAverage implements RunningAverage, Serializable {
   
   private int totalWeight;
   private double average;

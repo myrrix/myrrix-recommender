@@ -72,9 +72,9 @@ public final class MatrixUtilsTest extends MyrrixTest {
     M.put(1L, new float[] {4.0f, -1.0f, -5.0f});
     M.put(2L, new float[] {2.0f, 0.0f, 3.0f});
     RealMatrix MTM = MatrixUtils.transposeTimesSelf(M);
-    assertArrayEquals(MTM.getRow(0), new double[] { 20.0, -4.0, -14.0});
-    assertArrayEquals(MTM.getRow(1), new double[] { -4.0,  1.0,   5.0});
-    assertArrayEquals(MTM.getRow(2), new double[] {-14.0,  5.0,  34.0});
+    assertArrayEquals(new double[]{20.0, -4.0, -14.0}, MTM.getRow(0));
+    assertArrayEquals(new double[]{-4.0, 1.0, 5.0}, MTM.getRow(1));
+    assertArrayEquals(new double[]{-14.0, 5.0, 34.0}, MTM.getRow(2));
   }
 
 }

@@ -128,7 +128,6 @@ import net.myrrix.common.LangUtils;
  */
 public final class CLI {
 
-  private static final String TRANSLATE_FLAG = "translate";
   private static final String TRANSLATE_USER_FLAG = "translateUser";
   private static final String TRANSLATE_ITEM_FLAG = "translateItem";
   private static final String HOST_FLAG = "host";
@@ -174,12 +173,6 @@ public final class CLI {
 
     boolean translateUser = commandLine.hasOption(TRANSLATE_USER_FLAG);
     boolean translateItem = commandLine.hasOption(TRANSLATE_ITEM_FLAG);
-    if (commandLine.hasOption(TRANSLATE_FLAG)) {
-      System.err.println("--" + TRANSLATE_FLAG + " is deprecated. Use --" + TRANSLATE_USER_FLAG +
-                         " or --" + TRANSLATE_ITEM_FLAG);
-      translateUser = true;
-      translateItem = true;
-    }
 
     TranslatingRecommender translatingRecommender = null;
     if (translateUser || translateItem) {
@@ -188,7 +181,7 @@ public final class CLI {
       translatingRecommender = new TranslatingClientRecommender(recommender, userTranslator, itemTranslator);
       String translateFileName = commandLine.getOptionValue(TRANSLATE_ITEM_FLAG);
       if (translateFileName == null) {
-        translateFileName = commandLine.getOptionValue(TRANSLATE_FLAG);
+        translateFileName = commandLine.getOptionValue(TRANSLATE_ITEM_FLAG);
       }
       if (translateFileName != null) {
         File translateFile = new File(translateFileName);
@@ -503,9 +496,6 @@ public final class CLI {
     addOption(options, "Password to authenticate to Serving Layer", PASSWORD_FLAG, true, false);
     addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true, false);
     addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true, false);
-    // TODO remove:
-    addOption(options, "Deprecated. Use --" + TRANSLATE_USER_FLAG + " and --" + TRANSLATE_ITEM_FLAG,
-              TRANSLATE_FLAG, true, true);
     addOption(options, "Use String user IDs in client API.", TRANSLATE_USER_FLAG, false, true);
     addOption(options, "Use String item IDs in client API. Optional file argument contains list of all known item IDs",
               TRANSLATE_ITEM_FLAG, true, true);
