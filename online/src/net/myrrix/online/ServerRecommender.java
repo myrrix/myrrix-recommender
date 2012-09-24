@@ -97,7 +97,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                            File localInputDir,
                            int partition,
                            int numPartitions) {
-    Preconditions.checkNotNull(bucket, "No bucket");
     Preconditions.checkArgument(instanceID >= 0L, "Bad instance ID %s", instanceID);
     Preconditions.checkNotNull(localInputDir, "No local dir");
     Preconditions.checkArgument(numPartitions > 0, "Bad num partitions %s", numPartitions);
@@ -111,6 +110,10 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                                   GenerationManager.class,
                                   new Class<?>[] { String.class, long.class, File.class, int.class, int.class },
                                   new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
+  }
+
+  public String getBucket() {
+    return generationManager.getBucket();
   }
 
   public long getInstanceID() {

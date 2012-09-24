@@ -67,6 +67,8 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final int WRITES_BETWEEN_REBUILD = 10000000;
 
+  private final String bucket;
+  private final long instanceID;
   private final File inputDir;
   private final File modelFile;
   private final File appendFile;
@@ -96,6 +98,9 @@ public final class DelegateGenerationManager implements GenerationManager {
                                    int partition,
                                    int numPartitions) throws IOException {
 
+    this.bucket = bucket;
+    this.instanceID = instanceID;
+
     // Arguments above are unused but here for compatibility with other DelegateGenerationManager
 
     log.info("Using local computation, and data in {}", localInputDir);
@@ -115,12 +120,18 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   /**
    * Not used.
-   *
-   * @return 0
+   */
+  @Override
+  public String getBucket() {
+    return bucket;
+  }
+
+  /**
+   * Not used.
    */
   @Override
   public long getInstanceID() {
-    return 0L;
+    return instanceID;
   }
 
   @Override

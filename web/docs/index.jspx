@@ -29,21 +29,21 @@
 <head>
 <title>Myrrix Serving Layer</title>
 
-<style type="text/css">
-  body {background-color:#202020}
-  body,p,th,td,h1,h2,h3 {font-family:"Gill Sans","Gill Sans MT",Helvetica,sans-serif;font-weight:300;color:white}
-  a {text-decoration:none}
-  table,th,td {border:1px dotted black}
-  th,td {padding:10px;white-space:nowrap;vertical-align:top}
-  td {text-align:right}
-  table.layout th,table.layout td,table.layout {border:0;padding:0}
-  table {border-collapse:collapse}
-  h1,h2,h3,a {color:#CCFF66}
-  h1,h2,h3 {text-transform:uppercase}
-  hr {margin:20px 0 10px 0}
-  input {width:70px}
-  a.arrow {line-height:100%;font-size:200%;margin-left:10px}
-</style>
+<style type="text/css"><![CDATA[
+body {background-color:#202020}
+body,p,th,td,h1,h2,h3 {font-family:"Gill Sans","Gill Sans MT",Helvetica,sans-serif;font-weight:300;color:white}
+a {text-decoration:none}
+table,th,td {border:1px dotted black}
+th,td {padding:10px;white-space:nowrap;vertical-align:top}
+td {text-align:right}
+table.layout > tbody > tr > th, table.layout > tbody > tr > td, table.layout {border:0;padding:0;text-align:left}
+table {border-collapse:collapse}
+h1,h2,h3,a {color:#CCFF66}
+h1,h2,h3 {text-transform:uppercase}
+hr {margin:20px 0 10px 0}
+input {width:70px}
+a.arrow {line-height:100%;font-size:200%;margin-left:10px}
+]]></style>
 
 <script type="text/javascript"><![CDATA[
 function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
@@ -101,7 +101,7 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
 
 <hr/>
 
-<table class="layout" style="width:100%"><tr><td style="width:50%;text-align:left">
+<table class="layout" style="width:100%"><tr><td style="text-align:left">
 
 <h2>Machine</h2>
 
@@ -110,20 +110,28 @@ System.gc(); // Helps make the heap reported more reliable:
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 </jsp:scriptlet>
 
-<ul>
-  <li>Host <code>${jvmEnv.hostName}</code></li>
-  <li>${jvmEnv.numProcessors} cores available</li>
-  <li>${jvmEnv.usedMemoryMB}MB used of ${jvmEnv.maxMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</li>
-  <li><a href="log.txt" target="_blank">View log messages</a></li>
-</ul>
+<table>
+  <tr><td>Host</td><td style="text-align:left"><code>${jvmEnv.hostName}</code></td></tr>
+  <tr><td>Cores</td><td style="text-align:left">${jvmEnv.numProcessors}</td></tr>
+  <tr><td>Heap Used (MB)</td><td style="text-align:left">${jvmEnv.usedMemoryMB} (${jvmEnv.percentUsedMemory}%)</td></tr>
+  <tr><td>Logs</td><td style="text-align:left"><a href="log.txt" target="_blank">View</a></td></tr>
+</table>
 
-</td><td style="width:50%;text-align:left">
+</td><td style="text-align:left">
 
 <h2>Recommender</h2>
 
 <jsp:scriptlet>
 pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
-pageContext.setAttribute("localInputDir", application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
+String localInputDir = String.valueOf(application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
+pageContext.setAttribute("localInputDir", localInputDir);
+String localInputDirDisplay;
+if (localInputDir.length() > 32) {
+  localInputDirDisplay = localInputDir.substring(0, 32) + "...";
+} else {
+  localInputDirDisplay = localInputDir;
+}
+pageContext.setAttribute("localInputDirDisplay", localInputDirDisplay);
 RunningAverage estimateError = (RunningAverage) application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY);
 float avgEstimateError = estimateError == null ? 0.0f : (float) estimateError.getAverage();
 if (Float.isNaN(avgEstimateError)) {
@@ -132,24 +140,20 @@ if (Float.isNaN(avgEstimateError)) {
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
 </jsp:scriptlet>
 
-<ul>
-  <li>Instance ID ${rec.instanceID}</li>
-  <li>Local Input Dir<br/><code>${localInputDir}</code></li>
-  <li>${rec.generationManager.currentGeneration.numUsers} users</li>
-  <li>${rec.generationManager.currentGeneration.numItems} items</li>
-  <li>${avgEstimateError} avg. estimation error <em>(beta)</em></li>
-</ul>
+<table>
+  <tr><td>Bucket</td><td style="text-align:left"><code>${rec.bucket}</code></td></tr>
+  <tr><td>Instance ID</td><td style="text-align:left"><code>${rec.instanceID}</code></td></tr>
+  <tr><td>Local Input Dir</td><td style="text-align:left"><a href="file://${localInputDir}"><code>${localInputDirDisplay}</code></a></td></tr>
+  <tr><td>User Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numUsers}</td></tr>
+  <tr><td>Item Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numItems}</td></tr>
+  <tr><td>Avg. Estimate Error (beta)</td><td style="text-align:left">${avgEstimateError}</td></tr>
+</table>
 
 </td></tr></table>
 
 <hr/>
 
 <h2>Service</h2>
-
-<jsp:scriptlet>
-Map&lt;String,ServletStats&gt; timings =
-    (Map&lt;String,ServletStats&gt;) application.getAttribute(AbstractMyrrixServlet.TIMINGS_KEY);
-</jsp:scriptlet>
 
 <table style="width:100%">
   <tr>
@@ -161,6 +165,8 @@ Map&lt;String,ServletStats&gt; timings =
     <th>Server Errors</th>
   </tr>
   <jsp:scriptlet>
+    Map&lt;String,ServletStats&gt; timings =
+        (Map&lt;String,ServletStats&gt;) application.getAttribute(AbstractMyrrixServlet.TIMINGS_KEY);
     for (Map.Entry&lt;String,ServletStats&gt; entry : timings.entrySet()) {
       pageContext.setAttribute("entry", entry);
   </jsp:scriptlet>
@@ -200,7 +206,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/recommend</code></td>
     <td><code>/</code><input type="text" id="recommend-userid"/></td>
     <td></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('recommend',true,new Array('userid'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('recommend',true,new Array('userid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -208,7 +214,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/recommendToAnonymous</code></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1"/></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2"/></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('recommendToAnonymous',true,new Array('itemid1','itemid2'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('recommendToAnonymous',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -216,7 +222,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/similarity</code></td>
     <td><code>/</code><input type="text" id="similarity-itemid1"/></td>
     <td><code>/</code><input type="text" id="similarity-itemid2"/></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('similarity',true,new Array('itemid1','itemid2'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('similarity',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -224,7 +230,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/estimate</code></td>
     <td><code>/</code><input type="text" id="estimate-userid"/></td>
     <td><code>/</code><input type="text" id="estimate-itemid"/></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('estimate',true,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('estimate',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -232,7 +238,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/because</code></td>
     <td><code>/</code><input type="text" id="because-userid"/></td>
     <td><code>/</code><input type="text" id="because-itemid"/></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('because',true,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('because',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -240,7 +246,7 @@ Map&lt;String,ServletStats&gt; timings =
   <tr><td><code>/pref</code></td>
     <td><code>/</code><input type="text" id="pref-userid"/></td>
     <td><code>/</code><input type="text" id="pref-itemid"/></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('pref',false,new Array('userid','itemid'))">&amp;rarr;</a></td></tr>
+    <td><a href="#" class="arrow" onclick="return doQuery('pref',false,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -248,14 +254,14 @@ Map&lt;String,ServletStats&gt; timings =
     <td colspan="2">
       <textarea rows="20" id="ingestData">userID,itemID[,value]...</textarea>
     </td>
-    <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,[],'ingestData')">&amp;rarr;</a></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,[],'ingestData')">&amp;#x27AC;</a></td>
   </tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
   <tr><td><code>/refresh</code></td>
     <td colspan="2"></td>
-    <td><a href="#" class="arrow" onclick="return doQuery('refresh',false)">&amp;rarr;</a></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('refresh',false)">&amp;#x27AC;</a></td>
   </tr>
 
 </table>
