@@ -52,7 +52,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
   private static final Splitter COMMA = Splitter.on(',').omitEmptyStrings().trimResults();
   static final Splitter SLASH = Splitter.on('/').omitEmptyStrings();
-  private static final int DEFAULT_HOW_MANY = 10;
+  static final int DEFAULT_HOW_MANY = 10;
 
   private static final String KEY_PREFIX = AbstractMyrrixServlet.class.getName();
   public static final String RECOMMENDER_KEY = KEY_PREFIX + ".RECOMMENDER";

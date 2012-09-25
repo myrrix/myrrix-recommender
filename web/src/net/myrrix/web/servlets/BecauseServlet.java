@@ -34,7 +34,7 @@ import net.myrrix.common.NotReadyException;
 /**
  * <p>Responds to a GET request to {@code /because/[userID]/[itemID]?howMany=n}, and in turn calls
  * {@link MyrrixRecommender#recommendedBecause(long, long, int)}. If howMany is not specified, defaults to
-  * {@link #DEFAULT_HOW_MANY}.</p>
+  * {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}.</p>
  *
  * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
  *

@@ -158,8 +158,12 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private synchronized void closeAppender() throws IOException {
     if (appender != null) {
-      //appender.flush();
-      Closeables.closeQuietly(appender);
+      try {
+        appender.close(); // Want to know of output stream close failed -- maybe failed to write
+      } catch (IOException ioe) {
+        // But proceed anyway with what was written
+        log.warn("Failed to close appender cleanly", ioe);
+      }
       if (appendFile.length() == 0) {
         if (appendFile.exists() && !appendFile.delete()) {
           log.warn("Could not delete {}", appendFile);
@@ -262,14 +266,13 @@ public final class DelegateGenerationManager implements GenerationManager {
     ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(newModelFile));
     try {
       out.writeObject(new GenerationSerializer(generation));
-      //out.flush();
     } catch (IOException ioe) {
       if (newModelFile.exists() && !newModelFile.delete()) {
         log.warn("Could not delete {}", newModelFile);
       }
       throw ioe;
     } finally {
-      Closeables.closeQuietly(out);
+      out.close(); // Want to know of output stream close failed -- maybe failed to write
     }
 
     log.info("Done, moving into place at {}", modelFile);

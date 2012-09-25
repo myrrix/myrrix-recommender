@@ -37,7 +37,8 @@ import net.myrrix.online.RescorerProvider;
  * {@code /recommend/[userID](?howMany=n)(&considerKnownItems=true|false)(&rescorerParams=...)}
  * and in turn calls
  * {@link MyrrixRecommender#recommend(long, int)}. If {@code howMany} is not specified, defaults to
- * {@link #DEFAULT_HOW_MANY}. If {@code considerKnownItems} is not specified, it is considered {@code false}.</p>
+ * {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}. If {@code considerKnownItems} is not specified,
+ * it is considered {@code false}.</p>
  *
  * <p>Output is in CSV or JSON format. Select output format using the HTTP {@code Accept} header.</p>
  *

@@ -36,7 +36,7 @@ import net.myrrix.online.RescorerProvider;
 /**
  * <p>Responds to a GET request to {@code /similarity/[itemID1](/[itemID2]/...)?howMany=n(&rescorerParams=...)},
  * and in turn calls {@link MyrrixRecommender#mostSimilarItems(long[], int)} with the supplied values.
- * If howMany is not specified, defaults to {@link #DEFAULT_HOW_MANY}.</p>
+ * If howMany is not specified, defaults to {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}.</p>
  *
  * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
  *

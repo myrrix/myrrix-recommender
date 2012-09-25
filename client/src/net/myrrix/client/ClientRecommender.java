@@ -616,9 +616,8 @@ public final class ClientRecommender implements MyrrixRecommender {
         Writer out = new OutputStreamWriter(new GZIPOutputStream(connection.getOutputStream()), Charsets.UTF_8);
         try {
           CharStreams.copy(reader, out);
-          //out.flush();
         } finally {
-          Closeables.closeQuietly(out);
+          out.close(); // Want to know of output stream close failed -- maybe failed to write
         }
         // Should not be able to return Not Available status
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {

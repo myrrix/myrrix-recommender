@@ -235,9 +235,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
         }
         out.write(translatedLine + '\n');
       }
-      out.flush();
     } finally {
-      Closeables.closeQuietly(out);
+      out.close(); // Want to know of output stream close failed -- maybe failed to write
     }
     return tempFile;
   }

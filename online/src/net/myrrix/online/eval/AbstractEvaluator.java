@@ -165,7 +165,7 @@ public abstract class AbstractEvaluator {
       }
 
     } finally {
-      Closeables.closeQuietly(trainingOut);
+      trainingOut.close(); // Want to know of output stream close failed -- maybe failed to write
     }
 
     return testData;

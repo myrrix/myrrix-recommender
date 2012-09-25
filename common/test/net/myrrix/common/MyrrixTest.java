@@ -67,13 +67,13 @@ public abstract class MyrrixTest extends Assert {
   }
 
   @Before
-  public synchronized void setUp() throws Exception {
+  public void setUp() throws Exception {
     testTempDir = null;
     RandomUtils.useTestSeed();
   }
 
   @After
-  public synchronized void tearDown() throws Exception {
+  public void tearDown() throws Exception {
     IOUtils.deleteRecursively(testTempDir);
   }
 

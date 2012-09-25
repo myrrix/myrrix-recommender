@@ -44,7 +44,7 @@ import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
  * <p>Implements the Alternating Least Squares algorithm described in
- * <a href="www2.research.att.com/~yifanhu/PUB/cf.pdf">"Collaborative Filtering for Implicit Feedback Datasets"</a>
+ * <a href="http://www2.research.att.com/~yifanhu/PUB/cf.pdf">"Collaborative Filtering for Implicit Feedback Datasets"</a>
  * by Yifan Hu, Yehuda Koren, and Chris Volinsky.</p>
  *
  * <p>This implementation varies in some small details; it does not use the same mechanism for explaining ratings

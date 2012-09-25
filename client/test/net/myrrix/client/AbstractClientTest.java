@@ -110,14 +110,7 @@ public abstract class AbstractClientTest extends MyrrixTest {
     client.refresh(null);
 
     log.info("Waiting for client...");
-
-    while (!client.isReady()) {
-      try {
-        Thread.sleep(5000L);
-      } catch (InterruptedException e) {
-        // continue
-      }
-    }
+    client.await();
   }
 
   @Override
@@ -126,16 +119,16 @@ public abstract class AbstractClientTest extends MyrrixTest {
     if (runner != null) {
       runner.close();
     }
-
-    if (savedModelFile == null) {
-      savedModelFile = File.createTempFile("model-", ".bin");
-      savedModelFile.deleteOnExit();
-      File modelBinFile = new File(getTestTempDir(), "model.bin");
-      if (modelBinFile.exists()) {
-        Files.copy(modelBinFile, savedModelFile);
+    synchronized (AbstractClientTest.class) {
+      if (savedModelFile == null) {
+        savedModelFile = File.createTempFile("model-", ".bin");
+        savedModelFile.deleteOnExit();
+        File modelBinFile = new File(getTestTempDir(), "model.bin");
+        if (modelBinFile.exists()) {
+          Files.copy(modelBinFile, savedModelFile);
+        }
       }
     }
-
     super.tearDown();
   }
 

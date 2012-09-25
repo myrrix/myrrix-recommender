@@ -133,12 +133,12 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
   }
 
   @Override
-  public double getMin() {
+  public synchronized double getMin() {
     return min;
   }
 
   @Override
-  public double getMax() {
+  public synchronized double getMax() {
     return max;
   }
 
