@@ -46,7 +46,7 @@ public final class JVMEnvironment {
    * @return approximate heap used, in bytes
    */
   public int getUsedMemory() {
-    return (int) (runtime.totalMemory() - runtime.freeMemory());
+    return (int) (getMaxMemory() - runtime.freeMemory());
   }
 
   /**
@@ -71,7 +71,7 @@ public final class JVMEnvironment {
   }
 
   public int getPercentUsedMemory() {
-    return 100 * getUsedMemoryMB() / getMaxMemoryMB();
+    return (100 * getUsedMemoryMB()) / getMaxMemoryMB();
   }
 
   public String getHostName() {
