@@ -29,6 +29,8 @@ hr {margin:20px 0 10px 0}
 <ul>
   <li>New example shell scripts for more convenient execution of Serving Layer, Computation Layer</li>
   <li>Serving Layer can reload new models incrementally, reducing peak heap size required.</li>
+  <li>ALS algorithm has been modified to handle negative strength values more reasonably at model building time,
+      though input should still generally be positive.</li>
   <li>Updated to Tomcat 7.0.30, SLF4J 1.7</li>
 </ul>
 

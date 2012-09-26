@@ -67,6 +67,13 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final int WRITES_BETWEEN_REBUILD = 10000000;
 
+  /**
+   * Values with absolute value less than this in the input are considered 0.
+   * Values are generally assumed to be > 1, actually,
+   * and usually not negative, though they need not be.
+   */
+  private static final float DEFAULT_ZERO_THRESHOLD = 0.0001f;
+
   private final String bucket;
   private final long instanceID;
   private final File inputDir;
@@ -344,8 +351,8 @@ public final class DelegateGenerationManager implements GenerationManager {
       }
     }
 
-    removeNonpositive(RbyRow);
-    removeNonpositive(RbyColumn);
+    removeSmall(RbyRow);
+    removeSmall(RbyColumn);
 
     if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
       // No data yet
@@ -386,11 +393,11 @@ public final class DelegateGenerationManager implements GenerationManager {
     return new Generation(knownItemIDs, als.getX(), als.getY());
   }
 
-  private static void removeNonpositive(FastByIDMap<FastByIDFloatMap> matrix) {
+  private static void removeSmall(FastByIDMap<FastByIDFloatMap> matrix) {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : matrix.entrySet()) {
       for (Iterator<FastByIDFloatMap.MapEntry> it = entry.getValue().entrySet().iterator(); it.hasNext();) {
         FastByIDFloatMap.MapEntry entry2 = it.next();
-        if (entry2.getValue() <= 0.0f) {
+        if (Math.abs(entry2.getValue()) < DEFAULT_ZERO_THRESHOLD) {
           it.remove();
         }
       }
