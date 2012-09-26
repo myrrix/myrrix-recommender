@@ -65,6 +65,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.01;
 
+  private static final double LN_E_MINUS_1 = Math.log(Math.E - 1.0);
 
   private static final int WORK_UNIT_SIZE = 100;
 
@@ -301,7 +302,16 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
         for (FastByIDFloatMap.MapEntry entry : ru.entrySet()) {
 
-          double alphaTimesValue = alpha * entry.getValue();
+          // Normally, cu = 1 + alpha * xu. To provide some reasonable accommodation for negative values,
+          // we use a hinge-loss-style function: cu = ln(1 + e^(alpha * (xu + s))
+          // where s is chosen so that cu = 1 when xu = 0, which is the case in the original formula and
+          // is necessary to preserve the rest of the math. s = ln(e-1)/alpha.
+          // cu decays to 0 as xu goes from 1 to -infinity in the new formula, while the original would
+          // become negative, which is a problem. Above 1 it is nearly linear like the original, just slightly
+          // offset.
+          double shiftedXu = entry.getValue() + LN_E_MINUS_1 / alpha;
+          double cu = Math.log1p(Math.exp(alpha * shiftedXu));
+
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {
             log.warn("No vector for {}. This should not happen. Continuing...", entry.getKey());
@@ -311,7 +321,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           // Wu
 
           for (int row = 0; row < features; row++) {
-            double rowValue = vector[row] * alphaTimesValue;
+            double rowValue = vector[row] * (cu - 1.0);
             for (int col = 0; col < features; col++) {
               Wu.addToEntry(row, col, rowValue * vector[col]);
             }
@@ -319,9 +329,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
           // YTCupu
 
-          double onePlusAlphaCount = 1.0 + alphaTimesValue;
           for (int i = 0; i < features; i++) {
-            YTCupu[i] += vector[i] * onePlusAlphaCount;
+            YTCupu[i] += vector[i] * cu;
           }
 
         }
