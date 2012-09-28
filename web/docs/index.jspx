@@ -113,7 +113,7 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 <table>
   <tr><td>Host</td><td style="text-align:left"><code>${jvmEnv.hostName}</code></td></tr>
   <tr><td>Cores</td><td style="text-align:left">${jvmEnv.numProcessors}</td></tr>
-  <tr><td>Heap Used (MB)</td><td style="text-align:left">${jvmEnv.usedMemoryMB} (${jvmEnv.percentUsedMemory}%)</td></tr>
+  <tr><td>Heap Used</td><td style="text-align:left">${jvmEnv.usedMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</td></tr>
   <tr><td>Logs</td><td style="text-align:left"><a href="log.txt" target="_blank">View</a></td></tr>
 </table>
 

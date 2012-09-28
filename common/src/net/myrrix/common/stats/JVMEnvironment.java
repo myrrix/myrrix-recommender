@@ -45,29 +45,29 @@ public final class JVMEnvironment {
   /**
    * @return approximate heap used, in bytes
    */
-  public int getUsedMemory() {
-    return (int) (getMaxMemory() - runtime.freeMemory());
+  public long getUsedMemory() {
+    return runtime.totalMemory() - runtime.freeMemory();
   }
 
   /**
    * @return approximate heap used, in megabytes
    */
   public int getUsedMemoryMB() {
-    return getUsedMemory() / 1000000;
+    return (int) (getUsedMemory() / 1000000);
   }
 
   /**
    * @return maximum size that the heap may grow to, in bytes
    */
-  public int getMaxMemory() {
-    return (int) runtime.maxMemory();
+  public long getMaxMemory() {
+    return runtime.maxMemory();
   }
 
   /**
    * @return maximum size that the heap may grow to, in megabytes
    */
   public int getMaxMemoryMB() {
-    return getMaxMemory() / 1000000;
+    return (int) (getMaxMemory() / 1000000);
   }
 
   public int getPercentUsedMemory() {
