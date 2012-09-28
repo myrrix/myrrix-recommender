@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.LUDecomposition;
+import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
@@ -140,7 +140,11 @@ public final class MatrixUtils {
       return null;
     }
     RealMatrix MTM = transposeTimesSelf(M);
-    return new LUDecomposition(MTM).getSolver().getInverse();
+    return invert(MTM);
+  }
+
+  public static RealMatrix invert(RealMatrix M) {
+    return new Array2DRowRealMatrix(new QRDecomposition(M).getSolver().getInverse().getData());
   }
 
   /**

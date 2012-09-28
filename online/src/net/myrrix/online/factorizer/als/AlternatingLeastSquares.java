@@ -27,7 +27,6 @@ import java.util.concurrent.Future;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.RandomUtils;
@@ -309,8 +308,10 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           // cu decays to 0 as xu goes from 1 to -infinity in the new formula, while the original would
           // become negative, which is a problem. Above 1 it is nearly linear like the original, just slightly
           // offset.
-          double shiftedXu = entry.getValue() + LN_E_MINUS_1 / alpha;
-          double cu = Math.log1p(Math.exp(alpha * shiftedXu));
+
+          double xu = entry.getValue();
+          // Actually treat this as a two part function to avoid overflow:
+          double cu = xu < 0.0 ? Math.log1p(Math.exp(alpha * (xu + LN_E_MINUS_1 / alpha))) : 1.0 + alpha * xu;
 
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {
@@ -340,7 +341,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         for (int x = 0; x < features; x++) {
           Wu.addToEntry(x, x, lambdaTimesCount);
         }
-        Wu = new LUDecomposition(Wu).getSolver().getInverse();
+        Wu = MatrixUtils.invert(Wu);
 
         float[] xu = new float[features];
         for (int row = 0; row < features; row++) {
