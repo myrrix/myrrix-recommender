@@ -299,7 +299,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throws NotReadyException, NoSuchItemException {
 
     Generation generation = getCurrentGeneration();
-    float[] anonymousUserFeatures = new float[generation.getNumFeatures()];
 
     FastByIDMap<float[]> Y = generation.getY();
     RealMatrix ytyInv = generation.getYTYInverse();
@@ -307,6 +306,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throw new NotReadyException();
     }
 
+    float[] anonymousUserFeatures = null;
     Lock yLock = generation.getYLock().readLock();
 
     for (long itemID : itemIDs) {
@@ -321,6 +321,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         throw new NoSuchItemException(itemID);
       }
       double[] userFoldIn = MatrixUtils.multiply(ytyInv, itemFeatures);
+      if (anonymousUserFeatures == null) {
+        anonymousUserFeatures = new float[userFoldIn.length];
+      }
       for (int i = 0; i < anonymousUserFeatures.length; i++) {
         anonymousUserFeatures[i] += userFoldIn[i];
       }
@@ -437,15 +440,18 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       userFeatures = X.get(userID);
       if (userFeatures == null) {
-        userFeatures = new float[generation.getNumFeatures()];
-        Lock xWriteLock = xLock.writeLock();
-        xReadLock.unlock();
-        xWriteLock.lock();
-        try {
-          X.put(userID, userFeatures);
-        } finally {
-          xReadLock.lock();
-          xWriteLock.unlock();
+        int numFeatures = countFeatures(X);
+        if (numFeatures > 0) {
+          userFeatures = new float[numFeatures];
+          Lock xWriteLock = xLock.writeLock();
+          xReadLock.unlock();
+          xWriteLock.lock();
+          try {
+            X.put(userID, userFeatures);
+          } finally {
+            xReadLock.lock();
+            xWriteLock.unlock();
+          }
         }
       }
     } finally {
@@ -461,42 +467,47 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       itemFeatures = Y.get(itemID);
       if (itemFeatures == null) {
-        itemFeatures = new float[generation.getNumFeatures()];
-        Lock yWriteLock = yLock.writeLock();
-        yReadLock.unlock();
-        yWriteLock.lock();
-        try {
-          Y.put(itemID, itemFeatures);
-        } finally {
-          yReadLock.lock();
-          yWriteLock.unlock();
+        int numFeatures = countFeatures(Y);
+        if (numFeatures > 0) {
+          itemFeatures = new float[numFeatures];
+          Lock yWriteLock = yLock.writeLock();
+          yReadLock.unlock();
+          yWriteLock.lock();
+          try {
+            Y.put(itemID, itemFeatures);
+          } finally {
+            yReadLock.lock();
+            yWriteLock.unlock();
+          }
         }
       }
     } finally {
       yReadLock.unlock();
     }
 
-    // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
-    // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
-    // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
-    // we scale by 'value' to complete the multiplication of the fold-in and add it in.
-    RealMatrix xtxInverse = generation.getXTXInverse();
-    if (xtxInverse != null) {
-      double[] itemFoldIn = MatrixUtils.multiply(xtxInverse, userFeatures);
-      for (int i = 0; i < itemFeatures.length; i++) {
-        itemFeatures[i] += (float) (value * itemFoldIn[i]);
+    if (userFeatures != null && itemFeatures != null) {
+      // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
+      // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
+      // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
+      // we scale by 'value' to complete the multiplication of the fold-in and add it in.
+      RealMatrix xtxInverse = generation.getXTXInverse();
+      if (xtxInverse != null) {
+        double[] itemFoldIn = MatrixUtils.multiply(xtxInverse, userFeatures);
+        for (int i = 0; i < itemFeatures.length; i++) {
+          itemFeatures[i] += (float) (value * itemFoldIn[i]);
+        }
       }
-    }
 
-    // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
-    // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
-    // the same method above to carry out the multiply; the result is conceptually a row vector.
-    // The result is scaled by 'value' and added in.
-    RealMatrix ytyInverse = generation.getYTYInverse();
-    if (ytyInverse != null) {
-      double[] userFoldIn = MatrixUtils.multiply(ytyInverse, itemFeatures);
-      for (int i = 0; i < userFeatures.length; i++) {
-        userFeatures[i] += (float) (value * userFoldIn[i]);
+      // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
+      // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
+      // the same method above to carry out the multiply; the result is conceptually a row vector.
+      // The result is scaled by 'value' and added in.
+      RealMatrix ytyInverse = generation.getYTYInverse();
+      if (ytyInverse != null) {
+        double[] userFoldIn = MatrixUtils.multiply(ytyInverse, itemFeatures);
+        for (int i = 0; i < userFeatures.length; i++) {
+          userFeatures[i] += (float) (value * userFoldIn[i]);
+        }
       }
     }
 
@@ -528,6 +539,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         userKnownItemIDs.add(itemID);
       }
     }
+  }
+
+  private static int countFeatures(FastByIDMap<float[]> M) {
+    // assumes the read lock is held
+    return M.isEmpty() ? 0 : M.entrySet().iterator().next().getValue().length;
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package net.myrrix.online.generation;
 
-import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -56,7 +55,6 @@ public final class Generation {
   private final FastByIDMap<float[]> Y;
   private RealMatrix YTYinv;
   private final CandidateFilter candidateFilter;
-  private final int numFeatures;
   private final ReadWriteLock xLock;
   private final ReadWriteLock yLock;
   private final ReadWriteLock knownItemLock;
@@ -76,18 +74,12 @@ public final class Generation {
          Y,
          null,
          new LocationSensitiveHash(Y),
-         countFeatures(X),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
          null // not used yet
          );
     recomputeInverses();
-  }
-
-  private static int countFeatures(FastByIDMap<float[]> X) {
-    Iterator<FastByIDMap.MapEntry<float[]>> it = X.entrySet().iterator();
-    return it.hasNext() ? it.next().getValue().length : 0;
   }
 
   private Generation(FastByIDMap<FastIDSet> knownItemIDs,
@@ -97,7 +89,6 @@ public final class Generation {
                      FastByIDMap<float[]> Y,
                      RealMatrix YTYinv,
                      CandidateFilter candidateFilter,
-                     int numFeatures,
                      ReadWriteLock xLock,
                      ReadWriteLock yLock,
                      ReadWriteLock knownItemLock,
@@ -109,7 +100,6 @@ public final class Generation {
     this.Y = Y;
     this.YTYinv = YTYinv;
     this.candidateFilter = candidateFilter;
-    this.numFeatures = numFeatures;
     this.xLock = xLock;
     this.yLock = yLock;
     this.knownItemLock = knownItemLock;
@@ -124,7 +114,6 @@ public final class Generation {
                           X,
                           XTXinv,
                           new LocationSensitiveHash(X),
-                          numFeatures,
                           yLock,
                           xLock,
                           knownUserLock,
@@ -210,14 +199,6 @@ public final class Generation {
 
   public CandidateFilter getCandidateFilter() {
     return candidateFilter;
-  }
-
-  /**
-   * @return number of features, or the size of the arrays contained by {@link #getX()}
-   *  and {@link #getY()}
-   */
-  public int getNumFeatures() {
-    return numFeatures;
   }
 
   /**

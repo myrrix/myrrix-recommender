@@ -77,10 +77,12 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
       return null;
     }
 
+    float[] itemFeatures = entry.getValue();
     double sum = 0.0;
     int count = 0;
     for (float[] oneUserFeatures : features) {
-      double dot = SimpleVectorMath.dot(entry.getValue(), oneUserFeatures);
+      Preconditions.checkState(oneUserFeatures.length == itemFeatures.length);
+      double dot = SimpleVectorMath.dot(itemFeatures, oneUserFeatures);
       if (rescorer != null) {
         dot = rescorer.rescore(itemID, dot);
       }
