@@ -75,6 +75,10 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private static final Splitter DELIMITER = Splitter.on(CharMatcher.anyOf(",\t"));
 
+  // Maybe expose this publicly later
+  private static final double FOLDIN_LEARN_RATE =
+      Double.parseDouble(System.getProperty("model.foldin.learningRate", "0.2"));
+
   private final GenerationManager generationManager;
 
   /**
@@ -486,27 +490,32 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
 
     if (userFeatures != null && itemFeatures != null) {
+
+      double oldWeight = Math.pow(1.0 - FOLDIN_LEARN_RATE, Math.abs(value));
+      double signedNewWeight = Math.signum(value) * (1.0 - oldWeight);
+
       // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
       // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
       // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
       // we scale by 'value' to complete the multiplication of the fold-in and add it in.
       RealMatrix xtxInverse = generation.getXTXInverse();
-      if (xtxInverse != null) {
-        double[] itemFoldIn = MatrixUtils.multiply(xtxInverse, userFeatures);
-        for (int i = 0; i < itemFeatures.length; i++) {
-          itemFeatures[i] += (float) (value * itemFoldIn[i]);
-        }
-      }
+      double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
 
       // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
       // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
       // the same method above to carry out the multiply; the result is conceptually a row vector.
       // The result is scaled by 'value' and added in.
       RealMatrix ytyInverse = generation.getYTYInverse();
-      if (ytyInverse != null) {
-        double[] userFoldIn = MatrixUtils.multiply(ytyInverse, itemFeatures);
+      double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
+
+      if (itemFoldIn != null) {
+        for (int i = 0; i < itemFeatures.length; i++) {
+          itemFeatures[i] = (float) (oldWeight * itemFeatures[i] + signedNewWeight * itemFoldIn[i]);
+        }
+      }
+      if (userFoldIn != null) {
         for (int i = 0; i < userFeatures.length; i++) {
-          userFeatures[i] += (float) (value * userFoldIn[i]);
+          userFeatures[i] = (float) (oldWeight * userFeatures[i] + signedNewWeight * userFoldIn[i]);
         }
       }
     }
