@@ -124,17 +124,14 @@ public final class Generation {
    * Normally only called from specialized {@code DelegateGenerationManager} methods.
    */
   void recomputeInverses() {
-    Lock readLock = xLock.readLock();
+    XTXinv = recomputeInverse(X, xLock.readLock());
+    YTYinv = recomputeInverse(Y, yLock.readLock());
+  }
+
+  private static RealMatrix recomputeInverse(FastByIDMap<float[]> M, Lock readLock) {
     readLock.lock();
     try {
-      XTXinv = MatrixUtils.getTransposeTimesSelfInverse(X);
-    } finally {
-      readLock.unlock();
-    }
-    readLock = yLock.readLock();
-    readLock.lock();
-    try {
-      YTYinv = MatrixUtils.getTransposeTimesSelfInverse(Y);
+      return MatrixUtils.getTransposeTimesSelfInverse(M);
     } finally {
       readLock.unlock();
     }

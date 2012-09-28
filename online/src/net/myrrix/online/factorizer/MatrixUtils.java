@@ -23,6 +23,7 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
@@ -144,7 +145,16 @@ public final class MatrixUtils {
   }
 
   public static RealMatrix invert(RealMatrix M) {
-    return new Array2DRowRealMatrix(new QRDecomposition(M).getSolver().getInverse().getData());
+    try {
+      return doInvert(M, 0.0000001);
+    } catch (SingularMatrixException sme) {
+      log.warn("Inverting matrix failed; results may not be meaningful. Decrease the value of model.features");
+      return doInvert(M, 0.0);
+    }
+  }
+
+  private static RealMatrix doInvert(RealMatrix M, double threshold) {
+    return new Array2DRowRealMatrix(new QRDecomposition(M, threshold).getSolver().getInverse().getData());
   }
 
   /**
