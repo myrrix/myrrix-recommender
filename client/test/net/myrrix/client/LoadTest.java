@@ -32,7 +32,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
+import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.RandomUtils;
 import org.apache.mahout.common.iterator.FileLineIterable;
@@ -46,11 +46,11 @@ public final class LoadTest extends AbstractClientTest {
 
   private static final Logger log = LoggerFactory.getLogger(LoadTest.class);
 
-  private static final int ITERATIONS = 100000;
+  private static final int ITERATIONS = 20000;
 
   @Override
   protected String getTestDataPath() {
-    return "testdata/grouplens10M";
+    return "testdata/libimseti";
   }
 
   @Override
@@ -83,11 +83,13 @@ public final class LoadTest extends AbstractClientTest {
                                                             new NamedThreadFactory(true, "LoadTest"));
     Collection<Future<?>> futures = Lists.newArrayList();
 
-    final RunningAverage recommendedBecause = new FullRunningAverage();
-    final RunningAverage setPreference = new FullRunningAverage();
-    final RunningAverage estimatePreference = new FullRunningAverage();
-    final RunningAverage mostSimilarItems = new FullRunningAverage();
-    final RunningAverage recommend = new FullRunningAverage();
+    final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
+    final RunningAverage setPreference = new FullRunningAverageAndStdDev();
+    final RunningAverage removePreference = new FullRunningAverageAndStdDev();
+    final RunningAverage estimatePreference = new FullRunningAverageAndStdDev();
+    final RunningAverage mostSimilarItems = new FullRunningAverageAndStdDev();
+    final RunningAverage recommendToMany = new FullRunningAverageAndStdDev();
+    final RunningAverage recommend = new FullRunningAverageAndStdDev();
 
     final AtomicInteger count = new AtomicInteger();
 
@@ -114,12 +116,18 @@ public final class LoadTest extends AbstractClientTest {
           } else if (r < 0.1) {
             client.setPreference(userID, itemID, value);
             setPreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.15) {
+          } else if (r < 0.11) {
+            client.removePreference(userID, itemID);
+            removePreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.20) {
             client.estimatePreference(userID, itemID);
             estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.2) {
+          } else if (r < 0.25) {
             client.mostSimilarItems(new long[] {itemID}, 10);
             mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.30) {
+            client.recommendToMany(new long[] { userID, userID }, 10, true, null);
+            recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
           } else {
             client.recommend(userID, 10);
             recommend.addDatum(System.currentTimeMillis() - stepStart);
@@ -148,13 +156,15 @@ public final class LoadTest extends AbstractClientTest {
     long end = System.currentTimeMillis();
     log.info("Finished {} steps in {}ms", ITERATIONS, end - start);
 
-    assertTrue(end - start < 400000L);
-
     log.info("recommendedBecause: {}", recommendedBecause);
     log.info("setPreference: {}", setPreference);
+    log.info("removePreference: {}", removePreference);
     log.info("estimatePreference: {}", estimatePreference);
     log.info("mostSimilarItems: {}", mostSimilarItems);
+    log.info("recommendToMany: {}", recommendToMany);
     log.info("recommend: {}", recommend);
+
+    assertTrue(end - start < 10 * ITERATIONS);
   }
 
 }
