@@ -284,12 +284,12 @@ public final class CLI {
     }
     int howMany = Integer.parseInt(programArgs[3]);
     if (translatingRecommender == null) {
-      long userID = Long.parseLong(programArgs[1]);
-      long itemID = Long.parseLong(programArgs[2]);
+      long userID = Long.parseLong(unquote(programArgs[1]));
+      long itemID = Long.parseLong(unquote(programArgs[2]));
       output(recommender.recommendedBecause(userID, itemID, howMany));
     } else {
-      String userID = programArgs[1];
-      String itemID = programArgs[2];
+      String userID = unquote(programArgs[1]);
+      String itemID = unquote(programArgs[2]);
       outputTranslated(translatingRecommender.recommendedBecause(userID, itemID, howMany));
     }
     return true;
@@ -305,12 +305,14 @@ public final class CLI {
     if (translatingRecommender == null) {
       long[] itemIDs = new long[programArgs.length - 2];
       for (int i = 1; i < programArgs.length - 1; i++) {
-        itemIDs[i - 1] = Long.parseLong(programArgs[i]);
+        itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
       output(recommender.mostSimilarItems(itemIDs, howMany));
     } else {
       String[] itemIDs = new String[programArgs.length - 2];
-      System.arraycopy(programArgs, 1, itemIDs, 0, programArgs.length - 2);
+      for (int i = 1; i < programArgs.length - 1; i++) {
+        itemIDs[i - 1] = unquote(programArgs[i]);
+      }
       outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany));
     }
     return true;
@@ -326,12 +328,14 @@ public final class CLI {
     if (translatingRecommender == null) {
       long[] itemIDs = new long[programArgs.length - 2];
       for (int i = 1; i < programArgs.length - 1; i++) {
-        itemIDs[i - 1] = Long.parseLong(programArgs[i]);
+        itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
       output(recommender.recommendToAnonymous(itemIDs, howMany));
     } else {
       String[] itemIDs = new String[programArgs.length - 2];
-      System.arraycopy(programArgs, 1, itemIDs, 0, programArgs.length - 2);
+      for (int i = 1; i < programArgs.length - 1; i++) {
+        itemIDs[i - 1] = unquote(programArgs[i]);
+      }
       outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, howMany));
     }
     return true;
@@ -346,10 +350,10 @@ public final class CLI {
     int howMany = Integer.parseInt(programArgs[2]);
     boolean considerKnownItems = programArgs.length == 4 && Boolean.valueOf(programArgs[3]);
     if (translatingRecommender == null) {
-      long userID = Long.parseLong(programArgs[1]);
+      long userID = Long.parseLong(unquote(programArgs[1]));
       output(recommender.recommend(userID, howMany, considerKnownItems, null));
     } else {
-      String userID = programArgs[1];
+      String userID = unquote(programArgs[1]);
       outputTranslated(translatingRecommender.recommend(userID, howMany, considerKnownItems));
     }
     return true;
@@ -363,12 +367,12 @@ public final class CLI {
     }
     float estimate;
     if (translatingRecommender == null) {
-      long userID = Long.parseLong(programArgs[1]);
-      long itemID = Long.parseLong(programArgs[2]);
+      long userID = Long.parseLong(unquote(programArgs[1]));
+      long itemID = Long.parseLong(unquote(programArgs[2]));
       estimate = recommender.estimatePreference(userID, itemID);
     } else {
-      String userID = programArgs[1];
-      String itemID = programArgs[2];
+      String userID = unquote(programArgs[1]);
+      String itemID = unquote(programArgs[2]);
       estimate = translatingRecommender.estimatePreference(userID, itemID);
     }
     System.out.println(estimate);
@@ -399,12 +403,12 @@ public final class CLI {
       return false;
     }
     if (translatingRecommender == null) {
-      long userID = Long.parseLong(programArgs[1]);
-      long itemID = Long.parseLong(programArgs[2]);
+      long userID = Long.parseLong(unquote(programArgs[1]));
+      long itemID = Long.parseLong(unquote(programArgs[2]));
       recommender.removePreference(userID, itemID);
     } else {
-      String userID = programArgs[1];
-      String itemID = programArgs[2];
+      String userID = unquote(programArgs[1]);
+      String itemID = unquote(programArgs[2]);
       translatingRecommender.removePreference(userID, itemID);
     }
     return true;
@@ -417,25 +421,35 @@ public final class CLI {
       return false;
     }
     if (translatingRecommender == null) {
-      long userID = Long.parseLong(programArgs[1]);
-      long itemID = Long.parseLong(programArgs[2]);
+      long userID = Long.parseLong(unquote(programArgs[1]));
+      long itemID = Long.parseLong(unquote(programArgs[2]));
       if (programArgs.length == 3) {
         recommender.setPreference(userID, itemID);
       } else {
-        float value = LangUtils.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
         recommender.setPreference(userID, itemID, value);
       }
     } else {
-      String userID = programArgs[1];
-      String itemID = programArgs[2];
+      String userID = unquote(programArgs[1]);
+      String itemID = unquote(programArgs[2]);
       if (programArgs.length == 3) {
         translatingRecommender.setPreference(userID, itemID);
       } else {
-        float value = LangUtils.parseFloat(programArgs[3]);
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
         translatingRecommender.setPreference(userID, itemID, value);
       }
     }
     return true;
+  }
+
+  /**
+   * Unquotes a string. Makes it possible to pass negative values without being interpreted as a flag.
+   */
+  private static String unquote(String s) {
+    if (s.length() >= 2 && s.charAt(0) =='"' && s.charAt(s.length() - 1) == '"') {
+      s = s.substring(1, s.length() - 1);
+    }
+    return s;
   }
 
   private static void printHelp(Options options) {
