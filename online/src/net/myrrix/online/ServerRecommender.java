@@ -77,7 +77,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   // Maybe expose this publicly later
   private static final double FOLDIN_LEARN_RATE =
-      Double.parseDouble(System.getProperty("model.foldin.learningRate", "0.2"));
+      Double.parseDouble(System.getProperty("model.foldin.learningRate", "1.0"));
 
   private final GenerationManager generationManager;
 
@@ -491,8 +491,13 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (userFeatures != null && itemFeatures != null) {
 
-      double oldWeight = Math.pow(1.0 - FOLDIN_LEARN_RATE, Math.abs(value));
-      double signedNewWeight = Math.signum(value) * (1.0 - oldWeight);
+      // This is analogous to the weight function in the ALS algorithm.
+      double cu = 1 + FOLDIN_LEARN_RATE * Math.abs(value);
+      // Distance from 1 reduced proportionally with cu
+      double foldInWeight = 1.0 - 1.0 / cu;
+      // Negative values treated as literally the opposite of positive values in short-term fold in
+      // This is not the same as the case of negative overall values in input to ALS.
+      double signedFoldInWeight = Math.signum(value) * foldInWeight;
 
       // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
       // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
@@ -510,12 +515,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
       if (itemFoldIn != null) {
         for (int i = 0; i < itemFeatures.length; i++) {
-          itemFeatures[i] = (float) (oldWeight * itemFeatures[i] + signedNewWeight * itemFoldIn[i]);
+          itemFeatures[i] += signedFoldInWeight * itemFoldIn[i];
         }
       }
       if (userFoldIn != null) {
         for (int i = 0; i < userFeatures.length; i++) {
-          userFeatures[i] = (float) (oldWeight * userFeatures[i] + signedNewWeight * userFoldIn[i]);
+          userFeatures[i] += signedFoldInWeight * userFoldIn[i];
         }
       }
     }
