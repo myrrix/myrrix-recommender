@@ -132,15 +132,15 @@ import net.myrrix.web.servlets.SimilarityServlet;
  * <ul>
  *   <li>{@code model.features}: The number of features used in building the underlying user-feature and
  *   item-feature matrices. Typical values are 30-100. Defaults to
- *   {@link net.myrrix.online.factorizer.MatrixFactorizer#DEFAULT_FEATURES}.</li>
+ *   {@code MatrixFactorizer#DEFAULT_FEATURES}.</li>
  *   <li>{@code model.iterations}: The number of iterations used to refine the model. Typical values are 3-10.
- *   Defaults to {@link net.myrrix.online.factorizer.MatrixFactorizer#DEFAULT_ITERATIONS}.</li>
+ *   Defaults to {@code MatrixFactorizer#DEFAULT_ITERATIONS}.</li>
  *   <li>{@code model.als.lambda}: Controls the lambda overfitting parameter in the ALS algorithm.
  *    Typical values are near 0.1. Do not change this, in general. Defaults to
- *    {@link net.myrrix.online.factorizer.als.AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
+ *    {@code AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
  *   <li>{@code model.als.alpha}: Controls the alpha scaling parameter in the ALS algorithm.
  *    Typical values are near 40. Do not change this, in general. Defaults to
- *    {@link net.myrrix.online.factorizer.als.AlternatingLeastSquares#DEFAULT_ALPHA}.</li>
+ *    {@code AlternatingLeastSquares#DEFAULT_ALPHA}.</li>
  * </ul>
  *
  * @author Sean Owen
