@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.io;
 
 import java.io.File;
 import java.io.FileFilter;

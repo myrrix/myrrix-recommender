@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
-import net.myrrix.common.IOUtils;
+import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.PartitionsUtils;
 import net.myrrix.common.log.MemoryHandler;

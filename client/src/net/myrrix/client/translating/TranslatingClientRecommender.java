@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.client.ClientRecommender;
-import net.myrrix.common.IOUtils;
+import net.myrrix.common.io.IOUtils;
 
 /**
  * Default implementation of {@link TranslatingRecommender}. It delegates to an underlying {@link ClientRecommender}

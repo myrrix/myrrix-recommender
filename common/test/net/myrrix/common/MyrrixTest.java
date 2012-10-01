@@ -25,6 +25,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
+import net.myrrix.common.io.IOUtils;
+
 public abstract class MyrrixTest extends Assert {
 
   private static final float FLOAT_EPSILON = 1.0e-6f;
