@@ -23,6 +23,7 @@ import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
@@ -90,7 +91,9 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
       count++;
     }
 
-    delegate.set(itemID, (float) (sum / count));
+    float result = (float) (sum / count);
+    Preconditions.checkState(LangUtils.isFinite(result), "Bad recommendation value");
+    delegate.set(itemID, result);
     return delegate;
   }
 

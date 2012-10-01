@@ -40,9 +40,16 @@ public final class LangUtils {
    */
   public static float parseFloat(String s) {
     float value = Float.parseFloat(s);
-    Preconditions.checkArgument(!Float.isNaN(value), "Bad value: %s", value);
-    Preconditions.checkArgument(!Float.isInfinite(value), "Bad value: %s", value);
+    Preconditions.checkArgument(isFinite(value), "Bad value: %s", value);
     return value;
+  }
+
+  /**
+   * @return true if argument is not {@link Float#NaN}, {@link Float#POSITIVE_INFINITY} or
+   *  {@link Float#NEGATIVE_INFINITY}
+   */
+  public static boolean isFinite(float f) {
+    return !(Float.isNaN(f) || Float.isInfinite(f));
   }
 
   /**
@@ -50,10 +57,18 @@ public final class LangUtils {
    */
   public static double parseDouble(String s) {
     double value = Double.parseDouble(s);
-    Preconditions.checkArgument(!Double.isNaN(value), "Bad value: %s", value);
-    Preconditions.checkArgument(!Double.isInfinite(value), "Bad value: %s", value);
+    Preconditions.checkArgument(isFinite(value), "Bad value: %s", value);
     return value;
   }
+
+  /**
+   * @return true if argument is not {@link Double#NaN}, {@link Double#POSITIVE_INFINITY} or
+   *  {@link Double#NEGATIVE_INFINITY}
+   */
+  public static boolean isFinite(double d) {
+    return !(Double.isNaN(d) || Double.isInfinite(d));
+  }
+
 
   /**
    * Computes {@code l mod m}, such that the result is always in [0,m-1], for any {@code long}

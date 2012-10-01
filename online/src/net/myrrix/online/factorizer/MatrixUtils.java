@@ -146,7 +146,7 @@ public final class MatrixUtils {
 
   public static RealMatrix invert(RealMatrix M) {
     try {
-      return doInvert(M, 0.0000001);
+      return doInvert(M, 0.000001);
     } catch (SingularMatrixException sme) {
       log.warn("Inverting matrix failed; results may not be meaningful. Decrease the value of model.features");
       return doInvert(M, 0.0);

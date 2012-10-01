@@ -161,8 +161,8 @@ pageContext.setAttribute("avgEstimateError", avgEstimateError);
     <th>Requests<br/>(last hour)</th>
     <th>Average (&amp;mu;s)<br/>(last hour)</th>
     <th>Max (&amp;mu;s)<br/>(last hour)</th>
-    <th>Client Errors</th>
-    <th>Server Errors</th>
+    <th>Client<br/>Errors</th>
+    <th>Server<br/>Errors</th>
   </tr>
   <jsp:scriptlet>
     Map&lt;String,ServletStats&gt; timings =

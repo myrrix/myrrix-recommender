@@ -18,10 +18,12 @@ package net.myrrix.online;
 
 import java.util.Iterator;
 
+import com.google.common.base.Preconditions;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
@@ -92,8 +94,9 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
       total += correlation;
     }
 
-    double estimate = total / length;
-    delegate.set(itemID, (float) estimate);
+    float result = (float) (total / length);
+    Preconditions.checkState(LangUtils.isFinite(result), "Bad similarity value");
+    delegate.set(itemID, result);
     return delegate;
   }
 

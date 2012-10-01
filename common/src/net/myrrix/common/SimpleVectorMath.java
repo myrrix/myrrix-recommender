@@ -40,6 +40,14 @@ public final class SimpleVectorMath {
     return Math.sqrt(total);
   }
 
+  public static double norm(double[] x) {
+    double total = 0.0;
+    for (double d : x) {
+      total += d * d;
+    }
+    return Math.sqrt(total);
+  }
+
   /**
    * @return Pearson's correlation between the series in the two given arrays
    */

@@ -20,6 +20,7 @@ import java.util.Iterator;
 
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
@@ -54,11 +55,11 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
     FastByIDMap.MapEntry<float[]> entry = toFeaturesIterator.next();
     long itemID = entry.getKey();
     float[] candidateFeatures = entry.getValue();
-    double estimate = SimpleVectorMath.correlation(candidateFeatures, features);
-    if (Double.isNaN(estimate)) {
+    float estimate = (float) SimpleVectorMath.correlation(candidateFeatures, features);
+    if (!LangUtils.isFinite(estimate)) {
       return null;
     }
-    delegate.set(itemID, (float) estimate);
+    delegate.set(itemID, estimate);
     return delegate;
   }
 

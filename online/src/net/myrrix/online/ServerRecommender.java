@@ -78,6 +78,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   // Maybe expose this publicly later
   private static final double FOLDIN_LEARN_RATE =
       Double.parseDouble(System.getProperty("model.foldin.learningRate", "1.0"));
+  // Only temporary
+  private static final double BIG_FOLDIN_THRESHOLD =
+      Double.parseDouble(System.getProperty("model.foldin.bigThreshold", "10000.0"));
 
   private final GenerationManager generationManager;
 
@@ -401,7 +404,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         if (itemFeatures == null) {
           throw new NoSuchItemException(itemID);
         }
-        result[i] = (float) SimpleVectorMath.dot(itemFeatures, userFeatures);
+        float value = (float) SimpleVectorMath.dot(itemFeatures, userFeatures);
+        Preconditions.checkState(LangUtils.isFinite(value), "Bad estimate");
+        result[i] = value;
       }
       return result;
     } finally {
@@ -514,13 +519,25 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
 
       if (itemFoldIn != null) {
+        // TODO
+        if (SimpleVectorMath.norm(itemFoldIn) > Math.sqrt(itemFeatures.length / 2) * BIG_FOLDIN_THRESHOLD) {
+          log.warn("Item fold in vector is large; bug?");
+        }
         for (int i = 0; i < itemFeatures.length; i++) {
-          itemFeatures[i] += signedFoldInWeight * itemFoldIn[i];
+          double delta = signedFoldInWeight * itemFoldIn[i];
+          Preconditions.checkState(LangUtils.isFinite(delta));
+          itemFeatures[i] += delta;
         }
       }
       if (userFoldIn != null) {
+        // TODO
+        if (SimpleVectorMath.norm(userFoldIn) > Math.sqrt(userFeatures.length / 2) * BIG_FOLDIN_THRESHOLD) {
+          log.warn("User fold in vector is large; bug?");
+        }
         for (int i = 0; i < userFeatures.length; i++) {
-          userFeatures[i] += signedFoldInWeight * userFoldIn[i];
+          double delta = signedFoldInWeight * userFoldIn[i];
+          Preconditions.checkState(LangUtils.isFinite(delta));
+          userFeatures[i] += delta;
         }
       }
     }

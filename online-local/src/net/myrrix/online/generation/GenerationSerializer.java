@@ -21,9 +21,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import com.google.common.base.Preconditions;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDMap;
 
 /**
@@ -100,7 +102,9 @@ public final class GenerationSerializer implements Serializable {
       long id = in.readLong();
       float[] features = new float[in.readInt()];
       for (int j = 0; j < features.length; j++) {
-        features[j] = in.readFloat();
+        float f = in.readFloat();
+        Preconditions.checkState(LangUtils.isFinite(f));
+        features[j] = f;
       }
       matrix.put(id, features);
     }
@@ -118,6 +122,7 @@ public final class GenerationSerializer implements Serializable {
       float[] features = entry.getValue();
       out.writeInt(features.length);
       for (float f : features) {
+        Preconditions.checkState(LangUtils.isFinite(f));
         out.writeFloat(f);
       }
     }
