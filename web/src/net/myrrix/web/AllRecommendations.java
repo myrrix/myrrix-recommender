@@ -77,7 +77,7 @@ public final class AllRecommendations implements Callable<Object> {
 
     ExecutorService executorService =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new NamedThreadFactory(false, "AllRecommnedations"));
+                                     new NamedThreadFactory(false, "AllRecommendations"));
     List<Future<?>> futures = Lists.newArrayList();
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();
