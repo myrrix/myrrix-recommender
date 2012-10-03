@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.NoSuchElementException;
 import java.util.zip.GZIPInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -58,6 +59,10 @@ public final class IngestServlet extends AbstractMyrrixServlet {
 
     try {
       recommender.ingest(reader);
+    } catch (IllegalArgumentException iae) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, iae.toString());
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);

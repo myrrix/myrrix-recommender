@@ -169,6 +169,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           } else {
             setPreference(userID, itemID, LangUtils.parseFloat(token));
           }
+          if (tokens.hasNext()) {
+            // Allow a 4th timestamp column like Mahout, but don't parse it
+            tokens.next();
+            Preconditions.checkState(!tokens.hasNext(), "Line has too many columns");
+          }
         } else {
           setPreference(userID, itemID);
         }
