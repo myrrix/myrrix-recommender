@@ -33,6 +33,8 @@
     <delete dir="out"/>
     <delete dir=".">
       <include name="*.jar"/>
+      <include name="*.war"/>
+      <include name="*.zip"/>
     </delete>
   </target>
 
@@ -51,6 +53,7 @@
     <jar destfile="${temp.jar.path.client.jar}" duplicate="preserve">
       <manifest>
         <attribute name="Main-Class" value="net.myrrix.client.CLI"/>
+        <attribute name="Sealed" value="true"/>
       </manifest>
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
@@ -71,6 +74,7 @@
     <jar destfile="${temp.jar.path.web-local.jar}" duplicate="preserve">
       <manifest>
         <attribute name="Main-Class" value="net.myrrix.web.Runner"/>
+        <attribute name="Sealed" value="true"/>
       </manifest>
       <zipfileset dir="${web.output.dir}"/>
       <zipfileset dir="${online.output.dir}"/>
