@@ -266,7 +266,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return finalType;
   }
 
-  protected enum ResponseContentType {
+  enum ResponseContentType {
     JSON,
     CSV,
   }

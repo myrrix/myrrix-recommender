@@ -524,25 +524,23 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
 
       if (itemFoldIn != null) {
-        // TODO
-        if (SimpleVectorMath.norm(itemFoldIn) > Math.sqrt(itemFeatures.length / 2) * BIG_FOLDIN_THRESHOLD) {
+        if (SimpleVectorMath.norm(itemFoldIn) > Math.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
           log.warn("Item fold in vector is large; bug?");
         }
         for (int i = 0; i < itemFeatures.length; i++) {
           double delta = signedFoldInWeight * itemFoldIn[i];
           Preconditions.checkState(LangUtils.isFinite(delta));
-          itemFeatures[i] += delta;
+          itemFeatures[i] += (float) delta;
         }
       }
       if (userFoldIn != null) {
-        // TODO
-        if (SimpleVectorMath.norm(userFoldIn) > Math.sqrt(userFeatures.length / 2) * BIG_FOLDIN_THRESHOLD) {
+        if (SimpleVectorMath.norm(userFoldIn) > Math.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
           log.warn("User fold in vector is large; bug?");
         }
         for (int i = 0; i < userFeatures.length; i++) {
           double delta = signedFoldInWeight * userFoldIn[i];
           Preconditions.checkState(LangUtils.isFinite(delta));
-          userFeatures[i] += delta;
+          userFeatures[i] += (float) delta;
         }
       }
     }

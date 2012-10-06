@@ -215,28 +215,32 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   private File copyAndTranslateToTempFile(Reader reader) throws IOException {
     File tempFile = File.createTempFile("myrrix-", ".csv");
     tempFile.deleteOnExit();
-    Writer out = new OutputStreamWriter(new FileOutputStream(tempFile), Charsets.UTF_8);
     BufferedReader buffered =
         reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
-      String line;
-      while ((line = buffered.readLine()) != null) {
-        Iterator<String> it = COMMA_SPLIT.split(line).iterator();
-        String userIDString = it.next();
-        String itemIDString = it.next();
-        long longUserID = translateUser(userIDString);
-        long longItemID = translateItem(itemIDString);
-        String translatedLine;
-        if (it.hasNext()) {
-          String valueString = it.next();
-          translatedLine = COMMA_JOIN.join(longUserID, longItemID, valueString);
-        } else {
-          translatedLine = COMMA_JOIN.join(longUserID, longItemID);
+      Writer out = new OutputStreamWriter(new FileOutputStream(tempFile), Charsets.UTF_8);
+      try {
+        String line;
+        while ((line = buffered.readLine()) != null) {
+          Iterator<String> it = COMMA_SPLIT.split(line).iterator();
+          String userIDString = it.next();
+          String itemIDString = it.next();
+          long longUserID = translateUser(userIDString);
+          long longItemID = translateItem(itemIDString);
+          String translatedLine;
+          if (it.hasNext()) {
+            String valueString = it.next();
+            translatedLine = COMMA_JOIN.join(longUserID, longItemID, valueString);
+          } else {
+            translatedLine = COMMA_JOIN.join(longUserID, longItemID);
+          }
+          out.write(translatedLine + '\n');
         }
-        out.write(translatedLine + '\n');
+      } finally {
+        out.close(); // Want to know of output stream close failed -- maybe failed to write
       }
     } finally {
-      out.close(); // Want to know of output stream close failed -- maybe failed to write
+      Closeables.closeQuietly(buffered);
     }
     return tempFile;
   }

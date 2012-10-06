@@ -56,9 +56,7 @@ public abstract class AbstractAllIDsServlet extends AbstractMyrrixServlet {
     }
   }
 
-  protected final void outputIDs(HttpServletRequest request,
-                                 ServletResponse response,
-                                 FastIDSet ids) throws IOException {
+  final void outputIDs(HttpServletRequest request,ServletResponse response, FastIDSet ids) throws IOException {
 
     PrintWriter writer = response.getWriter();
     LongPrimitiveIterator it = ids.iterator();
