@@ -42,6 +42,7 @@ public final class RunnerConfiguration {
   private File localInputDir;
   private String userName;
   private String password;
+  private boolean consoleOnlyPassword;
   private String rescorerProviderClassName;
   private Integer partition;
   private String allPartitionsSpecification;
@@ -157,6 +158,17 @@ public final class RunnerConfiguration {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  /**
+   * @return true if username and password only apply to admin / console resources
+   */
+  public boolean isConsoleOnlyPassword() {
+    return consoleOnlyPassword;
+  }
+
+  public void setConsoleOnlyPassword(boolean consoleOnlyPassword) {
+    this.consoleOnlyPassword = consoleOnlyPassword;
   }
 
   /**

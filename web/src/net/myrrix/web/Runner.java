@@ -97,6 +97,7 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *   <li>{@code --userName}: If specified, the user name required to authenticate to the server using
  *   HTTP DIGEST authentication. Requires password to be set.</li>
  *   <li>{@code --password}: Password for HTTP DIGEST authentication. Requires userName to be set.</li>
+ *   <li>{@code --consoleOnlyPassword}: Only apply username and password to admin / console pages.</li>
  *   <li>{@code --rescorerProviderClass}: Optional. Name of an implementation of
  *     {@code RescorerProvider} to use to rescore recommendations and similarities, if any. The class
  *     must be added to the server classpath.</li>
@@ -155,6 +156,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
   private static final String INSTANCE_ID_FLAG = "instanceID";
   private static final String BUCKET_FLAG = "bucket";
   private static final String USER_NAME_FLAG = "userName";
+  private static final String CONSOLE_ONLY_PASSWORD_FLAG = "consoleOnlyPassword";
   private static final String PASSWORD_FLAG = "password";
   private static final String KEYSTORE_FILE_FLAG = "keystoreFile";
   private static final String KEYSTORE_PASSWORD_FLAG = "keystorePassword";
@@ -184,16 +186,25 @@ public final class Runner implements Callable<Boolean>, Closeable {
   }
 
   public static void main(String[] args) throws Exception {
+
     Options options = buildOptions();
     CommandLineParser parser = new PosixParser();
+
     RunnerConfiguration config;
+    CommandLine commandLine;
     try {
-      CommandLine commandLine = parser.parse(options, args);
+      commandLine = parser.parse(options, args);
       config = buildConfiguration(commandLine);
     } catch (MissingOptionException moe) {
-      new HelpFormatter().printHelp(Runner.class.getSimpleName(), options);
+      printHelp(options);
       return;
     }
+
+    if (commandLine.getArgs().length > 0) {
+      printHelp(options);
+      return;
+    }
+
     Runner runner = new Runner(config);
     runner.call();
     runner.await();
@@ -231,6 +242,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
       config.setPassword(commandLine.getOptionValue(PASSWORD_FLAG));
     }
 
+    config.setConsoleOnlyPassword(commandLine.hasOption(CONSOLE_ONLY_PASSWORD_FLAG));
+
     if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
       config.setKeystoreFile(new File(commandLine.getOptionValue(KEYSTORE_FILE_FLAG)));
     }
@@ -258,24 +271,26 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   private static Options buildOptions() {
     Options options = new Options();
-    addOption(options, "Working directory for input and intermediate files", LOCAL_INPUT_DIR_FLAG);
-    addOption(options, "Bucket storing data to access", BUCKET_FLAG);
-    addOption(options, "Instance ID to access", INSTANCE_ID_FLAG);
-    addOption(options, "HTTP port number", PORT_FLAG);
-    addOption(options, "HTTPS port number", SECURE_PORT_FLAG);
-    addOption(options, "User name needed to authenticate to this instance", USER_NAME_FLAG);
-    addOption(options, "Password to authenticate to this instance", PASSWORD_FLAG);
-    addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG);
-    addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG);
-    addOption(options, "RescorerProvider implementation class", RESCORER_PROVIDER_CLASS_FLAG);
+    addOption(options, "Working directory for input and intermediate files", LOCAL_INPUT_DIR_FLAG, true);
+    addOption(options, "Bucket storing data to access", BUCKET_FLAG, true);
+    addOption(options, "Instance ID to access", INSTANCE_ID_FLAG, true);
+    addOption(options, "HTTP port number", PORT_FLAG, true);
+    addOption(options, "HTTPS port number", SECURE_PORT_FLAG, true);
+    addOption(options, "User name needed to authenticate to this instance", USER_NAME_FLAG, true);
+    addOption(options, "Password to authenticate to this instance", PASSWORD_FLAG, true);
+    addOption(options, "User name and password only apply to admin and console resources",
+              CONSOLE_ONLY_PASSWORD_FLAG, false);
+    addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true);
+    addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true);
+    addOption(options, "RescorerProvider implementation class", RESCORER_PROVIDER_CLASS_FLAG, true);
     addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081)",
-              ALL_PARTITIONS_FLAG);
-    addOption(options, "Server's partition number (0-based)", PARTITION_FLAG);
+              ALL_PARTITIONS_FLAG, true);
+    addOption(options, "Server's partition number (0-based)", PARTITION_FLAG, true);
     return options;
   }
 
-  private static void addOption(Options options, String description, String longOpt) {
-    OptionBuilder.hasArg();
+  private static void addOption(Options options, String description, String longOpt, boolean hasArg) {
+    OptionBuilder.hasArg(hasArg);
     OptionBuilder.withDescription(description);
     OptionBuilder.withLongOpt(longOpt);
     options.addOption(OptionBuilder.create());
@@ -335,6 +350,13 @@ public final class Runner implements Callable<Boolean>, Closeable {
       log.warn("Unexpected error while stopping", le);
     }
     noSuchBaseDir.delete();
+  }
+
+  private static void printHelp(Options options) {
+    System.out.println("Myrrix Serving Layer. Copyright 2012 Myrrix Ltd, except for included ");
+    System.out.println("third-party open source software. Full details of licensing at http://myrrix.com/legal/");
+    System.out.println();
+    new HelpFormatter().printHelp(Runner.class.getSimpleName() + " [flags]", options);
   }
 
   private void configureTomcat(Tomcat tomcat, Connector connector) {
@@ -433,13 +455,17 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     if (needHTTPS || needAuthentication) {
 
-      SecurityConstraint everythingConstraint = new SecurityConstraint();
-      SecurityCollection everythingCollection = new SecurityCollection("Everything");
-      everythingCollection.addPattern("/*");
-      everythingConstraint.addCollection(everythingCollection);
+      SecurityConstraint securityConstraint = new SecurityConstraint();
+      SecurityCollection securityCollection = new SecurityCollection("Protected Resources");
+      if (config.isConsoleOnlyPassword()) {
+        securityCollection.addPattern("/index.jspx");
+      } else {
+        securityCollection.addPattern("/*");
+      }
+      securityConstraint.addCollection(securityCollection);
 
       if (needHTTPS) {
-        everythingConstraint.setUserConstraint("CONFIDENTIAL");
+        securityConstraint.setUserConstraint("CONFIDENTIAL");
       }
 
       if (needAuthentication) {
@@ -449,7 +475,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
         loginConfig.setRealmName(InMemoryRealm.NAME);
         context.setLoginConfig(loginConfig);
 
-        everythingConstraint.addAuthRole(InMemoryRealm.AUTH_ROLE);
+        securityConstraint.addAuthRole(InMemoryRealm.AUTH_ROLE);
 
         context.addSecurityRole(InMemoryRealm.AUTH_ROLE);
         DigestAuthenticator authenticator = new DigestAuthenticator();
@@ -458,7 +484,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
         context.getPipeline().addValve(authenticator);
       }
 
-      context.addConstraint(everythingConstraint);
+      context.addConstraint(securityConstraint);
     }
 
     return context;
