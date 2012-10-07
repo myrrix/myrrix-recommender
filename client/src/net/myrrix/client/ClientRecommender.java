@@ -90,6 +90,8 @@ import net.myrrix.common.NotReadyException;
  * <ul>
  *   <li>{@code client.connection.close}: Causes the client to request no HTTP keep-alive. This can avoid
  *    running out of local sockets on the client side during load testing, but should not otherwise be set.</li>
+ *   <li>{@code client.https.ignoreHost}: When using HTTPS, ignore the host specified in the certificate. This
+ *    can make development easier, but must not be used in production.</li>
  * </ul>
  *
  * @author Sean Owen
@@ -99,10 +101,13 @@ public final class ClientRecommender implements MyrrixRecommender {
   private static final Logger log = LoggerFactory.getLogger(ClientRecommender.class);
 
   private static final Splitter COMMA = Splitter.on(',');
+  private static final String IGNORE_HOSTNAME_KEY = "client.https.ignoreHost";
+  private static final String CONNECTION_CLOSE_KEY = "client.connection.close";
 
   private final MyrrixClientConfiguration config;
   private final boolean needAuthentication;
   private final boolean closeConnection;
+  private final boolean ignoreHTTPSHost;
   private final List<List<Pair<String,Integer>>> partitions;
   private final Random random;
 
@@ -134,7 +139,8 @@ public final class ClientRecommender implements MyrrixRecommender {
       HttpsURLConnection.setDefaultSSLSocketFactory(buildSSLSocketFactory());
     }
 
-    closeConnection = Boolean.valueOf(System.getProperty("client.connection.close"));
+    closeConnection = Boolean.valueOf(System.getProperty(CONNECTION_CLOSE_KEY));
+    ignoreHTTPSHost = Boolean.valueOf(System.getProperty(IGNORE_HOSTNAME_KEY));
 
     partitions = config.getPartitions();
     random = RandomUtils.getRandom();
@@ -147,7 +153,8 @@ public final class ClientRecommender implements MyrrixRecommender {
       new HostnameVerifier(){
         @Override
         public boolean verify(String hostname, SSLSession sslSession) {
-          return "localhost".equals(hostname)
+          return ignoreHTTPSHost
+              || "localhost".equals(hostname)
               || "127.0.0.1".equals(hostname)
               || defaultVerifier.verify(hostname, sslSession);
         }
@@ -607,7 +614,9 @@ public final class ClientRecommender implements MyrrixRecommender {
       connection.setDoOutput(true);
       connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
       connection.setRequestProperty("Content-Encoding", "gzip");
-      if (!needAuthentication) {
+      if (needAuthentication) {
+        log.info("Authentication is enabled, so ingest data must be buffered in memory");
+      } else {
         connection.setChunkedStreamingMode(0); // Use default buffer size
       }
       // Must buffer in memory if using authentication since it won't handle the authorization challenge
