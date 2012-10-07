@@ -108,23 +108,12 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
 <jsp:scriptlet>
 System.gc(); // Helps make the heap reported more reliable:
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
-</jsp:scriptlet>
 
-<table>
-  <tr><td>Host</td><td style="text-align:left"><code>${jvmEnv.hostName}</code></td></tr>
-  <tr><td>Cores</td><td style="text-align:left">${jvmEnv.numProcessors}</td></tr>
-  <tr><td>Heap Used</td><td style="text-align:left">${jvmEnv.usedMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</td></tr>
-  <tr><td>Logs</td><td style="text-align:left"><a href="log.txt" target="_blank">View</a></td></tr>
-</table>
-
-</td><td style="text-align:left">
-
-<h2>Recommender</h2>
-
-<jsp:scriptlet>
 pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
+
 String localInputDir = String.valueOf(application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
 pageContext.setAttribute("localInputDir", localInputDir);
+
 String localInputDirDisplay;
 if (localInputDir.length() > 32) {
   localInputDirDisplay = localInputDir.substring(0, 32) + "...";
@@ -132,13 +121,29 @@ if (localInputDir.length() > 32) {
   localInputDirDisplay = localInputDir;
 }
 pageContext.setAttribute("localInputDirDisplay", localInputDirDisplay);
+
 RunningAverage estimateError = (RunningAverage) application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY);
 float avgEstimateError = estimateError == null ? 0.0f : (float) estimateError.getAverage();
 if (Float.isNaN(avgEstimateError)) {
   avgEstimateError = 0.0f;
 }
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
+
+pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
+pageContext.setAttribute("numPartitions", application.getAttribute(AbstractMyrrixServlet.NUM_PARTITIONS_KEY));
 </jsp:scriptlet>
+
+<table>
+  <tr><td>Host</td><td style="text-align:left"><code>${jvmEnv.hostName}</code></td></tr>
+  <tr><td>Cores</td><td style="text-align:left">${jvmEnv.numProcessors}</td></tr>
+  <tr><td>Heap Used</td><td style="text-align:left">${jvmEnv.usedMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</td></tr>
+  <tr><td>Logs</td><td style="text-align:left"><a href="log.txt" target="_blank">View</a></td></tr>
+  <tr><td>Partition</td><td style="text-align:left">#${partition} (${numPartitions} total)</td></tr>
+</table>
+
+</td><td style="text-align:left">
+
+<h2>Recommender</h2>
 
 <table>
   <tr><td>Bucket</td><td style="text-align:left"><code>${rec.bucket}</code></td></tr>

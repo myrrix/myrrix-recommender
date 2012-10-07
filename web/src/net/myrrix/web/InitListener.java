@@ -112,14 +112,15 @@ public final class InitListener implements ServletContextListener {
       log.info("{} total partitions", numPartitions);
       context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY, allPartitions);
     }
+    context.setAttribute(AbstractMyrrixServlet.NUM_PARTITIONS_KEY, numPartitions);
 
     int partition = 0;
     String partitionString = getAttributeOrParam(context, PARTITION_KEY);
     if (partitionString != null) {
       partition = Integer.parseInt(partitionString);
       log.info("Running as partition {}", partition);
-      context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
     }
+    context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
 
     String bucket = getAttributeOrParam(context, BUCKET_KEY);
     long instanceID = Long.parseLong(getAttributeOrParam(context, INSTANCE_ID_KEY));

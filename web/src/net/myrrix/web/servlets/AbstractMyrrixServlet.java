@@ -61,6 +61,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
   public static final String ALL_PARTITIONS_KEY = KEY_PREFIX + ".ALL_PARTITIONS";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
+  public static final String NUM_PARTITIONS_KEY = KEY_PREFIX + ".NUM_PARTITIONS";
 
   private static final String[] NO_PARAMS = new String[0];
 
