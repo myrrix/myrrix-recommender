@@ -19,6 +19,7 @@ package net.myrrix.web.servlets;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -57,7 +58,13 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
 
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
+    long userID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
+    }
 
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
@@ -83,7 +90,12 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
   protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
+    long userID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      return null;
+    }
     return LangUtils.mod(userID, numPartitions);
   }
 

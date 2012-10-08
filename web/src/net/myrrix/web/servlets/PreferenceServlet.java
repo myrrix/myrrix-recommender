@@ -19,6 +19,7 @@ package net.myrrix.web.servlets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -62,8 +63,17 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
 
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
-    long itemID = Long.parseLong(pathComponents.next());
+
+    long userID;
+    long itemID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+      itemID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
+    }
+
     float prefValue;
     try {
       prefValue = readValue(request);
@@ -102,8 +112,17 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
   protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
-    long itemID = Long.parseLong(pathComponents.next());
+
+    long userID;
+    long itemID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+      itemID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
+    }
+
     MyrrixRecommender recommender = getRecommender();
     try {
       recommender.removePreference(userID, itemID);
@@ -128,7 +147,12 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
   protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
+    long userID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      return null;
+    }
     return LangUtils.mod(userID, numPartitions);
   }
 

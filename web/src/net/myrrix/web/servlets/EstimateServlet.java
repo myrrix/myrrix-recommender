@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -51,11 +52,18 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
 
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
 
-    List<Long> itemIDsList = Lists.newArrayList();
-    while (pathComponents.hasNext()) {
-      itemIDsList.add(Long.parseLong(pathComponents.next()));
+    long userID;
+    List<Long> itemIDsList;
+    try {
+        userID = Long.parseLong(pathComponents.next());
+        itemIDsList = Lists.newArrayList();
+        while (pathComponents.hasNext()) {
+          itemIDsList.add(Long.parseLong(pathComponents.next()));
+        }
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
     }
     long[] itemIDs = new long[itemIDsList.size()];
     for (int i = 0; i < itemIDs.length; i++) {
@@ -85,7 +93,12 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
   protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long userID = Long.parseLong(pathComponents.next());
+    long userID;
+    try {
+      userID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      return null;
+    }
     return LangUtils.mod(userID, numPartitions);
   }
 

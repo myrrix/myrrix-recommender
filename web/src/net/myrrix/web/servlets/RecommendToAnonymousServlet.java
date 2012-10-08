@@ -19,6 +19,7 @@ package net.myrrix.web.servlets;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,8 +48,17 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     FastIDSet itemIDSet = new FastIDSet();
-    while (pathComponents.hasNext()) {
-      itemIDSet.add(Long.parseLong(pathComponents.next()));
+    try {
+      while (pathComponents.hasNext()) {
+        itemIDSet.add(Long.parseLong(pathComponents.next()));
+      }
+    } catch (NoSuchElementException nsee) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
+    }
+    if (itemIDSet.isEmpty()) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      return;
     }
 
     MyrrixRecommender recommender = getRecommender();
