@@ -76,12 +76,12 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     try {
 
       // Experimental: see what the recommender thought before adding the datum, whether it would
-      // have expected this. Closer to 1.0 is better. Weight by pref value.
-      // For now... punt on the issue of handling negative weights
+      // have expected this. It "should" reproduce a 1, and the closer the better. Compute the
+      // average difference from 1. Where the estimate is > 1, count it as a 0 difference.
       if (prefValue > 0.0f) {
         try {
           float estimate = recommender.estimatePreference(userID, itemID);
-          avgEstimateError.addDatum(1.0f - estimate, prefValue);
+          avgEstimateError.addDatum(Math.max(0.0f, 1.0f - estimate), prefValue);
         } catch (NoSuchUserException nsue) {
           // continue
         } catch (NoSuchItemException nsie) {
