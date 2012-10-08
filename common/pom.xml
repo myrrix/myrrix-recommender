@@ -26,7 +26,7 @@
   <artifactId>myrrix-common</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Common</name>
-  <version>0.7</version>
+  <version>0.8-SNAPSHOT</version>
   <description>Myrrix common code</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <inceptionYear>2012</inceptionYear>
@@ -38,9 +38,9 @@
     </license>
   </licenses>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-common-0.7</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-common-0.7</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-common-0.7</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/common</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/common</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/common</developerConnection>
   </scm>
   <developers>
     <developer>
