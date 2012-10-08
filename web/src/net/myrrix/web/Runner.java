@@ -437,7 +437,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
       throw new IOException("Could not create " + contextPath);
     }
 
-    Context context = tomcat.addContext("/", contextPath.getAbsolutePath());
+    Context context = tomcat.addContext("", contextPath.getAbsolutePath());
     context.addApplicationListener(InitListener.class.getName());
     context.setWebappVersion("3.0");
     context.addWelcomeFile("index.jspx");
