@@ -22,13 +22,17 @@ import java.io.IOException;
 import java.util.concurrent.Callable;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
+import org.apache.catalina.Lifecycle;
+import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.Server;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.authenticator.DigestAuthenticator;
@@ -36,6 +40,7 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.JasperListener;
 import org.apache.catalina.core.JreMemoryLeakPreventionListener;
 import org.apache.catalina.core.ThreadLocalLeakPreventionListener;
+import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
@@ -163,6 +168,13 @@ public final class Runner implements Callable<Boolean>, Closeable {
   private static final String RESCORER_PROVIDER_CLASS_FLAG = "rescorerProviderClass";
   private static final String PARTITION_FLAG = "partition";
   private static final String ALL_PARTITIONS_FLAG = "allPartitions";
+
+  private static final int[] ERROR_PAGE_STATUSES = {
+      HttpServletResponse.SC_BAD_REQUEST,
+      HttpServletResponse.SC_NOT_FOUND,
+      HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+      HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+  };
 
   private final RunnerConfiguration config;
   private Tomcat tomcat;
@@ -323,6 +335,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new AllItemIDsServlet(), "item/allIDs");
     Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
     Tomcat.addServlet(context, "status_jspx", new status_jspx()).addMapping("/status.jspx");
+    Tomcat.addServlet(context, "error_jspx", new error_jspx()).addMapping("/error.jspx");
     Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
 
     try {
@@ -378,12 +391,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
   private static void configureServer(Server server) {
     //server.addLifecycleListener(new SecurityListener());
     //server.addLifecycleListener(new AprLifecycleListener());
-    try {
-      Class.forName("org.apache.jasper.compiler.JspRuntimeContext");
-    } catch (ClassNotFoundException e) {
-      log.warn("Unable to load JspRuntimeContext as a workaround; JSPX may not work");
-    }
-    server.addLifecycleListener(new JasperListener());
+    LifecycleListener jasperListener = new JasperListener();
+    server.addLifecycleListener(jasperListener);
+    jasperListener.lifecycleEvent(new LifecycleEvent(server, Lifecycle.BEFORE_INIT_EVENT, null));
     server.addLifecycleListener(new JreMemoryLeakPreventionListener());
     //server.addLifecycleListener(new GlobalResourcesLifecycleListener());
     server.addLifecycleListener(new ThreadLocalLeakPreventionListener());
@@ -441,6 +451,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     context.addApplicationListener(InitListener.class.getName());
     context.setWebappVersion("3.0");
     context.addWelcomeFile("index.jspx");
+    //addErrorPages(context); Not working yet, need to figure out Tomcat issue
 
     ServletContext servletContext = context.getServletContext();
     servletContext.setAttribute(InitListener.INSTANCE_ID_KEY, config.getInstanceID());
@@ -494,6 +505,19 @@ public final class Runner implements Callable<Boolean>, Closeable {
     Wrapper wrapper = Tomcat.addServlet(context, servlet.getClass().getSimpleName(), servlet);
     wrapper.addMapping('/' + prefix + "/*");
     wrapper.setLoadOnStartup(1);
+  }
+
+  private static void addErrorPages(Context context) {
+    for (int errorCode : ERROR_PAGE_STATUSES) {
+      ErrorPage errorPage = new ErrorPage();
+      errorPage.setErrorCode(errorCode);
+      errorPage.setLocation("/error.jspx");
+      context.addErrorPage(errorPage);
+    }
+    ErrorPage errorPage = new ErrorPage();
+    errorPage.setExceptionType(Throwable.class.getName());
+    errorPage.setLocation("/error.jspx");
+    context.addErrorPage(errorPage);
   }
 
 }

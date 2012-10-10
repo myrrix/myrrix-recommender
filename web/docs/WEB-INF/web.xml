@@ -136,6 +136,11 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>error_jspx</servlet-name>
+    <servlet-class>net.myrrix.web.error_jspx</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>log.txt</servlet-name>
     <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -198,6 +203,10 @@
     <url-pattern>/status.jspx</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
+    <servlet-name>error_jspx</servlet-name>
+    <url-pattern>/error.jspx</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
     <servlet-name>log.txt</servlet-name>
     <url-pattern>/log.txt</url-pattern>
   </servlet-mapping>
@@ -205,5 +214,11 @@
   <welcome-file-list>
     <welcome-file>index.jspx</welcome-file>
   </welcome-file-list>
+
+  <!-- Not working yet, need to figure out Tomcat issue
+  <error-page>
+    <location>/error.jspx</location>
+  </error-page>
+  -->
 
 </web-app>
