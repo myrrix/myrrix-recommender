@@ -321,22 +321,22 @@ public final class Runner implements Callable<Boolean>, Closeable {
     configureHost(tomcat.getHost());
     Context context = makeContext(tomcat, noSuchBaseDir);
 
-    addServlet(context, new PreferenceServlet(), "pref");
-    addServlet(context, new IngestServlet(), "ingest");
-    addServlet(context, new RecommendServlet(), "recommend");
-    addServlet(context, new RecommendToManyServlet(), "recommendToMany");
-    addServlet(context, new RecommendToAnonymousServlet(), "recommendToAnonymous");
-    addServlet(context, new SimilarityServlet(), "similarity");
-    addServlet(context, new EstimateServlet(), "estimate");
-    addServlet(context, new BecauseServlet(), "because");
-    addServlet(context, new RefreshServlet(), "refresh");
-    addServlet(context, new ReadyServlet(), "ready");
-    addServlet(context, new AllUserIDsServlet(), "user/allIDs");
-    addServlet(context, new AllItemIDsServlet(), "item/allIDs");
-    Tomcat.addServlet(context, "index_jspx", new index_jspx()).addMapping("/index.jspx");
-    Tomcat.addServlet(context, "status_jspx", new status_jspx()).addMapping("/status.jspx");
-    Tomcat.addServlet(context, "error_jspx", new error_jspx()).addMapping("/error.jspx");
-    Tomcat.addServlet(context, "log.txt", new LogServlet()).addMapping("/log.txt");
+    addServlet(context, new PreferenceServlet(), "/pref/*");
+    addServlet(context, new IngestServlet(), "/ingest/*");
+    addServlet(context, new RecommendServlet(), "/recommend/*");
+    addServlet(context, new RecommendToManyServlet(), "/recommendToMany/*");
+    addServlet(context, new RecommendToAnonymousServlet(), "/recommendToAnonymous/*");
+    addServlet(context, new SimilarityServlet(), "/similarity/*");
+    addServlet(context, new EstimateServlet(), "/estimate/*");
+    addServlet(context, new BecauseServlet(), "/because/*");
+    addServlet(context, new RefreshServlet(), "/refresh/*");
+    addServlet(context, new ReadyServlet(), "/ready/*");
+    addServlet(context, new AllUserIDsServlet(), "/user/allIDs/*");
+    addServlet(context, new AllItemIDsServlet(), "/item/allIDs/*");
+    addServlet(context, new index_jspx(), "/index.jspx");
+    addServlet(context, new status_jspx(), "/status.jspx");
+    addServlet(context, new error_jspx(), "/error.jspx");
+    addServlet(context, new LogServlet(), "/log.txt");
 
     try {
       tomcat.start();
@@ -451,7 +451,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     context.addApplicationListener(InitListener.class.getName());
     context.setWebappVersion("3.0");
     context.addWelcomeFile("index.jspx");
-    //addErrorPages(context); Not working yet, need to figure out Tomcat issue
+    addErrorPages(context);
 
     ServletContext servletContext = context.getServletContext();
     servletContext.setAttribute(InitListener.INSTANCE_ID_KEY, config.getInstanceID());
@@ -501,10 +501,10 @@ public final class Runner implements Callable<Boolean>, Closeable {
     return context;
   }
 
-  private static void addServlet(Context context, Servlet servlet, String prefix) {
-    Wrapper wrapper = Tomcat.addServlet(context, servlet.getClass().getSimpleName(), servlet);
-    wrapper.addMapping('/' + prefix + "/*");
-    wrapper.setLoadOnStartup(1);
+  private static void addServlet(Context context, Servlet servlet, String path) {
+    String name = servlet.getClass().getSimpleName();
+    Tomcat.addServlet(context, name, servlet);
+    context.addServletMapping(path, name);
   }
 
   private static void addErrorPages(Context context) {

@@ -141,7 +141,7 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
-    <servlet-name>log.txt</servlet-name>
+    <servlet-name>LogServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -207,7 +207,7 @@
     <url-pattern>/error.jspx</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>log.txt</servlet-name>
+    <servlet-name>LogServlet</servlet-name>
     <url-pattern>/log.txt</url-pattern>
   </servlet-mapping>
 
