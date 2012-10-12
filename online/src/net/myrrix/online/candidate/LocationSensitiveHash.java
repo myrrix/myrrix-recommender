@@ -18,7 +18,6 @@ package net.myrrix.online.candidate;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Random;
 
 import com.google.common.collect.Iterators;
@@ -193,8 +192,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
     List<LongPrimitiveIterator> inputs = Lists.newArrayList();
     for (FastByIDMap.MapEntry<FastIDSet> entry : buckets.entrySet()) {
       for (long bitSignature : bitSignatures) {
-        int bitsDiffering = Long.bitCount(bitSignature ^ entry.getKey());
-        if (bitsDiffering < maxBitsDiffering) {
+        if (Long.bitCount(bitSignature ^ entry.getKey()) < maxBitsDiffering) { // # bits differing
           inputs.add(entry.getValue().iterator());
           break;
         }
@@ -230,12 +228,9 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
     @Override
     public FastByIDMap.MapEntry<float[]> next() {
-      if (!hasNext()) {
-        throw new NoSuchElementException();
-      }
+      // Will throw NoSuchElementException if needed:
       long itemID = current.nextLong();
-      float[] itemVec = Y.get(itemID);
-      delegate.set(itemID, itemVec);
+      delegate.set(itemID, Y.get(itemID));
       return delegate;
     }
 

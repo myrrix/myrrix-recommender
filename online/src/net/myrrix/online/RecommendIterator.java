@@ -73,8 +73,10 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
         }
       }
     }
+
     IDRescorer rescorer = this.rescorer;
-    if (rescorer != null && rescorer.isFiltered(itemID)) {
+    boolean hasRescorer = rescorer != null;
+    if (hasRescorer && rescorer.isFiltered(itemID)) {
       return null;
     }
 
@@ -82,9 +84,8 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
     double sum = 0.0;
     int count = 0;
     for (float[] oneUserFeatures : features) {
-      Preconditions.checkState(oneUserFeatures.length == itemFeatures.length);
       double dot = SimpleVectorMath.dot(itemFeatures, oneUserFeatures);
-      if (rescorer != null) {
+      if (hasRescorer) {
         dot = rescorer.rescore(itemID, dot);
       }
       sum += dot;
