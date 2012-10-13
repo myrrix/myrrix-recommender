@@ -503,7 +503,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   private static void addServlet(Context context, Servlet servlet, String path) {
     String name = servlet.getClass().getSimpleName();
-    Tomcat.addServlet(context, name, servlet);
+    Tomcat.addServlet(context, name, servlet).setLoadOnStartup(1);
     context.addServletMapping(path, name);
   }
 

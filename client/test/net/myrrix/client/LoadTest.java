@@ -164,7 +164,7 @@ public final class LoadTest extends AbstractClientTest {
     log.info("recommendToMany: {}", recommendToMany);
     log.info("recommend: {}", recommend);
 
-    assertTrue(end - start < 10 * ITERATIONS);
+    assertTrue(end - start < 15 * ITERATIONS);
   }
 
 }
