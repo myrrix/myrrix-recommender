@@ -16,17 +16,19 @@
 
 package net.myrrix.online.candidate;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.common.RandomUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 
@@ -55,12 +57,13 @@ import net.myrrix.common.collection.FastByIDMap;
  * computed. All buckets whose signature matches in "most" bits are matches, and all item vectors inside
  * are candidates.</p>
  *
- * <p><em>This is experimental, and is effectively disabled in practice, as it will only be used currently
- * by default when there are over about half a million items in the data.</em></p>
+ * <p><em>This is experimental, and is disabled unless "model.lsh.sampleRatio" is set to a value less than 1.</em></p>
  *
  * @author Sean Owen
  */
 public final class LocationSensitiveHash implements CandidateFilter {
+
+  private static final Logger log = LoggerFactory.getLogger(LocationSensitiveHash.class);
 
   private static final int NUM_HASHES = 64;
   // Since there are n=64 hashes / bits, and random bits differ with probability p=0.5,
@@ -68,40 +71,34 @@ public final class LocationSensitiveHash implements CandidateFilter {
   // The variance is np(1-p) = n/4, so stdev is sqrt(n)/2.
   private static final int EXPECTED_RANDOM_VEC_BITS_DIFFERING = NUM_HASHES / 2;
   private static final int STDEV_RANDOM_VEC_BITS_DIFFERING = (int) Math.sqrt(NUM_HASHES / 4);
-  private static final int MIN_ITEMS_TO_SAMPLE =
-      Integer.parseInt(System.getProperty("model.lsh.minItemsToSample", String.valueOf(1 << 19))); // ~524K
+  private static final double LSH_SAMPLE_RATIO =
+      Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
 
   private final FastByIDMap<float[]> Y;
   private final boolean[][] randomVectors;
   private final double[] meanVector;
   private final FastByIDMap<FastIDSet> buckets;
+  private final FastIDSet newItems;
   private final int maxBitsDiffering;
 
   /**
-   * <p>This will compute appropriate cutoff values based on the input so that the sampling speeds up
-   * proportionally to size by pruning more candidates. So, recommendation speed ought to be of approximately constant
-   * speed as scale increases past the point where LSH kicks in -- albeit by simply ignoring more and
-   * more of the unlikely candidates.</p>
-   *
-   * <p>Up to about half a million item vectors, LSH will do no sampling. Past that it will use LSH to
-   * choose fewer candidates to keep the overall work in making a recommendation about constant.</p>
-   *
    * @param Y item vectors to hash
    */
   public LocationSensitiveHash(FastByIDMap<float[]> Y) {
 
     this.Y = Y;
 
-    if (Y.size() < MIN_ITEMS_TO_SAMPLE) {
+    if (LSH_SAMPLE_RATIO >= 1.0) {
 
       randomVectors = null;
       meanVector = null;
       buckets = null;
+      newItems = null;
       maxBitsDiffering = NUM_HASHES;
 
     } else {
 
-      double candidateFraction = (double) MIN_ITEMS_TO_SAMPLE / Y.size();
+      log.info("Using LSH sampling to sample about {}% of items", LSH_SAMPLE_RATIO * 100.0);
 
       // Assume number of bits differing is normally distributed -- reasonable since user/item vector values
       // are distributed like random vectors and random vectors' number of differing bits is the sum of 64
@@ -111,7 +108,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
           new NormalDistribution(EXPECTED_RANDOM_VEC_BITS_DIFFERING, STDEV_RANDOM_VEC_BITS_DIFFERING);
       int bitsDiffering = 0;
       while (bitsDiffering < NUM_HASHES &&
-             normalDistribution.cumulativeProbability(bitsDiffering) < candidateFraction) {
+             normalDistribution.cumulativeProbability(bitsDiffering) < LSH_SAMPLE_RATIO) {
         bitsDiffering++;
       }
       maxBitsDiffering = bitsDiffering;
@@ -129,6 +126,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
       meanVector = findMean(Y, features);
 
       buckets = new FastByIDMap<FastIDSet>();
+      int count = 0;
       for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
         long signature = toBitSignature(entry.getValue());
         FastIDSet ids = buckets.get(signature);
@@ -137,7 +135,15 @@ public final class LocationSensitiveHash implements CandidateFilter {
           buckets.put(signature, ids);
         }
         ids.add(entry.getKey());
+        if (++count % 1000000 == 0) {
+          log.info("Bucketed {} items", count);
+        }
       }
+
+      log.info("Put {} items into {} buckets", Y.size(), buckets.size());
+
+      // A separate bucket for new items, which will always be considered
+      newItems = new FastIDSet();
 
     }
 
@@ -181,55 +187,62 @@ public final class LocationSensitiveHash implements CandidateFilter {
   }
 
   @Override
-  public Iterator<FastByIDMap.MapEntry<float[]>> getCandidateIterator(float[][] userVectors) {
+  public Collection<Iterator<FastByIDMap.MapEntry<float[]>>> getCandidateIterator(float[][] userVectors) {
     if (buckets == null) {
-      return Y.entrySet().iterator();
+      return Collections.singleton(Y.entrySet().iterator());
     }
     long[] bitSignatures = new long[userVectors.length];
     for (int i = 0; i < userVectors.length; i++) {
       bitSignatures[i] = toBitSignature(userVectors[i]);
     }
-    List<LongPrimitiveIterator> inputs = Lists.newArrayList();
+    Collection<Iterator<FastByIDMap.MapEntry<float[]>>> inputs = Lists.newArrayList();
     for (FastByIDMap.MapEntry<FastIDSet> entry : buckets.entrySet()) {
       for (long bitSignature : bitSignatures) {
         if (Long.bitCount(bitSignature ^ entry.getKey()) < maxBitsDiffering) { // # bits differing
-          inputs.add(entry.getValue().iterator());
+          inputs.add(new IDToEntryIterator(entry.getValue().iterator()));
           break;
         }
       }
     }
-    if (inputs.isEmpty()) {
-      return Iterators.emptyIterator();
+
+    synchronized (newItems) {
+      if (!newItems.isEmpty()) {
+        // Have to clone because it's being written to
+        inputs.add(new IDToEntryIterator(newItems.clone().iterator()));
+      }
     }
-    return new BucketIterator(inputs.iterator());
+
+    return inputs;
   }
 
-  private final class BucketIterator implements Iterator<FastByIDMap.MapEntry<float[]>> {
+  @Override
+  public void addItem(long itemID) {
+    if (newItems != null) {
+      synchronized (newItems) {
+        newItems.add(itemID);
+      }
+    }
+  }
 
-    private final Iterator<LongPrimitiveIterator> inputs;
-    private LongPrimitiveIterator current;
+  private final class IDToEntryIterator implements Iterator<FastByIDMap.MapEntry<float[]>> {
+
+    private final LongPrimitiveIterator input;
     private final MutableMapEntry delegate;
 
-    private BucketIterator(Iterator<LongPrimitiveIterator> inputs) {
-      this.inputs = inputs;
-      current = inputs.next();
+    private IDToEntryIterator(LongPrimitiveIterator input) {
+      this.input = input;
       this.delegate = new MutableMapEntry();
     }
 
     @Override
     public boolean hasNext() {
-      // Copied from Google Guava:
-      boolean currentHasNext;
-      while (!(currentHasNext = current.hasNext()) && inputs.hasNext()) {
-        current = inputs.next();
-      }
-      return currentHasNext;
+      return input.hasNext();
     }
 
     @Override
     public FastByIDMap.MapEntry<float[]> next() {
       // Will throw NoSuchElementException if needed:
-      long itemID = current.nextLong();
+      long itemID = input.nextLong();
       delegate.set(itemID, Y.get(itemID));
       return delegate;
     }

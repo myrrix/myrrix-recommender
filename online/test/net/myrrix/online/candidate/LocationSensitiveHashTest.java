@@ -46,6 +46,7 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
 
   @Test
   public void testLSH() {
+    System.setProperty("model.lsh.sampleRatio", "0.01");
     Random r = RandomUtils.getRandom();
     AtomicInteger intersection = new AtomicInteger();
     AtomicInteger items = new AtomicInteger();
@@ -60,13 +61,13 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
       }
       float[] userVec = randomVector(r);
       doTestRandomVecs(Y, userVec, intersection, items, evaluated, total);
+      log.info("Considered {}% of all candidates, got {}% recommendations correct",
+               100 * evaluated.get() / total.get(),
+               100 * intersection.get() / items.get());
     }
 
-    log.info("Considered {}% of all candidates, got {}% recommendations correct",
-             100 * evaluated.get() / total.get(),
-             100 * intersection.get() / items.get());
     assertTrue(intersection.get() >= 0.99 * items.get());
-    assertTrue(evaluated.get() <= 0.33 * total.get());
+    assertTrue(evaluated.get() <= 0.1 * total.get());
   }
 
   private static float[] randomVector(Random r) {
@@ -86,10 +87,12 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
 
     CandidateFilter lsh = new LocationSensitiveHash(Y);
 
-    Iterator<FastByIDMap.MapEntry<float[]>> candidatesIterator = lsh.getCandidateIterator(new float[][]{userVec});
     FastIDSet candidates = new FastIDSet();
-    while (candidatesIterator.hasNext()) {
-      candidates.add(candidatesIterator.next().getKey());
+    float[][] userVecs = { userVec };
+    for (Iterator<FastByIDMap.MapEntry<float[]>> candidatesIterator : lsh.getCandidateIterator(userVecs)) {
+      while (candidatesIterator.hasNext()) {
+        candidates.add(candidatesIterator.next().getKey());
+      }
     }
 
     Collection<Long> topIDs = findTopRecommendations(Y, userVec);

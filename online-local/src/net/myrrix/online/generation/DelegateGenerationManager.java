@@ -211,6 +211,8 @@ public final class DelegateGenerationManager implements GenerationManager {
                 newGeneration = computeModel(inputDir);
                 saveModel(newGeneration, modelFile);
               }
+              log.info("New generation has {} users, {} items",
+                       newGeneration.getNumUsers(), newGeneration.getNumItems());
             } catch (OutOfMemoryError oome) {
               log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
                        "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");

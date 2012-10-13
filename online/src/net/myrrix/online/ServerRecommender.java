@@ -25,6 +25,12 @@ import java.io.Reader;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -32,6 +38,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -49,6 +56,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.MutableRecommendedItem;
+import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -83,6 +92,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       Double.parseDouble(System.getProperty("model.foldin.bigThreshold", "10000.0"));
 
   private final GenerationManager generationManager;
+  private final int numCores;
+  private ExecutorService executor;
 
   /**
    * Calls {@link #ServerRecommender(String, long, File, int, int)} for simple local mode, with no bucket,
@@ -117,6 +128,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                                   GenerationManager.class,
                                   new Class<?>[] { String.class, long.class, File.class, int.class, int.class },
                                   new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
+    numCores = Runtime.getRuntime().availableProcessors();
+    executor = null; // Lazy init
   }
 
   public String getBucket() {
@@ -186,6 +199,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public void close() throws IOException {
     generationManager.close();
+    synchronized (this) {
+      if (executor != null) {
+        executor.shutdownNow();
+      }
+    }
   }
 
   /**
@@ -290,20 +308,87 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     }
 
-    CandidateFilter candidateFilter = generation.getCandidateFilter();
-
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
-      return TopN.selectTopN(new RecommendIterator(userFeatures,
-                                                   candidateFilter.getCandidateIterator(userFeatures),
-                                                   usersKnownItemIDs,
-                                                   rescorer),
-                             howMany);
+      return multithreadedTopN(userFeatures,
+                               usersKnownItemIDs,
+                               rescorer, howMany,
+                               generation.getCandidateFilter());
     } finally {
       yLock.unlock();
     }
 
+  }
+
+  private List<RecommendedItem> multithreadedTopN(final float[][] userFeatures,
+                                                  final FastIDSet userKnownItemIDs,
+                                                  final IDRescorer rescorer,
+                                                  final int howMany,
+                                                  CandidateFilter candidateFilter) {
+
+    Collection<Iterator<FastByIDMap.MapEntry<float[]>>> candidateIterators =
+        candidateFilter.getCandidateIterator(userFeatures);
+
+    int numIterators = candidateIterators.size();
+    int parallelism = Math.min(numCores, numIterators);
+
+    final Queue<MutableRecommendedItem> topN = TopN.initialQueue(howMany);
+
+    if (parallelism > 1) {
+
+      synchronized (this) {
+        if (executor == null) {
+          executor = Executors.newFixedThreadPool(2 * numCores, new NamedThreadFactory(false, "ServerRecommender"));
+        }
+      }
+
+      final Iterator<Iterator<FastByIDMap.MapEntry<float[]>>> candidateIteratorsIterator =
+          candidateIterators.iterator();
+
+      List<Future<?>> futures = Lists.newArrayList();
+      for (int i = 0; i < numCores; i++) {
+        futures.add(executor.submit(new Callable<Void>() {
+          @Override
+          public Void call() {
+            float[] queueLeastValue = { Float.NEGATIVE_INFINITY };
+            while (true) {
+              Iterator<FastByIDMap.MapEntry<float[]>> candidateIterator;
+              synchronized (candidateIteratorsIterator) {
+                if (!candidateIteratorsIterator.hasNext()) {
+                  break;
+                }
+                candidateIterator = candidateIteratorsIterator.next();
+              }
+              Iterator<RecommendedItem> partialIterator =
+                  new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, rescorer);
+              TopN.selectTopNIntoQueueMultithreaded(topN, queueLeastValue, partialIterator, howMany);
+            }
+            return null;
+          }
+        }));
+      }
+      for (Future<?> future : futures) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          throw new IllegalStateException(e);
+        } catch (ExecutionException e) {
+          throw new IllegalStateException(e.getCause());
+        }
+      }
+
+    } else {
+
+      for (Iterator<FastByIDMap.MapEntry<float[]>> candidateIterator : candidateIterators) {
+        Iterator<RecommendedItem> partialIterator =
+            new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, rescorer);
+        TopN.selectTopNIntoQueue(topN, partialIterator, howMany);
+      }
+
+    }
+
+    return TopN.selectTopNFromQueue(topN, howMany);
   }
 
   @Override
@@ -346,16 +431,15 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       userKnownItemIDs.add(itemID);
     }
 
-    CandidateFilter candidateFilter = generation.getCandidateFilter();
     float[][] anonymousFeaturesAsArray = { anonymousUserFeatures };
 
     yLock.lock();
     try {
-      return TopN.selectTopN(new RecommendIterator(anonymousFeaturesAsArray,
-                                                   candidateFilter.getCandidateIterator(anonymousFeaturesAsArray),
-                                                   userKnownItemIDs,
-                                                   null),
-                             howMany);
+      return multithreadedTopN(anonymousFeaturesAsArray,
+                               userKnownItemIDs,
+                               null,
+                               howMany,
+                               generation.getCandidateFilter());
     } finally {
       yLock.unlock();
     }
@@ -473,7 +557,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
 
     FastByIDMap<float[]> Y = generation.getY();
-    
+
+    boolean newItem = false;
     float[] itemFeatures;
     ReadWriteLock yLock = generation.getYLock();
     Lock yReadLock = yLock.readLock();
@@ -481,6 +566,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       itemFeatures = Y.get(itemID);
       if (itemFeatures == null) {
+        newItem = true;
         int numFeatures = countFeatures(Y);
         if (numFeatures > 0) {
           itemFeatures = new float[numFeatures];
@@ -497,6 +583,10 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     } finally {
       yReadLock.unlock();
+    }
+
+    if (newItem) {
+      generation.getCandidateFilter().addItem(itemID);
     }
 
     if (userFeatures != null && itemFeatures != null) {

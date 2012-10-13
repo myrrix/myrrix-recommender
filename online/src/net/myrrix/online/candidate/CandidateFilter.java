@@ -16,6 +16,7 @@
 
 package net.myrrix.online.candidate;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.myrrix.common.collection.FastByIDMap;
@@ -33,6 +34,13 @@ public interface CandidateFilter {
    *
    * @return {@link Iterator} over item IDs and item vectors
    */
-  Iterator<FastByIDMap.MapEntry<float[]>> getCandidateIterator(float[][] userVectors);
+  Collection<Iterator<FastByIDMap.MapEntry<float[]>>> getCandidateIterator(float[][] userVectors);
+
+  /**
+   * Note a new item has appeared at run-time.
+   *
+   * @param itemID ID of new item
+   */
+  void addItem(long itemID);
 
 }
