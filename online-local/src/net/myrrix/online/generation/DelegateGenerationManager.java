@@ -37,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -65,7 +66,12 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final Logger log = LoggerFactory.getLogger(DelegateGenerationManager.class);
 
-  private static final int WRITES_BETWEEN_REBUILD = 10000000;
+  private static final int WRITES_BETWEEN_REBUILD;
+  static {
+    WRITES_BETWEEN_REBUILD =
+          Integer.parseInt(System.getProperty("model.local.writesBetweenRebuild", "10000"));
+    Preconditions.checkArgument(WRITES_BETWEEN_REBUILD > 0);
+  }
 
   /**
    * Values with absolute value less than this in the input are considered 0.
