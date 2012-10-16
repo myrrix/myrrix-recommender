@@ -294,16 +294,13 @@ public final class ClientRecommender implements MyrrixRecommender {
    * @return an estimate of the strength of the association between the user and item. These values are the
    *  same as will be returned from {@link #recommend(long, int)}. They are opaque values and have no interpretation
    *  other than that larger means stronger. The values are typically in the range [0,1] but are not guaranteed
-   *  to be so.
-   * @throws NoSuchUserException if the user is not known in the model
-   * @throws NoSuchItemException if the item is not known in the model
+   *  to be so. Note that 0 will be returned if the user or item is not known in the data.
    * @throws NotReadyException if the recommender has no model available yet
    * @throws TasteException if another error occurs
    */
   @Override
   public float estimatePreference(long userID, long itemID) throws TasteException {
-    float[] results = estimatePreferences(userID, itemID);
-    return results[0];
+    return estimatePreferences(userID, itemID)[0];
   }
 
   @Override
@@ -320,8 +317,6 @@ public final class ClientRecommender implements MyrrixRecommender {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
             break;
-          case HttpURLConnection.HTTP_NOT_FOUND:
-            throw new NoSuchItemException(userID + "/" + Arrays.toString(itemIDs));
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:

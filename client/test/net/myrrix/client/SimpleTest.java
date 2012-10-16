@@ -160,18 +160,9 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(0.88412833f, estimates[1]);
     assertEquals(0.9059035f, estimates[2]);
 
-    try {
-      client.estimatePreference(0L, 90L);
-      fail();
-    } catch (NoSuchItemException nsie) {
-      // good
-    }
-    try {
-      client.estimatePreference(10L, 0L);
-      fail();
-    } catch (NoSuchItemException nsie) {
-      // good
-    }
+    // Non-existent
+    assertEquals(0.0f, client.estimatePreference(0L, 90L));
+    assertEquals(0.0f, client.estimatePreference(10L, 0L));
   }
 
   @Test

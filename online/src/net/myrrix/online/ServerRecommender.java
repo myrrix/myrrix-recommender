@@ -451,20 +451,17 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @return an estimate of the strength of the association between the user and item. These values are the
    *  same as will be returned from {@link #recommend(long, int)}. They are opaque values and have no interpretation
    *  other than that larger means stronger. The values are typically in the range [0,1] but are not guaranteed
-   *  to be so.
-   * @throws NoSuchUserException if the user is not known in the model
+   *  to be so. Note that 0 will be returned if the user or item is not known in the data.
    * @throws NoSuchItemException if the item is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
    */
   @Override
-  public float estimatePreference(long userID, long itemID)
-      throws NoSuchUserException, NoSuchItemException, NotReadyException {
+  public float estimatePreference(long userID, long itemID) throws NotReadyException {
     return estimatePreferences(userID, itemID)[0];
   }
 
   @Override
-  public float[] estimatePreferences(long userID, long... itemIDs)
-      throws NoSuchUserException, NoSuchItemException, NotReadyException {
+  public float[] estimatePreferences(long userID, long... itemIDs) throws NotReadyException {
     
     Generation generation = getCurrentGeneration();
     FastByIDMap<float[]> X = generation.getX();
@@ -478,7 +475,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       xLock.unlock();
     }
     if (userFeatures == null) {
-      throw new NoSuchUserException(userID);
+      return new float[itemIDs.length]; // All 0.0f
     }
     
     FastByIDMap<float[]> Y = generation.getY();
@@ -490,12 +487,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       for (int i = 0; i < itemIDs.length; i++) {
         long itemID = itemIDs[i];
         float[] itemFeatures = Y.get(itemID);
-        if (itemFeatures == null) {
-          throw new NoSuchItemException(itemID);
-        }
-        float value = (float) SimpleVectorMath.dot(itemFeatures, userFeatures);
-        Preconditions.checkState(LangUtils.isFinite(value), "Bad estimate");
-        result[i] = value;
+        if (itemFeatures != null) {
+          float value = (float) SimpleVectorMath.dot(itemFeatures, userFeatures);
+          Preconditions.checkState(LangUtils.isFinite(value), "Bad estimate");
+          result[i] = value;
+        } // else leave value at 0.0f
       }
       return result;
     } finally {

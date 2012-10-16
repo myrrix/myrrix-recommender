@@ -25,8 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.collect.Lists;
-import org.apache.mahout.cf.taste.common.NoSuchItemException;
-import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.LangUtils;
@@ -77,10 +75,6 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
       for (float estimate : estimates) {
         out.println(Float.toString(estimate));
       }
-    } catch (NoSuchUserException nsue) {
-      response.sendError(HttpServletResponse.SC_NOT_FOUND, nsue.toString());
-    } catch (NoSuchItemException nsie) {
-      response.sendError(HttpServletResponse.SC_NOT_FOUND, nsie.toString());
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {
