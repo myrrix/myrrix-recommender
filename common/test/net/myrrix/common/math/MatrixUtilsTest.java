@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.online.factorizer;
+package net.myrrix.common.math;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.junit.Test;

@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
-import net.myrrix.online.factorizer.MatrixUtils;
 
 public final class NegativeInputTest extends MyrrixTest {
 

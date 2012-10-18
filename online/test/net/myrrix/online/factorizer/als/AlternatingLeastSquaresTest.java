@@ -27,7 +27,7 @@ import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.factorizer.MatrixFactorizer;
-import net.myrrix.online.factorizer.MatrixUtils;
+import net.myrrix.common.math.MatrixUtils;
 
 public final class AlternatingLeastSquaresTest extends MyrrixTest {
 

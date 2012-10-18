@@ -29,6 +29,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
@@ -39,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
-import net.myrrix.common.SimpleVectorMath;
+import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.online.ServerRecommender;
@@ -92,7 +93,7 @@ public final class ReconstructionEvaluator {
         // Each of which was a "1" in the factor P matrix
         double value = SimpleVectorMath.dot(X.get(userID), Y.get(itemID));
         // So store abs(1-value), except, don't penalize for reconstructing > 1. Error is 0 in this case.
-        averageError.addDatum(Math.max(0.0, 1.0 - value));
+        averageError.addDatum(FastMath.max(0.0, 1.0 - value));
       }
 
       return new EvaluationResultImpl(averageError.getAverage());

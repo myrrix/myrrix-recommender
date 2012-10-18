@@ -25,7 +25,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
-import net.myrrix.common.SimpleVectorMath;
+import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
 
 /**

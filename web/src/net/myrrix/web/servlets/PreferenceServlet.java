@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.io.Closeables;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
@@ -91,7 +92,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
       if (prefValue > 0.0f) {
         try {
           float estimate = recommender.estimatePreference(userID, itemID);
-          avgEstimateError.addDatum(Math.max(0.0f, 1.0f - estimate), prefValue);
+          avgEstimateError.addDatum(FastMath.max(0.0f, 1.0f - estimate), prefValue);
         } catch (NoSuchUserException nsue) {
           // continue
         } catch (NoSuchItemException nsie) {

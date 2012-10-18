@@ -43,6 +43,8 @@ import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
+import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
@@ -54,8 +56,8 @@ import net.myrrix.common.LangUtils;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
-import net.myrrix.online.factorizer.MatrixUtils;
 import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 
 /**
@@ -161,8 +163,10 @@ public final class DelegateGenerationManager implements GenerationManager {
   public void append(long userID, long itemID, float value) throws IOException {
     StringBuilder line = new StringBuilder(32);
     line.append(userID).append(',').append(itemID).append(',').append(value).append('\n');
-    synchronized (this) {
-      appender.append(line);
+    if (appender != null) {
+      synchronized (this) {
+        appender.append(line);
+      }
     }
     if (--countdownToRebuild == 0) {
       countdownToRebuild = WRITES_BETWEEN_REBUILD;
@@ -220,8 +224,8 @@ public final class DelegateGenerationManager implements GenerationManager {
                   new OutputStreamWriter(new FileOutputStream(appendFile, false), Charsets.UTF_8), 512);
             }
 
-            Generation newGeneration = null;
             try {
+              Generation newGeneration = null;
               if (currentGeneration == null && modelFile.exists()) {
                 newGeneration = readModel(modelFile);
               }
@@ -231,12 +235,16 @@ public final class DelegateGenerationManager implements GenerationManager {
               }
               log.info("New generation has {} users, {} items",
                        newGeneration.getNumUsers(), newGeneration.getNumItems());
+              currentGeneration = newGeneration;
             } catch (OutOfMemoryError oome) {
               log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
                        "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
+              currentGeneration = null;
               throw oome;
+            } catch (SingularMatrixException sme) {
+              log.warn("Unable to compute a valid generation yet; waiting for more data");
+              currentGeneration = null;
             }
-            currentGeneration = newGeneration;
 
           } catch (Throwable t) {
             log.warn("Unexpected exception while refreshing", t);
@@ -320,10 +328,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
 
-    File[] inputFiles = inputDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
-    Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
-
-    readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputFiles);
+    readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputDir);
 
     removeSmall(RbyRow);
     removeSmall(RbyColumn);
@@ -405,7 +410,15 @@ public final class DelegateGenerationManager implements GenerationManager {
   private static void readInputFiles(FastByIDMap<FastIDSet> knownItemIDs,
                                      FastByIDMap<FastByIDFloatMap> rbyRow,
                                      FastByIDMap<FastByIDFloatMap> rbyColumn,
-                                     File[] inputFiles) throws IOException {
+                                     File inputDir) throws IOException {
+
+    File[] inputFiles = inputDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
+    if (inputFiles == null) {
+      log.info("No input files in {}", inputDir);
+      return;
+    }
+    Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
+
     int lines = 0;
     for (File inputFile : inputFiles) {
       log.info("Reading {}", inputFile);
@@ -458,7 +471,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : matrix.entrySet()) {
       for (Iterator<FastByIDFloatMap.MapEntry> it = entry.getValue().entrySet().iterator(); it.hasNext();) {
         FastByIDFloatMap.MapEntry entry2 = it.next();
-        if (Math.abs(entry2.getValue()) < ZERO_THRESHOLD) {
+        if (FastMath.abs(entry2.getValue()) < ZERO_THRESHOLD) {
           it.remove();
         }
       }

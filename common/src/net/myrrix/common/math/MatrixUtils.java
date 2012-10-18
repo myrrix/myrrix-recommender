@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package net.myrrix.online.factorizer;
+package net.myrrix.common.math;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 
@@ -44,6 +45,7 @@ public final class MatrixUtils {
   private static final Logger log = LoggerFactory.getLogger(MatrixUtils.class);
 
   private static final int PRINT_COLUMN_WIDTH = 12;
+  private static final double SINGULARITY_THRESHOLD = 0.00001;
 
   // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
   private static final Field MATRIX_DATA_FIELD;
@@ -55,6 +57,16 @@ public final class MatrixUtils {
       throw new IllegalStateException(nsfe);
     }
     MATRIX_DATA_FIELD.setAccessible(true);
+  }
+  private static final Field RDIAG_FIELD;
+  static {
+    try {
+      RDIAG_FIELD = QRDecomposition.class.getDeclaredField("rDiag");
+    } catch (NoSuchFieldException nsfe) {
+      log.error("Can't access QRDecomposition.rDiag", nsfe);
+      throw new IllegalStateException(nsfe);
+    }
+    RDIAG_FIELD.setAccessible(true);
   }
 
   private MatrixUtils() {
@@ -145,16 +157,29 @@ public final class MatrixUtils {
   }
 
   public static RealMatrix invert(RealMatrix M) {
+    QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
+    DecompositionSolver solver = decomposition.getSolver();
+    RealMatrix inverse;
     try {
-      return doInvert(M, 0.000001);
+      inverse = solver.getInverse();
     } catch (SingularMatrixException sme) {
-      log.warn("Inverting matrix failed; results may not be meaningful. Decrease the value of model.features");
-      return doInvert(M, 0.0);
+      log.warn("Matrix is near-singular; add more data or decrease the value of model.features", sme);
+      double[] rDiag;
+      try {
+        rDiag = (double[]) RDIAG_FIELD.get(decomposition);
+      } catch (IllegalAccessException iae) {
+        log.warn("Can't read QR decomposition fields to suggest dimensionality");
+        throw sme;
+      }
+      for (int i = 0; i < rDiag.length; i++) {
+        if (FastMath.abs(rDiag[i]) <= SINGULARITY_THRESHOLD) {
+          log.info("Suggested value of -Dmodel.features is about {} or less", i);
+          break;
+        }
+      }
+      throw sme;
     }
-  }
-
-  private static RealMatrix doInvert(RealMatrix M, double threshold) {
-    return new Array2DRowRealMatrix(new QRDecomposition(M, threshold).getSolver().getInverse().getData());
+    return new Array2DRowRealMatrix(inverse.getData());
   }
 
   /**

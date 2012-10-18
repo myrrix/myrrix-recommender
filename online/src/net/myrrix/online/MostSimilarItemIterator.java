@@ -25,8 +25,8 @@ import org.apache.mahout.common.LongPair;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
-import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.SimpleVectorMath;
 
 /**
  * An {@link Iterator} that generates and iterates over all possible candidate items in computation

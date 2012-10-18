@@ -24,6 +24,7 @@ import java.util.Random;
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.common.RandomUtils;
@@ -70,7 +71,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
   // the expected number of differences in two random n-bit vectors is np = n/2.
   // The variance is np(1-p) = n/4, so stdev is sqrt(n)/2.
   private static final int EXPECTED_RANDOM_VEC_BITS_DIFFERING = NUM_HASHES / 2;
-  private static final int STDEV_RANDOM_VEC_BITS_DIFFERING = (int) Math.sqrt(NUM_HASHES / 4);
+  private static final int STDEV_RANDOM_VEC_BITS_DIFFERING = (int) FastMath.sqrt(NUM_HASHES / 4);
   private static final double LSH_SAMPLE_RATIO =
       Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
 

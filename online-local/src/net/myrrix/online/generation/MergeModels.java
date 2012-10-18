@@ -29,7 +29,7 @@ import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.collection.FastByIDMap;
-import net.myrrix.online.factorizer.MatrixUtils;
+import net.myrrix.common.math.MatrixUtils;
 
 /**
  * <p>Merges two model files into one model file. The models have to be "compatible" in order to make any sense,

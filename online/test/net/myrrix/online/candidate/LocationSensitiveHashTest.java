@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixTest;
-import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.SimpleVectorMath;
 
 public final class LocationSensitiveHashTest extends MyrrixTest {
 

@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.math;
 
 import org.junit.Test;
+
+import net.myrrix.common.MyrrixTest;
 
 public final class SimpleVectorMathTest extends MyrrixTest {
   

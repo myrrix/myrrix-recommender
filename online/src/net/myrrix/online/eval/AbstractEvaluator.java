@@ -39,6 +39,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -176,7 +177,7 @@ public abstract class AbstractEvaluator {
     // evaluationPercentage filters per user and item, not per datum, since time scales with users and
     // items. We select sqrt(evaluationPercentage) of users and items to overall select about evaluationPercentage
     // of all data.
-    int perMillion = (int) (1000000 * Math.sqrt(evaluationPercentage));
+    int perMillion = (int) (1000000 * FastMath.sqrt(evaluationPercentage));
 
     Multimap<Long,RecommendedItem> data = ArrayListMultimap.create();
 

@@ -28,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
@@ -38,8 +39,8 @@ import net.myrrix.common.LangUtils;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
-import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
  * <p>Implements the Alternating Least Squares algorithm described in
@@ -64,7 +65,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.01;
 
-  private static final double LN_E_MINUS_1 = Math.log(Math.E - 1.0);
+  private static final double LN_E_MINUS_1 = FastMath.log(FastMath.E - 1.0);
 
   private static final int WORK_UNIT_SIZE = 100;
 
@@ -181,7 +182,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     // length is sqrt(f/12). We expected actual feature vectors to converge to unit vectors. So start off
     // by making the expected random vector length 1.
     int features = this.features;
-    double normalization = Math.sqrt(features / 12.0);
+    double normalization = FastMath.sqrt(features / 12.0);
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
       float[] Yrow = new float[features];
       for (int col = 0; col < features; col++) {
@@ -311,7 +312,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
           double xu = entry.getValue();
           // Actually treat this as a two part function to avoid overflow:
-          double cu = xu < 0.0 ? Math.log1p(Math.exp(alpha * (xu + LN_E_MINUS_1 / alpha))) : 1.0 + alpha * xu;
+          double cu = xu < 0.0 ? FastMath.log1p(FastMath.exp(alpha * (xu + LN_E_MINUS_1 / alpha))) : 1.0 + alpha * xu;
 
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {

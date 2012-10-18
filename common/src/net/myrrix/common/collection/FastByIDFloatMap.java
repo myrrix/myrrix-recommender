@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.AbstractLongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.common.RandomUtils;
@@ -295,7 +296,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
     float[] otherValues = otherMap.values;
     int length = keys.length;
     int otherLength = otherKeys.length;
-    int max = Math.min(length, otherLength);
+    int max = FastMath.min(length, otherLength);
 
     int i = 0;
     while (i < max) {

@@ -24,9 +24,9 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.candidate.CandidateFilter;
 import net.myrrix.online.candidate.LocationSensitiveHash;
-import net.myrrix.online.factorizer.MatrixUtils;
 
 /**
  * Encapsulates one generation of the underlying recommender's model. The data in this object is quite

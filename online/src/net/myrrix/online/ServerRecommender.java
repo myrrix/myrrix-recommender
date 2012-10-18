@@ -41,6 +41,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -62,11 +63,11 @@ import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
-import net.myrrix.common.SimpleVectorMath;
 import net.myrrix.common.TopN;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.candidate.CandidateFilter;
-import net.myrrix.online.factorizer.MatrixUtils;
+import net.myrrix.common.math.MatrixUtils;
+import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.online.generation.Generation;
 import net.myrrix.online.generation.GenerationManager;
 
@@ -331,7 +332,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         candidateFilter.getCandidateIterator(userFeatures);
 
     int numIterators = candidateIterators.size();
-    int parallelism = Math.min(numCores, numIterators);
+    int parallelism = FastMath.min(numCores, numIterators);
 
     final Queue<MutableRecommendedItem> topN = TopN.initialQueue(howMany);
 
@@ -588,12 +589,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     if (userFeatures != null && itemFeatures != null) {
 
       // This is analogous to the weight function in the ALS algorithm.
-      double cu = 1 + FOLDIN_LEARN_RATE * Math.abs(value);
+      double cu = 1 + FOLDIN_LEARN_RATE * FastMath.abs(value);
       // Distance from 1 reduced proportionally with cu
       double foldInWeight = 1.0 - 1.0 / cu;
       // Negative values treated as literally the opposite of positive values in short-term fold in
       // This is not the same as the case of negative overall values in input to ALS.
-      double signedFoldInWeight = Math.signum(value) * foldInWeight;
+      double signedFoldInWeight = FastMath.signum(value) * foldInWeight;
 
       // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
       // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
@@ -610,7 +611,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
 
       if (itemFoldIn != null) {
-        if (SimpleVectorMath.norm(itemFoldIn) > Math.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
+        if (SimpleVectorMath.norm(itemFoldIn) > FastMath.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
           log.warn("Item fold in vector is large; bug?");
         }
         for (int i = 0; i < itemFeatures.length; i++) {
@@ -620,7 +621,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         }
       }
       if (userFoldIn != null) {
-        if (SimpleVectorMath.norm(userFoldIn) > Math.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
+        if (SimpleVectorMath.norm(userFoldIn) > FastMath.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
           log.warn("User fold in vector is large; bug?");
         }
         for (int i = 0; i < userFeatures.length; i++) {

@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.math;
+
+import org.apache.commons.math3.util.FastMath;
 
 public final class SimpleVectorMath {
 
@@ -37,7 +39,7 @@ public final class SimpleVectorMath {
     for (float f : x) {
       total += f * f;
     }
-    return Math.sqrt(total);
+    return FastMath.sqrt(total);
   }
 
   public static double norm(double[] x) {
@@ -45,7 +47,7 @@ public final class SimpleVectorMath {
     for (double d : x) {
       total += d * d;
     }
-    return Math.sqrt(total);
+    return FastMath.sqrt(total);
   }
 
   /**
@@ -67,7 +69,7 @@ public final class SimpleVectorMath {
       sumY2 += yValue * yValue;
       sumXY += xValue * yValue;
     }
-    return (n * sumXY - sumX * sumY) / Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    return (n * sumXY - sumX * sumY) / FastMath.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
   }
 
   public static double cosineMeasure(float[] x, float[] y) {
