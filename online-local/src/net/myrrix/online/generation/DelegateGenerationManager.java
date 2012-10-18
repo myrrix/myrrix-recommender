@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -44,6 +45,7 @@ import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +68,8 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final Logger log = LoggerFactory.getLogger(DelegateGenerationManager.class);
 
+  private static final Splitter COMMA = Splitter.on(',');
+
   private static final int WRITES_BETWEEN_REBUILD;
   static {
     WRITES_BETWEEN_REBUILD =
@@ -78,7 +82,8 @@ public final class DelegateGenerationManager implements GenerationManager {
    * Values are generally assumed to be > 1, actually,
    * and usually not negative, though they need not be.
    */
-  private static final float DEFAULT_ZERO_THRESHOLD = 0.0001f;
+  private static final float ZERO_THRESHOLD =
+      Float.parseFloat(System.getProperty("model.decay.zeroThreshold", "0.0001"));
 
   private final String bucket;
   private final long instanceID;
@@ -87,6 +92,8 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final File appendFile;
   private Writer appender;
   private Generation currentGeneration;
+  private final FastIDSet recentlyActiveUsers;
+  private final FastIDSet recentlyActiveItems;
   private int countdownToRebuild;
   private final ExecutorService refreshExecutor;
   private final Semaphore refreshSemaphore;
@@ -124,6 +131,9 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     modelFile = new File(inputDir, "model.bin");
     appendFile = new File(inputDir, "append.bin");
+
+    recentlyActiveUsers = new FastIDSet();
+    recentlyActiveItems = new FastIDSet();
 
     countdownToRebuild = WRITES_BETWEEN_REBUILD;
     refreshExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory(true, "LocalGenerationManager"));
@@ -166,6 +176,8 @@ public final class DelegateGenerationManager implements GenerationManager {
     line.append(userID).append(',').append(itemID).append(",\n");
     synchronized (this) {
       appender.append(line);
+      recentlyActiveUsers.add(userID);
+      recentlyActiveItems.add(itemID);
     }
   }
 
@@ -214,7 +226,7 @@ public final class DelegateGenerationManager implements GenerationManager {
                 newGeneration = readModel(modelFile);
               }
               if (newGeneration == null) {
-                newGeneration = computeModel(inputDir);
+                newGeneration = computeModel(inputDir, currentGeneration);
                 saveModel(newGeneration, modelFile);
               }
               log.info("New generation has {} users, {} items",
@@ -295,7 +307,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     Files.move(newModelFile, modelFile);
   }
 
-  private Generation computeModel(File inputDir) throws IOException {
+  private Generation computeModel(File inputDir, Generation currentGeneration) throws IOException {
 
     log.info("Computing model from input in {}", inputDir);
 
@@ -305,18 +317,100 @@ public final class DelegateGenerationManager implements GenerationManager {
     } else {
       knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
     }
-    Splitter comma = Splitter.on(',');
     FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
 
     File[] inputFiles = inputDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
     Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
 
+    readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputFiles);
+
+    removeSmall(RbyRow);
+    removeSmall(RbyColumn);
+
+    if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
+      // No data yet
+      return new Generation(null,
+                            new FastByIDMap<float[]>(),
+                            new FastByIDMap<float[]>());
+    }
+
+    MatrixFactorizer als = runFactorization(currentGeneration, RbyRow, RbyColumn);
+    FastByIDMap<float[]> X = als.getX();
+    FastByIDMap<float[]> Y = als.getY();
+
+    if (currentGeneration != null) {
+      FastIDSet recentlyActiveUsers;
+      synchronized (this) {
+        recentlyActiveUsers = this.recentlyActiveUsers.clone();
+        this.recentlyActiveUsers.clear();
+      }
+      restoreRecentlyActive(recentlyActiveUsers,
+                            currentGeneration.getX(),
+                            currentGeneration.getXLock().readLock(),
+                            X);
+
+      FastIDSet recentlyActiveItems;
+      synchronized (this) {
+        recentlyActiveItems = this.recentlyActiveItems.clone();
+        this.recentlyActiveItems.clear();
+      }
+      restoreRecentlyActive(recentlyActiveItems,
+                            currentGeneration.getY(),
+                            currentGeneration.getYLock().readLock(),
+                            Y);
+
+      restoreRecentlyActive(recentlyActiveUsers,
+                            currentGeneration.getKnownItemIDs(),
+                            currentGeneration.getKnownItemLock().readLock(),
+                            knownItemIDs);
+    }
+
+    return new Generation(knownItemIDs, X, Y);
+  }
+
+  private static MatrixFactorizer runFactorization(Generation currentGeneration,
+                                                   FastByIDMap<FastByIDFloatMap> rbyRow,
+                                                   FastByIDMap<FastByIDFloatMap> rbyColumn) throws IOException {
+    log.info("Building factorization...");
+
+    String featuresString = System.getProperty("model.features");
+    int features = featuresString == null ?
+        MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+    String iterationsString = System.getProperty("model.iterations");
+    int iterations = iterationsString == null ?
+        MatrixFactorizer.DEFAULT_ITERATIONS : Integer.parseInt(iterationsString);
+
+    MatrixFactorizer als = new AlternatingLeastSquares(rbyRow, rbyColumn, features, iterations);
+
+    if (currentGeneration != null) {
+      FastByIDMap<float[]> previousY = currentGeneration.getY();
+      if (previousY != null) {
+        als.setPreviousY(previousY);
+      }
+    }
+
+    try {
+      als.call();
+    } catch (ExecutionException ee) {
+      throw new IOException(ee.getCause());
+    } catch (InterruptedException ie) {
+      throw new IOException(ie);
+    }
+
+    log.info("Factorization complete");
+    return als;
+  }
+
+  private static void readInputFiles(FastByIDMap<FastIDSet> knownItemIDs,
+                                     FastByIDMap<FastByIDFloatMap> rbyRow,
+                                     FastByIDMap<FastByIDFloatMap> rbyColumn,
+                                     File[] inputFiles) throws IOException {
     int lines = 0;
     for (File inputFile : inputFiles) {
       log.info("Reading {}", inputFile);
       for (CharSequence line : new FileLineIterable(inputFile)) {
-        Iterator<String> it = comma.split(line).iterator();
+        Iterator<String> it = COMMA.split(line).iterator();
         long userID = Long.parseLong(it.next());
         long itemID = Long.parseLong(it.next());
         float value;
@@ -329,9 +423,9 @@ public final class DelegateGenerationManager implements GenerationManager {
 
         if (Float.isNaN(value)) {
           // Remove, not set
-          MatrixUtils.remove(userID, itemID, RbyRow, RbyColumn);
+          MatrixUtils.remove(userID, itemID, rbyRow, rbyColumn);
         } else {
-          MatrixUtils.addTo(userID, itemID, value, RbyRow, RbyColumn);
+          MatrixUtils.addTo(userID, itemID, value, rbyRow, rbyColumn);
         }
 
         if (knownItemIDs != null) {
@@ -358,58 +452,37 @@ public final class DelegateGenerationManager implements GenerationManager {
         }
       }
     }
-
-    removeSmall(RbyRow);
-    removeSmall(RbyColumn);
-
-    if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
-      // No data yet
-      return new Generation(null,
-                            new FastByIDMap<float[]>(),
-                            new FastByIDMap<float[]>());
-    }
-
-    log.info("Building factorization...");
-
-    String featuresString = System.getProperty("model.features");
-    int features = featuresString == null ?
-        MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
-    String iterationsString = System.getProperty("model.iterations");
-    int iterations = iterationsString == null ?
-        MatrixFactorizer.DEFAULT_ITERATIONS : Integer.parseInt(iterationsString);
-
-    MatrixFactorizer als = new AlternatingLeastSquares(RbyRow, RbyColumn, features, iterations);
-
-    Generation currentGeneration = getCurrentGeneration();
-    if (currentGeneration != null) {
-      FastByIDMap<float[]> previousY = currentGeneration.getY();
-      if (previousY != null) {
-        als.setPreviousY(previousY);
-      }
-    }
-
-    try {
-      als.call();
-    } catch (ExecutionException ee) {
-      throw new IOException(ee.getCause());
-    } catch (InterruptedException ie) {
-      throw new IOException(ie);
-    }
-
-    log.info("Factorization complete");
-
-    return new Generation(knownItemIDs, als.getX(), als.getY());
   }
 
   private static void removeSmall(FastByIDMap<FastByIDFloatMap> matrix) {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : matrix.entrySet()) {
       for (Iterator<FastByIDFloatMap.MapEntry> it = entry.getValue().entrySet().iterator(); it.hasNext();) {
         FastByIDFloatMap.MapEntry entry2 = it.next();
-        if (Math.abs(entry2.getValue()) < DEFAULT_ZERO_THRESHOLD) {
+        if (Math.abs(entry2.getValue()) < ZERO_THRESHOLD) {
           it.remove();
         }
       }
     }
   }
+
+  private static <V> void restoreRecentlyActive(FastIDSet recentlyActive,
+                                                FastByIDMap<V> currentMatrix,
+                                                Lock currentLock,
+                                                FastByIDMap<V> newMatrix) {
+    LongPrimitiveIterator it = recentlyActive.iterator();
+    while (it.hasNext()) {
+      long id = it.nextLong();
+      if (!newMatrix.containsKey(id)) {
+        currentLock.lock();
+        try {
+          newMatrix.put(id, currentMatrix.get(id));
+        } finally {
+          currentLock.unlock();
+        }
+      }
+    }
+  }
+
+
 
 }
