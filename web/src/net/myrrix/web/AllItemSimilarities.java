@@ -85,7 +85,7 @@ public final class AllItemSimilarities implements Callable<Object> {
     final int howMany = config.getHowMany();
     final PrintStream out = System.out;
 
-    LongPrimitiveIterator it = recommender.getAllUserIDs().iterator();
+    LongPrimitiveIterator it = recommender.getAllItemIDs().iterator();
     while (it.hasNext()) {
       final long itemID = it.nextLong();
       futures.add(executorService.submit(new Callable<Void>() {
