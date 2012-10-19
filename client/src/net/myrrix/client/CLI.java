@@ -464,7 +464,7 @@ public final class CLI {
 
     boolean hasHost = commandLine.hasOption(HOST_FLAG);
     boolean hasAllPartitions = commandLine.hasOption(ALL_PARTITIONS_FLAG);
-    if (hasHost == hasAllPartitions) {
+    if (hasHost && hasAllPartitions) {
       throw new ParseException("Only one of --host and --allPartitions may be set");
     }
 

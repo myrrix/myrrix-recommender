@@ -32,6 +32,7 @@ import net.myrrix.common.PartitionsUtils;
  */
 public final class MyrrixClientConfiguration {
 
+  public static final String DEFAULT_HOST = "localhost";
   public static final int DEFAULT_PORT = 80;
 
   private String host;
@@ -45,6 +46,7 @@ public final class MyrrixClientConfiguration {
   private List<List<Pair<String,Integer>>> partitions;
 
   public MyrrixClientConfiguration() {
+    host = DEFAULT_HOST;
     port = DEFAULT_PORT;
   }
 
