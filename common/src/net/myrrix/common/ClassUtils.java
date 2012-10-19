@@ -18,6 +18,8 @@ package net.myrrix.common;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 /**
  * {@link Class}-related utility methods.
@@ -59,8 +61,26 @@ public final class ClassUtils {
                                      Class<T> superClass,
                                      Class<?>[] constructorTypes,
                                      Object[] constructorArgs) {
+    return doLoadInstanceOf(implClassName,
+                            superClass,
+                            constructorTypes,
+                            constructorArgs,
+                            ClassUtils.class.getClassLoader());
+  }
+
+  public static <T> T loadFromRemote(String implClassName, Class<T> superClass, URL url) {
+    URLClassLoader urlClassloader = new URLClassLoader(new URL[] {url}, ClassUtils.class.getClassLoader());
+    return doLoadInstanceOf(implClassName, superClass, NO_TYPES, NO_ARGS, urlClassloader);
+    // In Java 7, should call close() on URLClassLoader
+  }
+
+  private static <T> T doLoadInstanceOf(String implClassName,
+                                      Class<T> superClass,
+                                      Class<?>[] constructorTypes,
+                                      Object[] constructorArgs,
+                                      ClassLoader classLoader) {
     try {
-      Class<? extends T> configClass = Class.forName(implClassName).asSubclass(superClass);
+      Class<? extends T> configClass = Class.forName(implClassName, true, classLoader).asSubclass(superClass);
       Constructor<? extends T> constructor = configClass.getConstructor(constructorTypes);
       return constructor.newInstance(constructorArgs);
     } catch (ClassNotFoundException cnfe) {
