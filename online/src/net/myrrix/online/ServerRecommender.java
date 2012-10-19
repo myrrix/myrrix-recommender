@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.LazyReference;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.io.IOUtils;
@@ -94,7 +95,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private final GenerationManager generationManager;
   private final int numCores;
-  private ExecutorService executor;
+  private LazyReference<ExecutorService> executor;
 
   /**
    * Calls {@link #ServerRecommender(String, long, File, int, int)} for simple local mode, with no bucket,
@@ -129,8 +130,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                                   GenerationManager.class,
                                   new Class<?>[] { String.class, long.class, File.class, int.class, int.class },
                                   new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
+
     numCores = Runtime.getRuntime().availableProcessors();
-    executor = null; // Lazy init
+    executor = new LazyReference<ExecutorService>(new Callable<ExecutorService>() {
+      @Override
+      public ExecutorService call() {
+        return Executors.newFixedThreadPool(2 * numCores, new NamedThreadFactory(false, "ServerRecommender"));
+      }
+    });
   }
 
   public String getBucket() {
@@ -200,10 +207,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public void close() throws IOException {
     generationManager.close();
-    synchronized (this) {
-      if (executor != null) {
-        executor.shutdownNow();
-      }
+    ExecutorService executorService = executor.maybeGet();
+    if (executorService != null) {
+      executorService.shutdownNow();
     }
   }
 
@@ -338,18 +344,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (parallelism > 1) {
 
-      synchronized (this) {
-        if (executor == null) {
-          executor = Executors.newFixedThreadPool(2 * numCores, new NamedThreadFactory(false, "ServerRecommender"));
-        }
-      }
+      ExecutorService executorService = executor.get();
 
       final Iterator<Iterator<FastByIDMap.MapEntry<float[]>>> candidateIteratorsIterator =
           candidateIterators.iterator();
 
       List<Future<?>> futures = Lists.newArrayList();
       for (int i = 0; i < numCores; i++) {
-        futures.add(executor.submit(new Callable<Void>() {
+        futures.add(executorService.submit(new Callable<Void>() {
           @Override
           public Void call() {
             float[] queueLeastValue = { Float.NEGATIVE_INFINITY };
