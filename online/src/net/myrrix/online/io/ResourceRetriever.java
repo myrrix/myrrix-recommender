@@ -28,6 +28,20 @@ import java.io.IOException;
  */
 public interface ResourceRetriever {
 
+  /**
+   * @param bucket due to initialization order and where the class is used, it is necessary to tell
+   *  implementations the bucket name being used directly
+   */
+  void init(String bucket);
+
+  /**
+   * @return a local file containing a copy of the remote {@code rescorer.jar}
+   */
   File getRescorerJar() throws IOException;
+
+  /**
+   * @return a local file containing a copy of the remote {@code keystore.ks}
+   */
+  File getKeystoreFile() throws IOException;
 
 }

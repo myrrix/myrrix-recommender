@@ -119,13 +119,9 @@ public final class InitListener implements ServletContextListener {
     String bucket = getAttributeOrParam(context, BUCKET_KEY);
     long instanceID = Long.parseLong(getAttributeOrParam(context, INSTANCE_ID_KEY));
 
-    MyrrixRecommender recommender =
-        new ServerRecommender(bucket, instanceID, localInputDir, partition, numPartitions);
-    context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
-
     RescorerProvider rescorerProvider;
     try {
-      rescorerProvider = loadRescorerProvider(context);
+      rescorerProvider = loadRescorerProvider(context, bucket);
     } catch (IOException ioe) {
       throw new IllegalStateException(ioe);
     } catch (ClassNotFoundException cnfe) {
@@ -134,6 +130,10 @@ public final class InitListener implements ServletContextListener {
     if (rescorerProvider != null) {
       context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
     }
+
+    MyrrixRecommender recommender =
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, numPartitions);
+    context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
 
     log.info("Myrrix is initialized");
   }
@@ -147,7 +147,7 @@ public final class InitListener implements ServletContextListener {
     return valueString;
   }
 
-  private static RescorerProvider loadRescorerProvider(ServletContext context)
+  private static RescorerProvider loadRescorerProvider(ServletContext context, String bucket)
       throws IOException, ClassNotFoundException {
     String rescorerProviderClassName = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
     if (rescorerProviderClassName == null) {
@@ -161,6 +161,7 @@ public final class InitListener implements ServletContextListener {
 
     ResourceRetriever resourceRetriever =
         ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
+    resourceRetriever.init(bucket);
     File tempResourceFile = resourceRetriever.getRescorerJar();
     if (tempResourceFile == null) {
       throw new ClassNotFoundException(rescorerProviderClassName);

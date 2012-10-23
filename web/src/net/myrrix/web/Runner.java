@@ -18,6 +18,7 @@ package net.myrrix.web;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import javax.servlet.Servlet;
@@ -55,7 +56,9 @@ import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ClassUtils;
 import net.myrrix.common.log.MemoryHandler;
+import net.myrrix.online.io.ResourceRetriever;
 import net.myrrix.web.servlets.AllItemIDsServlet;
 import net.myrrix.web.servlets.AllUserIDsServlet;
 import net.myrrix.web.servlets.BecauseServlet;
@@ -76,7 +79,7 @@ import net.myrrix.web.servlets.SimilarityServlet;
  * both in stand-alone local mode, and in a distributed mode cooperating with a Computation Layer.</p>
  *
  * <p>This program instantiates a Tomcat-based HTTP server exposing a REST-style API. It is available via
- * HTTP, or HTTPS as well if {@link RunnerConfiguration#getKeystoreFile()} is set. It can also be password
+ * HTTP, or HTTPS as well if {@link RunnerConfiguration#getKeystoreFilePath()} is set. It can also be password
  * protected by setting {@link RunnerConfiguration#getUserName()} and
  * {@link RunnerConfiguration#getPassword()}.</p>
  *
@@ -95,16 +98,19 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *   as the root user to access port 80.</li>
  *   <li>{@code --securePort}: Port on which to listen for HTTPS requests. Defaults to 443. Likewise note that
  *   using port 443 requires running as root.</li>
- *   <li>{@code --keystoreFile}: File containing the SSL key to use for HTTPS. Note that setting this flag
- *   enables HTTPS connections, and so requires that options keystorePassword be set.</li>
- *   <li>{@code --keystorePassword}: Password for keystoreFile.</li>
+ *   <li>{@code --keystoreFile}: File containing the SSL key to use for HTTPS. Setting this flag
+ *   enables HTTPS connections, and so requires that option {@code --keystorePassword} be set. In distributed
+ *   mode, if not set, will attempt to load a keystore file from the distributed file system,
+ *   at {@code sys/keystore.ks}</li>
+ *   <li>{@code --keystorePassword}: Password for keystoreFile. Setting this flag enables HTTPS connections.</li>
  *   <li>{@code --userName}: If specified, the user name required to authenticate to the server using
  *   HTTP DIGEST authentication. Requires password to be set.</li>
  *   <li>{@code --password}: Password for HTTP DIGEST authentication. Requires userName to be set.</li>
  *   <li>{@code --consoleOnlyPassword}: Only apply username and password to admin / console pages.</li>
  *   <li>{@code --rescorerProviderClass}: Optional. Name of an implementation of
  *     {@code RescorerProvider} to use to rescore recommendations and similarities, if any. The class
- *     must be added to the server classpath.</li>
+ *     must be added to the server classpath. Or, in distributed mode, if not found in the classpath, it
+ *     will be loaded from a JAR file found on the distributed file system at {@code sys/rescorer.jar}.</li>
  *   <li>{@code --allPartitions}: Optional, but must be set with {@code --partition}.
  *     Describes all partitions, when partitioning across Serving Layers
  *     by user. Each partition may have multiple replicas. Serving Layers are specified as "host:port".
@@ -256,7 +262,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     config.setConsoleOnlyPassword(commandLine.hasOption(CONSOLE_ONLY_PASSWORD_FLAG));
 
     if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
-      config.setKeystoreFile(new File(commandLine.getOptionValue(KEYSTORE_FILE_FLAG)));
+      config.setKeystoreFile(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
     }
     if (commandLine.hasOption(KEYSTORE_PASSWORD_FLAG)) {
       config.setKeystorePassword(commandLine.getOptionValue(KEYSTORE_PASSWORD_FLAG));
@@ -402,15 +408,30 @@ public final class Runner implements Callable<Boolean>, Closeable {
     host.setAutoDeploy(false);
   }
 
-  private Connector makeConnector() {
+  private Connector makeConnector() throws IOException {
     Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-    if (config.getKeystoreFile() == null) {
+    String keystoreFilePath = config.getKeystoreFilePath();
+    String keystorePassword = config.getKeystorePassword();
+    if (keystoreFilePath == null && keystorePassword == null) {
       // HTTP connector
       connector.setPort(config.getPort());
       connector.setSecure(false);
       connector.setScheme("http");
 
     } else {
+
+      File keystoreFile = keystoreFilePath == null ? null : new File(keystoreFilePath);
+      if (keystoreFile == null || !keystoreFile.exists()) {
+        log.info("Keystore file not found; trying to load remote keystore file if applicable");
+        ResourceRetriever resourceRetriever =
+            ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
+        resourceRetriever.init(config.getBucket());
+        keystoreFile = resourceRetriever.getKeystoreFile();
+        if (keystoreFile == null) {
+          throw new FileNotFoundException(keystoreFilePath);
+        }
+      }
+
       // HTTPS connector
       connector.setPort(config.getSecurePort());
       connector.setSecure(true);
@@ -418,9 +439,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
       connector.setAttribute("SSLEnabled", "true");
       connector.setAttribute("sslProtocol", "TLS");
       connector.setAttribute("clientAuth", "false");
-      connector.setAttribute("keystoreFile", config.getKeystoreFile());
-      connector.setAttribute("keystorePass", config.getKeystorePassword());
-
+      connector.setAttribute("keystoreFile", keystoreFile);
+      connector.setAttribute("keystorePass", keystorePassword);
     }
 
     // Keep quiet about the server type
@@ -460,7 +480,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());
     servletContext.setAttribute(InitListener.PARTITION_KEY, config.getPartition());
 
-    boolean needHTTPS = config.getKeystoreFile() != null;
+    boolean needHTTPS = config.getKeystoreFilePath() != null;
     boolean needAuthentication = config.getUserName() != null;
 
     if (needHTTPS || needAuthentication) {

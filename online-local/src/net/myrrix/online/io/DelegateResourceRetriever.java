@@ -17,7 +17,6 @@
 package net.myrrix.online.io;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * An implementation that does nothing; not necessary/used in this version.
@@ -26,11 +25,25 @@ import java.io.IOException;
  */
 public final class DelegateResourceRetriever implements ResourceRetriever {
 
+  @Override
+  public void init(String bucket) {
+    // Do nothing
+  }
+
   /**
    * @return null
    */
   @Override
-  public File getRescorerJar() throws IOException {
+  public File getRescorerJar() {
+    // Not available / necessary in this version
+    return null;
+  }
+
+  /**
+   * @return null
+   */
+  @Override
+  public File getKeystoreFile() {
     // Not available / necessary in this version
     return null;
   }

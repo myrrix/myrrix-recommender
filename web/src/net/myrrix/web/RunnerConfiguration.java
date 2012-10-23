@@ -37,7 +37,7 @@ public final class RunnerConfiguration {
   private long instanceID;
   private int port;
   private int securePort;
-  private File keystoreFile;
+  private String keystoreFilePath;
   private String keystorePassword;
   private File localInputDir;
   private String userName;
@@ -105,16 +105,16 @@ public final class RunnerConfiguration {
    * @return keystore file that contains the SSL keys used for HTTPS connections, if any; if not set
    *  the instance will not listen for HTTPS connections
    */
-  public File getKeystoreFile() {
-    return keystoreFile;
+  public String getKeystoreFilePath() {
+    return keystoreFilePath;
   }
 
-  public void setKeystoreFile(File keystoreFile) {
-    this.keystoreFile = keystoreFile;
+  public void setKeystoreFile(String keystoreFilePath) {
+    this.keystoreFilePath = keystoreFilePath;
   }
 
   /**
-   * @return password for {@link #getKeystoreFile()}, if applicable
+   * @return password for {@link #getKeystoreFilePath()}, if applicable
    */
   public String getKeystorePassword() {
     return keystorePassword;
