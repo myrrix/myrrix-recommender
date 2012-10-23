@@ -22,6 +22,8 @@ hr {margin:20px 0 10px 0}
   <li>New users and items should no longer be able to become temporarily unavailable when a new model loads</li>
   <li>Corrected output format from --recommend and --itemSimilarity in Computation Layer</li>
   <li><code>AllItemSiimlarities</code> now correctly uses item IDs from model</li>
+  <li>It is now possible to specify an SSL keystore file and JAR file containing a RescorerProvider to the
+    Serving Layer, when run on Amazon AWS.</li>
 </ul>
 
 <h2>Other</h2>
@@ -31,7 +33,7 @@ hr {margin:20px 0 10px 0}
     <code>model.local.writesBetweenRebuild</code></li>
   <li><code>estimate</code> method now returns 0 for unknown users and items rather than an exception.</li>
   <li>Updated to Tomcat 7.0.32</li>
-  <li>Updated Computaion Layer supported version to include Hadoop 1.1.x</li>
+  <li>Updated Computation Layer supported version to include Hadoop 1.1.x</li>
 </ul>
 
 <h1>Version 0.7</h1>

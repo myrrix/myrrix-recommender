@@ -34,7 +34,6 @@ import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.Server;
-import org.apache.catalina.Wrapper;
 import org.apache.catalina.authenticator.DigestAuthenticator;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.JasperListener;

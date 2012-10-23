@@ -18,6 +18,7 @@ package net.myrrix.web;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.logging.Handler;
 import javax.servlet.ServletContext;
@@ -38,6 +39,7 @@ import net.myrrix.common.PartitionsUtils;
 import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
+import net.myrrix.online.io.ResourceRetriever;
 import net.myrrix.web.servlets.AbstractMyrrixServlet;
 
 /**
@@ -94,14 +96,6 @@ public final class InitListener implements ServletContextListener {
     }
     context.setAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY, localInputDir.getAbsolutePath());
 
-    String recommenderProviderClassName = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
-    if (recommenderProviderClassName != null) {
-      log.info("Using RescorerProvider {}", recommenderProviderClassName);
-      RescorerProvider rescorerProvider =
-          ClassUtils.loadInstanceOf(recommenderProviderClassName, RescorerProvider.class);
-      context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
-    }
-
     int numPartitions = 1;
     String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
     if (allPartitionsSpecString != null) {
@@ -129,6 +123,18 @@ public final class InitListener implements ServletContextListener {
         new ServerRecommender(bucket, instanceID, localInputDir, partition, numPartitions);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
 
+    RescorerProvider rescorerProvider;
+    try {
+      rescorerProvider = loadRescorerProvider(context);
+    } catch (IOException ioe) {
+      throw new IllegalStateException(ioe);
+    } catch (ClassNotFoundException cnfe) {
+      throw new IllegalStateException(cnfe);
+    }
+    if (rescorerProvider != null) {
+      context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
+    }
+
     log.info("Myrrix is initialized");
   }
 
@@ -139,6 +145,33 @@ public final class InitListener implements ServletContextListener {
       valueString = context.getInitParameter(key);
     }
     return valueString;
+  }
+
+  private static RescorerProvider loadRescorerProvider(ServletContext context)
+      throws IOException, ClassNotFoundException {
+    String rescorerProviderClassName = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
+    if (rescorerProviderClassName == null) {
+      return null;
+    }
+
+    log.info("Using RescorerProvider class {}", rescorerProviderClassName);
+    if (ClassUtils.classExists(rescorerProviderClassName)) {
+      return ClassUtils.loadInstanceOf(rescorerProviderClassName, RescorerProvider.class);
+    }
+
+    ResourceRetriever resourceRetriever =
+        ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
+    File tempResourceFile = resourceRetriever.getRescorerJar();
+    if (tempResourceFile == null) {
+      throw new ClassNotFoundException(rescorerProviderClassName);
+    }
+
+    log.info("Loading {} from remote rescorer JAR, from local copy {}", rescorerProviderClassName, tempResourceFile);
+    RescorerProvider rescorerProvider = ClassUtils.loadFromRemote(rescorerProviderClassName,
+                                                                  RescorerProvider.class,
+                                                                  tempResourceFile.toURI().toURL());
+    tempResourceFile.delete();
+    return rescorerProvider;
   }
 
   @Override

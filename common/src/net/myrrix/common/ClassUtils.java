@@ -75,10 +75,10 @@ public final class ClassUtils {
   }
 
   private static <T> T doLoadInstanceOf(String implClassName,
-                                      Class<T> superClass,
-                                      Class<?>[] constructorTypes,
-                                      Object[] constructorArgs,
-                                      ClassLoader classLoader) {
+                                        Class<T> superClass,
+                                        Class<?>[] constructorTypes,
+                                        Object[] constructorArgs,
+                                        ClassLoader classLoader) {
     try {
       Class<? extends T> configClass = Class.forName(implClassName, true, classLoader).asSubclass(superClass);
       Constructor<? extends T> constructor = configClass.getConstructor(constructorTypes);
@@ -95,4 +95,14 @@ public final class ClassUtils {
       throw new IllegalStateException("No valid " + superClass + " binding exists", iae);
     }
   }
+
+  public static boolean classExists(String implClassName) {
+    try {
+      Class.forName(implClassName);
+      return true;
+    } catch (ClassNotFoundException cnfe) {
+      return false;
+    }
+  }
+
 }
