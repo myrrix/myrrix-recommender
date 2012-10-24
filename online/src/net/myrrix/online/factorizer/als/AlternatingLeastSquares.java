@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.FastMath;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.stats.JVMEnvironment;
 import net.myrrix.common.LangUtils;
-import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.MatrixUtils;
@@ -158,7 +158,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     int numThreads =
         threadsString == null ? Runtime.getRuntime().availableProcessors() : Integer.parseInt(threadsString);
     ExecutorService executor =
-        Executors.newFixedThreadPool(numThreads, new NamedThreadFactory(false, "AlternatingLeastSquares"));
+        Executors.newFixedThreadPool(numThreads,
+                                     new ThreadFactoryBuilder().setNameFormat("AlternatingLeastSquares-%d").build());
 
     log.info("Starting {} iterations with {} threads", iterationsToRun, numThreads);
 

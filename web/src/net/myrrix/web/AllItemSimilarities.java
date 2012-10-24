@@ -26,12 +26,12 @@ import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
-import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
@@ -78,7 +78,7 @@ public final class AllItemSimilarities implements Callable<Object> {
 
     ExecutorService executorService =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new NamedThreadFactory(false, "AllItemSimilarities"));
+                                     new ThreadFactoryBuilder().setNameFormat("AllItemSimilarities-%d").build());
     List<Future<?>> futures = Lists.newArrayList();
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();

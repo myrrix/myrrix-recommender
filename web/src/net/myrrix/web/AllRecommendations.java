@@ -26,11 +26,11 @@ import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
-import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
@@ -77,7 +77,7 @@ public final class AllRecommendations implements Callable<Object> {
 
     ExecutorService executorService =
         Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new NamedThreadFactory(false, "AllRecommendations"));
+                                     new ThreadFactoryBuilder().setNameFormat("AllRecommendations-%d").build());
     List<Future<?>> futures = Lists.newArrayList();
 
     final RescorerProvider rescorerProvider = config.getRescorerProvider();

@@ -43,6 +43,7 @@ import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.SingularMatrixException;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -53,7 +54,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
-import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.MatrixUtils;
@@ -138,7 +138,8 @@ public final class DelegateGenerationManager implements GenerationManager {
     recentlyActiveItems = new FastIDSet();
 
     countdownToRebuild = WRITES_BETWEEN_REBUILD;
-    refreshExecutor = Executors.newSingleThreadExecutor(new NamedThreadFactory(true, "LocalGenerationManager"));
+    refreshExecutor = Executors.newSingleThreadExecutor(
+        new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LocalGenerationManager-%d").build());
     refreshSemaphore = new Semaphore(1);
     refresh(null);
   }

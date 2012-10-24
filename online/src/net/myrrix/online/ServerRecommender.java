@@ -40,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -59,7 +60,6 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.ClassUtils;
 import net.myrrix.common.LazyReference;
 import net.myrrix.common.MutableRecommendedItem;
-import net.myrrix.common.NamedThreadFactory;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -135,7 +135,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     executor = new LazyReference<ExecutorService>(new Callable<ExecutorService>() {
       @Override
       public ExecutorService call() {
-        return Executors.newFixedThreadPool(2 * numCores, new NamedThreadFactory(false, "ServerRecommender"));
+        return Executors.newFixedThreadPool(2 * numCores,
+                                            new ThreadFactoryBuilder().setNameFormat("ServerRecommender-%d").build());
       }
     });
   }

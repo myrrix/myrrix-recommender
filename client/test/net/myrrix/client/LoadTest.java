@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.PatternFilenameFilter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
@@ -39,8 +40,6 @@ import org.apache.mahout.common.iterator.FileLineIterable;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.myrrix.common.NamedThreadFactory;
 
 public final class LoadTest extends AbstractClientTest {
 
@@ -79,8 +78,9 @@ public final class LoadTest extends AbstractClientTest {
     Random random = RandomUtils.getRandom();
     final ClientRecommender client = getClient();
 
-    ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                                            new NamedThreadFactory(true, "LoadTest"));
+    ExecutorService executor =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+                                     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LoadTest-%d").build());
     Collection<Future<?>> futures = Lists.newArrayList();
 
     final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
