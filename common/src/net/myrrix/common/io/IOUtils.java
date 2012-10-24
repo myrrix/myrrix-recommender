@@ -48,6 +48,9 @@ public final class IOUtils {
    * @return {@code true} if all files and dirs were deleted successfully
    */
   public static boolean deleteRecursively(File dir) {
+    if (dir == null) {
+      return false;
+    }
     Deque<File> stack = new ArrayDeque<File>();
     stack.push(dir);
     boolean result = true;
