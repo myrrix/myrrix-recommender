@@ -68,14 +68,14 @@ SIXTYFOUR_BIT_OPTS="-d64 -XX:+UseCompressedOops"
 ALL_ARGS="--localInputDir=${LOCAL_INPUT_DIR}"
 
 if [ -n "${PORT}" ]; then
-  ALL_ARGS="--port=${PORT}"
+  ALL_ARGS="${ALL_ARGS} --port=${PORT}"
 fi
 if [ -n "${SECURE_PORT}" ]; then
-  ALL_ARGS="--securePort=${SECURE_PORT}"
+  ALL_ARGS="${ALL_ARGS} --securePort=${SECURE_PORT}"
 fi
 
 if [ -n "${KEYSTORE_FILE}" ]; then
-  ALL_ARGS="--keystoreFile=${KEYSTORE_FILE} --keystorePassword=${KEYSTORE_PASSWORD}"
+  ALL_ARGS="${ALL_ARGS} --keystoreFile=${KEYSTORE_FILE} --keystorePassword=${KEYSTORE_PASSWORD}"
 fi
 
 if [ -n "${USERNAME}" ]; then
