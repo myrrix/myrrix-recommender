@@ -62,7 +62,7 @@ public interface GenerationManager extends Closeable, Refreshable {
   /**
    * @return instance ID of the recommender system that this object is managing
    */
-  long getInstanceID();
+  String getInstanceID();
 
   /**
    * @return bucket used by the recommender system

@@ -88,7 +88,7 @@ public final class DelegateGenerationManager implements GenerationManager {
       Float.parseFloat(System.getProperty("model.decay.zeroThreshold", "0.0001"));
 
   private final String bucket;
-  private final long instanceID;
+  private final String instanceID;
   private final File inputDir;
   private final File modelFile;
   private final File appendFile;
@@ -101,7 +101,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final Semaphore refreshSemaphore;
 
   public DelegateGenerationManager(File localInputDir) throws IOException {
-    this(null, 0L, localInputDir, 0, 0);
+    this(null, "test", localInputDir, 0, 0);
   }
 
   /**
@@ -115,7 +115,7 @@ public final class DelegateGenerationManager implements GenerationManager {
    * @param numPartitions not used; required for API compatibility internally
    */
   public DelegateGenerationManager(String bucket,
-                                   long instanceID,
+                                   String instanceID,
                                    File localInputDir,
                                    int partition,
                                    int numPartitions) throws IOException {
@@ -155,7 +155,7 @@ public final class DelegateGenerationManager implements GenerationManager {
    * Not used.
    */
   @Override
-  public long getInstanceID() {
+  public String getInstanceID() {
     return instanceID;
   }
 

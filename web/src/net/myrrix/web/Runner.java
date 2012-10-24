@@ -248,7 +248,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
       throw new MissingOptionException("Must set both --instanceID and --bucket together");
     }
     if (instanceIDSet && bucketSet) {
-      config.setInstanceID(Long.parseLong(commandLine.getOptionValue(INSTANCE_ID_FLAG)));
+      config.setInstanceID(commandLine.getOptionValue(INSTANCE_ID_FLAG));
       config.setBucket(commandLine.getOptionValue(BUCKET_FLAG));
     }
 
@@ -262,7 +262,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     config.setConsoleOnlyPassword(commandLine.hasOption(CONSOLE_ONLY_PASSWORD_FLAG));
 
     if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
-      config.setKeystoreFile(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
+      config.setKeystoreFilePath(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
     }
     if (commandLine.hasOption(KEYSTORE_PASSWORD_FLAG)) {
       config.setKeystorePassword(commandLine.getOptionValue(KEYSTORE_PASSWORD_FLAG));

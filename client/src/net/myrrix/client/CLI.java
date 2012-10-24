@@ -54,7 +54,7 @@ import net.myrrix.common.LangUtils;
  *   <li>{@code --secure}: sets {@link MyrrixClientConfiguration#isSecure()}</li>
  *   <li>{@code --userName}: sets {@link MyrrixClientConfiguration#setUserName(String)}</li>
  *   <li>{@code --password}: sets {@link MyrrixClientConfiguration#setPassword(String)}</li>
- *   <li>{@code --keystoreFile}: sets {@link MyrrixClientConfiguration#setKeystoreFile(java.io.File)}</li>
+ *   <li>{@code --keystoreFile}: sets {@link MyrrixClientConfiguration#setKeystoreFilePath(String)}</li>
  *   <li>{@code --keystorePassword}: sets {@link MyrrixClientConfiguration#setKeystorePassword(String)}</li>
  *   <li>{@code --allPartitions}: sets {@link MyrrixClientConfiguration#setAllPartitionsSpecification(String)}</li>
  * </ul>
@@ -492,7 +492,7 @@ public final class CLI {
     }
 
     if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
-      config.setKeystoreFile(new File(commandLine.getOptionValue(KEYSTORE_FILE_FLAG)));
+      config.setKeystoreFilePath(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
     }
     if (commandLine.hasOption(KEYSTORE_PASSWORD_FLAG)) {
       config.setKeystorePassword(commandLine.getOptionValue(KEYSTORE_PASSWORD_FLAG));

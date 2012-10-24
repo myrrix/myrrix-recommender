@@ -98,11 +98,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private LazyReference<ExecutorService> executor;
 
   /**
-   * Calls {@link #ServerRecommender(String, long, File, int, int)} for simple local mode, with no bucket,
+   * Calls {@link #ServerRecommender(String, String, File, int, int)} for simple local mode, with no bucket,
    * instance ID 0, and no partitions (partition 0 of 1 total).
    */
   public ServerRecommender(File localInputDir) {
-    this(null, 0L, localInputDir, 0, 1);
+    this(null, "test", localInputDir, 0, 1);
   }
 
   /**
@@ -113,11 +113,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @param numPartitions total partitions in partitioned distributed mode. 1 if not partitioned.
    */
   public ServerRecommender(String bucket,
-                           long instanceID,
+                           String instanceID,
                            File localInputDir,
                            int partition,
                            int numPartitions) {
-    Preconditions.checkArgument(instanceID >= 0L, "Bad instance ID %s", instanceID);
+    Preconditions.checkNotNull(instanceID, "Bad instance ID %s", instanceID);
     Preconditions.checkNotNull(localInputDir, "No local dir");
     Preconditions.checkArgument(numPartitions > 0, "Bad num partitions %s", numPartitions);
     Preconditions.checkArgument(partition >= 0 && partition < numPartitions, "Bad partition %s", partition);
@@ -128,7 +128,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     generationManager =
         ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
                                   GenerationManager.class,
-                                  new Class<?>[] { String.class, long.class, File.class, int.class, int.class },
+                                  new Class<?>[] { String.class, String.class, File.class, int.class, int.class },
                                   new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
 
     numCores = Runtime.getRuntime().availableProcessors();
@@ -144,7 +144,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     return generationManager.getBucket();
   }
 
-  public long getInstanceID() {
+  public String getInstanceID() {
     return generationManager.getInstanceID();
   }
 

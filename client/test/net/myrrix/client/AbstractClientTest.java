@@ -81,12 +81,12 @@ public abstract class AbstractClientTest extends MyrrixTest {
     log.info("Configuring recommender...");
 
     RunnerConfiguration runnerConfig = new RunnerConfiguration();
-    runnerConfig.setInstanceID(0L);
+    runnerConfig.setInstanceID("test");
     runnerConfig.setPort(8080);
     if (useSecurity()) {
       runnerConfig.setSecurePort(8443);
       runnerConfig.setKeystorePassword("changeit");
-      runnerConfig.setKeystoreFile(new File("testdata/keystore").getAbsoluteFile());
+      runnerConfig.setKeystoreFilePath(new File("testdata/keystore").getAbsolutePath());
       runnerConfig.setUserName("foo");
       runnerConfig.setPassword("bar");
     }
@@ -95,14 +95,14 @@ public abstract class AbstractClientTest extends MyrrixTest {
     runner = new Runner(runnerConfig);
     runner.call();
 
-    boolean clientSecure = runnerConfig.getKeystoreFile() != null;
+    boolean clientSecure = runnerConfig.getKeystoreFilePath() != null;
     int clientPort = clientSecure ? runnerConfig.getSecurePort() : runnerConfig.getPort();
     MyrrixClientConfiguration clientConfig = new MyrrixClientConfiguration();
     clientConfig.setHost("localhost");
     clientConfig.setPort(clientPort);
     clientConfig.setSecure(clientSecure);
     clientConfig.setKeystorePassword(runnerConfig.getKeystorePassword());
-    clientConfig.setKeystoreFile(runnerConfig.getKeystoreFile());
+    clientConfig.setKeystoreFilePath(runnerConfig.getKeystoreFilePath());
     clientConfig.setUserName(runnerConfig.getUserName());
     clientConfig.setPassword(runnerConfig.getPassword());
     client = new ClientRecommender(clientConfig);

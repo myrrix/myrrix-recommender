@@ -38,7 +38,7 @@ public final class MyrrixClientConfiguration {
   private String host;
   private int port;
   private boolean secure;
-  private File keystoreFile;
+  private String keystoreFilePath;
   private String keystorePassword;
   private String userName;
   private String password;
@@ -101,16 +101,16 @@ public final class MyrrixClientConfiguration {
    * @return the keystore file containing the server's SSL keys. Only necessary when accessing a server with a
    *  temporary self-signed key, which is not by default trusted by the Java SSL implementation
    */
-  public File getKeystoreFile() {
-    return keystoreFile;
+  public String getKeystoreFilePath() {
+    return keystoreFilePath;
   }
 
-  public void setKeystoreFile(File keystoreFile) {
-    this.keystoreFile = keystoreFile;
+  public void setKeystoreFilePath(String keystoreFilePath) {
+    this.keystoreFilePath = keystoreFilePath;
   }
 
   /**
-   * @return password for {@link #getKeystoreFile()}
+   * @return password for {@link #getKeystoreFilePath()}
    */
   public String getKeystorePassword() {
     return keystorePassword;

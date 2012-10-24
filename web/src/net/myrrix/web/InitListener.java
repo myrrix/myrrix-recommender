@@ -117,7 +117,7 @@ public final class InitListener implements ServletContextListener {
     context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
 
     String bucket = getAttributeOrParam(context, BUCKET_KEY);
-    long instanceID = Long.parseLong(getAttributeOrParam(context, INSTANCE_ID_KEY));
+    String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
 
     RescorerProvider rescorerProvider;
     try {

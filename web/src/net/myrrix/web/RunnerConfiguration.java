@@ -30,11 +30,11 @@ public final class RunnerConfiguration {
 
   public static final int DEFAULT_PORT = 80;
   public static final int DEFAULT_SECURE_PORT = 443;
-  public static final int DEFAULT_INSTANCE_ID = 0;
+  public static final String DEFAULT_INSTANCE_ID = "test";
   private static final Pattern SEMICOLON = Pattern.compile(";");
 
   private String bucket;
-  private long instanceID;
+  private String instanceID;
   private int port;
   private int securePort;
   private String keystoreFilePath;
@@ -69,11 +69,11 @@ public final class RunnerConfiguration {
    * @return instance ID that the Serving Layer will use, when interacting with a Computation Layer in
    *  distributed mode. Used with {@link #getBucket()}.
    */
-  public long getInstanceID() {
+  public String getInstanceID() {
     return instanceID;
   }
 
-  public void setInstanceID(long instanceID) {
+  public void setInstanceID(String instanceID) {
     this.instanceID = instanceID;
   }
 
@@ -109,7 +109,7 @@ public final class RunnerConfiguration {
     return keystoreFilePath;
   }
 
-  public void setKeystoreFile(String keystoreFilePath) {
+  public void setKeystoreFilePath(String keystoreFilePath) {
     this.keystoreFilePath = keystoreFilePath;
   }
 
