@@ -16,17 +16,19 @@
 
 package net.myrrix.online.candidate;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
+import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.RandomUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,34 +42,52 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
 
   private static final Logger log = LoggerFactory.getLogger(LocationSensitiveHashTest.class);
 
-  private static final int NUM_FEATURES = 30;
+  private static final int NUM_FEATURES = 50;
   private static final int NUM_ITEMS = 2000000;
-  private static final int NUM_RECS = 20;
+  private static final int NUM_RECS = 10;
+  private static final int ITERATIONS = 20;
+  private static final double LN2 = FastMath.log(2.0);
 
   @Test
   public void testLSH() {
-    System.setProperty("model.lsh.sampleRatio", "0.01");
+    System.setProperty("model.lsh.sampleRatio", "0.1");
+    System.setProperty("model.lsh.numHashes", "20");
     Random r = RandomUtils.getRandom();
-    AtomicInteger intersection = new AtomicInteger();
-    AtomicInteger items = new AtomicInteger();
-    AtomicInteger evaluated = new AtomicInteger();
-    AtomicInteger total = new AtomicInteger();
 
-    int iterations = 10000000 / NUM_ITEMS;
-    for (int iteration = 0; iteration < iterations; iteration++) {
+    RunningAverage avgPercentTopRecsConsidered = new FullRunningAverage();
+    RunningAverage avgNDCG = new FullRunningAverage();
+    RunningAverage avgPercentAllItemsConsidered= new FullRunningAverage();
+
+    for (int iteration = 0; iteration < ITERATIONS; iteration++) {
+
       FastByIDMap<float[]> Y = new FastByIDMap<float[]>();
       for (int i = 0; i < NUM_ITEMS; i++) {
         Y.put(i, randomVector(r));
       }
       float[] userVec = randomVector(r);
-      doTestRandomVecs(Y, userVec, intersection, items, evaluated, total);
-      log.info("Considered {}% of all candidates, got {}% recommendations correct",
-               100 * evaluated.get() / total.get(),
-               100 * intersection.get() / items.get());
+
+      double[] results = doTestRandomVecs(Y, userVec);
+      double percentTopRecsConsidered = results[0];
+      double ndcg = results[1];
+      double percentAllItemsConsidered = results[2];
+
+      log.info("Considered {}% of all candidates, {} nDCG, got {}% recommendations correct",
+               100 * percentAllItemsConsidered,
+               ndcg,
+               100 * percentTopRecsConsidered);
+
+      avgPercentTopRecsConsidered.addDatum(percentTopRecsConsidered);
+      avgNDCG.addDatum(ndcg);
+      avgPercentAllItemsConsidered.addDatum(percentAllItemsConsidered);
     }
 
-    assertTrue(intersection.get() >= 0.99 * items.get());
-    assertTrue(evaluated.get() <= 0.1 * total.get());
+    log.info(avgPercentTopRecsConsidered.toString());
+    log.info(avgNDCG.toString());
+    log.info(avgPercentAllItemsConsidered.toString());
+
+    assertTrue(avgPercentTopRecsConsidered.getAverage() >= 0.7);
+    assertTrue(avgNDCG.getAverage() >= 0.7);
+    assertTrue(avgPercentAllItemsConsidered.getAverage() <= 0.1);
   }
 
   private static float[] randomVector(Random r) {
@@ -78,12 +98,7 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
     return vec;
   }
 
-  private static void doTestRandomVecs(FastByIDMap<float[]> Y,
-                                       float[] userVec,
-                                       AtomicInteger intersectionSum,
-                                       AtomicInteger itemSum,
-                                       AtomicInteger evaluatedSum,
-                                       AtomicInteger totalSum) {
+  private static double[] doTestRandomVecs(FastByIDMap<float[]> Y, float[] userVec) {
 
     CandidateFilter lsh = new LocationSensitiveHash(Y);
 
@@ -95,38 +110,35 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
       }
     }
 
-    Collection<Long> topIDs = findTopRecommendations(Y, userVec);
+    List<Long> topIDs = findTopRecommendations(Y, userVec);
 
+    double score = 0.0;
+    double maxScore = 0.0;
     int intersectionSize = 0;
-    for (long id : topIDs) {
+    for (int i = 0; i < topIDs.size(); i++) {
+      double value = LN2 / FastMath.log(2.0 + i);
+      long id = topIDs.get(i);
       if (candidates.contains(id)) {
         intersectionSize++;
+        score += value;
       }
+      maxScore += value;
     }
 
-    intersectionSum.addAndGet(intersectionSize);
-    itemSum.addAndGet(topIDs.size());
+    double percentTopRecsConsidered = (double) intersectionSize / topIDs.size();
+    double ndcg = maxScore == 0.0 ? 0.0 : score / maxScore;
+    double percentAllItemsConsidered = (double) candidates.size() / Y.size();
 
-    int evaluated = 0;
-    int total = 0;
-    for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
-      if (candidates.contains(entry.getKey())) {
-        evaluated++;
-      }
-      total++;
-    }
-
-    evaluatedSum.addAndGet(evaluated);
-    totalSum.addAndGet(total);
+    return new double[] {percentTopRecsConsidered, ndcg, percentAllItemsConsidered};
   }
 
-  private static Collection<Long> findTopRecommendations(FastByIDMap<float[]> Y, float[] userVec) {
+  private static List<Long> findTopRecommendations(FastByIDMap<float[]> Y, float[] userVec) {
     SortedMap<Double,Long> allScores = Maps.newTreeMap(Collections.reverseOrder());
     for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
       double dot = SimpleVectorMath.dot(entry.getValue(), userVec);
       allScores.put(dot, entry.getKey());
     }
-    Collection<Long> topRecommendations = new ArrayList<Long>();
+    List<Long> topRecommendations = Lists.newArrayList();
     for (Map.Entry<Double,Long> entry : allScores.entrySet()) {
       topRecommendations.add(entry.getValue());
       if (topRecommendations.size() == NUM_RECS) {

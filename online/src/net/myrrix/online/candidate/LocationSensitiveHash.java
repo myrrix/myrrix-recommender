@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Random;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
@@ -40,13 +40,14 @@ import net.myrrix.common.collection.FastByIDMap;
  * the user vector. And, in turn, the largest dot products are found from vectors that point in the same direction
  * from the origin as the user vector -- small angle between them.</p>
  *
- * <p>This uses 64 hash functions, where the hash function is based on a short vector in a random direction in
+ * <p>This uses H hash functions, where the hash function is based on a short vector in a random direction in
  * the space. It suffices to choose a vector whose elements are, randomly, -1 or 1. This is represented as a
  * {@code boolean[]}. The vector defines a hyperplane through the origin, and produces a hash value of 1 or 0
  * depending on whether the given vector is on one side of the hyperplane or the other. This amounts to
  * evaluating whether the dot product of the random vector and given vector is positive or not.</p>
  *
- * <p>These 64 1/0 hash values are combined into a signature of 64 bits, or a {@code long}.</p>
+ * <p>These H 1/0 hash values are combined into a signature of H bits, which are represented as an {@code long}
+ * because for purposes here, H <= 64.</p>
  *
  * <p>"Close" vectors -- those which form small angles together -- point in nearly the same direction and so
  * should generally fall on the same sides of these hyperplanes. That is, they should match in most bits.</p>
@@ -66,19 +67,18 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
   private static final Logger log = LoggerFactory.getLogger(LocationSensitiveHash.class);
 
-  private static final int NUM_HASHES = 64;
-  // Since there are n=64 hashes / bits, and random bits differ with probability p=0.5,
-  // the expected number of differences in two random n-bit vectors is np = n/2.
-  // The variance is np(1-p) = n/4, so stdev is sqrt(n)/2.
-  private static final int EXPECTED_RANDOM_VEC_BITS_DIFFERING = NUM_HASHES / 2;
-  private static final int STDEV_RANDOM_VEC_BITS_DIFFERING = (int) FastMath.sqrt(NUM_HASHES / 4);
   private static final double LSH_SAMPLE_RATIO =
       Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
+  private static final int NUM_HASHES = Integer.parseInt(System.getProperty("model.lsh.numHashes", "20"));
+  static {
+    Preconditions.checkArgument(LSH_SAMPLE_RATIO > 0.0 && LSH_SAMPLE_RATIO <= 1.0);
+    Preconditions.checkArgument(NUM_HASHES >= 1 && NUM_HASHES <= 64);
+  }
 
   private final FastByIDMap<float[]> Y;
   private final boolean[][] randomVectors;
   private final double[] meanVector;
-  private final FastByIDMap<FastIDSet> buckets;
+  private final FastByIDMap<long[]> buckets;
   private final FastIDSet newItems;
   private final int maxBitsDiffering;
 
@@ -101,18 +101,18 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
       log.info("Using LSH sampling to sample about {}% of items", LSH_SAMPLE_RATIO * 100.0);
 
-      // Assume number of bits differing is normally distributed -- reasonable since user/item vector values
-      // are distributed like random vectors and random vectors' number of differing bits is the sum of 64
-      // Bernoulli trials -- nearly normal. Pick a number of bit differences to allow to achieve about the
-      // desired sampling rate.
-      RealDistribution normalDistribution =
-          new NormalDistribution(EXPECTED_RANDOM_VEC_BITS_DIFFERING, STDEV_RANDOM_VEC_BITS_DIFFERING);
-      int bitsDiffering = 0;
-      while (bitsDiffering < NUM_HASHES &&
-             normalDistribution.cumulativeProbability(bitsDiffering) < LSH_SAMPLE_RATIO) {
+      // This follows from the binomial distribution:
+      double cumulativeProbability = 0.0;
+      double denominator = FastMath.pow(2.0, NUM_HASHES);
+      int bitsDiffering = -1;
+      while (bitsDiffering < NUM_HASHES && cumulativeProbability < LSH_SAMPLE_RATIO) {
         bitsDiffering++;
+        cumulativeProbability +=
+            ArithmeticUtils.binomialCoefficientDouble(NUM_HASHES, bitsDiffering) / denominator;
       }
-      maxBitsDiffering = bitsDiffering;
+
+      maxBitsDiffering = bitsDiffering - 1;
+      log.info("Max bits differing: {}", maxBitsDiffering);
 
       int features = Y.entrySet().iterator().next().getValue().length;
 
@@ -126,20 +126,31 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
       meanVector = findMean(Y, features);
 
-      buckets = new FastByIDMap<FastIDSet>();
+      buckets = new FastByIDMap<long[]>(1000, 1.25f);
       int count = 0;
+      int maxBucketSize = 0;
       for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
         long signature = toBitSignature(entry.getValue());
-        FastIDSet ids = buckets.get(signature);
+        long[] ids = buckets.get(signature);
         if (ids == null) {
-          ids = new FastIDSet();
-          buckets.put(signature, ids);
+          buckets.put(signature, new long[] {entry.getKey()});
+        } else {
+          int length = ids.length;
+          // Large majority of arrays will be length 1; all are short.
+          // This is a reasonable way to store 'sets' of longs
+          long[] newIDs = new long[length + 1];
+          for (int i = 0; i < length; i++) {
+            newIDs[i] = ids[i];
+          }
+          newIDs[length] = entry.getKey();
+          maxBucketSize = Math.max(maxBucketSize, newIDs.length);
+          buckets.put(signature, newIDs);
         }
-        ids.add(entry.getKey());
         if (++count % 1000000 == 0) {
           log.info("Bucketed {} items", count);
         }
       }
+      log.info("Max bucket size {}", maxBucketSize);
 
       log.info("Put {} items into {} buckets", Y.size(), buckets.size());
 
@@ -179,9 +190,10 @@ public final class LocationSensitiveHash implements CandidateFilter {
           total -= delta;
         }
       }
-      l <<= 1;
       if (total > 0.0) {
-        l |= 1L;
+        l = (l << 1L) | 1L;
+      } else {
+        l <<= 1;
       }
     }
     return l;
@@ -197,10 +209,10 @@ public final class LocationSensitiveHash implements CandidateFilter {
       bitSignatures[i] = toBitSignature(userVectors[i]);
     }
     Collection<Iterator<FastByIDMap.MapEntry<float[]>>> inputs = Lists.newArrayList();
-    for (FastByIDMap.MapEntry<FastIDSet> entry : buckets.entrySet()) {
+    for (FastByIDMap.MapEntry<long[]> entry : buckets.entrySet()) {
       for (long bitSignature : bitSignatures) {
-        if (Long.bitCount(bitSignature ^ entry.getKey()) < maxBitsDiffering) { // # bits differing
-          inputs.add(new IDToEntryIterator(entry.getValue().iterator()));
+        if (Long.bitCount(bitSignature ^ entry.getKey()) <= maxBitsDiffering) { // # bits differing
+          inputs.add(new IDArrayToEntryIterator(entry.getValue()));
           break;
         }
       }
@@ -225,6 +237,9 @@ public final class LocationSensitiveHash implements CandidateFilter {
     }
   }
 
+  /**
+   * @see IDArrayToEntryIterator
+   */
   private final class IDToEntryIterator implements Iterator<FastByIDMap.MapEntry<float[]>> {
 
     private final LongPrimitiveIterator input;
@@ -244,6 +259,39 @@ public final class LocationSensitiveHash implements CandidateFilter {
     public FastByIDMap.MapEntry<float[]> next() {
       // Will throw NoSuchElementException if needed:
       long itemID = input.nextLong();
+      delegate.set(itemID, Y.get(itemID));
+      return delegate;
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
+    }
+
+  }
+
+  /**
+   * @see IDToEntryIterator
+   */
+  private final class IDArrayToEntryIterator implements Iterator<FastByIDMap.MapEntry<float[]>> {
+
+    private int offset;
+    private final long[] input;
+    private final MutableMapEntry delegate;
+
+    private IDArrayToEntryIterator(long[] input) {
+      this.input = input;
+      this.delegate = new MutableMapEntry();
+    }
+
+    @Override
+    public boolean hasNext() {
+      return offset < input.length;
+    }
+
+    @Override
+    public FastByIDMap.MapEntry<float[]> next() {
+      long itemID = input[offset++];
       delegate.set(itemID, Y.get(itemID));
       return delegate;
     }

@@ -31,6 +31,8 @@ hr {margin:20px 0 10px 0}
   <li>It is now possible to specify an SSL keystore file and JAR file containing a RescorerProvider to the
     Serving Layer, when run on Amazon AWS.</li>
   <li>Normalized Discounted Cumulative Gain evaluation metric uses a corrected formula</li>
+  <li>More efficient LSH implementation which allows performance-accuracy tradeoff at smaller (more reasonable)
+    data sizes.</li>
 </ul>
 
 <h2>Other</h2>
@@ -39,7 +41,6 @@ hr {margin:20px 0 10px 0}
   <li>Now can control the number of writes between rebuild in stand-alone Serving Layer mode with property
     <code>model.local.writesBetweenRebuild</code></li>
   <li><code>estimate</code> method now returns 0 for unknown users and items rather than an exception.</li>
-  <li>Updated to Tomcat 7.0.32</li>
   <li>Computation Layer supports Hadoop 1.1.x</li>
   <li>Computation Layer has minor changes now to operate with Hadoop 2.x, but still requires "MRv1" mode.</li>
 </ul>
