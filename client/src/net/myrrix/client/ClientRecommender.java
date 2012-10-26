@@ -163,7 +163,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     try {
 
       KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      File trustStoreFile = new File(config.getKeystoreFilePath());
+      File trustStoreFile = new File(config.getKeystoreFilePath()).getAbsoluteFile();
       String password = config.getKeystorePassword();
       Preconditions.checkNotNull(password);
 

@@ -420,7 +420,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     } else {
 
-      File keystoreFile = keystoreFilePath == null ? null : new File(keystoreFilePath);
+      File keystoreFile = keystoreFilePath == null ? null : new File(keystoreFilePath).getAbsoluteFile();
       if (keystoreFile == null || !keystoreFile.exists()) {
         log.info("Keystore file not found; trying to load remote keystore file if applicable");
         ResourceRetriever resourceRetriever =
