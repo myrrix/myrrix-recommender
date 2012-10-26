@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
@@ -40,6 +41,8 @@ import net.myrrix.common.MyrrixRecommender;
 public final class PrecisionRecallEvaluator extends AbstractEvaluator {
 
   private static final Logger log = LoggerFactory.getLogger(PrecisionRecallEvaluator.class);
+
+  private static final double LN2 = FastMath.log(2.0);
 
   @Override
   protected boolean isSplitTestByPrefValue() {
@@ -80,14 +83,16 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
 
       int intersectionSize = 0;
       double score = 0.0;
+      double maxScore = 0.0;
       for (int i = 0; i < numRecs; i++) {
         RecommendedItem rec = recs.get(i);
+        double value = LN2 / FastMath.log(2.0 + i); // 1 / log_2(1 + (i+1))
         if (valueIDs.contains(rec.getItemID())) {
           intersectionSize++;
-          score += 1.0 / (1 << (i+1));
+          score += value;
         }
+        maxScore += value;
       }
-      double maxScore = 1.0 - 1.0 / (1 << numRecs);
 
       precision.addDatum(numRecs == 0 ? 0.0 : (double) intersectionSize / numRecs);
       recall.addDatum((double) intersectionSize / numValues);
