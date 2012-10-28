@@ -463,25 +463,26 @@ public final class CLI {
     MyrrixClientConfiguration config = new MyrrixClientConfiguration();
 
     boolean hasHost = commandLine.hasOption(HOST_FLAG);
-    boolean hasAllPartitions = commandLine.hasOption(ALL_PARTITIONS_FLAG);
-    if (hasHost && hasAllPartitions) {
-      throw new ParseException("Only one of --host and --allPartitions may be set");
-    }
-
     if (hasHost) {
       config.setHost(commandLine.getOptionValue(HOST_FLAG));
     }
-
-    if (commandLine.hasOption(PORT_FLAG)) {
+    boolean hasPort = commandLine.hasOption(PORT_FLAG);
+    if (hasPort) {
       config.setPort(Integer.parseInt(commandLine.getOptionValue(PORT_FLAG)));
     }
-
-    if (hasAllPartitions) {
-      config.setAllPartitionsSpecification(commandLine.getOptionValue(ALL_PARTITIONS_FLAG));
-    }
-
     if (commandLine.hasOption(SECURE_FLAG)) {
       config.setSecure(true);
+    }
+
+    if (commandLine.hasOption(ALL_PARTITIONS_FLAG)) {
+      String allPartitionsFlagValue = commandLine.getOptionValue(ALL_PARTITIONS_FLAG);
+      config.setAllPartitionsSpecification(allPartitionsFlagValue);
+      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue)) {
+        if (!hasHost || !hasPort) {
+          throw new ParseException("--" + HOST_FLAG + " and --" + PORT_FLAG + " are required with --allPartitions=" +
+                                   MyrrixClientConfiguration.AUTO_PARTITION_SPEC);
+        }
+      }
     }
 
     if (commandLine.hasOption(USER_NAME_FLAG)) {
@@ -513,7 +514,7 @@ public final class CLI {
     addOption(options, "Use String user IDs in client API.", TRANSLATE_USER_FLAG, false, true);
     addOption(options, "Use String item IDs in client API. Optional file argument contains list of all known item IDs",
               TRANSLATE_ITEM_FLAG, true, true);
-    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081)",
+    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081), or 'auto'",
               ALL_PARTITIONS_FLAG, true, false);
     return options;
   }

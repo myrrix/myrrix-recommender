@@ -324,7 +324,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     configureEngine(tomcat.getEngine());
     configureServer(tomcat.getServer());
     configureHost(tomcat.getHost());
-    Context context = makeContext(tomcat, noSuchBaseDir);
+    Context context = makeContext(tomcat, noSuchBaseDir, connector.getPort());
 
     addServlet(context, new PreferenceServlet(), "/pref/*");
     addServlet(context, new IngestServlet(), "/ingest/*");
@@ -459,7 +459,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     return connector;
   }
 
-  private Context makeContext(Tomcat tomcat, File noSuchBaseDir) throws IOException {
+  private Context makeContext(Tomcat tomcat, File noSuchBaseDir, int port) throws IOException {
 
     File contextPath = new File(noSuchBaseDir, "context");
     if (!contextPath.mkdirs()) {
@@ -477,6 +477,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.BUCKET_KEY, config.getBucket());
     servletContext.setAttribute(InitListener.RESCORER_PROVIDER_CLASS_KEY, config.getRescorerProviderClassName());
     servletContext.setAttribute(InitListener.LOCAL_INPUT_DIR_KEY, config.getLocalInputDir());
+    servletContext.setAttribute(InitListener.PORT_KEY, port);
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());
     servletContext.setAttribute(InitListener.PARTITION_KEY, config.getPartition());
 

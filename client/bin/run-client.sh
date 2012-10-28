@@ -11,6 +11,7 @@
 HOST=localhost
 PORT=8080
 #ALL_PARTITIONS=foo:80,foo2:8080;bar:8080;baz2:80,baz3:80
+#ALL_PARTITIONS=auto
 
 # Set if the Serving Layer requires HTTPS
 #SECURE=true

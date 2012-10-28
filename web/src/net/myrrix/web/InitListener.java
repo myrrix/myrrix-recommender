@@ -55,6 +55,7 @@ public final class InitListener implements ServletContextListener {
   private static final String KEY_PREFIX = InitListener.class.getName();
   public static final String LOG_HANDLER = KEY_PREFIX + ".LOG_HANDLER";
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
+  public static final String PORT_KEY = KEY_PREFIX + ".PORT";
   public static final String BUCKET_KEY = KEY_PREFIX + ".BUCKET";
   public static final String INSTANCE_ID_KEY = KEY_PREFIX + ".INSTANCE_ID";
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
@@ -96,23 +97,27 @@ public final class InitListener implements ServletContextListener {
     }
     context.setAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY, localInputDir.getAbsolutePath());
 
-    int numPartitions = 1;
+    List<List<Pair<String,Integer>>> allPartitions;
     String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
-    if (allPartitionsSpecString != null) {
-      List<List<Pair<String,Integer>>> allPartitions =
-          PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
-      log.info("Parsed partitions {}", allPartitions);
-      numPartitions = allPartitions.size();
-      log.info("{} total partitions", numPartitions);
-      context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY, allPartitions);
+    if (allPartitionsSpecString == null) {
+      int port = Integer.parseInt(getAttributeOrParam(context, PORT_KEY));
+      allPartitions = PartitionsUtils.getDefaultLocalPartition(port);
+    } else {
+      allPartitions = PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
     }
+    Preconditions.checkState(!allPartitions.isEmpty());
+    log.info("Partitions: {}", allPartitions);
+    context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY, allPartitions);
+    int numPartitions = allPartitions.size();
     context.setAttribute(AbstractMyrrixServlet.NUM_PARTITIONS_KEY, numPartitions);
 
     int partition = 0;
     String partitionString = getAttributeOrParam(context, PARTITION_KEY);
-    if (partitionString != null) {
+    if (partitionString == null) {
+      log.info("No partition specified, so it is implicitly parition #{}", partition);
+    } else {
       partition = Integer.parseInt(partitionString);
-      log.info("Running as partition {}", partition);
+      log.info("Running as partition #{}", partition);
     }
     context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
 

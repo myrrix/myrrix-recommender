@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  -->
+<jsp:directive.page import="java.util.List"/>
+<jsp:directive.page import="org.apache.mahout.common.Pair"/>
 <jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page contentType="application/xml"/>
@@ -36,5 +38,31 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
     <users>${rec.generationManager.currentGeneration.numUsers}</users>
     <items>${rec.generationManager.currentGeneration.numItems}</items>
   </recommender>
+  <cluster>
+    <jsp:scriptlet>
+      int thisPartition = (Integer) application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY);
+      pageContext.setAttribute("thisPartition", thisPartition);
+      int partitionNumber = 0;
+      for (List&lt;Pair&lt;String,Integer&gt;&gt; partition :
+           (List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY)) {
+        pageContext.setAttribute("partitionNumber", partitionNumber);
+    </jsp:scriptlet>
+    <partitionNumber>${thisPartition}</partitionNumber>
+    <partition>
+      <number>${partitionNumber}</number>
+      <jsp:scriptlet>
+        for (Pair&lt;String,Integer&gt; replica : partition) {
+          pageContext.setAttribute("replica", replica);
+      </jsp:scriptlet>
+      <replica>${replica.first}:${replica.second}</replica>
+      <jsp:scriptlet>
+        }
+      </jsp:scriptlet>
+    </partition>
+    <jsp:scriptlet>
+        partitionNumber++;
+      }
+    </jsp:scriptlet>
+  </cluster>
 </status>
 </jsp:root>

@@ -16,7 +16,9 @@
 
 package net.myrrix.client;
 
-import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +36,7 @@ public final class MyrrixClientConfiguration {
 
   public static final String DEFAULT_HOST = "localhost";
   public static final int DEFAULT_PORT = 80;
+  public static final String AUTO_PARTITION_SPEC = "auto";
 
   private String host;
   private int port;
@@ -58,7 +61,6 @@ public final class MyrrixClientConfiguration {
   }
 
   /**
-   * Cannot be set if {@link #setAllPartitionsSpecification(String)} is set
    * @param host Serving Layer host to communicate with. Defaults to {@link #DEFAULT_PORT}.
    */
   public void setHost(String host) {
@@ -144,10 +146,11 @@ public final class MyrrixClientConfiguration {
 
   /**
    * @return specification for all servers that have partitions. Only applicable in distributed mode and returns
-   *  {@code null} otherwise. Serving Layers are specified as "host:port".
-   *  Replicas are specified as many Serving Layers, separated by commas, like "rep1:port1,rep2:port2,...".
-   *  Finally, partitions are specified as multiple replicas separated by semicolon, like
-   *  "part1rep1:port11,part1rep2:port12;part2rep1:port21,part2rep2:port22;...". Example:
+   *  {@code null} otherwise. May be specified as "auto", in which case {@link #getHost()} and {@link #getPort()}
+   *  must be valid, since this host will be queried for partition details. Otherwise, Serving Layers are specified
+   *  explicitly as "host:port" pairs. Replicas are specified as many Serving Layers, separated by commas, like
+   *  "rep1:port1,rep2:port2,...". Finally, partitions are specified as multiple replicas separated by semicolon,
+   *  like "part1rep1:port11,part1rep2:port12;part2rep1:port21,part2rep2:port22;...". Example:
    *  "foo:80,foo2:8080;bar:8080;baz2:80,baz3:80"
    */
   public String getAllPartitionsSpecification() {
@@ -159,9 +162,27 @@ public final class MyrrixClientConfiguration {
    * @param allPartitionsSpecification see {@link #getAllPartitionsSpecification()}
    */
   public void setAllPartitionsSpecification(String allPartitionsSpecification) {
-    Preconditions.checkState(host == null, "host was already set");
     this.allPartitionsSpecification = allPartitionsSpecification;
-    this.partitions = PartitionsUtils.parseAllPartitions(allPartitionsSpecification);
+    if (AUTO_PARTITION_SPEC.equals(allPartitionsSpecification)) {
+      try {
+        this.partitions = parseAutoPartitionSpecification();
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
+    } else {
+      this.partitions = PartitionsUtils.parseAllPartitions(allPartitionsSpecification);
+    }
+  }
+
+  private List<List<Pair<String,Integer>>> parseAutoPartitionSpecification() throws IOException {
+    String scheme = isSecure() ? "https" : "http";
+    URL statusURL;
+    try {
+      statusURL = new URL(scheme, host, port, "/status.jspx");
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e); // Can't happen
+    }
+    return PartitionsUtils.parsePartitionsFromStatus(statusURL);
   }
 
   /**
@@ -171,7 +192,7 @@ public final class MyrrixClientConfiguration {
    */
   public List<List<Pair<String,Integer>>> getPartitions() {
     return partitions == null ?
-        Collections.singletonList(Collections.singletonList(new Pair<String, Integer>(host, port))) :
+        Collections.singletonList(Collections.singletonList(Pair.of(host, port))) :
         partitions;
   }
 

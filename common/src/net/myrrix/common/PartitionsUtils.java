@@ -16,15 +16,36 @@
 
 package net.myrrix.common;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.io.Closeables;
 import org.apache.mahout.common.Pair;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * Utility methods for dealing with partitions in distributed mode.
+ *
+ * @author Sean Owen
  */
 public final class PartitionsUtils {
 
@@ -64,6 +85,63 @@ public final class PartitionsUtils {
       allPartitions.add(partition);
     }
     return allPartitions;
+  }
+
+  /**
+   * @param port port the instance is configured to run on
+   * @return a simple structure representing one partition, one replica: the local host
+      * and configured instance port
+   */
+  public static List<List<Pair<String,Integer>>> getDefaultLocalPartition(int port) {
+    InetAddress localhost;
+    try {
+      localhost = InetAddress.getLocalHost();
+    } catch (UnknownHostException e) {
+      throw new IllegalStateException(e);
+    }
+    String host = localhost.getHostName();
+    return Collections.singletonList(Collections.singletonList(Pair.of(host, port)));
+  }
+
+  public static List<List<Pair<String,Integer>>> parsePartitionsFromStatus(URL url) throws IOException {
+
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder;
+    try {
+      builder = factory.newDocumentBuilder();
+    } catch (ParserConfigurationException e) {
+      throw new IllegalStateException(e);
+    }
+
+    Reader reader = new InputStreamReader(url.openStream(), Charsets.UTF_8);
+    Document doc;
+    try {
+      doc = builder.parse(new InputSource(reader));
+    } catch (SAXException saxe) {
+      throw new IllegalStateException(saxe);
+    } finally {
+      Closeables.closeQuietly(reader);
+    }
+
+    Element docElement = doc.getDocumentElement();
+    docElement.normalize();
+
+    List<List<Pair<String,Integer>>> result = Lists.newArrayList();
+
+    NodeList partitionElements = docElement.getElementsByTagName("partition");
+    for (int i = 0; i < partitionElements.getLength(); i++) {
+      List<Pair<String,Integer>> partitionResult = Lists.newArrayList();
+      result.add(partitionResult);
+      Element partitionElement = (Element) partitionElements.item(i);
+      NodeList replicaElements = partitionElement.getElementsByTagName("replica");
+      for (int j = 0; j < replicaElements.getLength(); j++) {
+        Node replicaElement = replicaElements.item(j);
+        String[] hostPort = COLON.split(replicaElement.getTextContent());
+        partitionResult.add(Pair.of(hostPort[0], Integer.parseInt(hostPort[1])));
+      }
+    }
+
+    return result;
   }
 
 }
