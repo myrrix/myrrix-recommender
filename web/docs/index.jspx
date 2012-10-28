@@ -23,6 +23,7 @@
 <jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
 <jsp:directive.page import="org.apache.mahout.cf.taste.impl.common.RunningAverage"/>
 <jsp:directive.page contentType="text/html"/>
+<jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
 <jsp:text><![CDATA[<!-- Copyright 2012 Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>

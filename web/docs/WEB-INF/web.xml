@@ -224,7 +224,15 @@
     <location>/error.jspx</location>
   </error-page>
   <error-page>
+    <error-code>401</error-code>
+    <location>/error.jspx</location>
+  </error-page>
+  <error-page>
     <error-code>404</error-code>
+    <location>/error.jspx</location>
+  </error-page>
+  <error-page>
+    <error-code>405</error-code>
     <location>/error.jspx</location>
   </error-page>
   <error-page>

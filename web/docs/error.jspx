@@ -16,15 +16,13 @@ limitations under the License.
 -->
 <jsp:directive.page contentType="text/html"/>
 <jsp:directive.page isErrorPage="true"/>
+<jsp:directive.page session="false"/>
 <jsp:directive.page import="java.io.PrintWriter"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
 <head>
 <title>Error</title>
-<style type="text/css"><![CDATA[
-body {background-color:#202020}
-body,p {font-family:monospace;color:white}
-]]></style>
+<style type="text/css"><![CDATA[body{background-color:#202020} body,p{font-family:monospace;color:white}]]></style>
 </head>
 <body>
 <p><strong>Error ${pageContext.errorData.statusCode}</strong> : ${pageContext.errorData.requestURI}</p>

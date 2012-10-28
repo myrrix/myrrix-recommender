@@ -176,7 +176,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   private static final int[] ERROR_PAGE_STATUSES = {
       HttpServletResponse.SC_BAD_REQUEST,
+      HttpServletResponse.SC_UNAUTHORIZED,
       HttpServletResponse.SC_NOT_FOUND,
+      HttpServletResponse.SC_METHOD_NOT_ALLOWED,
       HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
       HttpServletResponse.SC_SERVICE_UNAVAILABLE,
   };
@@ -517,6 +519,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
       context.addConstraint(securityConstraint);
     }
+
+    context.setCookies(false);
 
     return context;
   }

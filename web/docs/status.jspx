@@ -19,6 +19,7 @@
 <jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page contentType="application/xml"/>
+<jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8"?>]]></jsp:text>
 <jsp:scriptlet>
 System.gc(); // Helps make the heap reported more reliable:
