@@ -48,9 +48,6 @@ PORT=8080
 # Set to a value that can be used with the -Xmx flag, like 1200m or 4G or 4g
 HEAP_SIZE=4g
 
-# Unset if on a 32-bit machine
-SIXTYFOUR_BIT_OPTS="-d64 -XX:+UseCompressedOops"
-
 # -------- Apache Hadoop-specific settings
 
 # If using an Apache Hadoop cluster, set HADOOP_CONF_DIR here (if it is not already set in the environment)
@@ -124,6 +121,6 @@ fi
 
 SERVING_JAR=`ls myrrix-serving-*.jar`
 
-java ${ALL_SYS_PROPS} -server -da -dsa -Xmx${HEAP_SIZE} ${SIXTYFOUR_BIT_OPTS}\
- -XX:NewRatio=12 -XX:+UseParallelGC -XX:+UseParallelOldGC\
+# Try -XX:+UseG1GC on Java 7
+java ${ALL_SYS_PROPS} -Xmx${HEAP_SIZE} -XX:NewRatio=12 -XX:+UseParallelGC -XX:+UseParallelOldGC\
  ${ADDITIONAL_CLASSPATH} -jar ${SERVING_JAR} ${ALL_ARGS} $@
