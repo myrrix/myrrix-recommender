@@ -113,8 +113,13 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *     will be loaded from a JAR file found on the distributed file system at {@code sys/rescorer.jar}.</li>
  *   <li>{@code --allPartitions}: Optional, but must be set with {@code --partition}.
  *     Describes all partitions, when partitioning across Serving Layers
- *     by user. Each partition may have multiple replicas. Serving Layers are specified as "host:port".
- *     Replicas are specified as many Serving Layers, separated by commas, like "rep1:port1,rep2:port2,...".
+ *     by user. Each partition may have multiple replicas. When running in distibuted mode on Amazon EC2,
+ *     may be specified as "auto", in which case it will
+ *     attempt to discover partition members dynamically, searching for instances tagged with EC2 key
+ *     "myrrix-partition" and whose value is a partition. (Port may be specified with EC2 tag "myrrix-port" if not
+ *     the default of 80, and, instances may be uniquely associated to a bucket and instance with "myrrix-bucket" and
+ *     "myrrix-instanceID" EC2 tags if needed.) Otherwise, replicas are specified as many Serving Layer
+ *     "host:port" pairs, separated by commas, like "rep1:port1,rep2:port2,...".
  *     Finally, partitions are specified as multiple replicas separated by semicolon, like
  *     "part1rep1:port11,part1rep2:port12;part2rep1:port21,part2rep2:port22;...". Example:
  *     "foo:80,foo2:8080;bar:8080;baz2:80,baz3:80"</li>
@@ -130,12 +135,11 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *
  * <p>Example of running in local mode:</p>
  *
- * <p>{@code java -jar myrrix-serving-x.y.jar --port=8080}</p>
+ * <p>{@code java -jar myrrix-serving-x.y.jar --port 8080}</p>
  *
  * <p>(with an example of JVM tuning flags:)</p>
  *
- * <p>{@code java -jar myrrix-serving-x.y.jar -server -da -dsa -d64 -Xmx1g -XX:NewRatio=12
- *  -XX:+UseParallelGC -XX:+UseParallelOldGC --port=8080}</p>
+ * <p>{@code java -Xmx1g -XX:NewRatio=12 -XX:+UseG1GC -XX:+UseCompressedOops -jar myrrix-serving-x.y.jar --port 8080}</p>
  *
  * <p>Finally, some more advanced tuning parameters are available. These are system parameters, set with
  * {@code -Dproperty=value}.</p>
