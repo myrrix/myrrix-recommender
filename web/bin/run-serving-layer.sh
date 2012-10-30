@@ -21,6 +21,7 @@ PORT=8080
 # Set these values if the Serving Layer requires a username and password to access
 #USERNAME=username
 #PASSWORD=password
+#CONSOLE_ONLY_PASSWORD=true
 
 # Set to the name of a RescorerProvider if applicable, and the location of a JAR with the class
 #RESCORER=org.example.foo.RescorerProvider
@@ -80,6 +81,9 @@ if [ -n "${USERNAME}" ]; then
 fi
 if [ -n "${PASSWORD}" ]; then
   ALL_ARGS="${ALL_ARGS} --password=${PASSWORD}"
+fi
+if [ -n "${CONSOLE_ONLY_PASSWORD}" ]; then
+  ALL_ARGS="${ALL_ARGS} --consoleOnlyPassword"
 fi
 
 if [ -n "${RESCORER}" ]; then
