@@ -32,6 +32,7 @@ public final class RunnerConfiguration {
   public static final int DEFAULT_SECURE_PORT = 443;
   public static final String DEFAULT_INSTANCE_ID = "test";
   private static final Pattern SEMICOLON = Pattern.compile(";");
+  public static final String AUTO_PARTITION_SPEC = "auto";
 
   private String bucket;
   private String instanceID;
@@ -196,18 +197,15 @@ public final class RunnerConfiguration {
   public void setPartition(Integer partition) {
     if (partition != null) {
       Preconditions.checkArgument(partition >= 0, "Partition should be at least 0");
-      if (allPartitionsSpecification != null) {
-        int numPartitions = SEMICOLON.split(allPartitionsSpecification).length;
-        Preconditions.checkArgument(partition < numPartitions,
-                                    "Partition should be at most {}", numPartitions - 1);
-      }
     }
     this.partition = partition;
   }
 
   /**
    * @return specification for all servers that have partitions. Only applicable in distributed mode and returns
-   *  {@code null} otherwise. Serving Layers are specified as "host:port".
+   *  {@code null} otherwise. May be specified as "auto", in distributed mode only, in which case it will attempt
+   *  to discover partitions automatically. Note that this further only works with Amazon AWS / S3
+   *  Otherwise, Serving Layers are specified explicitly as "host:port" pairs.
    *  Replicas are specified as many Serving Layers, separated by commas, like "rep1:port1,rep2:port2,...".
    *  Finally, partitions are specified as multiple replicas separated by semicolon, like
    *  "part1rep1:port11,part1rep2:port12;part2rep1:port21,part2rep2:port22;...". Example:

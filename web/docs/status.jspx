@@ -18,6 +18,7 @@
 <jsp:directive.page import="org.apache.mahout.common.Pair"/>
 <jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
+<jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
 <jsp:directive.page contentType="application/xml"/>
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8"?>]]></jsp:text>
@@ -44,8 +45,10 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
       int thisPartition = (Integer) application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY);
       pageContext.setAttribute("thisPartition", thisPartition);
       int partitionNumber = 0;
-      for (List&lt;Pair&lt;String,Integer&gt;&gt; partition :
-           (List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY)) {
+      ReloadingReference&lt;List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;&gt; ref =
+          (ReloadingReference&lt;List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;&gt;)
+              application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY);
+      for (List&lt;Pair&lt;String,Integer&gt;&gt; partition : ref.get()) {
         pageContext.setAttribute("partitionNumber", partitionNumber);
     </jsp:scriptlet>
     <partitionNumber>${thisPartition}</partitionNumber>

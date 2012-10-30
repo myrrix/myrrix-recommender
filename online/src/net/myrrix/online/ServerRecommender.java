@@ -54,11 +54,12 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
+import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
-import net.myrrix.common.LazyReference;
+import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
@@ -95,14 +96,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private final GenerationManager generationManager;
   private final int numCores;
-  private LazyReference<ExecutorService> executor;
+  private ReloadingReference<ExecutorService> executor;
 
   /**
-   * Calls {@link #ServerRecommender(String, String, File, int, int)} for simple local mode, with no bucket,
-   * instance ID 0, and no partitions (partition 0 of 1 total).
+   * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference)} for simple local mode,
+   * with no bucket, instance ID 0, and no partitions (partition 0 of 1 total).
    */
   public ServerRecommender(File localInputDir) {
-    this(null, "test", localInputDir, 0, 1);
+    this(null, "test", localInputDir, 0, null);
   }
 
   /**
@@ -110,29 +111,27 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @param instanceID instance ID that the Serving Layer is serving. May be 0 for local mode.
    * @param localInputDir local input and model file directory
    * @param partition partition number in a partitioned distributed mode. 0 if not partitioned.
-   * @param numPartitions total partitions in partitioned distributed mode. 1 if not partitioned.
+   * @param allPartitions reference to an object that can describe all parititions; only used to get their count
    */
   public ServerRecommender(String bucket,
                            String instanceID,
                            File localInputDir,
                            int partition,
-                           int numPartitions) {
+                           ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions) {
     Preconditions.checkNotNull(instanceID, "Bad instance ID %s", instanceID);
     Preconditions.checkNotNull(localInputDir, "No local dir");
-    Preconditions.checkArgument(numPartitions > 0, "Bad num partitions %s", numPartitions);
-    Preconditions.checkArgument(partition >= 0 && partition < numPartitions, "Bad partition %s", partition);
 
-    log.info("Creating ServingRecommender for bucket {}, instance {} and with local work dir {}, partition {} of {}",
-             bucket, instanceID, localInputDir, partition, numPartitions);
+    log.info("Creating ServingRecommender for bucket {}, instance {} and with local work dir {}, partition {}",
+             bucket, instanceID, localInputDir, partition);
 
-    generationManager =
-        ClassUtils.loadInstanceOf("net.myrrix.online.generation.DelegateGenerationManager",
-                                  GenerationManager.class,
-                                  new Class<?>[] { String.class, String.class, File.class, int.class, int.class },
-                                  new Object[] { bucket, instanceID, localInputDir, partition, numPartitions });
+    generationManager = ClassUtils.loadInstanceOf(
+        "net.myrrix.online.generation.DelegateGenerationManager",
+        GenerationManager.class,
+        new Class<?>[] { String.class, String.class, File.class, int.class, ReloadingReference.class },
+        new Object[] { bucket, instanceID, localInputDir, partition, allPartitions });
 
     numCores = Runtime.getRuntime().availableProcessors();
-    executor = new LazyReference<ExecutorService>(new Callable<ExecutorService>() {
+    executor = new ReloadingReference<ExecutorService>(new Callable<ExecutorService>() {
       @Override
       public ExecutorService call() {
         return Executors.newFixedThreadPool(2 * numCores,
@@ -725,14 +724,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (removeUser) {
 
-      if (knownItemIDs != null) {
-        Lock knownItemWriteLock = knownItemLock.writeLock();
-        knownItemWriteLock.lock();
-        try {
-          knownItemIDs.remove(userID);
-        } finally {
-          knownItemWriteLock.unlock();
-        }
+      Lock knownItemWriteLock = knownItemLock.writeLock();
+      knownItemWriteLock.lock();
+      try {
+        knownItemIDs.remove(userID);
+      } finally {
+        knownItemWriteLock.unlock();
       }
 
       Lock xWriteLock = xLock.writeLock();

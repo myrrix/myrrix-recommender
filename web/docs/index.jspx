@@ -14,6 +14,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  -->
+<jsp:directive.page import="java.util.List"/>
 <jsp:directive.page import="java.util.Map"/>
 <jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
 <jsp:directive.page import="net.myrrix.web.common.stats.ServletStats"/>
@@ -22,6 +23,7 @@
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
 <jsp:directive.page import="org.apache.mahout.cf.taste.impl.common.RunningAverage"/>
+<jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
 <jsp:directive.page contentType="text/html"/>
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
@@ -131,7 +133,8 @@ if (Float.isNaN(avgEstimateError)) {
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
 
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
-pageContext.setAttribute("numPartitions", application.getAttribute(AbstractMyrrixServlet.NUM_PARTITIONS_KEY));
+pageContext.setAttribute("numPartitions",
+                         ((ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY)).get().size());
 </jsp:scriptlet>
 
 <table>

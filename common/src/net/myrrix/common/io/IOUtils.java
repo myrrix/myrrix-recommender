@@ -21,6 +21,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -28,7 +30,9 @@ import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
 
 /**
@@ -118,6 +122,15 @@ public final class IOUtils {
     InputStream in = url.openStream();
     try {
       copyStreamToFile(in, file);
+    } finally {
+      Closeables.closeQuietly(in);
+    }
+  }
+
+  public static String readSmallTextFromURL(URL url) throws IOException {
+    Reader in = new InputStreamReader(url.openStream(), Charsets.UTF_8);
+    try {
+      return CharStreams.toString(in);
     } finally {
       Closeables.closeQuietly(in);
     }

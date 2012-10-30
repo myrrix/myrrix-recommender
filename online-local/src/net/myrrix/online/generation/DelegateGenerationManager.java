@@ -30,6 +30,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
+import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.MatrixUtils;
@@ -101,7 +103,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final Semaphore refreshSemaphore;
 
   public DelegateGenerationManager(File localInputDir) throws IOException {
-    this(null, "test", localInputDir, 0, 0);
+    this(null, "test", localInputDir, 0, null);
   }
 
   /**
@@ -112,13 +114,13 @@ public final class DelegateGenerationManager implements GenerationManager {
    *  be placed in this directory at any time. The file name should end in ".csv" and the file should
    *  contain lines of the form "userID,itemID(,value)".
    * @param partition not used; required for API compatibility internally
-   * @param numPartitions not used; required for API compatibility internally
+   * @param allPartitions not used; required for API compatibility internally
    */
   public DelegateGenerationManager(String bucket,
                                    String instanceID,
                                    File localInputDir,
                                    int partition,
-                                   int numPartitions) throws IOException {
+                                   ReloadingReference<List<?>> allPartitions) throws IOException {
 
     this.bucket = bucket;
     this.instanceID = instanceID;

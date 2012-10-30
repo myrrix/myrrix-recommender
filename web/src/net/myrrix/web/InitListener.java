@@ -20,6 +20,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -33,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.PartitionsUtils;
@@ -40,6 +43,7 @@ import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 import net.myrrix.online.io.ResourceRetriever;
+import net.myrrix.online.partition.PartitionLoader;
 import net.myrrix.web.servlets.AbstractMyrrixServlet;
 
 /**
@@ -97,19 +101,33 @@ public final class InitListener implements ServletContextListener {
     }
     context.setAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY, localInputDir.getAbsolutePath());
 
-    List<List<Pair<String,Integer>>> allPartitions;
-    String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
-    if (allPartitionsSpecString == null) {
-      int port = Integer.parseInt(getAttributeOrParam(context, PORT_KEY));
-      allPartitions = PartitionsUtils.getDefaultLocalPartition(port);
-    } else {
-      allPartitions = PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
-    }
-    Preconditions.checkState(!allPartitions.isEmpty());
-    log.info("Partitions: {}", allPartitions);
-    context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_KEY, allPartitions);
-    int numPartitions = allPartitions.size();
-    context.setAttribute(AbstractMyrrixServlet.NUM_PARTITIONS_KEY, numPartitions);
+    final int port = Integer.parseInt(getAttributeOrParam(context, PORT_KEY));
+    final String bucket = getAttributeOrParam(context, BUCKET_KEY);
+    final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
+
+    final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
+
+    ReloadingReference<List<List<Pair<String,Integer>>>> allPartitionsReference =
+        new ReloadingReference<List<List<Pair<String,Integer>>>>(new Callable<List<List<Pair<String,Integer>>>>() {
+          @Override
+          public List<List<Pair<String, Integer>>> call() {
+            if (allPartitionsSpecString == null) {
+              return PartitionsUtils.getDefaultLocalPartition(port);
+            }
+            if (RunnerConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsSpecString)) {
+              PartitionLoader loader =
+                  ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", PartitionLoader.class);
+              List<List<Pair<String, Integer>>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
+              log.info("Latest partitions: {}", newPartitions);
+              return newPartitions;
+            }
+            return PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
+          }
+        }, 10, TimeUnit.MINUTES);
+
+    // "Tickle" it to pre-load and check for errors
+    allPartitionsReference.get();
+    context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY, allPartitionsReference);
 
     int partition = 0;
     String partitionString = getAttributeOrParam(context, PARTITION_KEY);
@@ -120,9 +138,6 @@ public final class InitListener implements ServletContextListener {
       log.info("Running as partition #{}", partition);
     }
     context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
-
-    String bucket = getAttributeOrParam(context, BUCKET_KEY);
-    String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
 
     RescorerProvider rescorerProvider;
     try {
@@ -137,7 +152,7 @@ public final class InitListener implements ServletContextListener {
     }
 
     MyrrixRecommender recommender =
-        new ServerRecommender(bucket, instanceID, localInputDir, partition, numPartitions);
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
 
     log.info("Myrrix is initialized");

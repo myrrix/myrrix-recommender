@@ -446,8 +446,9 @@ public final class CLI {
    * Unquotes a string. Makes it possible to pass negative values without being interpreted as a flag.
    */
   private static String unquote(String s) {
-    if (s.length() >= 2 && s.charAt(0) =='"' && s.charAt(s.length() - 1) == '"') {
-      s = s.substring(1, s.length() - 1);
+    int length = s.length();
+    if (length >= 2 && s.charAt(0) =='"' && s.charAt(length - 1) == '"') {
+      return s.substring(1, length - 1);
     }
     return s;
   }
@@ -477,11 +478,9 @@ public final class CLI {
     if (commandLine.hasOption(ALL_PARTITIONS_FLAG)) {
       String allPartitionsFlagValue = commandLine.getOptionValue(ALL_PARTITIONS_FLAG);
       config.setAllPartitionsSpecification(allPartitionsFlagValue);
-      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue)) {
-        if (!hasHost || !hasPort) {
-          throw new ParseException("--" + HOST_FLAG + " and --" + PORT_FLAG + " are required with --allPartitions=" +
-                                   MyrrixClientConfiguration.AUTO_PARTITION_SPEC);
-        }
+      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue) && (!hasHost || !hasPort)) {
+        throw new ParseException("--" + HOST_FLAG + " and --" + PORT_FLAG + " are required with --allPartitions=" +
+                                     MyrrixClientConfiguration.AUTO_PARTITION_SPEC);
       }
     }
 

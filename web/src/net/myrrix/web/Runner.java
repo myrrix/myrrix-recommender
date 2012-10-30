@@ -302,7 +302,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true);
     addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true);
     addOption(options, "RescorerProvider implementation class", RESCORER_PROVIDER_CLASS_FLAG, true);
-    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081)",
+    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081), " +
+                       "or \"auto\" (distributed mode only)",
               ALL_PARTITIONS_FLAG, true);
     addOption(options, "Server's partition number (0-based)", PARTITION_FLAG, true);
     return options;

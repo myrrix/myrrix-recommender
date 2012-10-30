@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -40,6 +41,7 @@ import org.apache.mahout.common.RandomUtils;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.ReloadingReference;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.web.common.stats.ServletStats;
 
@@ -59,16 +61,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   public static final String RESCORER_PROVIDER_KEY = KEY_PREFIX + ".RESCORER_PROVIDER";
   public static final String TIMINGS_KEY = KEY_PREFIX + ".TIMINGS";
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
-  public static final String ALL_PARTITIONS_KEY = KEY_PREFIX + ".ALL_PARTITIONS";
+  public static final String ALL_PARTITIONS_REF_KEY = KEY_PREFIX + ".ALL_PARTITIONS";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
-  public static final String NUM_PARTITIONS_KEY = KEY_PREFIX + ".NUM_PARTITIONS";
 
   private static final String[] NO_PARAMS = new String[0];
 
   private MyrrixRecommender recommender;
   private RescorerProvider rescorerProvider;
   private ServletStats timing;
-  private List<List<Pair<String,Integer>>> allPartitions;
+  private ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions;
   private Integer thisPartition;
   private Random random;
   private ConcurrentMap<String,ResponseContentType> responseTypeCache;
@@ -82,8 +83,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     rescorerProvider = (RescorerProvider) context.getAttribute(RESCORER_PROVIDER_KEY);
 
     @SuppressWarnings("unchecked")
-    List<List<Pair<String,Integer>>> theAllPartitions =
-        (List<List<Pair<String,Integer>>>) context.getAttribute(ALL_PARTITIONS_KEY);
+    ReloadingReference<List<List<Pair<String,Integer>>>> theAllPartitions =
+        (ReloadingReference<List<List<Pair<String,Integer>>>>) context.getAttribute(ALL_PARTITIONS_REF_KEY);
     allPartitions = theAllPartitions;
 
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
@@ -110,9 +111,10 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
       throws ServletException, IOException {
 
     if (allPartitions != null) {
-      Integer partitionToServe = getPartitionToServe(request, allPartitions.size());
+      List<List<Pair<String,Integer>>> thePartitions = allPartitions.get(1, TimeUnit.SECONDS);
+      Integer partitionToServe = getPartitionToServe(request, thePartitions.size());
       if (partitionToServe != null && !partitionToServe.equals(thisPartition)) {
-        String redirectURL = buildRedirectToPartitionURL(request, partitionToServe);
+        String redirectURL = buildRedirectToPartitionURL(request, partitionToServe, thePartitions);
         response.sendRedirect(redirectURL);
         return;
       }
@@ -133,9 +135,11 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  private String buildRedirectToPartitionURL(HttpServletRequest request, int toPartition) {
+  private String buildRedirectToPartitionURL(HttpServletRequest request,
+                                             int toPartition,
+                                             List<List<Pair<String,Integer>>> thePartitions) {
 
-    List<Pair<String,Integer>> replicas = allPartitions.get(toPartition);
+    List<Pair<String,Integer>> replicas = thePartitions.get(toPartition);
     int chosenReplica = random.nextInt(replicas.size());
     Pair<String,Integer> hostPort = replicas.get(chosenReplica);
 
