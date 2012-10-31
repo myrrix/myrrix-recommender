@@ -28,6 +28,8 @@ hr {margin:20px 0 10px 0}
 
 <ul>
   <li>New users and items should no longer be able to become temporarily unavailable when a new model loads</li>
+  <li>Forced shutdown (with Ctrl-C, <code>kill</code>) should initiate orderly shutdown and sync
+    data to S3 / HDFS</li>
   <li>Corrected output format from --recommend and --itemSimilarity in Computation Layer</li>
   <li><code>AllItemSiimlarities</code> now correctly uses item IDs from model</li>
   <li>It is now possible to specify an SSL keystore file and JAR file containing a RescorerProvider to the

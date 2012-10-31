@@ -58,6 +58,8 @@ import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
 import net.myrrix.common.log.MemoryHandler;
+import net.myrrix.common.signal.SignalManager;
+import net.myrrix.common.signal.SignalType;
 import net.myrrix.online.io.ResourceRetriever;
 import net.myrrix.web.servlets.AllItemIDsServlet;
 import net.myrrix.web.servlets.AllUserIDsServlet;
@@ -190,6 +192,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
   private final RunnerConfiguration config;
   private Tomcat tomcat;
   private final File noSuchBaseDir;
+  private boolean closed;
 
   /**
    * Creates a new instance with the given configuration.
@@ -228,8 +231,16 @@ public final class Runner implements Callable<Boolean>, Closeable {
       return;
     }
 
-    Runner runner = new Runner(config);
+    final Runner runner = new Runner(config);
     runner.call();
+
+    SignalManager.register(new Runnable() {
+        @Override
+        public void run() {
+          runner.close();
+        }
+      }, SignalType.INT, SignalType.TERM);
+
     runner.await();
     runner.close();
   }
@@ -367,14 +378,19 @@ public final class Runner implements Callable<Boolean>, Closeable {
   }
 
   @Override
-  public void close() {
-    try {
-      tomcat.stop();
-      tomcat.destroy();
-    } catch (LifecycleException le) {
-      log.warn("Unexpected error while stopping", le);
+  public synchronized void close() {
+    if (!closed) {
+      closed = true;
+      if (tomcat != null) {
+        try {
+          tomcat.stop();
+          tomcat.destroy();
+        } catch (LifecycleException le) {
+          log.warn("Unexpected error while stopping", le);
+        }
+        noSuchBaseDir.delete();
+      }
     }
-    noSuchBaseDir.delete();
   }
 
   private static void printHelp(Options options) {
