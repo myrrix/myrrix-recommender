@@ -92,7 +92,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
       if (prefValue > 0.0f) {
         try {
           float estimate = recommender.estimatePreference(userID, itemID);
-          avgEstimateError.addDatum(FastMath.max(0.0f, 1.0f - estimate), prefValue);
+          avgEstimateError.addDatum(FastMath.max(0.0, 1.0 - estimate), prefValue);
         } catch (NoSuchUserException nsue) {
           // continue
         } catch (NoSuchItemException nsie) {

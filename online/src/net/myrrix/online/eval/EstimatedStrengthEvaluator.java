@@ -59,7 +59,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
       try {
         float estimate = recommender.estimatePreference(userID, itemPref.getItemID());
         Preconditions.checkState(!Float.isNaN(estimate));
-        score.addDatum(1.0f - estimate, itemPref.getValue());
+        score.addDatum(1.0 - estimate, itemPref.getValue());
       } catch (NoSuchItemException nsie) {
         // continue
       } catch (NoSuchUserException nsue) {
