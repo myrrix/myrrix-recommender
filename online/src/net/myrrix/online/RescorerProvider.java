@@ -24,16 +24,23 @@ import org.apache.mahout.common.LongPair;
  * <p>Implementations of this interface provide, optionally, objects that can be used to modify and influence
  * the results of {@link ServerRecommender#recommend(long, int)},
  * {@link ServerRecommender#recommendToMany(long[], int, boolean, IDRescorer)} and
- * {@link ServerRecommender#mostSimilarItems(long, int)}. It is a means to inject business logic into
+ * {@link ServerRecommender#mostSimilarItems(long, int, Rescorer)}. It is a means to inject business logic into
  * the results of {@link ServerRecommender}.</p>
  *
- * <p>Implementations of this class are factories. An implementation creates and configures the
- * rescoring objects and returns them for use by the framework.</p>
+ * <p>Implementations of this class are factories. An implementation creates and configures an {@link IDRescorer}
+ * rescoring object and returns it for use in the context of one
+ * {@link ServerRecommender#recommend(long, int, IDRescorer)} method call. (A {@code Rescorer&lt;LongPair&gt;}
+ * is used for {@link ServerRecommender#mostSimilarItems(long, int, Rescorer)} since it operates on item ID
+ * <em>pairs</em>, but is otherwise analogous.) The {@link IDRescorer} then filters the candidates
+ * recommendations or most similar items by item ID ({@link IDRescorer#isFiltered(long)})
+ * or modifies the scores of item candidates that are not filtered ({@link IDRescorer#rescore(long, double)})
+ * based on the item ID and original score.</p>
  *
- * <p>The factory methods, like {@link #getRecommendRescorer(long[], String...)}, takes an optional argument. These
- * are passed from the REST API, as a {@code String}, from URL parameter {@code rescorerParams}. The
- * implementation may need this information to initialize its rescoring logic. For example, the argument
- * may be the user's current location, used to filter results by location.</p>
+ * <p>The factory methods, like {@link #getRecommendRescorer(long[], String...)}, take optional
+ * {@code String} arguments. These are passed from the REST API, as a {@code String}, from URL parameter
+ * {@code rescorerParams}. The implementation may need this information to initialize its rescoring
+ * logic for the request.  For example, the argument may be the user's current location, used to filter
+ * results by location.</p>
  *
  * @author Sean Owen
  */
@@ -45,7 +52,9 @@ public interface RescorerProvider {
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
    * @return {@link IDRescorer} to use with {@link ServerRecommender#recommend(long, int, IDRescorer)}
-   *  or null if none should be used
+   *  or {@code null} if none should be used. The resulting {@link IDRescorer} will be passed each candidate
+   *  item ID to {@link IDRescorer#isFiltered(long)}, and each non-filtered candidate with its original score
+   *  to {@link IDRescorer#rescore(long, double)}
    */
   IDRescorer getRecommendRescorer(long[] userIDs, String... args);
 
@@ -54,7 +63,10 @@ public interface RescorerProvider {
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
    * @return {@link Rescorer} to use with {@link ServerRecommender#mostSimilarItems(long[], int, Rescorer)}
-   *  or null if none should be used
+   *  or {@code null} if none should be used. The resulting {@code Rescorer&lt;LongPair&gt;} will be passed
+   *  each candidate item ID pair (IDs of the two similar items) to {@link Rescorer#isFiltered(Object)},
+   *  and each non-filtered candidate item ID pair with its original score to
+   *  {@link Rescorer#rescore(Object, double)}
    */
   Rescorer<LongPair> getMostSimilarItemsRescorer(String... args);
 
