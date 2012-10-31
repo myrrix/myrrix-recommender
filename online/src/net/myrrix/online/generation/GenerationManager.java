@@ -45,9 +45,10 @@ public interface GenerationManager extends Closeable, Refreshable {
    * @param userID user involved in new association
    * @param itemID item involved
    * @param value strength of the user/item association; must be positive
+   * @param bulk if true, part of a bulk update and should expect many method calls in a row
    * @throws IOException if an error occurs while sending the update
    */
-  void append(long userID, long itemID, float value) throws IOException;
+  void append(long userID, long itemID, float value, boolean bulk) throws IOException;
 
   /**
    * Records that the user-item association should be removed. This is different from recording a
@@ -55,9 +56,15 @@ public interface GenerationManager extends Closeable, Refreshable {
    *
    * @param userID user involved in new association
    * @param itemID item involved
+   * @param bulk if true, part of a bulk update and should expect many method calls in a row
    * @throws IOException if an error occurs while sending the update
    */
-  void remove(long userID, long itemID) throws IOException;
+  void remove(long userID, long itemID, boolean bulk) throws IOException;
+
+  /**
+   * Signals the end of a string of updates from a bulk update, like an {@code ingest} request.
+   */
+  void bulkDone();
 
   /**
    * @return instance ID of the recommender system that this object is managing

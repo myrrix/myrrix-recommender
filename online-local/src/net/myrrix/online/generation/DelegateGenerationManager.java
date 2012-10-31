@@ -77,7 +77,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private static final int WRITES_BETWEEN_REBUILD;
   static {
     WRITES_BETWEEN_REBUILD =
-          Integer.parseInt(System.getProperty("model.local.writesBetweenRebuild", "10000"));
+          Integer.parseInt(System.getProperty("model.local.writesBetweenRebuild", "100000"));
     Preconditions.checkArgument(WRITES_BETWEEN_REBUILD > 0);
   }
 
@@ -163,7 +163,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   }
 
   @Override
-  public void append(long userID, long itemID, float value) throws IOException {
+  public void append(long userID, long itemID, float value, boolean bulk) throws IOException {
     StringBuilder line = new StringBuilder(32);
     line.append(userID).append(',').append(itemID).append(',').append(value).append('\n');
     if (appender != null) {
@@ -171,20 +171,30 @@ public final class DelegateGenerationManager implements GenerationManager {
         appender.append(line);
       }
     }
-    if (--countdownToRebuild == 0) {
-      countdownToRebuild = WRITES_BETWEEN_REBUILD;
-      refresh(null);
-    }
+    maybeRefresh(bulk);
   }
 
   @Override
-  public void remove(long userID, long itemID) throws IOException {
+  public void remove(long userID, long itemID, boolean bulk) throws IOException {
     StringBuilder line = new StringBuilder(24);
     line.append(userID).append(',').append(itemID).append(",\n");
     synchronized (this) {
       appender.append(line);
       recentlyActiveUsers.add(userID);
       recentlyActiveItems.add(itemID);
+    }
+    maybeRefresh(bulk);
+  }
+
+  @Override
+  public void bulkDone() {
+    maybeRefresh(false);
+  }
+
+  private void maybeRefresh(boolean bulk) {
+    if (--countdownToRebuild <= 0 && !bulk) {
+      countdownToRebuild = WRITES_BETWEEN_REBUILD;
+      refresh(null);
     }
   }
 

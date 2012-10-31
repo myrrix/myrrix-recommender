@@ -174,21 +174,24 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public void ingest(Reader reader) throws TasteException {
     BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
+
       int count = 0;
       String line;
       while ((line = buffered.readLine()) != null) {
+
         if (++count % 1000000 == 0) {
           log.info("Ingested {} lines", count);
         }
+
         Iterator<String> tokens = DELIMITER.split(line).iterator();
         long userID = Long.parseLong(tokens.next());
         long itemID = Long.parseLong(tokens.next());
         if (tokens.hasNext()) {
           String token = tokens.next().trim();
           if (token.isEmpty()) {
-            removePreference(userID, itemID);
+            removePreference(userID, itemID, true);
           } else {
-            setPreference(userID, itemID, LangUtils.parseFloat(token));
+            setPreference(userID, itemID, LangUtils.parseFloat(token), true);
           }
           if (tokens.hasNext()) {
             // Allow a 4th timestamp column like Mahout, but don't parse it
@@ -196,9 +199,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
             Preconditions.checkState(!tokens.hasNext(), "Line has too many columns");
           }
         } else {
-          setPreference(userID, itemID);
+          setPreference(userID, itemID, 1.0f, true);
         }
+
       }
+      generationManager.bulkDone();
+
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     }
@@ -512,10 +518,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   @Override
   public void setPreference(long userID, long itemID, float value) {
+    setPreference(userID, itemID, value, false);
+  }
+
+  public void setPreference(long userID, long itemID, float value, boolean bulk) {
 
     // Record datum
     try {
-      generationManager.append(userID, itemID, value);
+      generationManager.append(userID, itemID, value, bulk);
     } catch (IOException ioe) {
       log.warn("Could not append datum; continuing", ioe);
     }
@@ -671,10 +681,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   @Override
   public void removePreference(long userID, long itemID) {
+    removePreference(userID, itemID, false);
+  }
+
+  private void removePreference(long userID, long itemID, boolean bulk) {
 
     // Record datum
     try {
-      generationManager.remove(userID, itemID);
+      generationManager.remove(userID, itemID, bulk);
     } catch (IOException ioe) {
       log.warn("Could not append datum; continuing", ioe);
     }
