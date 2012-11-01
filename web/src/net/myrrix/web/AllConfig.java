@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -69,7 +68,7 @@ public final class AllConfig {
     return howMany;
   }
 
-  static AllConfig build(String[] args) throws ParseException {
+  static AllConfig build(String[] args) {
     Options options = new Options();
 
     OptionBuilder.hasArg();
@@ -89,7 +88,9 @@ public final class AllConfig {
     CommandLine commandLine;
     try {
       commandLine = parser.parse(options, args);
-    } catch (MissingOptionException moe) {
+    } catch (ParseException pe) {
+      System.out.println(pe.getMessage());
+      System.out.println();
       new HelpFormatter().printHelp(AllItemSimilarities.class.getSimpleName(), options);
       return null;
     }

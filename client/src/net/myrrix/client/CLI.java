@@ -23,7 +23,6 @@ import java.util.Locale;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -149,14 +148,14 @@ public final class CLI {
     CommandLine commandLine;
     try {
       commandLine = parser.parse(options, args);
-    } catch (MissingOptionException moe) {
-      printHelp(options);
+    } catch (ParseException pe) {
+      printHelp(options, pe);
       return;
     }
     String[] programArgs = commandLine.getArgs();
 
     if (programArgs.length == 0) {
-      printHelp(options);
+      printHelp(options, null);
       return;
     }
 
@@ -164,7 +163,7 @@ public final class CLI {
     try {
       command = CLICommand.valueOf(programArgs[0].toUpperCase(Locale.ENGLISH));
     } catch (IllegalArgumentException iae) {
-      printHelp(options);
+      printHelp(options, iae);
       return;
     }
 
@@ -230,7 +229,7 @@ public final class CLI {
     }
 
     if (!success) {
-      printHelp(options);
+      printHelp(options, null);
     }
 
   }
@@ -453,10 +452,14 @@ public final class CLI {
     return s;
   }
 
-  private static void printHelp(Options options) {
+  private static void printHelp(Options options, Exception e) {
     System.out.println("Myrrix Client command line interface. Copyright 2012 Myrrix Ltd, except for included ");
     System.out.println("third-party open source software. Full details of licensing at http://myrrix.com/legal/");
     System.out.println();
+    if (e != null) {
+      System.out.println(e.getMessage());
+      System.out.println();
+    }
     new HelpFormatter().printHelp(CLI.class.getSimpleName() + " [flags] command [arg0 arg1 ...]", options);
   }
 

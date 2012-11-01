@@ -221,13 +221,13 @@ public final class Runner implements Callable<Boolean>, Closeable {
     try {
       commandLine = parser.parse(options, args);
       config = buildConfiguration(commandLine);
-    } catch (MissingOptionException moe) {
-      printHelp(options);
+    } catch (ParseException pe) {
+      printHelp(options, pe);
       return;
     }
 
     if (commandLine.getArgs().length > 0) {
-      printHelp(options);
+      printHelp(options, null);
       return;
     }
 
@@ -393,10 +393,14 @@ public final class Runner implements Callable<Boolean>, Closeable {
     }
   }
 
-  private static void printHelp(Options options) {
+  private static void printHelp(Options options, Exception e) {
     System.out.println("Myrrix Serving Layer. Copyright 2012 Myrrix Ltd, except for included ");
     System.out.println("third-party open source software. Full details of licensing at http://myrrix.com/legal/");
     System.out.println();
+    if (e != null) {
+      System.out.println(e.getMessage());
+      System.out.println();
+    }
     new HelpFormatter().printHelp(Runner.class.getSimpleName() + " [flags]", options);
   }
 
