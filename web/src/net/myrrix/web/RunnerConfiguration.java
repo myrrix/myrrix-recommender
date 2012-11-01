@@ -17,7 +17,6 @@
 package net.myrrix.web;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 
@@ -30,8 +29,6 @@ public final class RunnerConfiguration {
 
   public static final int DEFAULT_PORT = 80;
   public static final int DEFAULT_SECURE_PORT = 443;
-  public static final String DEFAULT_INSTANCE_ID = "test";
-  private static final Pattern SEMICOLON = Pattern.compile(";");
   public static final String AUTO_PARTITION_SPEC = "auto";
 
   private String bucket;
@@ -49,7 +46,6 @@ public final class RunnerConfiguration {
   private String allPartitionsSpecification;
 
   public RunnerConfiguration() {
-    instanceID = DEFAULT_INSTANCE_ID;
     port = DEFAULT_PORT;
     securePort = DEFAULT_SECURE_PORT;
   }

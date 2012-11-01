@@ -24,6 +24,7 @@
 <jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
 <jsp:directive.page import="org.apache.mahout.cf.taste.impl.common.RunningAverage"/>
 <jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
+<jsp:directive.page import="net.myrrix.online.ServerRecommender"/>
 <jsp:directive.page contentType="text/html"/>
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
@@ -121,7 +122,8 @@ function handleReturn(event, endpoint, isGet, paramSuffixes, postBodyElement) {
 System.gc(); // Helps make the heap reported more reliable:
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 
-pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
+ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
+pageContext.setAttribute("rec", rec);
 
 String localInputDir = String.valueOf(application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
 pageContext.setAttribute("localInputDir", localInputDir);
@@ -142,8 +144,9 @@ if (Float.isNaN(avgEstimateError)) {
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
 
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
-pageContext.setAttribute("numPartitions",
-                         ((ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY)).get().size());
+int numPartitions =
+    ((ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY)).get().size();
+pageContext.setAttribute("numPartitions", numPartitions);
 </jsp:scriptlet>
 
 <table>
@@ -151,7 +154,13 @@ pageContext.setAttribute("numPartitions",
   <tr><td>Cores</td><td style="text-align:left">${jvmEnv.numProcessors}</td></tr>
   <tr><td>Heap Used</td><td style="text-align:left">${jvmEnv.usedMemoryMB}MB (${jvmEnv.percentUsedMemory}%)</td></tr>
   <tr><td>Logs</td><td style="text-align:left"><a href="log.txt" target="_blank">View</a></td></tr>
+<jsp:scriptlet>
+  if (numPartitions > 1) {
+</jsp:scriptlet>
   <tr><td>Partition</td><td style="text-align:left">#${partition} (${numPartitions} total)</td></tr>
+<jsp:scriptlet>
+  }
+</jsp:scriptlet>
 </table>
 
 </td><td style="text-align:left">
@@ -159,8 +168,14 @@ pageContext.setAttribute("numPartitions",
 <h2>Recommender</h2>
 
 <table>
+<jsp:scriptlet>
+  if (rec.getBucket() != null || rec.getInstanceID() != null) {
+</jsp:scriptlet>
   <tr><td>Bucket</td><td style="text-align:left"><code>${rec.bucket}</code></td></tr>
   <tr><td>Instance ID</td><td style="text-align:left"><code>${rec.instanceID}</code></td></tr>
+<jsp:scriptlet>
+  }
+</jsp:scriptlet>
   <tr><td>Local Input Dir</td><td style="text-align:left"><a href="file://${localInputDir}"><code>${localInputDirDisplay}</code></a></td></tr>
   <tr><td>User Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numUsers}</td></tr>
   <tr><td>Item Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numItems}</td></tr>

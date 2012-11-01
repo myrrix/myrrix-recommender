@@ -103,7 +103,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * with no bucket, instance ID 0, and no partitions (partition 0 of 1 total).
    */
   public ServerRecommender(File localInputDir) {
-    this(null, "test", localInputDir, 0, null);
+    this(null, null, localInputDir, 0, null);
   }
 
   /**
@@ -118,11 +118,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                            File localInputDir,
                            int partition,
                            ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions) {
-    Preconditions.checkNotNull(instanceID, "Bad instance ID %s", instanceID);
     Preconditions.checkNotNull(localInputDir, "No local dir");
 
-    log.info("Creating ServingRecommender for bucket {}, instance {} and with local work dir {}, partition {}",
-             bucket, instanceID, localInputDir, partition);
+    if (bucket == null || instanceID == null) {
+      log.info("Creating ServerRecommender with local input dir {}", localInputDir);
+    } else {
+      log.info("Creating ServerRecommender for bucket {}, instance {} and with local input dir {}, partition {}",
+               bucket, instanceID, localInputDir, partition);
+    }
 
     generationManager = ClassUtils.loadInstanceOf(
         "net.myrrix.online.generation.DelegateGenerationManager",

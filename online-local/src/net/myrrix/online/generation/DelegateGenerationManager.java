@@ -103,7 +103,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final Semaphore refreshSemaphore;
 
   public DelegateGenerationManager(File localInputDir) throws IOException {
-    this(null, "test", localInputDir, 0, null);
+    this(null, null, localInputDir, 0, null);
   }
 
   /**
