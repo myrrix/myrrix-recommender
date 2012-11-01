@@ -93,6 +93,15 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
   }
   return false;
 }
+
+function handleReturn(event, endpoint, isGet, paramSuffixes, postBodyElement) {
+  if (event.keyCode == 13) {
+    doQuery(endpoint, isGet, paramSuffixes, postBodyElement);
+    return false;
+  }
+  return true;
+}
+
 ]]></script>
 
 </head>
@@ -211,50 +220,50 @@ pageContext.setAttribute("numPartitions",
 <form action="#" style="padding:10px">
 <table class="layout">
 
-  <tr><td></td><td>User ID</td><td colspan="2"></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td colspan="2"></td></tr>
   <tr><td><code>/recommend</code></td>
-    <td><code>/</code><input type="text" id="recommend-userid"/></td>
+    <td><code>/</code><input type="text" id="recommend-userid" onkeyup="return handleReturn(event, 'recommend',true,new Array('userid'))"/></td>
     <td></td>
     <td><a href="#" class="arrow" onclick="return doQuery('recommend',true,new Array('userid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>Item ID 1</td><td>Item ID 2</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;Item ID 2</td><td></td></tr>
   <tr><td><code>/recommendToAnonymous</code></td>
-    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1"/></td>
-    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2"/></td>
+    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
+    <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('recommendToAnonymous',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>Item ID 1</td><td>Item ID 2</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;Item ID 2</td><td></td></tr>
   <tr><td><code>/similarity</code></td>
-    <td><code>/</code><input type="text" id="similarity-itemid1"/></td>
-    <td><code>/</code><input type="text" id="similarity-itemid2"/></td>
+    <td><code>/</code><input type="text" id="similarity-itemid1" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
+    <td><code>/</code><input type="text" id="similarity-itemid2" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('similarity',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/estimate</code></td>
-    <td><code>/</code><input type="text" id="estimate-userid"/></td>
-    <td><code>/</code><input type="text" id="estimate-itemid"/></td>
+    <td><code>/</code><input type="text" id="estimate-userid" onkeyup="return handleReturn(event,'estimate',true,new Array('userid','itemid'))"/></td>
+    <td><code>/</code><input type="text" id="estimate-itemid" onkeyup="return handleReturn(event,'estimate',true,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('estimate',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/because</code></td>
-    <td><code>/</code><input type="text" id="because-userid"/></td>
-    <td><code>/</code><input type="text" id="because-itemid"/></td>
+    <td><code>/</code><input type="text" id="because-userid" onkeyup="return handleReturn(event,'because',true,new Array('userid','itemid'))"/></td>
+    <td><code>/</code><input type="text" id="because-itemid" onkeyup="return handleReturn(event,'because',true,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('because',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>User ID</td><td>Item ID</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/pref</code></td>
-    <td><code>/</code><input type="text" id="pref-userid"/></td>
-    <td><code>/</code><input type="text" id="pref-itemid"/></td>
+    <td><code>/</code><input type="text" id="pref-userid" onkeyup="return handleReturn(event,'pref',false,new Array('userid','itemid'))"/></td>
+    <td><code>/</code><input type="text" id="pref-itemid" onkeyup="return handleReturn(event,'pref',false,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('pref',false,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
 
   <tr><td colspan="4"><hr/></td></tr>
@@ -278,7 +287,7 @@ pageContext.setAttribute("numPartitions",
 
 </td><td style="width:40%">
 
-<div style="background-color:#404040;padding:10px;min-height:300px;white-space:normal">
+<div style="background-color:#404040;padding:10px;min-height:500px;white-space:normal">
 <pre><code id="request-result">[]</code></pre>
 </div>
 
