@@ -176,9 +176,11 @@ public final class InitListener implements ServletContextListener {
 
     log.info("Using RescorerProvider class {}", rescorerProviderClassName);
     if (ClassUtils.classExists(rescorerProviderClassName)) {
+      log.info("Found class in local classpath");
       return ClassUtils.loadInstanceOf(rescorerProviderClassName, RescorerProvider.class);
     }
 
+    log.info("Class doesn't exist in local classpath, looking to external JAR file");
     ResourceRetriever resourceRetriever =
         ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
     resourceRetriever.init(bucket);
