@@ -180,16 +180,18 @@ public final class InitListener implements ServletContextListener {
       return ClassUtils.loadInstanceOf(rescorerProviderClassName, RescorerProvider.class);
     }
 
-    log.info("Class doesn't exist in local classpath, looking to external JAR file");
+    log.info("Class doesn't exist in local classpath");
     ResourceRetriever resourceRetriever =
         ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
     resourceRetriever.init(bucket);
     File tempResourceFile = resourceRetriever.getRescorerJar();
     if (tempResourceFile == null) {
+      log.info("No external rescorer JAR is available in this implementation");
       throw new ClassNotFoundException(rescorerProviderClassName);
     }
 
-    log.info("Loading {} from remote rescorer JAR, from local copy {}", rescorerProviderClassName, tempResourceFile);
+    log.info("Loading {} from {}, copied from remote JAR at key {}",
+             rescorerProviderClassName, tempResourceFile, tempResourceFile);
     RescorerProvider rescorerProvider = ClassUtils.loadFromRemote(rescorerProviderClassName,
                                                                   RescorerProvider.class,
                                                                   tempResourceFile.toURI().toURL());
