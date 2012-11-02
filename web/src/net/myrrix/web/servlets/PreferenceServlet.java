@@ -74,6 +74,10 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
     }
+    if (pathComponents.hasNext()) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Path too long");
+      return;
+    }
 
     float prefValue;
     try {
