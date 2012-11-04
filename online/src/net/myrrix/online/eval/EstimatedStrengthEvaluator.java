@@ -28,6 +28,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 
 /**
@@ -58,7 +59,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
       RecommendedItem itemPref = entry.getValue();
       try {
         float estimate = recommender.estimatePreference(userID, itemPref.getItemID());
-        Preconditions.checkState(!Float.isNaN(estimate));
+        Preconditions.checkState(LangUtils.isFinite(estimate));
         score.addDatum(1.0 - estimate, itemPref.getValue());
       } catch (NoSuchItemException nsie) {
         // continue

@@ -21,6 +21,8 @@ import java.io.Serializable;
 import com.google.common.base.Preconditions;
 import org.apache.mahout.common.RandomUtils;
 
+import net.myrrix.common.LangUtils;
+
 /**
  * <p>A simple implementation of {@link TranslatedRecommendedItem}.</p>
  *
@@ -36,7 +38,7 @@ public final class GenericTranslatedRecommendedItem implements TranslatedRecomme
    */
   public GenericTranslatedRecommendedItem(String itemID, float value) {
     Preconditions.checkNotNull(itemID);
-    Preconditions.checkArgument(!Float.isNaN(value) && !Float.isInfinite(value));
+    Preconditions.checkArgument(LangUtils.isFinite(value));
     this.itemID = itemID;
     this.value = value;
   }

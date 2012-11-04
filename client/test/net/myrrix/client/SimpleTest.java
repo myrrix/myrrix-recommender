@@ -131,11 +131,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", similar);
 
     assertEquals(181L, similar.get(0).getItemID());
-    assertEquals(0.96329296f, similar.get(0).getValue());
+    assertEquals(0.99179077f, similar.get(0).getValue());
     assertEquals(50L, similar.get(1).getItemID());
-    assertEquals(0.96242565f, similar.get(1).getValue());
+    assertEquals(0.99089783f, similar.get(1).getValue());
     assertEquals(100L, similar.get(2).getItemID());
-    assertEquals(0.96033472f, similar.get(2).getValue());
+    assertEquals(0.98874503f, similar.get(2).getValue());
 
     try {
       client.mostSimilarItems(0L, 3);
@@ -177,11 +177,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", because);
 
     assertEquals(269L, because.get(0).getItemID());
-    assertEquals(0.92528331f, because.get(0).getValue());
-    assertEquals(258L, because.get(1).getItemID());
-    assertEquals(0.86642462f, because.get(1).getValue());
-    assertEquals(268L, because.get(2).getItemID());
-    assertEquals(0.85865098f, because.get(2).getValue());
+    assertEquals(0.93395460f, because.get(0).getValue());
+    assertEquals(245L, because.get(1).getItemID());
+    assertEquals(0.88200206f, because.get(1).getValue());
+    assertEquals(258L, because.get(2).getItemID());
+    assertEquals(0.87893885f, because.get(2).getValue());
 
     try {
       client.recommendedBecause(0L, 222L, 3);

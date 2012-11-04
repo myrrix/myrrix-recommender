@@ -82,13 +82,14 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
         return null;
       }
       float[] features = itemFeatures[i];
-      double similarity = SimpleVectorMath.dot(candidateFeatures, features) / candidateFeaturesNorm;
-      if (Double.isNaN(similarity)) {
+      double featuresNorm = SimpleVectorMath.norm(features);
+      double similarity = SimpleVectorMath.dot(candidateFeatures, features) / (candidateFeaturesNorm * featuresNorm);
+      if (!LangUtils.isFinite(similarity)) {
         return null;
       }
       if (rescorer1 != null) {
         similarity = rescorer1.rescore(new LongPair(itemID, toItemID), similarity);
-        if (Double.isNaN(similarity)) {
+        if (!LangUtils.isFinite(similarity)) {
           return null;
         }
       }

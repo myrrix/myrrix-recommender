@@ -57,11 +57,12 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
     FastByIDMap.MapEntry<float[]> entry = toFeaturesIterator.next();
     long itemID = entry.getKey();
     float[] candidateFeatures = entry.getValue();
-    float estimate = (float) (SimpleVectorMath.dot(candidateFeatures, features) / featuresNorm);
+    double candidateFeaturesNorm = SimpleVectorMath.norm(candidateFeatures);
+    double estimate = SimpleVectorMath.dot(candidateFeatures, features) / (candidateFeaturesNorm * featuresNorm);
     if (!LangUtils.isFinite(estimate)) {
       return null;
     }
-    delegate.set(itemID, estimate);
+    delegate.set(itemID, (float) estimate);
     return delegate;
   }
 
