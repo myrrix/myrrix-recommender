@@ -37,11 +37,13 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[] features;
+  private final double featuresNorm;
   private final Iterator<FastByIDMap.MapEntry<float[]>> toFeaturesIterator;
 
   RecommendedBecauseIterator(Iterator<FastByIDMap.MapEntry<float[]>> toFeaturesIterator, float[] features) {
     delegate = new MutableRecommendedItem();
     this.features = features;
+    this.featuresNorm = SimpleVectorMath.norm(features);
     this.toFeaturesIterator = toFeaturesIterator;
   }
 
@@ -55,7 +57,7 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
     FastByIDMap.MapEntry<float[]> entry = toFeaturesIterator.next();
     long itemID = entry.getKey();
     float[] candidateFeatures = entry.getValue();
-    float estimate = (float) SimpleVectorMath.correlation(candidateFeatures, features);
+    float estimate = (float) (SimpleVectorMath.dot(candidateFeatures, features) / featuresNorm);
     if (!LangUtils.isFinite(estimate)) {
       return null;
     }

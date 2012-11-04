@@ -36,14 +36,4 @@ public final class SimpleVectorMathTest extends MyrrixTest {
     assertEquals(2.12132034355964, SimpleVectorMath.norm(VEC2));
   }
 
-  @Test
-  public void testCosine() {
-    assertEquals(-0.61394061351492, SimpleVectorMath.cosineMeasure(VEC1, VEC2));
-  }
-
-  @Test
-  public void testCorrelation() {
-    assertEquals(-0.802955068546966, SimpleVectorMath.correlation(VEC1, VEC2));
-  }
-
 }

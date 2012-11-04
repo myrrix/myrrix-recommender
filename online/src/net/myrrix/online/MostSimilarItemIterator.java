@@ -72,6 +72,7 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
 
     Rescorer<LongPair> rescorer1 = this.rescorer;
     float[] candidateFeatures = entry.getValue();
+    double candidateFeaturesNorm = SimpleVectorMath.norm(candidateFeatures);
     double total = 0.0;
 
     int length = itemFeatures.length;
@@ -81,17 +82,17 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
         return null;
       }
       float[] features = itemFeatures[i];
-      double correlation = SimpleVectorMath.correlation(candidateFeatures, features);
-      if (Double.isNaN(correlation)) {
+      double similarity = SimpleVectorMath.dot(candidateFeatures, features) / candidateFeaturesNorm;
+      if (Double.isNaN(similarity)) {
         return null;
       }
       if (rescorer1 != null) {
-        correlation = rescorer1.rescore(new LongPair(itemID, toItemID), correlation);
-        if (Double.isNaN(correlation)) {
+        similarity = rescorer1.rescore(new LongPair(itemID, toItemID), similarity);
+        if (Double.isNaN(similarity)) {
           return null;
         }
       }
-      total += correlation;
+      total += similarity;
     }
 
     float result = (float) (total / length);

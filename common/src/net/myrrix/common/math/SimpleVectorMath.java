@@ -50,30 +50,4 @@ public final class SimpleVectorMath {
     return FastMath.sqrt(total);
   }
 
-  /**
-   * @return Pearson's correlation between the series in the two given arrays
-   */
-  public static double correlation(float[] x, float[] y) {
-    double sumX = 0.0;
-    double sumY = 0.0;
-    double sumX2 = 0.0;
-    double sumY2 = 0.0;
-    double sumXY = 0.0;
-    int n = x.length;
-    for (int i = 0; i < n; i++) {
-      double xValue = x[i];
-      double yValue = y[i];
-      sumX += xValue;
-      sumY += yValue;
-      sumX2 += xValue * xValue;
-      sumY2 += yValue * yValue;
-      sumXY += xValue * yValue;
-    }
-    return (n * sumXY - sumX * sumY) / FastMath.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-  }
-
-  public static double cosineMeasure(float[] x, float[] y) {
-    return dot(x, y) / (norm(x) * norm(y));
-  }
-
 }
