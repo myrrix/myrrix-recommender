@@ -34,8 +34,8 @@ public final class LangUtils {
    *
    * @param s {@link String} to parse
    * @return floating-point value in the {@link String}
-   * @throws IllegalArgumentException if input does not parse as a floating-point value, or is infinite or
-   *  {@link Float#NaN}
+   * @throws NumberFormatException if input does not parse as a floating-point value
+   * @throws IllegalArgumentException if input is infinite or {@link Float#NaN}
    * @see #parseDouble(String)
    */
   public static float parseFloat(String s) {

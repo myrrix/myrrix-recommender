@@ -68,7 +68,11 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
+
     long[] userIDs = userIDSet.toArray();
 
     MyrrixRecommender recommender = getRecommender();
@@ -99,6 +103,8 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
       try {
         userID = Long.parseLong(pathComponents.next());
       } catch (NoSuchElementException nsee) {
+        return null;
+      } catch (NumberFormatException nfe) {
         return null;
       }
       int nextPartitionToServe = LangUtils.mod(userID, numPartitions);

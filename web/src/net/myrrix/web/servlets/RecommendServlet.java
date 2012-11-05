@@ -64,6 +64,9 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
     if (pathComponents.hasNext()) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Path too long");
@@ -98,6 +101,8 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
     try {
       userID = Long.parseLong(pathComponents.next());
     } catch (NoSuchElementException nsee) {
+      return null;
+    } catch (NumberFormatException nfe) {
       return null;
     }
     return LangUtils.mod(userID, numPartitions);

@@ -173,7 +173,14 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
   protected static int getHowMany(ServletRequest request) {
     String howManyString = request.getParameter("howMany");
-    return howManyString == null ? DEFAULT_HOW_MANY : Integer.parseInt(howManyString);
+    if (howManyString == null) {
+      return DEFAULT_HOW_MANY;
+    }
+    try {
+      return Integer.parseInt(howManyString);
+    } catch (NumberFormatException nfe) {
+      return DEFAULT_HOW_MANY;
+    }
   }
 
   protected static String[] getRescorerParams(ServletRequest request) {

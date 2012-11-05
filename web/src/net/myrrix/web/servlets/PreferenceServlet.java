@@ -73,6 +73,9 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
     if (pathComponents.hasNext()) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Path too long");
@@ -126,6 +129,9 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
 
     MyrrixRecommender recommender = getRecommender();
@@ -145,7 +151,14 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     } finally {
       Closeables.closeQuietly(reader);
     }
-    return line != null && !line.isEmpty() ? LangUtils.parseFloat(line) : 1.0f;
+    if (line == null || line.isEmpty()) {
+      return 1.0f;
+    }
+    try {
+      return LangUtils.parseFloat(line);
+    } catch (NumberFormatException nfe) {
+      return 1.0f;
+    }
   }
 
   @Override
@@ -156,6 +169,8 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     try {
       userID = Long.parseLong(pathComponents.next());
     } catch (NoSuchElementException nsee) {
+      return null;
+    } catch (NumberFormatException nfe) {
       return null;
     }
     return LangUtils.mod(userID, numPartitions);

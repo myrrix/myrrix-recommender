@@ -141,7 +141,7 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *
  * <p>(with an example of JVM tuning flags:)</p>
  *
- * <p>{@code java -Xmx1g -XX:NewRatio=12 -XX:+UseG1GC -XX:+UseCompressedOops -jar myrrix-serving-x.y.jar --port 8080}</p>
+ * <p>{@code java -Xmx1g -XX:NewRatio=12 -XX:+UseParallelOldGC -jar myrrix-serving-x.y.jar --port 8080}</p>
  *
  * <p>Finally, some more advanced tuning parameters are available. These are system parameters, set with
  * {@code -Dproperty=value}.</p>

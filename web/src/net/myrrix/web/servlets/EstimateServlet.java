@@ -54,15 +54,19 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
     long userID;
     List<Long> itemIDsList;
     try {
-        userID = Long.parseLong(pathComponents.next());
-        itemIDsList = Lists.newArrayList();
-        while (pathComponents.hasNext()) {
-          itemIDsList.add(Long.parseLong(pathComponents.next()));
-        }
+      userID = Long.parseLong(pathComponents.next());
+      itemIDsList = Lists.newArrayList();
+      while (pathComponents.hasNext()) {
+        itemIDsList.add(Long.parseLong(pathComponents.next()));
+      }
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
+
     long[] itemIDs = new long[itemIDsList.size()];
     for (int i = 0; i < itemIDs.length; i++) {
       itemIDs[i] = itemIDsList.get(i);
@@ -91,6 +95,8 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
     try {
       userID = Long.parseLong(pathComponents.next());
     } catch (NoSuchElementException nsee) {
+      return null;
+    } catch (NumberFormatException nfe) {
       return null;
     }
     return LangUtils.mod(userID, numPartitions);

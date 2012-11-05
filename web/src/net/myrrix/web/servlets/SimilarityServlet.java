@@ -60,7 +60,11 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
+    } catch (NumberFormatException nfe) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
+      return;
     }
+
     if (itemIDSet.isEmpty()) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
