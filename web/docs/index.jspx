@@ -103,6 +103,17 @@ function handleReturn(event, endpoint, isGet, paramSuffixes, postBodyElement) {
   return true;
 }
 
+function expandOrCollapse(divID, arrowSpanID) {
+  var theDiv = document.getElementById(divID);
+  var theArrowSpan = document.getElementById(arrowSpanID);
+  if (theDiv.style.display == 'none') {
+    theDiv.style.display = 'block';
+    theArrowSpan.innerHTML = '&#x25BC;';
+  } else {
+    theDiv.style.display = 'none';
+    theArrowSpan.innerHTML = '&#x25B6;';
+  }
+}
 ]]></script>
 
 </head>
@@ -111,8 +122,6 @@ function handleReturn(event, endpoint, isGet, paramSuffixes, postBodyElement) {
 <div style="width:800px;margin-left:auto;margin-right:auto;padding:10px">
 
 <h1>Myrrix Serving Layer</h1>
-
-<hr/>
 
 <table class="layout" style="width:100%"><tr><td style="text-align:left">
 
@@ -186,8 +195,10 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
 <hr/>
 
-<h2>Service</h2>
+<h2><span onclick="expandOrCollapse('endpoint-stats','endpoint-stats-arrow')">Endpoint Stats
+  <span id="endpoint-stats-arrow">&#x25B6;</span></span></h2>
 
+<div id="endpoint-stats" style="display:none">
 <table style="width:100%">
   <tr>
     <th>Service</th>
@@ -225,6 +236,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
     }
   </jsp:scriptlet>
 </table>
+</div>
 
 <hr/>
 
