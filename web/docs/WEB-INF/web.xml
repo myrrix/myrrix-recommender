@@ -141,6 +141,11 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>som_jspx</servlet-name>
+    <servlet-class>net.myrrix.web.som_jspx</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>LogServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -205,6 +210,10 @@
   <servlet-mapping>
     <servlet-name>error_jspx</servlet-name>
     <url-pattern>/error.jspx</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>som_jspx</servlet-name>
+    <url-pattern>/som.jspx</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>LogServlet</servlet-name>

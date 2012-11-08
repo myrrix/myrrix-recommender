@@ -1,0 +1,126 @@
+<jsp:root xmlns:jsp="http://java.sun.com/JSP/Page" version="2.2">
+<!--
+Copyright Myrrix Ltd
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<jsp:directive.page contentType="text/html" session="false"/>
+<jsp:directive.page import="net.myrrix.online.ServerRecommender"/>
+<jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
+<jsp:directive.page import="net.myrrix.online.generation.Generation"/>
+<jsp:directive.page import="net.myrrix.online.som.SelfOrganizingMaps"/>
+<jsp:directive.page import="net.myrrix.online.som.Node"/>
+<jsp:directive.page import="org.apache.mahout.common.Pair"/>
+<jsp:directive.page import="java.util.Iterator"/>
+<jsp:directive.page import="java.util.List"/>
+<jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
+<html>
+<jsp:text><![CDATA[<!-- Copyright 2012 Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>
+<head>
+<title>Myrrix Serving Layer</title>
+<style type="text/css">
+body {background-color:#202020;border:0;padding:0;margin:0}
+table.htt,th.htt,tr.htt,td.htt {border:none;border-spacing:0;border-collapse:collapse}
+td.htt {width:16px;height:16px;line-height:30%}
+td.htt div {display:none;padding:10px;font-family:'Gill Sans','Gill Sans MT',Arial,sans-serif;line-height:100%;position:absolute;background-color:white;opacity:0.5}
+td.htt:hover div, td.htt div:hover {display:block}
+</style>
+</head>
+<body>
+<jsp:scriptlet>
+String mapSizeParam = request.getParameter("mapSize");
+int mapSize = mapSizeParam == null ? 40 : Integer.parseInt(mapSizeParam);
+boolean userMatrix = "user".equalsIgnoreCase(request.getParameter("matrix"));
+ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
+Generation generation = rec.getGenerationManager().getCurrentGeneration();
+if (generation != null) {
+  Node[][] map = new SelfOrganizingMaps().buildSelfOrganizedMap(userMatrix ? generation.getX() : generation.getY(),
+                                                                mapSize);
+</jsp:scriptlet>
+
+<table class="htt">
+  <jsp:scriptlet> for (Node[] mapRow : map) { </jsp:scriptlet>
+  <tr class="htt">
+    <jsp:scriptlet>
+      for (Node node : mapRow) {
+        float[] projection3D = node.getProjection3D();
+        String hexColor = '#' +
+            percentageToHexByte(projection3D[0]) +
+            percentageToHexByte(projection3D[1]) +
+            percentageToHexByte(projection3D[2]);
+        pageContext.setAttribute("hexColor", hexColor);
+    </jsp:scriptlet>
+    <td class="htt" style="background-color:${hexColor}">
+      <jsp:scriptlet>
+        List&lt;Pair&lt;Double,Long&gt;&gt; contentIDs = node.getAssignedIDs();
+        int n = Math.min(16, contentIDs.size());
+        int rowSize = n &lt;= 4 ? 2 : n &lt;= 9 ? 3 : 4;
+        if (n &gt; 0) {
+      </jsp:scriptlet>
+        <div>
+        <jsp:scriptlet>
+        Iterator&lt;Pair&lt;Double,Long&gt;&gt; it = contentIDs.iterator();
+        int k = 0;
+        while (k &lt; 9 &amp;&amp; it.hasNext()) {
+          out.write(String.valueOf(it.next().getSecond()));
+          out.write(' ');
+          if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
+            out.write("&lt;br/&gt;");
+          }
+          k++;
+        }
+        if (it.hasNext()) {
+          out.write("...");
+        }
+        </jsp:scriptlet>
+        </div>
+        <jsp:scriptlet>
+        k = 0;
+        while (k &lt; n) {
+          out.write('·');
+          if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
+            out.write("&lt;br/&gt;");
+          }
+          k++;
+        }
+        </jsp:scriptlet>
+      <jsp:scriptlet> } </jsp:scriptlet>
+    </td>
+    <jsp:scriptlet> } </jsp:scriptlet>
+  </tr>
+  <jsp:scriptlet> } </jsp:scriptlet>
+</table>
+<jsp:scriptlet> } </jsp:scriptlet>
+</body>
+</html>
+
+<jsp:declaration><![CDATA[
+private static String percentageToHexByte(double d) {
+  int value = (int) (256 * d);
+  if (value > 255) {
+    value = 255;
+  }
+  if (value < 16) {
+    return "0" + byteToHexChar(value);
+  }
+  return String.valueOf(byteToHexChar(value / 16)) + byteToHexChar(value % 16);
+}
+private static char byteToHexChar(int value) {
+  if (value < 10) {
+    return (char) ('0' + value);
+  }
+  return (char) ('A' + (value - 10));
+}
+]]></jsp:declaration>
+
+</jsp:root>

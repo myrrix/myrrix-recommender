@@ -33,7 +33,7 @@
 <head>
 <title>Myrrix Serving Layer</title>
 
-<style type="text/css"><![CDATA[
+<style type="text/css">
 body {background-color:#202020}
 body,p,th,td,h1,h2,h3 {font-family:"Gill Sans","Gill Sans MT",Helvetica,sans-serif;font-weight:300;color:white}
 a {text-decoration:none}
@@ -47,7 +47,7 @@ h1,h2,h3 {text-transform:uppercase}
 hr {margin:20px 0 10px 0}
 input {width:70px}
 a.arrow {line-height:100%;font-size:200%;margin-left:10px}
-]]></style>
+</style>
 
 <script type="text/javascript"><![CDATA[
 function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
@@ -236,6 +236,20 @@ pageContext.setAttribute("numPartitions", numPartitions);
     }
   </jsp:scriptlet>
 </table>
+</div>
+
+<hr/>
+
+
+<h2><span onclick="expandOrCollapse('feature-space','feature-space-arrow');document.getElementById('feature-space-map').src='/som.jspx?matrix=item'">Feature Space Map
+  <span id="feature-space-arrow">&#x25B6;</span></span></h2>
+
+<div id="feature-space" style="display:none">
+  <p><em>Randomized self-organizing map of feature space. Nearby points are users or items that are similar. Mouse-over cells to view IDs.</em><br/>
+    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?matrix=user'">Compute New User-Feature Map</a> &amp;middot;
+    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?matrix=item'">Compute New Item-Feature Map</a>
+  </p>
+  <iframe id="feature-space-map" src="" style="width:100%;height:660px;border:0;padding:0;margin:0">Your browser does not support iframes.</iframe>
 </div>
 
 <hr/>

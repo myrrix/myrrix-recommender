@@ -359,6 +359,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new index_jspx(), "/index.jspx");
     addServlet(context, new status_jspx(), "/status.jspx");
     addServlet(context, new error_jspx(), "/error.jspx");
+    addServlet(context, new som_jspx(), "/som.jspx");
     addServlet(context, new LogServlet(), "/log.txt");
 
     try {
