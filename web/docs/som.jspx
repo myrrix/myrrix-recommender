@@ -15,6 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <jsp:directive.page contentType="text/html" session="false"/>
+<jsp:directive.page import="net.myrrix.common.collection.FastByIDMap"/>
 <jsp:directive.page import="net.myrrix.online.ServerRecommender"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page import="net.myrrix.online.generation.Generation"/>
@@ -44,8 +45,10 @@ boolean userMatrix = "user".equalsIgnoreCase(request.getParameter("matrix"));
 ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
 Generation generation = rec.getGenerationManager().getCurrentGeneration();
 if (generation != null) {
-  Node[][] map = new SelfOrganizingMaps().buildSelfOrganizedMap(userMatrix ? generation.getX() : generation.getY(),
-                                                                mapSize);
+  FastByIDMap&lt;float[]&gt; matrix = userMatrix ? generation.getX() : generation.getY();
+  if (matrix != null &amp;&amp; !matrix.isEmpty()) {
+    Node[][] map = new SelfOrganizingMaps().buildSelfOrganizedMap(userMatrix ? generation.getX() : generation.getY(),
+                                                                  mapSize);
 </jsp:scriptlet>
 
 <table class="htt">
@@ -100,7 +103,10 @@ if (generation != null) {
   </tr>
   <jsp:scriptlet> } </jsp:scriptlet>
 </table>
-<jsp:scriptlet> } </jsp:scriptlet>
+<jsp:scriptlet>
+  }
+}
+</jsp:scriptlet>
 </body>
 </html>
 
