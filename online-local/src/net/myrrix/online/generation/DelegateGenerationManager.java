@@ -16,7 +16,6 @@
 
 package net.myrrix.online.generation;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -206,12 +206,15 @@ public final class DelegateGenerationManager implements GenerationManager {
         // But proceed anyway with what was written
         log.warn("Failed to close appender cleanly", ioe);
       }
-      if (appendFile.length() == 0) {
-        if (appendFile.exists() && !appendFile.delete()) {
-          log.warn("Could not delete {}", appendFile);
+      if (appendFile.exists()) {
+        if (appendFile.length() > 20) { // 20 is size of gzip header; <= 20 means empty
+          Files.move(appendFile, new File(inputDir, System.currentTimeMillis() + ".csv.gz"));
+        } else {
+          log.info("File appears to have no data, deleting: {}", appendFile);
+          if (!appendFile.delete()) {
+            log.warn("Could not delete {}", appendFile);
+          }
         }
-      } else {
-        Files.move(appendFile, new File(inputDir, System.currentTimeMillis() + ".csv"));
       }
     }
   }
@@ -233,8 +236,9 @@ public final class DelegateGenerationManager implements GenerationManager {
 
             synchronized (DelegateGenerationManager.this) {
               closeAppender();
-              appender = new BufferedWriter(
-                  new OutputStreamWriter(new FileOutputStream(appendFile, false), Charsets.UTF_8), 512);
+              // A small buffer is needed here, but GZIPOutputStream already provides a substantial native buffer
+              appender = new OutputStreamWriter(
+                  new GZIPOutputStream(new FileOutputStream(appendFile, false)), Charsets.UTF_8);
             }
 
             try {
