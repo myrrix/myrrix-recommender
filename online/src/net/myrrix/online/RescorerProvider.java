@@ -65,6 +65,7 @@ public interface RescorerProvider {
   IDRescorer getRecommendRescorer(long[] userIDs, String... args);
 
   /**
+   * @param itemIDs items that the anonymous user is associated to
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
@@ -73,7 +74,7 @@ public interface RescorerProvider {
    *  item ID to {@link IDRescorer#isFiltered(long)}, and each non-filtered candidate with its original score
    *  to {@link IDRescorer#rescore(long, double)}
    */
-  IDRescorer getRecommendToAnonymousRescorer(String... args);
+  IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args);
 
   /**
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional

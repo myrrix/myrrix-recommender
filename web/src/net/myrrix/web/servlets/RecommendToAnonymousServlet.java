@@ -67,13 +67,13 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
       return;
     }
 
+    long[] itemIDs = itemIDSet.toArray();
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
     IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getRecommendToAnonymousRescorer(getRescorerParams(request));
+        rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, getRescorerParams(request));
     try {
-      List<RecommendedItem> recommended =
-          recommender.recommendToAnonymous(itemIDSet.toArray(), getHowMany(request), rescorer);
+      List<RecommendedItem> recommended = recommender.recommendToAnonymous(itemIDs, getHowMany(request), rescorer);
       output(request, response, recommended);
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());

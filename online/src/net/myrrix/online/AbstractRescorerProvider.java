@@ -39,7 +39,7 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
    * @return {@code null}
    */
   @Override
-  public IDRescorer getRecommendToAnonymousRescorer(String... args) {
+  public IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args) {
     return null;
   }
 
