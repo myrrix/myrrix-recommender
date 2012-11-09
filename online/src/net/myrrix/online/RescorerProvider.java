@@ -22,10 +22,16 @@ import org.apache.mahout.common.LongPair;
 
 /**
  * <p>Implementations of this interface provide, optionally, objects that can be used to modify and influence
- * the results of {@link ServerRecommender#recommend(long, int)},
- * {@link ServerRecommender#recommendToMany(long[], int, boolean, IDRescorer)} and
- * {@link ServerRecommender#mostSimilarItems(long, int, Rescorer)}. It is a means to inject business logic into
- * the results of {@link ServerRecommender}.</p>
+ * the results of:</p>
+ *
+ * <ul>
+ *  <li>{@link ServerRecommender#recommend(long, int)}</li>
+ *  <li>{@link ServerRecommender#recommendToMany(long[], int, boolean, IDRescorer)}</li>
+ *  <li>{@link ServerRecommender#recommendToAnonymous(long[], int, IDRescorer)}</li>
+ *  <li>{@link ServerRecommender#mostSimilarItems(long, int, Rescorer)}</li>
+ * </ul>
+ *
+ * <p>It is a means to inject business logic into the results of {@link ServerRecommender}.</p>
  *
  * <p>Implementations of this class are factories. An implementation creates and configures an {@link IDRescorer}
  * rescoring object and returns it for use in the context of one
@@ -57,6 +63,17 @@ public interface RescorerProvider {
    *  to {@link IDRescorer#rescore(long, double)}
    */
   IDRescorer getRecommendRescorer(long[] userIDs, String... args);
+
+  /**
+   * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
+   *  information from the request that may be necessary to its logic, like current location. What it means
+   *  is up to the implementation.
+   * @return {@link IDRescorer} to use with {@link ServerRecommender#recommendToAnonymous(long[], int, IDRescorer)}
+   *  or {@code null} if none should be used. The resulting {@link IDRescorer} will be passed each candidate
+   *  item ID to {@link IDRescorer#isFiltered(long)}, and each non-filtered candidate with its original score
+   *  to {@link IDRescorer#rescore(long, double)}
+   */
+  IDRescorer getRecommendToAnonymousRescorer(String... args);
 
   /**
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional

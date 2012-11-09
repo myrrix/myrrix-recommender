@@ -58,6 +58,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * Recommends to a group of users all at once. It takes into account their tastes equally and produces
    * one set of recommendations that is deemed most suitable to them as a group. It is otherwise identical
    * to {@link #recommend(long, int, boolean, IDRescorer)}.
+   *
+   * @see #recommend(long, int, boolean, IDRescorer)
    */
   List<RecommendedItem> recommendToMany(long[] userIDs,
                                         int howMany,
@@ -73,6 +75,14 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @throws NotReadyException if the implementation has no usable model yet
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException;
+
+  /**
+   * Like {@link #recommendToAnonymous(long[], int)} but rescorer results like
+   * {@link #recommend(long, int, boolean, IDRescorer)}.
+   *
+   * @see #recommendToAnonymous(long[], int)
+   */
+  List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer) throws TasteException;
 
   /**
    * A bulk version of {@link #estimatePreference(long, long)}, suitable for computing many estimates

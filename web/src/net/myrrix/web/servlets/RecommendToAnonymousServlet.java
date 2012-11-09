@@ -26,10 +26,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FastIDSet;
+import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
+import net.myrrix.online.RescorerProvider;
 
 /**
  * <p>Responds to a GET request to {@code /recommendToAnonymous/[itemID1](/[itemID2]/...)?howMany=n},
@@ -66,8 +68,12 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     }
 
     MyrrixRecommender recommender = getRecommender();
+    RescorerProvider rescorerProvider = getRescorerProvider();
+    IDRescorer rescorer = rescorerProvider == null ? null :
+        rescorerProvider.getRecommendToAnonymousRescorer(getRescorerParams(request));
     try {
-      List<RecommendedItem> recommended = recommender.recommendToAnonymous(itemIDSet.toArray(), getHowMany(request));
+      List<RecommendedItem> recommended =
+          recommender.recommendToAnonymous(itemIDSet.toArray(), getHowMany(request), rescorer);
       output(request, response, recommended);
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());

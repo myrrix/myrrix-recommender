@@ -16,30 +16,39 @@
 
 package net.myrrix.online;
 
-import org.apache.mahout.cf.taste.impl.recommender.NullRescorer;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
 /**
- * Dummy implementation which just returns no-op {@link NullRescorer}.
+ * Abstract implementation of {@link RescorerProvider} which implements all methods to return {@code null}.
+ *
+ * @author Sean Owen
  */
-public final class NullRescorerProvider implements RescorerProvider {
+public abstract class AbstractRescorerProvider implements RescorerProvider {
 
   /**
-   * @return {@link NullRescorer#getUserInstance()}
+   * @return {@code null}
    */
   @Override
   public IDRescorer getRecommendRescorer(long[] userIDs, String... args) {
-    return NullRescorer.getUserInstance();
+    return null;
   }
 
   /**
-   * @return {@link NullRescorer#getItemItemPairInstance()}
+   * @return {@code null}
+   */
+  @Override
+  public IDRescorer getRecommendToAnonymousRescorer(String... args) {
+    return null;
+  }
+
+  /**
+   * @return {@code null}
    */
   @Override
   public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
-    return NullRescorer.getItemItemPairInstance();
+    return null;
   }
 
 }

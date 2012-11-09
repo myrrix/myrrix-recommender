@@ -487,6 +487,21 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException {
+    return recommendToAnonymous(itemIDs, howMany, null);
+  }
+
+  /**
+   * <p>Note that {@link IDRescorer} is not supported in the client now and must be null.</p>
+   *
+   * @param rescorer must be null
+   */
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                                    int howMany,
+                                                    IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
     return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous");
   }
 

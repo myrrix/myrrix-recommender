@@ -406,6 +406,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany)
       throws NotReadyException, NoSuchItemException {
+    return recommendToAnonymous(itemIDs, howMany, null);
+  }
+
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer)
+      throws NotReadyException, NoSuchItemException {
 
     Generation generation = getCurrentGeneration();
 
@@ -449,7 +455,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       return multithreadedTopN(anonymousFeaturesAsArray,
                                userKnownItemIDs,
-                               null,
+                               rescorer,
                                howMany,
                                generation.getCandidateFilter());
     } finally {
