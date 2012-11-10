@@ -64,7 +64,7 @@ public interface GenerationManager extends Closeable, Refreshable {
   /**
    * Signals the end of a string of updates from a bulk update, like an {@code ingest} request.
    */
-  void bulkDone();
+  void bulkDone() throws IOException;
 
   /**
    * @return instance ID of the recommender system that this object is managing

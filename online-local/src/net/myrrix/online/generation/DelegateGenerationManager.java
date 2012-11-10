@@ -187,7 +187,10 @@ public final class DelegateGenerationManager implements GenerationManager {
   }
 
   @Override
-  public void bulkDone() {
+  public void bulkDone() throws IOException {
+    synchronized (this) {
+      appender.flush();
+    }
     maybeRefresh(false);
   }
 
