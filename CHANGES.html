@@ -33,6 +33,7 @@ hr {margin:20px 0 10px 0}
   <li>Forced shutdown (with Ctrl-C, <code>kill</code>) should initiate orderly shutdown and sync
     data to S3 / HDFS</li>
   <li>Corrected output format from --recommend and --itemSimilarity in Computation Layer</li>
+  <li>Fixed a bug wherein the Computation Layer could drop a small number of users' data</li>
   <li><code>AllItemSiimlarities</code> now correctly uses item IDs from model</li>
   <li>It is now possible to specify an SSL keystore file and JAR file containing a RescorerProvider to the
     Serving Layer, when run on Amazon AWS.</li>
