@@ -28,4 +28,13 @@ public final class OneWayMigrator extends AbstractIDMigrator {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Prints the hashed long value of the given string argument.
+   *
+   * @param args first argument is string to hash
+   */
+  public static void main(String[] args) {
+    System.out.println(new OneWayMigrator().toLongID(args[0]));
+  }
+
 }
