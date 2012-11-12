@@ -50,7 +50,7 @@
   <target name="artifact.client" depends="init.artifacts, compile.module.client, compile.module.common">
     <property name="artifact.temp.output.client" value="${artifacts.temp.dir}/client"/>
     <mkdir dir="${artifact.temp.output.client}"/>
-    <jar destfile="${temp.jar.path.client.jar}" duplicate="preserve">
+    <jar destfile="${temp.jar.path.client.jar}" duplicate="preserve" level="9">
       <manifest>
         <attribute name="Main-Class" value="net.myrrix.client.CLI"/>
         <attribute name="Sealed" value="true"/>
@@ -71,7 +71,7 @@
   <target name="artifact.web-local" depends="init.artifacts, compile.module.web, compile.module.online, compile.module.common, compile.module.online-local">
     <property name="artifact.temp.output.web-local" value="${artifacts.temp.dir}/web-local"/>
     <mkdir dir="${artifact.temp.output.web-local}"/>
-    <jar destfile="${temp.jar.path.web-local.jar}" duplicate="preserve">
+    <jar destfile="${temp.jar.path.web-local.jar}" duplicate="preserve" level="9">
       <manifest>
         <attribute name="Main-Class" value="net.myrrix.web.Runner"/>
         <attribute name="Sealed" value="true"/>
