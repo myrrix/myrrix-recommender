@@ -184,8 +184,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   }
 
   protected static String[] getRescorerParams(ServletRequest request) {
-    String rescorerParamsString = request.getParameter("rescorerParams");
-    return rescorerParamsString == null ? NO_PARAMS : new String[] { rescorerParamsString };
+    String[] rescorerParams = request.getParameterValues("rescorerParams");
+    return rescorerParams == null ? NO_PARAMS : rescorerParams;
   }
 
   protected static boolean getConsiderKnownItems(ServletRequest request) {
