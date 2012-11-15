@@ -17,6 +17,7 @@
 package net.myrrix.common.stats;
 
 import java.io.Serializable;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
   private double min;
   private double max;
   private final long bucketTimeMS;
-  private final LinkedList<RunningAverageAndMinMax> subBuckets;
+  private final Deque<RunningAverageAndMinMax> subBuckets;
   private long frontBucketValidUntil;
 
   public RunningStatisticsPerTime(TimeUnit timeUnit) {

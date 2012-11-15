@@ -45,7 +45,7 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
   private static final int NUM_FEATURES = 50;
   private static final int NUM_ITEMS = 2000000;
   private static final int NUM_RECS = 10;
-  private static final int ITERATIONS = 20;
+  private static final int ITERATIONS = 4;
   private static final double LN2 = FastMath.log(2.0);
 
   @Test

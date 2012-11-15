@@ -48,25 +48,19 @@ public final class MatrixUtils {
   private static final double SINGULARITY_THRESHOLD = 0.001;
 
   // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
-  private static final Field MATRIX_DATA_FIELD;
-  static {
+  private static final Field MATRIX_DATA_FIELD = loadField(Array2DRowRealMatrix.class, "data");
+  private static final Field RDIAG_FIELD = loadField(QRDecomposition.class, "rDiag");
+
+  private static Field loadField(Class<?> clazz, String fieldName) {
+    Field field;
     try {
-      MATRIX_DATA_FIELD = Array2DRowRealMatrix.class.getDeclaredField("data");
+      field = clazz.getDeclaredField(fieldName);
     } catch (NoSuchFieldException nsfe) {
-      log.error("Can't access Array2DRowRealMatrix.data", nsfe);
+      log.error("Can't access {}.{}", clazz, fieldName);
       throw new IllegalStateException(nsfe);
     }
-    MATRIX_DATA_FIELD.setAccessible(true);
-  }
-  private static final Field RDIAG_FIELD;
-  static {
-    try {
-      RDIAG_FIELD = QRDecomposition.class.getDeclaredField("rDiag");
-    } catch (NoSuchFieldException nsfe) {
-      log.error("Can't access QRDecomposition.rDiag", nsfe);
-      throw new IllegalStateException(nsfe);
-    }
-    RDIAG_FIELD.setAccessible(true);
+    field.setAccessible(true);
+    return field;
   }
 
   private MatrixUtils() {
@@ -304,25 +298,6 @@ public final class MatrixUtils {
         } else {
           appendWithPadOrTruncate(value, result);
         }
-      }
-      result.append('\n');
-    }
-    result.append('\n');
-    return result.toString();
-  }
-
-  /**
-   * @param M matrix to print
-   * @return a print-friendly rendering of a dense, skinny matrix.
-   */
-  public static String featureMatrixToString(FastByIDMap<float[]> M) {
-    long[] rowKeys = keysInOrder(M);
-    StringBuilder result = new StringBuilder();
-    for (long rowKey : rowKeys) {
-      appendWithPadOrTruncate(rowKey, result);
-      for (float f : M.get(rowKey)) {
-        result.append('\t');
-        appendWithPadOrTruncate(f, result);
       }
       result.append('\n');
     }

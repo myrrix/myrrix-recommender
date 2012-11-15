@@ -389,7 +389,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
         } catch (LifecycleException le) {
           log.warn("Unexpected error while stopping", le);
         }
-        noSuchBaseDir.delete();
+        if (!noSuchBaseDir.delete()) {
+          log.info("Could not delete {}", noSuchBaseDir);
+        }
       }
     }
   }

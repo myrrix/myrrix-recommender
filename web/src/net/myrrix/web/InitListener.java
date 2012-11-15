@@ -195,7 +195,9 @@ public final class InitListener implements ServletContextListener {
     RescorerProvider rescorerProvider = ClassUtils.loadFromRemote(rescorerProviderClassName,
                                                                   RescorerProvider.class,
                                                                   tempResourceFile.toURI().toURL());
-    tempResourceFile.delete();
+    if (!tempResourceFile.delete()) {
+      log.info("Could not delete {}", tempResourceFile);
+    }
     return rescorerProvider;
   }
 

@@ -59,12 +59,12 @@ public final class NullInputStream extends InputStream {
   }
 
   @Override
-  public synchronized void mark(int i) {
+  public void mark(int i) {
     // Do nothing
   }
 
   @Override
-  public synchronized void reset() {
+  public void reset() {
      // Do nothing
   }
 
