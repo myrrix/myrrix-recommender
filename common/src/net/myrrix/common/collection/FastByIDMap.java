@@ -18,6 +18,7 @@
 package net.myrrix.common.collection;
 
 import java.io.Serializable;
+import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Arrays;
 import java.util.Collection;
@@ -273,6 +274,10 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
   
   public Set<MapEntry<V>> entrySet() {
     return new EntrySet();
+  }
+
+  public Collection<V> values() {
+    return new ValueCollection();
   }
   
   public void rehash() {
@@ -585,5 +590,93 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       iteratorRemove(lastNext);
     }
   }
-  
+
+  private final class ValueCollection extends AbstractCollection<V> {
+
+    @Override
+    public int size() {
+      return FastByIDMap.this.size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return FastByIDMap.this.isEmpty();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+      return containsValue(o);
+    }
+
+    @Override
+    public Iterator<V> iterator() {
+      return new ValueIterator();
+    }
+
+    @Override
+    public boolean add(V v) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean remove(Object o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends V> vs) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean removeAll(Collection<?> objects) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> objects) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void clear() {
+      FastByIDMap.this.clear();
+    }
+
+    private final class ValueIterator implements Iterator<V> {
+
+      private int position;
+      private int lastNext = -1;
+
+      @Override
+      public boolean hasNext() {
+        goToNext();
+        return position < values.length;
+      }
+
+      @Override
+      public V next() {
+        goToNext();
+        lastNext = position;
+        if (position >= values.length) {
+          throw new NoSuchElementException();
+        }
+        return values[position++];
+      }
+
+      private void goToNext() {
+        int length = values.length;
+        while (position < length && values[position] == null) {
+          position++;
+        }
+      }
+
+      @Override
+      public void remove() {
+        iteratorRemove(lastNext);
+      }
+
+    }
+
+  }
 }

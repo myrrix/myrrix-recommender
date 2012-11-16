@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.common.signal.SignalManager;
 import net.myrrix.common.signal.SignalType;
@@ -389,7 +390,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
         } catch (LifecycleException le) {
           log.warn("Unexpected error while stopping", le);
         }
-        if (!noSuchBaseDir.delete()) {
+        if (!IOUtils.deleteRecursively(noSuchBaseDir)) {
           log.info("Could not delete {}", noSuchBaseDir);
         }
       }

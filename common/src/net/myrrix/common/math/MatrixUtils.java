@@ -45,7 +45,8 @@ public final class MatrixUtils {
   private static final Logger log = LoggerFactory.getLogger(MatrixUtils.class);
 
   private static final int PRINT_COLUMN_WIDTH = 12;
-  private static final double SINGULARITY_THRESHOLD = 0.001;
+  private static final double SINGULARITY_THRESHOLD =
+      Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", "0.001"));
 
   // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
   private static final Field MATRIX_DATA_FIELD = loadField(Array2DRowRealMatrix.class, "data");
