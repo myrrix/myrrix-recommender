@@ -16,6 +16,7 @@
 
 package net.myrrix.online.som;
 
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -32,12 +33,11 @@ import org.apache.mahout.common.Pair;
  */
 public final class Node {
 
-  private final List<Pair<Double,Long>> assignedIDs;
+  private List<Pair<Double,Long>> assignedIDs;
   private final float[] center;
   private final float[] projection3D;
 
   Node(float[] initialCenter) {
-    assignedIDs = Lists.newArrayListWithCapacity(1);
     center = initialCenter;
     projection3D = new float[3];
   }
@@ -47,7 +47,18 @@ public final class Node {
    *  indicating how close it is to the center (here, cosine similarity)
    */
   public List<Pair<Double,Long>> getAssignedIDs() {
-    return assignedIDs;
+    return assignedIDs == null ? Collections.<Pair<Double,Long>>emptyList() : assignedIDs;
+  }
+
+  void addAssignedID(Pair<Double,Long> assignedID) {
+    if (assignedIDs == null) {
+      assignedIDs = Lists.newArrayListWithCapacity(1);
+    }
+    assignedIDs.add(assignedID);
+  }
+
+  void clearAssignedIDs() {
+    assignedIDs = null;
   }
 
   /**

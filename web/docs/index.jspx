@@ -241,15 +241,15 @@ pageContext.setAttribute("numPartitions", numPartitions);
 <hr/>
 
 
-<h2><span onclick="expandOrCollapse('feature-space','feature-space-arrow');document.getElementById('feature-space-map').src='/som.jspx?matrix=item'">Feature Space Map
+<h2><span onclick="expandOrCollapse('feature-space','feature-space-arrow');document.getElementById('feature-space-map').src='/som.jspx?maxMapSize=40&amp;matrix=item'">Feature Space Map
   <span id="feature-space-arrow">&#x25B6;</span></span></h2>
 
 <div id="feature-space" style="display:none">
   <p><em>Randomized self-organizing map of feature space. Nearby points are users or items that are similar. Mouse-over cells to view IDs.</em><br/>
-    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?matrix=user'">Compute New User-Feature Map</a> &amp;middot;
-    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?matrix=item'">Compute New Item-Feature Map</a>
+    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?maxMapSize=40&amp;matrix=user'">Compute New User-Feature Map</a> &amp;middot;
+    <a href="#" onclick="document.getElementById('feature-space-map').src='/som.jspx?maxMapSize=40&amp;matrix=item'">Compute New Item-Feature Map</a>
   </p>
-  <iframe id="feature-space-map" src="" style="width:100%;height:660px;border:0;padding:0;margin:0">Your browser does not support iframes.</iframe>
+  <iframe id="feature-space-map" src="" style="width:100%;height:680px;border:0;padding:0;margin:0">Your browser does not support iframes.</iframe>
 </div>
 
 <hr/>

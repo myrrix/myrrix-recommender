@@ -24,6 +24,7 @@ limitations under the License.
 <jsp:directive.page import="org.apache.mahout.common.Pair"/>
 <jsp:directive.page import="java.util.Iterator"/>
 <jsp:directive.page import="java.util.List"/>
+<jsp:directive.page import="org.apache.commons.math3.util.FastMath"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
 <jsp:text><![CDATA[<!-- Copyright 2012 Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>
@@ -32,15 +33,16 @@ limitations under the License.
 <style type="text/css">
 body {background-color:#202020;border:0;padding:0;margin:0}
 table.htt,th.htt,tr.htt,td.htt {border:none;border-spacing:0;border-collapse:collapse}
-td.htt {width:16px;height:16px;line-height:30%}
-td.htt div {display:none;padding:10px;font-family:'Gill Sans','Gill Sans MT',Arial,sans-serif;line-height:100%;position:absolute;background-color:white;opacity:0.5}
+td.htt {width:15px;height:15px;line-height:30%}
+td.htt div {display:none;padding:10px;font-size:10px;font-family:'Gill Sans','Gill Sans MT',Arial,sans-serif;line-height:100%;position:absolute;background-color:white;opacity:0.5}
 td.htt:hover div, td.htt div:hover {display:block}
 </style>
 </head>
 <body>
 <jsp:scriptlet>
-String mapSizeParam = request.getParameter("mapSize");
-int mapSize = mapSizeParam == null ? 40 : Integer.parseInt(mapSizeParam);
+String maxMapSizeParam = request.getParameter("maxMapSize");
+int maxMapSize = maxMapSizeParam == null ? 40 : Integer.parseInt(maxMapSizeParam);
+int nodeMaxSize = 9;
 boolean userMatrix = "user".equalsIgnoreCase(request.getParameter("matrix"));
 ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
 Generation generation = rec.getGenerationManager().getCurrentGeneration();
@@ -48,7 +50,7 @@ if (generation != null) {
   FastByIDMap&lt;float[]&gt; matrix = userMatrix ? generation.getX() : generation.getY();
   if (matrix != null &amp;&amp; !matrix.isEmpty()) {
     Node[][] map = new SelfOrganizingMaps().buildSelfOrganizedMap(userMatrix ? generation.getX() : generation.getY(),
-                                                                  mapSize);
+                                                                  maxMapSize);
 </jsp:scriptlet>
 
 <table class="htt">
@@ -66,36 +68,36 @@ if (generation != null) {
     <td class="htt" style="background-color:${hexColor}">
       <jsp:scriptlet>
         List&lt;Pair&lt;Double,Long&gt;&gt; contentIDs = node.getAssignedIDs();
-        int n = Math.min(16, contentIDs.size());
-        int rowSize = n &lt;= 4 ? 2 : n &lt;= 9 ? 3 : 4;
+        int n = Math.min(nodeMaxSize, contentIDs.size());
         if (n &gt; 0) {
+          int rowSize = (int) FastMath.round(FastMath.sqrt(n));
       </jsp:scriptlet>
         <div>
         <jsp:scriptlet>
-        Iterator&lt;Pair&lt;Double,Long&gt;&gt; it = contentIDs.iterator();
-        int k = 0;
-        while (k &lt; 9 &amp;&amp; it.hasNext()) {
-          out.write(String.valueOf(it.next().getSecond()));
-          out.write(' ');
-          if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
-            out.write("&lt;br/&gt;");
+          Iterator&lt;Pair&lt;Double,Long&gt;&gt; it = contentIDs.iterator();
+          int k = 0;
+          while (k &lt; nodeMaxSize &amp;&amp; it.hasNext()) {
+            out.write(String.valueOf(it.next().getSecond()));
+            out.write(' ');
+            if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
+              out.write("&lt;br/&gt;");
+            }
+            k++;
           }
-          k++;
-        }
-        if (it.hasNext()) {
-          out.write("...");
-        }
-        </jsp:scriptlet>
-        </div>
-        <jsp:scriptlet>
-        k = 0;
-        while (k &lt; n) {
-          out.write('·');
-          if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
-            out.write("&lt;br/&gt;");
+          if (it.hasNext()) {
+            out.write("...");
           }
-          k++;
-        }
+          </jsp:scriptlet>
+          </div>
+          <jsp:scriptlet>
+          k = 0;
+          while (k &lt; n) {
+            out.write('·');
+            if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
+              out.write("&lt;br/&gt;");
+            }
+            k++;
+          }
         </jsp:scriptlet>
       <jsp:scriptlet> } </jsp:scriptlet>
     </td>

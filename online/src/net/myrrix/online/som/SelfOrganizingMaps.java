@@ -24,6 +24,8 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.common.Pair;
 import org.apache.mahout.common.RandomUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.SimpleVectorMath;
@@ -46,6 +48,8 @@ import net.myrrix.common.math.SimpleVectorMath;
  * @author Sean Owen
  */
 public final class SelfOrganizingMaps {
+
+  private static final Logger log = LoggerFactory.getLogger(SelfOrganizingMaps.class);
 
   public static final double DEFAULT_MIN_DECAY = 0.00001;
   public static final double DEFAULT_INIT_LEARNING_RATE = 0.5;
@@ -70,24 +74,48 @@ public final class SelfOrganizingMaps {
     this.initLearningRate = initLearningRate;
   }
 
+  public Node[][] buildSelfOrganizedMap(FastByIDMap<float[]> vectors, int maxMapSize) {
+    return buildSelfOrganizedMap(vectors, maxMapSize, Double.NaN);
+  }
+
   /**
    * @param vectors user-feature or item-feature matrix from current computation generation
-   * @param mapSize dimension of the (square) 2D map of {@link Node}
+   * @param maxMapSize maximum desired dimension of the (square) 2D map
+   * @param samplingRate fraction of input to consider when creating the map
+   *   size overall, nodes will be pruned to remove least-matching assignments, and not all vectors in the
+   *   input will be assigned.
    * @return a square, 2D array of {@link Node} representing the map, with dimension {@code mapSize}
    */
-  public Node[][] buildSelfOrganizedMap(FastByIDMap<float[]> vectors, int mapSize) {
+  public Node[][] buildSelfOrganizedMap(FastByIDMap<float[]> vectors, int maxMapSize, double samplingRate) {
 
     Preconditions.checkNotNull(vectors);
     Preconditions.checkArgument(!vectors.isEmpty());
-    Preconditions.checkArgument(mapSize > 0);
+    Preconditions.checkArgument(maxMapSize > 0);
+    Preconditions.checkArgument(Double.isNaN(samplingRate) || (samplingRate > 0.0 && samplingRate <= 1.0));
+
+    if (Double.isNaN(samplingRate)) {
+      // Compute a sampling rate that shoots for 1 assignment per node on average
+      double expectedNodeSize = (double) vectors.size() / (maxMapSize * maxMapSize);
+      samplingRate = expectedNodeSize > 1.0 ? 1.0 / expectedNodeSize : 1.0;
+    }
+    log.info("Sampling rate: {}", samplingRate);
+    boolean doSample = samplingRate < 1.0;
+
+    int mapSize = (int) FastMath.sqrt(vectors.size() * samplingRate);
+    mapSize = FastMath.min(maxMapSize, mapSize);
+
+    Random random = RandomUtils.getRandom();
 
     int numFeatures = vectors.entrySet().iterator().next().getValue().length;
-    Node[][] map = buildInitialMap(vectors, mapSize);
+    Node[][] map = buildInitialMap(vectors, mapSize, random);
 
-    double sigma = vectors.size() / FastMath.log(mapSize);
+    double sigma = (vectors.size() * samplingRate) / FastMath.log(mapSize);
 
     int t = 0;
     for (FastByIDMap.MapEntry<float[]> vector : vectors.entrySet()) {
+      if (doSample && random.nextDouble() > samplingRate) {
+        continue;
+      }
       float[] V = vector.getValue();
       int[] bmuCoordinates = findBestMatchingUnit(V, map);
       double decayFactor = FastMath.exp(-t / sigma);
@@ -100,17 +128,21 @@ public final class SelfOrganizingMaps {
 
     for (Node[] mapRow : map) {
       for (int j = 0; j < mapSize; j++) {
-        mapRow[j].getAssignedIDs().clear();
+        mapRow[j].clearAssignedIDs();
       }
     }
+
     for (FastByIDMap.MapEntry<float[]> vector : vectors.entrySet()) {
+      if (doSample && random.nextDouble() > samplingRate) {
+        continue;
+      }
       float[] V = vector.getValue();
       int[] bmuCoordinates = findBestMatchingUnit(V, map);
       Node node = map[bmuCoordinates[0]][bmuCoordinates[1]];
       float[] center = node.getCenter();
       double currentScore =
           SimpleVectorMath.dot(V, center) / (SimpleVectorMath.norm(center) * SimpleVectorMath.norm(V));
-      map[bmuCoordinates[0]][bmuCoordinates[1]].getAssignedIDs().add(Pair.of(currentScore, vector.getKey()));
+      node.addAssignedID(Pair.of(currentScore, vector.getKey()));
     }
 
     sortMembers(map);
@@ -123,8 +155,7 @@ public final class SelfOrganizingMaps {
    * @return map of initialized {@link Node}s, where each node is empty and initialized to a randomly chosen
    *  input vector normalized to unit length
    */
-  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize) {
-    Random random = RandomUtils.getRandom();
+  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize, Random random) {
     double selectionProbability = 1.0 / vectors.size();
     Iterator<FastByIDMap.MapEntry<float[]>> it = vectors.entrySet().iterator();
     Node[][] map = new Node[mapSize][mapSize];
@@ -176,8 +207,9 @@ public final class SelfOrganizingMaps {
     int bestI = -1;
     int bestJ = -1;
     for (int i = 0; i < mapSize; i++) {
+      Node[] mapRow = map[i];
       for (int j = 0; j < mapSize; j++) {
-        float[] center = map[i][j].getCenter();
+        float[] center = mapRow[j].getCenter();
         double currentScore = SimpleVectorMath.dot(vector, center) / (SimpleVectorMath.norm(center) * vectorNorm);
         if (currentScore > bestScore) {
           bestScore = currentScore;
