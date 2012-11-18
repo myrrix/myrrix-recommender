@@ -59,6 +59,19 @@
       <artifactId>myrrix-common</artifactId>
       <version>0.9-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>net.myrrix</groupId>
+      <artifactId>myrrix-common</artifactId>
+      <version>0.9-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
