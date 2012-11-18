@@ -26,9 +26,9 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
  *
  * @author Sean Owen
  */
-final class ByValueAscComparator implements Comparator<RecommendedItem> {
+public final class ByValueAscComparator implements Comparator<RecommendedItem> {
 
-  static final Comparator<RecommendedItem> INSTANCE = new ByValueAscComparator();
+  public static final Comparator<RecommendedItem> INSTANCE = new ByValueAscComparator();
 
   private ByValueAscComparator() {
   }

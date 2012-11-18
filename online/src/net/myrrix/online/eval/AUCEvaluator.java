@@ -24,7 +24,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +55,10 @@ public final class AUCEvaluator extends AbstractEvaluator {
     int underCurve = 0;
     int total = 0;
 
-    long[] allItemIDs = getAllItemIDs(recommender);
+    long[] allItemIDs = recommender.getAllItemIDs().toArray();
     RandomGenerator random = RandomManager.getRandom();
+
+    FastIDSet testItemIDs = new FastIDSet();
 
     for (long userID : testData.keySet()) {
 
@@ -66,7 +67,7 @@ public final class AUCEvaluator extends AbstractEvaluator {
       if (numTest == 0) {
         continue;
       }
-      FastIDSet testItemIDs = new FastIDSet();
+      testItemIDs.clear();
       for (RecommendedItem testValue : testValues) {
         testItemIDs.add(testValue.getItemID());
       }
@@ -98,7 +99,7 @@ public final class AUCEvaluator extends AbstractEvaluator {
         total++;
       }
 
-      if (++count % 10000 == 0) {
+      if (++count % 100000 == 0) {
         log.info("AUC: {}", (double) underCurve / total);
       }
     }
@@ -106,17 +107,6 @@ public final class AUCEvaluator extends AbstractEvaluator {
     double score = (double) underCurve / total;
     log.info("AUC: {}", score);
     return new EvaluationResultImpl(score);
-  }
-
-  private static long[] getAllItemIDs(MyrrixRecommender recommender) throws TasteException {
-    FastIDSet allItemIDsSet = recommender.getAllItemIDs();
-    long[] allItemIDs = new long[allItemIDsSet.size()];
-    LongPrimitiveIterator it = allItemIDsSet.iterator();
-    int i = 0;
-    while (it.hasNext()) {
-      allItemIDs[i++] = it.nextLong();
-    }
-    return allItemIDs;
   }
 
 }

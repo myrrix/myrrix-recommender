@@ -16,7 +16,6 @@
 
 package net.myrrix.online.eval;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,10 +23,10 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -47,6 +46,7 @@ import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ByValueAscComparator;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -101,7 +101,7 @@ public abstract class AbstractEvaluator {
 
     File trainingDataDir = Files.createTempDir();
     trainingDataDir.deleteOnExit();
-    File trainingFile = new File(trainingDataDir, "training.csv");
+    File trainingFile = new File(trainingDataDir, "training.csv.gz");
     trainingFile.deleteOnExit();
 
     ServerRecommender recommender = null;
@@ -132,10 +132,10 @@ public abstract class AbstractEvaluator {
 
     Multimap<Long,RecommendedItem> testData = ArrayListMultimap.create();
     Writer trainingOut =
-        new OutputStreamWriter(new BufferedOutputStream(new FileOutputStream(trainingFile)), Charsets.UTF_8);
+        new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(trainingFile)), Charsets.UTF_8);
     try {
 
-      Iterator<Map.Entry<Long, Collection<RecommendedItem>>> it = data.asMap().entrySet().iterator();
+      Iterator<Map.Entry<Long,Collection<RecommendedItem>>> it = data.asMap().entrySet().iterator();
       while (it.hasNext()) {
 
         Map.Entry<Long, Collection<RecommendedItem>> entry = it.next();
@@ -145,12 +145,7 @@ public abstract class AbstractEvaluator {
 
         if (isSplitTestByPrefValue()) {
           // Sort low to high, leaving high values at end for testing as "relevant" items
-          Collections.sort(userPrefs, new Comparator<RecommendedItem>() {
-            @Override
-            public int compare(RecommendedItem a, RecommendedItem b) {
-              return a.getValue() < b.getValue() ? -1 : a.getValue() > b.getValue() ? 1 : 0;
-            }
-          });
+          Collections.sort(userPrefs, ByValueAscComparator.INSTANCE);
         }
         // else leave sorted in time order
 
