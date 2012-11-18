@@ -18,13 +18,13 @@
 package net.myrrix.common.collection;
 
 import com.google.common.collect.Maps;
-import org.apache.mahout.common.RandomUtils;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.Random;
 
 import net.myrrix.common.MyrrixTest;
+import net.myrrix.common.random.RandomManager;
 
 public final class FastByIDMapTest extends MyrrixTest {
 
@@ -104,7 +104,7 @@ public final class FastByIDMapTest extends MyrrixTest {
   public void testVersusHashMap() {
     FastByIDMap<String> actual = new FastByIDMap<String>();
     Map<Long, String> expected = Maps.newHashMapWithExpectedSize(1000000);
-    Random r = RandomUtils.getRandom();
+    RandomGenerator r = RandomManager.getRandom();
     for (int i = 0; i < 1000000; i++) {
       double d = r.nextDouble();
       Long key = (long) r.nextInt(100);

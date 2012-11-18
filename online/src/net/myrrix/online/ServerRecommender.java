@@ -47,7 +47,6 @@ import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
@@ -61,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.ClassUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -96,7 +96,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private final GenerationManager generationManager;
   private final int numCores;
-  private ReloadingReference<ExecutorService> executor;
+  private final ReloadingReference<ExecutorService> executor;
 
   /**
    * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference)} for simple local mode,

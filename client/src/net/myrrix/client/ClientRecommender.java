@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -55,11 +54,11 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
@@ -67,14 +66,15 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
+import net.myrrix.common.random.RandomManager;
 
 /**
  * <p>An implementation of {@link MyrrixRecommender} which accesses a remote Serving Layer instance
@@ -109,7 +109,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   private final boolean closeConnection;
   private final boolean ignoreHTTPSHost;
   private final List<List<Pair<String,Integer>>> partitions;
-  private final Random random;
+  private final RandomGenerator random;
 
   /**
    * Instantiates a new recommender client with the given configuration
@@ -143,7 +143,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     ignoreHTTPSHost = Boolean.valueOf(System.getProperty(IGNORE_HOSTNAME_KEY));
 
     partitions = config.getPartitions();
-    random = RandomUtils.getRandom();
+    random = RandomManager.getRandom();
   }
 
   private SSLSocketFactory buildSSLSocketFactory() throws IOException {
@@ -230,13 +230,21 @@ public final class ClientRecommender implements MyrrixRecommender {
     } else {
       if (id == null) {
         // No need to partition, use one at random
-        replicas = partitions.get(random.nextInt(numPartitions));
+        int whichPartition;
+        synchronized (random) {
+          whichPartition = random.nextInt(numPartitions);
+        }
+        replicas = partitions.get(whichPartition);
       } else {
         replicas = partitions.get(partition(id));
       }
     }
     int numReplicas = replicas.size();
-    return numReplicas == 1 ? replicas.get(0) : replicas.get(random.nextInt(numReplicas));
+    int whichReplica;
+    synchronized (random) {
+      whichReplica = random.nextInt(numReplicas);
+    }
+    return numReplicas == 1 ? replicas.get(0) : replicas.get(whichReplica);
   }
 
   private int partition(long id) {

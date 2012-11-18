@@ -28,7 +28,6 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
@@ -39,6 +38,7 @@ import net.myrrix.client.translating.TranslatedRecommendedItem;
 import net.myrrix.client.translating.TranslatingClientRecommender;
 import net.myrrix.client.translating.TranslatingRecommender;
 import net.myrrix.common.LangUtils;
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * <p>A basic command-line interface to the Java client. It is run like so:</p>

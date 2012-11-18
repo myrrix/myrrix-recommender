@@ -21,10 +21,11 @@ import java.io.Reader;
 import java.util.List;
 
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.ItemBasedRecommender;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * <p>Defines additional methods supported beyond what is in {@link ItemBasedRecommender},

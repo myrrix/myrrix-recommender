@@ -30,10 +30,11 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.AbstractLongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.common.RandomUtils;
+
+import net.myrrix.common.random.RandomUtils;
 
 /**
- * Based on {@link org.apache.mahout.cf.taste.impl.common.FastByIDMap}; adds new methods.
+ * Based on Mahout's {@code FastByIDMap}; adds new methods.
  *
  * @author Sean Owen, Mahout
  */
@@ -115,11 +116,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     int index = theHashCode % hashSize;
     long currentKey = keys[index];
     while (currentKey != NULL && key != currentKey) {
-      if (index < jump) {
-        index += hashSize - jump;
-      } else {
-        index -= jump;
-      }
+      index -= index < jump ? jump - hashSize : jump;
       currentKey = keys[index];
     }
     return index;
@@ -135,15 +132,20 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     int jump = 1 + theHashCode % (hashSize - 2);
     int index = theHashCode % hashSize;
     long currentKey = keys[index];
-    while (currentKey != NULL && currentKey != REMOVED && key != currentKey) { // Different here
-      if (index < jump) {
-        index += hashSize - jump;
-      } else {
-        index -= jump;
-      }
+    while (currentKey != NULL && currentKey != REMOVED && key != currentKey) {
+      index -= index < jump ? jump - hashSize : jump;
       currentKey = keys[index];
     }
-    return index;
+    if (currentKey != REMOVED) {
+      return index;
+    }
+    // If we're adding, it's here, but, the key might have a value already later
+    int addIndex = index;
+    while (currentKey != NULL && key != currentKey) {
+      index -= index < jump ? jump - hashSize : jump;
+      currentKey = keys[index];
+    }
+    return key == currentKey ? index : addIndex;
   }
   
   public V get(long key) {
@@ -201,20 +203,19 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       V oldValue = values[index];
       values[index] = value;
       return oldValue;
-    } else {
-      // If size is limited,
-      if (countingAccesses && numEntries >= maxSize) {
-        // and we're too large, clear some old-ish entry
-        clearStaleEntry(index);
-      }
-      keys[index] = key;
-      values[index] = value;
-      numEntries++;
-      if (keyIndex == NULL) {
-        numSlotsUsed++;
-      }
-      return null;
     }
+    // If size is limited,
+    if (countingAccesses && numEntries >= maxSize) {
+      // and we're too large, clear some old-ish entry
+      clearStaleEntry(index);
+    }
+    keys[index] = key;
+    values[index] = value;
+    numEntries++;
+    if (keyIndex == NULL) {
+      numSlotsUsed++;
+    }
+    return null;
   }
   
   private void clearStaleEntry(int index) {

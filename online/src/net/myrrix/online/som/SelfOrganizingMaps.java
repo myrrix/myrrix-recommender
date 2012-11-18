@@ -18,17 +18,18 @@ package net.myrrix.online.som;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Random;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.SimpleVectorMath;
+import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 
 /**
  * <p>This class implements a basic version of
@@ -104,7 +105,7 @@ public final class SelfOrganizingMaps {
     int mapSize = (int) FastMath.sqrt(vectors.size() * samplingRate);
     mapSize = FastMath.min(maxMapSize, mapSize);
 
-    Random random = RandomUtils.getRandom();
+    RandomGenerator random = RandomManager.getRandom();
 
     int numFeatures = vectors.entrySet().iterator().next().getValue().length;
     Node[][] map = buildInitialMap(vectors, mapSize, random);
@@ -146,7 +147,7 @@ public final class SelfOrganizingMaps {
     }
 
     sortMembers(map);
-    buildProjections(numFeatures, map);
+    buildProjections(numFeatures, map, random);
 
     return map;
   }
@@ -155,7 +156,7 @@ public final class SelfOrganizingMaps {
    * @return map of initialized {@link Node}s, where each node is empty and initialized to a randomly chosen
    *  input vector normalized to unit length
    */
-  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize, Random random) {
+  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize, RandomGenerator random) {
     double selectionProbability = 1.0 / vectors.size();
     Iterator<FastByIDMap.MapEntry<float[]>> it = vectors.entrySet().iterator();
     Node[][] map = new Node[mapSize][mapSize];
@@ -176,24 +177,6 @@ public final class SelfOrganizingMaps {
       }
     }
     return map;
-  }
-
-  /**
-   * @return a vector whose elements are uniformly chosen in [0.5,-0.5], then normalized to unit length
-   */
-  private static float[] randomUnitVector(int size, Random random) {
-    float[] vector = new float[size];
-    double total = 0.0;
-    for (int k = 0; k < size; k++) {
-      double d = random.nextDouble() - 0.5;
-      total += d * d;
-      vector[k] = (float) d;
-    }
-    float norm = (float) FastMath.sqrt(total);
-    for (int k = 0; k < size; k++) {
-      vector[k] /= norm;
-    }
-    return vector;
   }
 
   /**
@@ -260,7 +243,7 @@ public final class SelfOrganizingMaps {
     }
   }
 
-  private static void buildProjections(int numFeatures, Node[][] map) {
+  private static void buildProjections(int numFeatures, Node[][] map, RandomGenerator random) {
     int mapSize = map.length;
     float[] mean = new float[numFeatures];
     for (Node[] mapRow : map) {
@@ -270,10 +253,9 @@ public final class SelfOrganizingMaps {
     }
     divide(mean, mapSize * mapSize);
 
-    Random random = RandomUtils.getRandom();
-    float[] rBasis = randomUnitVector(numFeatures, random);
-    float[] gBasis = randomUnitVector(numFeatures, random);
-    float[] bBasis = randomUnitVector(numFeatures, random);
+    float[] rBasis = RandomUtils.randomUnitVector(numFeatures, random);
+    float[] gBasis = RandomUtils.randomUnitVector(numFeatures, random);
+    float[] bBasis = RandomUtils.randomUnitVector(numFeatures, random);
 
     for (Node[] mapRow : map) {
       for (int j = 0; j < mapSize; j++) {

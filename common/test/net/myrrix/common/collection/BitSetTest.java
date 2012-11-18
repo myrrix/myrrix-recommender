@@ -17,12 +17,11 @@
 
 package net.myrrix.common.collection;
 
-import java.util.Random;
-
-import org.apache.mahout.common.RandomUtils;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Test;
 
 import net.myrrix.common.MyrrixTest;
+import net.myrrix.common.random.RandomManager;
 
 /**
  * @author Sean Owen, Mahout
@@ -123,7 +122,7 @@ public final class BitSetTest extends MyrrixTest {
 
   @Test
   public void testNextBitSetRandom() {
-    Random random = RandomUtils.getRandom();
+    RandomGenerator random = RandomManager.getRandom();
     for (int i = 0; i < 100; i++) {
       BitSet bitSet = new BitSet(NUM_BITS);
       for (int j = 0; j < 20 + random.nextInt(50); j++) {
@@ -131,10 +130,16 @@ public final class BitSetTest extends MyrrixTest {
       }
       int from = random.nextInt(NUM_BITS);
       int nextSet = bitSet.nextSetBit(from);
-      for (int j = from; j < nextSet; j++) {
-        assertFalse(bitSet.get(j));
+      if (nextSet == -1) {
+        for (int j = from; j < NUM_BITS; j++) {
+          assertFalse(bitSet.get(j));
+        }
+      } else {
+        for (int j = from; j < nextSet; j++) {
+          assertFalse(bitSet.get(j));
+        }
+        assertTrue(bitSet.get(nextSet));
       }
-      assertTrue(bitSet.get(nextSet));
     }
   }
 

@@ -21,9 +21,9 @@ import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 
 import com.google.common.io.Closeables;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * <p>Simply prints the contents of a generation model file.</p>

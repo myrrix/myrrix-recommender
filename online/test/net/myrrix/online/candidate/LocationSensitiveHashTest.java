@@ -20,23 +20,24 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.SortedMap;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
-import org.apache.mahout.common.RandomUtils;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.SimpleVectorMath;
+import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 
 public final class LocationSensitiveHashTest extends MyrrixTest {
 
@@ -45,14 +46,14 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
   private static final int NUM_FEATURES = 50;
   private static final int NUM_ITEMS = 2000000;
   private static final int NUM_RECS = 10;
-  private static final int ITERATIONS = 4;
+  private static final int ITERATIONS = 20;
   private static final double LN2 = FastMath.log(2.0);
 
   @Test
   public void testLSH() {
     System.setProperty("model.lsh.sampleRatio", "0.1");
     System.setProperty("model.lsh.numHashes", "20");
-    Random r = RandomUtils.getRandom();
+    RandomGenerator random = RandomManager.getRandom();
 
     RunningAverage avgPercentTopRecsConsidered = new FullRunningAverage();
     RunningAverage avgNDCG = new FullRunningAverage();
@@ -62,9 +63,9 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
 
       FastByIDMap<float[]> Y = new FastByIDMap<float[]>();
       for (int i = 0; i < NUM_ITEMS; i++) {
-        Y.put(i, randomVector(r));
+        Y.put(i, RandomUtils.randomUnitVector(NUM_FEATURES, random));
       }
-      float[] userVec = randomVector(r);
+      float[] userVec = RandomUtils.randomUnitVector(NUM_FEATURES, random);
 
       double[] results = doTestRandomVecs(Y, userVec);
       double percentTopRecsConsidered = results[0];
@@ -85,17 +86,9 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
     log.info(avgNDCG.toString());
     log.info(avgPercentAllItemsConsidered.toString());
 
-    assertTrue(avgPercentTopRecsConsidered.getAverage() >= 0.7);
-    assertTrue(avgNDCG.getAverage() >= 0.7);
-    assertTrue(avgPercentAllItemsConsidered.getAverage() <= 0.1);
-  }
-
-  private static float[] randomVector(Random r) {
-    float[] vec = new float[NUM_FEATURES];
-    for (int j = 0; j < NUM_FEATURES; j++) {
-      vec[j] = r.nextFloat() - 0.5f;
-    }
-    return vec;
+    assertTrue(avgPercentTopRecsConsidered.getAverage() > 0.65);
+    assertTrue(avgNDCG.getAverage() > 0.65);
+    assertTrue(avgPercentAllItemsConsidered.getAverage() < 0.07);
   }
 
   private static double[] doTestRandomVecs(FastByIDMap<float[]> Y, float[] userVec) {

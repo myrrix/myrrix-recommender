@@ -21,9 +21,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.candidate.CandidateFilter;
 import net.myrrix.online.candidate.LocationSensitiveHash;

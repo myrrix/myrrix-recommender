@@ -63,7 +63,6 @@
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
-      <zipfileset src="common/lib/uncommons-maths-1.2.2.jar"/>
     </jar>
     <copy file="${temp.jar.path.client.jar}" tofile="myrrix-client-${version}.jar"/>
   </target>
@@ -86,7 +85,6 @@
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
-      <zipfileset src="common/lib/uncommons-maths-1.2.2.jar"/>
       <zipfileset src="common/lib/commons-math3-3.0.jar"/>
       <zipfileset src="web/lib/tomcat-embed-logging-juli.jar"/>
       <zipfileset src="web/lib/tomcat-embed-jasper.jar"/>
@@ -108,7 +106,6 @@
         <include name="mahout-math-0.7.jar"/>
         <include name="slf4j-jdk14-1.7.2.jar"/>
         <include name="slf4j-api-1.7.2.jar"/>
-        <include name="uncommons-maths-1.2.2.jar"/>
         <include name="commons-math3-3.0.jar"/>
       </lib>
     </war>

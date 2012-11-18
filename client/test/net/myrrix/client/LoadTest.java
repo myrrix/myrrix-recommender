@@ -19,7 +19,6 @@ package net.myrrix.client;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -31,15 +30,17 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.PatternFilenameFilter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
-import org.apache.mahout.common.RandomUtils;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.random.RandomManager;
 
 public final class LoadTest extends AbstractClientTest {
 
@@ -75,7 +76,7 @@ public final class LoadTest extends AbstractClientTest {
     long[] uniqueUserIDs = userIDsSet.toArray();
     long[] uniqueItemIDs = itemIDsSet.toArray();
 
-    Random random = RandomUtils.getRandom();
+    RandomGenerator random = RandomManager.getRandom();
     final ClientRecommender client = getClient();
 
     ExecutorService executor =

@@ -26,14 +26,15 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.primitives.Doubles;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.AbstractLongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.common.RandomUtils;
+
+import net.myrrix.common.random.RandomUtils;
 
 /**
- * Based on {@link org.apache.mahout.cf.taste.impl.common.FastByIDMap}; used with {@code float} instead of
- * {@code double}.
+ * Based on Mahout's {@code FastByIDMap}; used with {@code float} instead of {@code double}.
  *
  * @author Sean Owen, Mahout
  */
@@ -86,11 +87,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
     int index = theHashCode % hashSize;
     long currentKey = keys[index];
     while (currentKey != KEY_NULL && key != currentKey) {
-      if (index < jump) {
-        index += hashSize - jump;
-      } else {
-        index -= jump;
-      }
+      index -= index < jump ? jump - hashSize : jump;
       currentKey = keys[index];
     }
     return index;
@@ -106,15 +103,20 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
     int jump = 1 + theHashCode % (hashSize - 2);
     int index = theHashCode % hashSize;
     long currentKey = keys[index];
-    while (currentKey != KEY_NULL && currentKey != REMOVED && key != currentKey) { // Different here
-      if (index < jump) {
-        index += hashSize - jump;
-      } else {
-        index -= jump;
-      }
+    while (currentKey != KEY_NULL && currentKey != REMOVED && key != currentKey) {
+      index -= index < jump ? jump - hashSize : jump;
       currentKey = keys[index];
     }
-    return index;
+    if (currentKey != REMOVED) {
+      return index;
+    }
+    // If we're adding, it's here, but, the key might have a value already later
+    int addIndex = index;
+    while (currentKey != KEY_NULL && key != currentKey) {
+      index -= index < jump ? jump - hashSize : jump;
+      currentKey = keys[index];
+    }
+    return key == currentKey ? index : addIndex;
   }
 
   public float get(long key) {
@@ -280,7 +282,7 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
       long key = keys[i];
       if (key != KEY_NULL && key != REMOVED) {
         hash = 31 * hash + ((int) (key >> 32) ^ (int) key);
-        hash = 31 * hash + RandomUtils.hashDouble(values[i]);
+        hash = 31 * hash + Doubles.hashCode(values[i]);
       }
     }
     return hash;

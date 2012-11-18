@@ -19,12 +19,12 @@ package net.myrrix.online;
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
 

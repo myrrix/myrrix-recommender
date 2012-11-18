@@ -25,13 +25,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.online.RescorerProvider;
 
 /**

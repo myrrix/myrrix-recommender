@@ -22,11 +22,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * A {@link Serializable} wrapper around a {@link Generation} that lets it easily write

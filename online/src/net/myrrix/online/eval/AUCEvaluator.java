@@ -17,21 +17,21 @@
 package net.myrrix.online.eval;
 
 import java.util.List;
-import java.util.Random;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.random.RandomManager;
 
 /**
  * This implementation calculates Area under curve (AUC), which may be understood as the probability
@@ -57,7 +57,7 @@ public final class AUCEvaluator extends AbstractEvaluator {
     int total = 0;
 
     long[] allItemIDs = getAllItemIDs(recommender);
-    Random random = RandomUtils.getRandom();
+    RandomGenerator random = RandomManager.getRandom();
 
     for (long userID : testData.keySet()) {
 

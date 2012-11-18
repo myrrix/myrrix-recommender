@@ -18,7 +18,6 @@ package net.myrrix.online.factorizer.als;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,12 +28,14 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 import net.myrrix.common.stats.JVMEnvironment;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDFloatMap;
@@ -177,19 +178,9 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
   private FastByIDMap<float[]> constructInitialY() {
     FastByIDMap<float[]> randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
-    Random random = RandomUtils.getRandom();
-    // The expected length of a vector from origin to random point in the unit f-dimensional hypercube is
-    // sqrt(f/3). We've picked a vector to a point in the "half" hypercube (bounds at 0.5 not 1). Expected
-    // length is sqrt(f/12). We expected actual feature vectors to converge to unit vectors. So start off
-    // by making the expected random vector length 1.
-    int features = this.features;
-    double normalization = FastMath.sqrt(features / 12.0);
+    RandomGenerator random = RandomManager.getRandom();
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
-      float[] Yrow = new float[features];
-      for (int col = 0; col < features; col++) {
-        Yrow[col] = (float) ((random.nextDouble() - 0.5) / normalization);
-      }
-      randomY.put(entry.getKey(), Yrow);
+      randomY.put(entry.getKey(), RandomUtils.randomUnitVector(features, random));
     }
     return randomY;
   }

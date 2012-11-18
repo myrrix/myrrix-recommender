@@ -34,7 +34,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
@@ -44,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.client.ClientRecommender;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
 
 /**

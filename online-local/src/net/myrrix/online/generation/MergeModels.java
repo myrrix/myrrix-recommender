@@ -25,10 +25,10 @@ import java.io.ObjectOutputStream;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.MatrixUtils;
 
 /**

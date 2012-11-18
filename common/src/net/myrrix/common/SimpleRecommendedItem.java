@@ -16,9 +16,9 @@
 
 package net.myrrix.common;
 
+import com.google.common.primitives.Floats;
 import com.google.common.primitives.Longs;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.RandomUtils;
 
 /**
  * Simple and complete implementation of {@link RecommendedItem} which can be compared with itself.
@@ -47,7 +47,7 @@ public final class SimpleRecommendedItem implements RecommendedItem, Comparable<
 
   @Override
   public int hashCode() {
-    return Longs.hashCode(itemID) ^ RandomUtils.hashFloat(value);
+    return Longs.hashCode(itemID) ^ Floats.hashCode(value);
   }
 
   @Override

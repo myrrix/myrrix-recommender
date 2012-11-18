@@ -19,7 +19,7 @@ package net.myrrix.client.translating;
 import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.common.RandomUtils;
+import com.google.common.primitives.Floats;
 
 import net.myrrix.common.LangUtils;
 
@@ -60,7 +60,7 @@ public final class GenericTranslatedRecommendedItem implements TranslatedRecomme
 
   @Override
   public int hashCode() {
-    return itemID.hashCode() ^ RandomUtils.hashFloat(value);
+    return itemID.hashCode() ^ Floats.hashCode(value);
   }
 
   @Override

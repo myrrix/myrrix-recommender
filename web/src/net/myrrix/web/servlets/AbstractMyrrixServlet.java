@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -35,13 +34,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.Pair;
-import org.apache.mahout.common.RandomUtils;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.ReloadingReference;
+import net.myrrix.common.random.RandomManager;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.web.common.stats.ServletStats;
 
@@ -71,7 +71,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private ServletStats timing;
   private ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions;
   private Integer thisPartition;
-  private Random random;
+  private RandomGenerator random;
   private ConcurrentMap<String,ResponseContentType> responseTypeCache;
 
   @Override
@@ -88,7 +88,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     allPartitions = theAllPartitions;
 
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
-    random = RandomUtils.getRandom();
+    random = RandomManager.getRandom();
     responseTypeCache = Maps.newConcurrentMap();
 
     @SuppressWarnings("unchecked")
@@ -140,7 +140,11 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
                                              List<List<Pair<String,Integer>>> thePartitions) {
 
     List<Pair<String,Integer>> replicas = thePartitions.get(toPartition);
-    int chosenReplica = random.nextInt(replicas.size());
+    int numReplicas = replicas.size();
+    int chosenReplica;
+    synchronized (random) {
+      chosenReplica = random.nextInt(numReplicas);
+    }
     Pair<String,Integer> hostPort = replicas.get(chosenReplica);
 
     StringBuilder redirectURL = new StringBuilder();
@@ -228,7 +232,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  protected final ResponseContentType determineResponseType(HttpServletRequest request) {
+  final ResponseContentType determineResponseType(HttpServletRequest request) {
 
     String acceptHeader = request.getHeader("Accept");
     ResponseContentType cached = responseTypeCache.get(acceptHeader);

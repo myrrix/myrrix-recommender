@@ -23,11 +23,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * <p>Responds to a GET request to {@code /user/allIDs} or {@code /item/allIDs}, and in turn calls

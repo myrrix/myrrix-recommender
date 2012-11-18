@@ -20,12 +20,12 @@ package net.myrrix.common;
 import java.io.File;
 
 import com.google.common.io.Files;
-import org.apache.mahout.common.RandomUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
 import net.myrrix.common.io.IOUtils;
+import net.myrrix.common.random.RandomManager;
 
 public abstract class MyrrixTest extends Assert {
 
@@ -46,10 +46,6 @@ public abstract class MyrrixTest extends Assert {
     Assert.assertArrayEquals(expecteds, actuals, FLOAT_EPSILON);
   }
 
-  public static void assertArrayEquals(String message, float[] expecteds, float[] actuals) {
-    Assert.assertArrayEquals(message, expecteds, actuals, FLOAT_EPSILON);
-  }
-
   @SuppressWarnings("deprecation")
   public static void assertEquals(double expected, double actual) {
     Assert.assertEquals(expected, actual, DOUBLE_EPSILON);
@@ -64,14 +60,10 @@ public abstract class MyrrixTest extends Assert {
     Assert.assertArrayEquals(expecteds, actuals, DOUBLE_EPSILON);
   }
 
-  public static void assertArrayEquals(String message, double[] expecteds, double[] actuals) {
-    Assert.assertArrayEquals(message, expecteds, actuals, DOUBLE_EPSILON);
-  }
-
   @Before
   public void setUp() throws Exception {
     testTempDir = null;
-    RandomUtils.useTestSeed();
+    RandomManager.useTestSeed();
   }
 
   @After

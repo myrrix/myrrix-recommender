@@ -19,19 +19,19 @@ package net.myrrix.online.candidate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Random;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.ArithmeticUtils;
 import org.apache.commons.math3.util.FastMath;
-import org.apache.mahout.cf.taste.impl.common.FastIDSet;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.common.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.random.RandomManager;
 
 /**
  * <p>This class implements a form of location sensitive hashing (LSH). This is used to quickly, approximately,
@@ -116,11 +116,11 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
       int features = Y.entrySet().iterator().next().getValue().length;
 
-      Random r = RandomUtils.getRandom();
+      RandomGenerator random = RandomManager.getRandom();
       randomVectors = new boolean[NUM_HASHES][features];
       for (boolean[] randomVector : randomVectors) {
         for (int j = 0; j < features; j++) {
-          randomVector[j] = r.nextBoolean();
+          randomVector[j] = random.nextBoolean();
         }
       }
 
