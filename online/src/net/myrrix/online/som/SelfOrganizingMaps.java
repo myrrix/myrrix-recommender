@@ -17,11 +17,12 @@
 package net.myrrix.online.som;
 
 import java.util.Collections;
-import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.distribution.PascalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,80 +101,96 @@ public final class SelfOrganizingMaps {
       samplingRate = expectedNodeSize > 1.0 ? 1.0 / expectedNodeSize : 1.0;
     }
     log.info("Sampling rate: {}", samplingRate);
-    boolean doSample = samplingRate < 1.0;
 
-    int mapSize = (int) FastMath.sqrt(vectors.size() * samplingRate);
-    mapSize = FastMath.min(maxMapSize, mapSize);
+    int mapSize = FastMath.min(maxMapSize, (int) FastMath.sqrt(vectors.size() * samplingRate));
+    Node[][] map = buildInitialMap(vectors, mapSize);
 
-    RandomGenerator random = RandomManager.getRandom();
+    sketchMapParallel(vectors, samplingRate, map);
+
+    for (Node[] mapRow : map) {
+      for (Node node : mapRow) {
+        node.clearAssignedIDs();
+      }
+    }
+
+    assignVectorsParallel(vectors, samplingRate, map);
+    sortMembers(map);
 
     int numFeatures = vectors.entrySet().iterator().next().getValue().length;
-    Node[][] map = buildInitialMap(vectors, mapSize, random);
+    buildProjections(numFeatures, map);
 
+    return map;
+  }
+
+  private void sketchMapParallel(FastByIDMap<float[]> vectors, double samplingRate, Node[][] map) {
+    int mapSize = map.length;
     double sigma = (vectors.size() * samplingRate) / FastMath.log(mapSize);
-
     int t = 0;
-    for (FastByIDMap.MapEntry<float[]> vector : vectors.entrySet()) {
-      if (doSample && random.nextDouble() > samplingRate) {
-        continue;
-      }
-      float[] V = vector.getValue();
+    for (FastByIDMap.MapEntry<float[]> entry : vectors.entrySet()) {
+      float[] V = entry.getValue();
       int[] bmuCoordinates = findBestMatchingUnit(V, map);
       double decayFactor = FastMath.exp(-t / sigma);
+      t++;
       if (decayFactor < minDecay) {
         break;
       }
-      updateNeighborhood(map, V, bmuCoordinates, decayFactor);
-      t++;
+      updateNeighborhood(map, V, bmuCoordinates[0], bmuCoordinates[1], decayFactor);
     }
+  }
 
-    for (Node[] mapRow : map) {
-      for (int j = 0; j < mapSize; j++) {
-        mapRow[j].clearAssignedIDs();
-      }
-    }
-
-    for (FastByIDMap.MapEntry<float[]> vector : vectors.entrySet()) {
+  private static void assignVectorsParallel(FastByIDMap<float[]> vectors, double samplingRate, Node[][] map) {
+    boolean doSample = samplingRate < 1.0;
+    RandomGenerator random = RandomManager.getRandom();
+    for (FastByIDMap.MapEntry<float[]> entry : vectors.entrySet()) {
       if (doSample && random.nextDouble() > samplingRate) {
         continue;
       }
-      float[] V = vector.getValue();
+      float[] V = entry.getValue();
       int[] bmuCoordinates = findBestMatchingUnit(V, map);
       Node node = map[bmuCoordinates[0]][bmuCoordinates[1]];
       float[] center = node.getCenter();
       double currentScore =
           SimpleVectorMath.dot(V, center) / (SimpleVectorMath.norm(center) * SimpleVectorMath.norm(V));
-      node.addAssignedID(Pair.of(currentScore, vector.getKey()));
+      Pair<Double,Long> newAssignedID = Pair.of(currentScore, entry.getKey());
+      node.addAssignedID(newAssignedID);
     }
-
-    sortMembers(map);
-    buildProjections(numFeatures, map, random);
-
-    return map;
   }
 
   /**
    * @return map of initialized {@link Node}s, where each node is empty and initialized to a randomly chosen
    *  input vector normalized to unit length
    */
-  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize, RandomGenerator random) {
-    double selectionProbability = 1.0 / vectors.size();
-    Iterator<FastByIDMap.MapEntry<float[]>> it = vectors.entrySet().iterator();
+  private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize) {
+
+    double p = ((double) mapSize * mapSize) / vectors.size(); // Choose mapSize^2 out of # vectors
+    PascalDistribution pascalDistribution;
+    if (p >= 1.0) {
+      // No sampling at all, we can't fill the map with one pass even
+      pascalDistribution = null;
+    } else {
+      // Change this in Commons Math 3.1:
+      //pascalDistribution = new PascalDistribution(RandomManager.getRandom(), 1, p);
+      // Number of un-selected elements to skip between selections is geometrically distributed with
+      // parameter p; this is the same as a negative binomial / Pascal distribution with r=1:
+      pascalDistribution = new PascalDistribution(1, p);
+    }
+
+    LongPrimitiveIterator keyIterator = vectors.keySetIterator();
     Node[][] map = new Node[mapSize][mapSize];
     for (Node[] mapRow : map) {
       for (int j = 0; j < mapSize; j++) {
-        float[] chosenVector = null;
-        while (chosenVector == null) {
-          if (!it.hasNext()) { // Start over; not exactly random but OK
-            it = vectors.entrySet().iterator();
-          }
-          FastByIDMap.MapEntry<float[]> entry = it.next();
-          if (random.nextDouble() < selectionProbability) {
-            chosenVector = entry.getValue().clone();
-            divide(chosenVector, (float) SimpleVectorMath.norm(chosenVector));
+        if (pascalDistribution != null) {
+          keyIterator.skip(pascalDistribution.sample());
+        }
+        while (!keyIterator.hasNext()) {
+          keyIterator = vectors.keySetIterator(); // Start over, a little imprecise but affects it not much
+          Preconditions.checkState(keyIterator.hasNext());
+          if (pascalDistribution != null) {
+            keyIterator.skip(pascalDistribution.sample());
           }
         }
-        mapRow[j] = new Node(chosenVector);
+        float[] sampledVector = vectors.get(keyIterator.nextLong());
+        mapRow[j] = new Node(sampledVector);
       }
     }
     return map;
@@ -208,28 +225,28 @@ public final class SelfOrganizingMaps {
    * Completes the update step after assigning an input vector tentatively to a {@link Node}. The assignment
    * causes nearby nodes (including the assigned one) to move their centers towards the vector.
    */
-  private void updateNeighborhood(Node[][] map, float[] v, int[] bmuCoordinates, double decayFactor) {
+  private void updateNeighborhood(Node[][] map, float[] V, int bmuI, int bmuJ, double decayFactor) {
     int mapSize = map.length;
     double neighborhoodRadius = mapSize * decayFactor;
 
-    int bmuI = bmuCoordinates[0];
-    int bmuJ = bmuCoordinates[1];
-
-    int minI = Math.max(0, (int) FastMath.floor(bmuI - neighborhoodRadius));
-    int maxI = Math.min(mapSize, (int) FastMath.ceil(bmuI + neighborhoodRadius));
-    int minJ = Math.max(0, (int) FastMath.floor(bmuJ - neighborhoodRadius));
-    int maxJ = Math.min(mapSize, (int) FastMath.ceil(bmuJ + neighborhoodRadius));
+    int minI = FastMath.max(0, (int) FastMath.floor(bmuI - neighborhoodRadius));
+    int maxI = FastMath.min(mapSize, (int) FastMath.ceil(bmuI + neighborhoodRadius));
+    int minJ = FastMath.max(0, (int) FastMath.floor(bmuJ - neighborhoodRadius));
+    int maxJ = FastMath.min(mapSize, (int) FastMath.ceil(bmuJ + neighborhoodRadius));
 
     for (int i = minI; i < maxI; i++) {
+      Node[] mapRow = map[i];
       for (int j = minJ; j < maxJ; j++) {
         double learningRate = initLearningRate * decayFactor;
         double currentDistance = distance(i, j, bmuI, bmuJ);
         double theta = FastMath.exp(-(currentDistance * currentDistance) /
                                      (2.0 * neighborhoodRadius * neighborhoodRadius));
         double learningTheta = learningRate * theta;
-        float[] W = map[i][j].getCenter();
-        for (int k = 0; k < W.length; k++) {
-          W[k] += (float) (learningTheta * (v[k] - W[k]));
+        float[] center = mapRow[j].getCenter();
+        int length = center.length;
+        // Don't synchronize, for performance. Colliding updates once in a while does little.
+        for (int k = 0; k < length; k++) {
+          center[k] += (float) (learningTheta * (V[k] - center[k]));
         }
       }
     }
@@ -243,7 +260,7 @@ public final class SelfOrganizingMaps {
     }
   }
 
-  private static void buildProjections(int numFeatures, Node[][] map, RandomGenerator random) {
+  private static void buildProjections(int numFeatures, Node[][] map) {
     int mapSize = map.length;
     float[] mean = new float[numFeatures];
     for (Node[] mapRow : map) {
@@ -253,6 +270,7 @@ public final class SelfOrganizingMaps {
     }
     divide(mean, mapSize * mapSize);
 
+    RandomGenerator random = RandomManager.getRandom();
     float[] rBasis = RandomUtils.randomUnitVector(numFeatures, random);
     float[] gBasis = RandomUtils.randomUnitVector(numFeatures, random);
     float[] bBasis = RandomUtils.randomUnitVector(numFeatures, random);
