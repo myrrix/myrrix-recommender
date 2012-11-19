@@ -97,7 +97,8 @@ public abstract class AbstractEvaluator {
 
     Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0);
     Preconditions.checkArgument(evaluationPercentage > 0.0 && evaluationPercentage <= 1.0);
-    Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory());
+    Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory(),
+                                "%s is not a directory", originalDataDir);
 
     File trainingDataDir = Files.createTempDir();
     trainingDataDir.deleteOnExit();

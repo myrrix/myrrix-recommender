@@ -65,7 +65,8 @@ public final class ReconstructionEvaluator {
 
   public EvaluationResult evaluate(File originalDataDir) throws TasteException {
 
-    Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory());
+    Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory(),
+                                "%s is not a directory", originalDataDir);
     File tempDir = Files.createTempDir();
 
     ServerRecommender recommender = null;

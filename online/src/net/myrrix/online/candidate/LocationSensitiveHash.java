@@ -143,7 +143,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
             newIDs[i] = ids[i];
           }
           newIDs[length] = entry.getKey();
-          maxBucketSize = Math.max(maxBucketSize, newIDs.length);
+          maxBucketSize = FastMath.max(maxBucketSize, newIDs.length);
           buckets.put(signature, newIDs);
         }
         if (++count % 1000000 == 0) {

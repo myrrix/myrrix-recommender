@@ -59,6 +59,7 @@
       <artifactId>myrrix-common</artifactId>
       <version>0.9-SNAPSHOT</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-common</artifactId>
@@ -72,11 +73,12 @@
       <version>4.10</version>
       <scope>test</scope>
     </dependency>
+    -->
   </dependencies>
 
   <build>
     <sourceDirectory>src</sourceDirectory>
-    <testSourceDirectory>test</testSourceDirectory>
+    <!--<testSourceDirectory>test</testSourceDirectory>-->
     <outputDirectory>build</outputDirectory>
     <plugins>
       <plugin>

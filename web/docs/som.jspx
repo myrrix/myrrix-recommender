@@ -68,7 +68,7 @@ if (generation != null) {
     <td class="htt" style="background-color:${hexColor}">
       <jsp:scriptlet>
         List&lt;Pair&lt;Double,Long&gt;&gt; contentIDs = node.getAssignedIDs();
-        int n = Math.min(nodeMaxSize, contentIDs.size());
+        int n = FastMath.min(nodeMaxSize, contentIDs.size());
         if (n &gt; 0) {
           int rowSize = (int) FastMath.round(FastMath.sqrt(n));
       </jsp:scriptlet>

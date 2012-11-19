@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.AbstractLongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
@@ -317,7 +318,7 @@ public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> 
     long[] otherKeys = otherMap.keys;
     int length = keys.length;
     int otherLength = otherKeys.length;
-    int max = Math.min(length, otherLength);
+    int max = FastMath.min(length, otherLength);
 
     int i = 0;
     while (i < max) {
