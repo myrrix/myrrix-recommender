@@ -59,9 +59,9 @@ public final class PrintGeneration {
     printFeatureMatrix(generation.getY());
     System.out.println();
 
-    System.out.println("knownUserIDs:");
-    printKnownItems(generation.getKnownUserIDs());
-    System.out.println();
+    //System.out.println("knownUserIDs:");
+    //printKnownItems(generation.getKnownUserIDs());
+    //System.out.println();
 
     System.out.println("knownItemIDs:");
     printKnownItems(generation.getKnownItemIDs());
