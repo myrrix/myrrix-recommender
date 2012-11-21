@@ -50,4 +50,14 @@ public final class SimpleVectorMath {
     return FastMath.sqrt(total);
   }
 
+  public static double distanceSquared(float[] x, float[] y) {
+    int length = x.length;
+    double total = 0.0;
+    for (int i = 0; i < length; i++) {
+      double d = x[i] - y[i];
+      total += d * d;
+    }
+    return total;
+  }
+
 }

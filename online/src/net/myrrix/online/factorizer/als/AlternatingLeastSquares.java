@@ -30,10 +30,13 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
+import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
 import net.myrrix.common.stats.JVMEnvironment;
@@ -159,16 +162,17 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     int numThreads =
         threadsString == null ? Runtime.getRuntime().availableProcessors() : Integer.parseInt(threadsString);
     ExecutorService executor =
-        Executors.newFixedThreadPool(numThreads,
-                                     new ThreadFactoryBuilder().setNameFormat("AlternatingLeastSquares-%d").build());
+        Executors.newFixedThreadPool(numThreads, new ThreadFactoryBuilder().setNameFormat("ALS-%d").build());
 
     log.info("Starting {} iterations with {} threads", iterationsToRun, numThreads);
 
     try {
       for (int i = 0; i < iterationsToRun; i++) {
-        iterateXFromY(executor);
-        iterateYFromX(executor);
+        RunningAverage avgSquaredDiff = new FullRunningAverage();
+        iterateXFromY(executor, avgSquaredDiff);
+        iterateYFromX(executor, avgSquaredDiff);
         log.info("Finished iteration {} of {}", i + 1, iterationsToRun);
+        log.info("Avg squared difference of feature vectors vs prior iteration: {}", avgSquaredDiff);
       }
     } finally {
       executor.shutdown();
@@ -188,7 +192,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /**
    * Runs one iteration to compute X from Y.
    */
-  private void iterateXFromY(ExecutorService executor) throws ExecutionException, InterruptedException {
+  private void iterateXFromY(ExecutorService executor, RunningAverage avgSquaredDiff)
+      throws ExecutionException, InterruptedException {
 
     RealMatrix YTY = MatrixUtils.transposeTimesSelf(Y);
     Collection<Future<?>> futures = Lists.newArrayList();
@@ -197,12 +202,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyRow.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
+        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit, avgSquaredDiff)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
+      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit, avgSquaredDiff)));
     }
 
     int count = 0;
@@ -226,7 +231,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /**
    * Runs one iteration to compute Y from X.
    */
-  private void iterateYFromX(ExecutorService executor) throws ExecutionException, InterruptedException {
+  private void iterateYFromX(ExecutorService executor, RunningAverage avgSquaredDiff)
+      throws ExecutionException, InterruptedException {
 
     RealMatrix XTX = MatrixUtils.transposeTimesSelf(X);
     Collection<Future<?>> futures = Lists.newArrayList();
@@ -235,12 +241,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
+        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit, avgSquaredDiff)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
+      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit, avgSquaredDiff)));
     }
 
     int count = 0;
@@ -263,17 +269,20 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     private final RealMatrix YTY;
     private final FastByIDMap<float[]> X;
     private final List<Pair<Long,FastByIDFloatMap>> workUnit;
+    private final RunningAverage avgSquaredDiff;
 
     private Worker(int features,
                    FastByIDMap<float[]> Y,
                    RealMatrix YTY,
                    FastByIDMap<float[]> X,
-                   List<Pair<Long,FastByIDFloatMap>> workUnit) {
+                   List<Pair<Long,FastByIDFloatMap>> workUnit,
+                   RunningAverage avgSquaredDiff) {
       this.features = features;
       this.Y = Y;
       this.YTY = YTY;
       this.X = X;
       this.workUnit = workUnit;
+      this.avgSquaredDiff = avgSquaredDiff;
     }
 
     @Override
@@ -347,8 +356,15 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         }
 
         // Store result:
+        float[] oldXu;
         synchronized (X) {
-          X.put(work.getFirst(), xu);
+          oldXu = X.put(work.getFirst(), xu);
+        }
+        if (oldXu != null) {
+          double distSquared = SimpleVectorMath.distanceSquared(xu, oldXu);
+          synchronized (avgSquaredDiff) {
+            avgSquaredDiff.addDatum(distSquared);
+          }
         }
 
         // Process is identical for computing Y from X. Swap X in for Y, Y for X, i for u, etc.
