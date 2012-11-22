@@ -27,7 +27,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.google.common.base.Preconditions;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import org.apache.mahout.common.Pair;
@@ -80,7 +79,11 @@ public final class InitListener implements ServletContextListener {
         break;
       }
     }
-    Preconditions.checkState(logHandler != null);
+    if (logHandler == null) {
+      // Not previously configured by command line, make a new one
+      logHandler = new MemoryHandler();
+      java.util.logging.Logger.getLogger("").addHandler(logHandler);
+    }
     context.setAttribute(LOG_HANDLER, logHandler);
 
     String localInputDirName = getAttributeOrParam(context, LOCAL_INPUT_DIR_KEY);
