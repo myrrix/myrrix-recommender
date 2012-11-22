@@ -153,8 +153,9 @@ if (Float.isNaN(avgEstimateError)) {
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
 
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
-int numPartitions =
-    ((ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY)).get().size();
+ReloadingReference&lt;List&lt;?&gt;&gt; partitionRef =
+    (ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY);
+int numPartitions = partitionRef == null ? 0 : partitionRef.get().size();
 pageContext.setAttribute("numPartitions", numPartitions);
 </jsp:scriptlet>
 

@@ -21,18 +21,6 @@
 
   <!--
   <context-param>
-    <param-name>net.myrrix.web.InitListener.BUCKET</param-name>
-    <param-value>my-bucket</param-value>
-  </context-param>
-   -->
-  <!--
-  <context-param>
-    <param-name>net.myrrix.web.InitListener.INSTANCE_ID</param-name>
-    <param-value>0</param-value>
-  </context-param>
-   -->
-  <!--
-  <context-param>
     <param-name>net.myrrix.web.InitListener.RESCORER_PROVIDER_CLASS</param-name>
     <param-value>CHANGEME</param-value>
   </context-param>
@@ -40,18 +28,6 @@
   <!--
   <context-param>
     <param-name>net.myrrix.web.InitListener.LOCAL_INPUT_DIR</param-name>
-    <param-value>CHANGEME</param-value>
-  </context-param>
-   -->
-  <!--
-  <context-param>
-    <param-name>net.myrrix.web.InitListener.ALL_PARTITIONS_SPEC</param-name>
-    <param-value>CHANGEME</param-value>
-  </context-param>
-   -->
-  <!--
-  <context-param>
-    <param-name>net.myrrix.web.InitListener.PARTITION</param-name>
     <param-value>CHANGEME</param-value>
   </context-param>
    -->

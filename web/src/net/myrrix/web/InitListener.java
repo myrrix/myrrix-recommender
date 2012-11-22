@@ -104,43 +104,18 @@ public final class InitListener implements ServletContextListener {
     }
     context.setAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY, localInputDir.getAbsolutePath());
 
-    final int port = Integer.parseInt(getAttributeOrParam(context, PORT_KEY));
-    final String bucket = getAttributeOrParam(context, BUCKET_KEY);
-    final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
-
-    final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
-
-    ReloadingReference<List<List<Pair<String,Integer>>>> allPartitionsReference =
-        new ReloadingReference<List<List<Pair<String,Integer>>>>(new Callable<List<List<Pair<String,Integer>>>>() {
-          @Override
-          public List<List<Pair<String, Integer>>> call() {
-            if (allPartitionsSpecString == null) {
-              return PartitionsUtils.getDefaultLocalPartition(port);
-            }
-            if (RunnerConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsSpecString)) {
-              PartitionLoader loader =
-                  ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", PartitionLoader.class);
-              List<List<Pair<String, Integer>>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
-              log.info("Latest partitions: {}", newPartitions);
-              return newPartitions;
-            }
-            return PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
-          }
-        }, 10, TimeUnit.MINUTES);
-
-    // "Tickle" it to pre-load and check for errors
-    allPartitionsReference.get();
-    context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY, allPartitionsReference);
-
-    int partition = 0;
+    int partition;
     String partitionString = getAttributeOrParam(context, PARTITION_KEY);
     if (partitionString == null) {
-      log.info("No partition specified, so it is implicitly parition #{}", partition);
+      partition = 0;
+      log.info("No partition specified, so it is implicitly partition #{}", partition);
     } else {
       partition = Integer.parseInt(partitionString);
       log.info("Running as partition #{}", partition);
     }
     context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
+
+    final String bucket = getAttributeOrParam(context, BUCKET_KEY);
 
     RescorerProvider rescorerProvider;
     try {
@@ -152,6 +127,33 @@ public final class InitListener implements ServletContextListener {
     }
     if (rescorerProvider != null) {
       context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
+    }
+
+    final String portString = getAttributeOrParam(context, PORT_KEY);
+    final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
+    final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
+
+    ReloadingReference<List<List<Pair<String,Integer>>>> allPartitionsReference = null;
+    if (allPartitionsSpecString != null) {
+      allPartitionsReference =
+          new ReloadingReference<List<List<Pair<String,Integer>>>>(new Callable<List<List<Pair<String,Integer>>>>() {
+            @Override
+            public List<List<Pair<String, Integer>>> call() {
+              if (RunnerConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsSpecString)) {
+                int port = Integer.parseInt(portString);
+                PartitionLoader loader =
+                    ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", PartitionLoader.class);
+                List<List<Pair<String, Integer>>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
+                log.info("Latest partitions: {}", newPartitions);
+                return newPartitions;
+              }
+              return PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
+            }
+          }, 10, TimeUnit.MINUTES);
+
+      // "Tickle" it to pre-load and check for errors
+      allPartitionsReference.get();
+      context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY, allPartitionsReference);
     }
 
     MyrrixRecommender recommender =
