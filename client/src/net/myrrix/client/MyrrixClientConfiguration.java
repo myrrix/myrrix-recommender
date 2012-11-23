@@ -41,6 +41,7 @@ public final class MyrrixClientConfiguration {
   private String host;
   private int port;
   private boolean secure;
+  private String contextPath;
   private String keystoreFilePath;
   private String keystorePassword;
   private String userName;
@@ -97,6 +98,19 @@ public final class MyrrixClientConfiguration {
    */
   public void setSecure(boolean secure) {
     this.secure = secure;
+  }
+
+  /**
+   * @return the context path under which the target Serving Layer app is deployed (e.g.
+   *  {@code http://example.org/contextPath/...}), or {@code null} if the default root context
+   *  should be used.
+   */
+  public String getContextPath() {
+    return contextPath;
+  }
+
+  public void setContextPath(String contextPath) {
+    this.contextPath = contextPath;
   }
 
   /**

@@ -51,6 +51,7 @@ import net.myrrix.common.collection.FastIDSet;
  *   <li>{@code --host}: sets {@link MyrrixClientConfiguration#getHost()}</li>
  *   <li>{@code --port}: sets {@link MyrrixClientConfiguration#getPort()}</li>
  *   <li>{@code --secure}: sets {@link MyrrixClientConfiguration#isSecure()}</li>
+ *   <li>{@code --contextPath}: sets {@link MyrrixClientConfiguration#getContextPath()}</li>
  *   <li>{@code --userName}: sets {@link MyrrixClientConfiguration#setUserName(String)}</li>
  *   <li>{@code --password}: sets {@link MyrrixClientConfiguration#setPassword(String)}</li>
  *   <li>{@code --keystoreFile}: sets {@link MyrrixClientConfiguration#setKeystoreFilePath(String)}</li>
@@ -133,6 +134,7 @@ public final class CLI {
   private static final String ALL_PARTITIONS_FLAG = "allPartitions";
   private static final String PORT_FLAG = "port";
   private static final String SECURE_FLAG = "secure";
+  private static final String CONTEXT_PATH_FLAG = "contextPath";
   private static final String USER_NAME_FLAG = "userName";
   private static final String PASSWORD_FLAG = "password";
   private static final String KEYSTORE_FILE_FLAG = "keystoreFile";
@@ -477,6 +479,9 @@ public final class CLI {
     if (commandLine.hasOption(SECURE_FLAG)) {
       config.setSecure(true);
     }
+    if (commandLine.hasOption(CONTEXT_PATH_FLAG)) {
+      config.setContextPath(commandLine.getOptionValue(CONTEXT_PATH_FLAG));
+    }
 
     if (commandLine.hasOption(ALL_PARTITIONS_FLAG)) {
       String allPartitionsFlagValue = commandLine.getOptionValue(ALL_PARTITIONS_FLAG);
@@ -509,6 +514,8 @@ public final class CLI {
     addOption(options, "Serving Layer host name", HOST_FLAG, true, false);
     addOption(options, "Serving Layer port number", PORT_FLAG, true, false);
     addOption(options, "If set, use HTTPS instead of HTTP", SECURE_FLAG, false, true);
+    addOption(options, "Non-root URL context path under which Serving Layer is deployed",
+              CONTEXT_PATH_FLAG, true, true);
     addOption(options, "User name to authenticate to Serving Layer", USER_NAME_FLAG, true, false);
     addOption(options, "Password to authenticate to Serving Layer", PASSWORD_FLAG, true, false);
     addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true, false);

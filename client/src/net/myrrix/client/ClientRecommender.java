@@ -194,12 +194,16 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
-   * @param path URL to access
+   * @param path URL to access (relative to context root)
    * @param method HTTP method to use
    * @param partitionID ID value that determines partition, or {@code null} if no partition is needed
    * @return a {@link HttpURLConnection} to the Serving Layer with default configuration in place
    */
   private HttpURLConnection makeConnection(String path, String method, Long partitionID) throws IOException {
+    String contextPath = config.getContextPath();
+    if (contextPath != null) {
+      path = '/' + contextPath + path;
+    }
     String protocol = config.isSecure() ? "https" : "http";
     Pair<String,Integer> replica = choosePartitionAndReplica(partitionID);
     URL url;
