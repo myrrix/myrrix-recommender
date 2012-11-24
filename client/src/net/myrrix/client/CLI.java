@@ -128,6 +128,7 @@ import net.myrrix.common.collection.FastIDSet;
  */
 public final class CLI {
 
+  private static final String VERBOSE_FLAG = "verbose";
   private static final String TRANSLATE_USER_FLAG = "translateUser";
   private static final String TRANSLATE_ITEM_FLAG = "translateItem";
   private static final String HOST_FLAG = "host";
@@ -167,6 +168,10 @@ public final class CLI {
     } catch (IllegalArgumentException iae) {
       printHelp(options, iae);
       return;
+    }
+
+    if (commandLine.hasOption(VERBOSE_FLAG)) {
+      enableDebugLoggingIn(CLI.class, ClientRecommender.class, TranslatingClientRecommender.class);
     }
 
     MyrrixClientConfiguration config = buildConfiguration(commandLine);
@@ -486,9 +491,9 @@ public final class CLI {
     if (commandLine.hasOption(ALL_PARTITIONS_FLAG)) {
       String allPartitionsFlagValue = commandLine.getOptionValue(ALL_PARTITIONS_FLAG);
       config.setAllPartitionsSpecification(allPartitionsFlagValue);
-      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue) && (!hasHost || !hasPort)) {
-        throw new ParseException("--" + HOST_FLAG + " and --" + PORT_FLAG + " are required with --allPartitions=" +
-                                     MyrrixClientConfiguration.AUTO_PARTITION_SPEC);
+      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue) && !hasHost) {
+        throw new ParseException(
+            "--allPartitions=" + MyrrixClientConfiguration.AUTO_PARTITION_SPEC + " requires --" + HOST_FLAG);
       }
     }
 
@@ -511,6 +516,7 @@ public final class CLI {
 
   private static Options buildOptions() {
     Options options = new Options();
+    addOption(options, "Verbose logging", VERBOSE_FLAG, false, true);
     addOption(options, "Serving Layer host name", HOST_FLAG, true, false);
     addOption(options, "Serving Layer port number", PORT_FLAG, true, false);
     addOption(options, "If set, use HTTPS instead of HTTP", SECURE_FLAG, false, true);
@@ -554,6 +560,19 @@ public final class CLI {
   private static void outputTranslated(Iterable<TranslatedRecommendedItem> items) {
     for (TranslatedRecommendedItem item : items) {
       System.out.println(item.getItemID() + ',' + item.getValue());
+    }
+  }
+
+  private static void enableDebugLoggingIn(Class<?>... classes) {
+    for (Class<?> c : classes) {
+      java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(c.getName());
+      julLogger.setLevel(java.util.logging.Level.FINE);
+      while (julLogger != null) {
+        for (java.util.logging.Handler handler : julLogger.getHandlers()) {
+          handler.setLevel(java.util.logging.Level.FINE);
+        }
+        julLogger = julLogger.getParent();
+      }
     }
   }
 

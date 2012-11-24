@@ -213,6 +213,10 @@ public final class ClientRecommender implements MyrrixRecommender {
       // can't happen
       throw new IllegalStateException(mue);
     }
+    if (log.isDebugEnabled()) {
+      log.debug("{} to {}", method, url);
+    }
+
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
     connection.setRequestMethod(method);
     connection.setDoInput(true);
