@@ -59,7 +59,7 @@ import net.myrrix.common.collection.FastIDSet;
  *   <li>{@code --allPartitions}: sets {@link MyrrixClientConfiguration#setAllPartitionsSpecification(String)}</li>
  * </ul>
  *
- * <p>"options" may include one additional flag:</p>
+ * <p>"options" may include a few additional flags:</p>
  *
  * <ul>
  *   <li>{@code --translateItem [file]}: Sets the client to use String item IDs instead of numeric, and to translate
@@ -69,6 +69,7 @@ import net.myrrix.common.collection.FastIDSet;
  *   value from the server.</li>
  *   <li>{@code --translateUser}: Same as above, but controls translating user IDs. Since they need never be
  *   translated back, no list of values is required.</li>
+ *   <li>{@code --verbose}: log more messages to standard out</li>
  * </ul>
  *
  * <p>"command" may be any value of {@link CLICommand}, in lower case if you like; "estimatePreference" and
