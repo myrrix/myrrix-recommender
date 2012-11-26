@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 public final class MemoryHandler extends Handler {
 
   private static final int NUM_LINES = 1000;
+  private static final String JAVA7_LOG_FORMAT_PROP = "java.util.logging.SimpleFormatter.format";
 
   private final Queue<String> logLines;
 
@@ -62,6 +63,20 @@ public final class MemoryHandler extends Handler {
   @Override
   public void close() {
     logLines.clear();
+  }
+
+  /**
+   * <p>Sets the {@code java.util.logging} default output format to something more sensible than the 2-line default.
+   * This can be overridden further on the command line. The format is like:</p>
+   *
+   * <p><pre>
+   * Mon Nov 26 23:16:09 GMT 2012 INFO Starting service Tomcat
+   * </pre></p>
+   */
+  public static void setSensibleLogFormat() {
+    if (System.getProperty(JAVA7_LOG_FORMAT_PROP) == null) {
+      System.setProperty(JAVA7_LOG_FORMAT_PROP, "%1$tc %4$s %5$s%6$s%n");
+    }
   }
 
 }

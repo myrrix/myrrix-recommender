@@ -72,6 +72,7 @@ public final class InitListener implements ServletContextListener {
     log.info("Initializing Myrrix in servlet context...");
     ServletContext context = event.getServletContext();
 
+    MemoryHandler.setSensibleLogFormat();
     Handler logHandler = null;
     for (Handler handler : java.util.logging.Logger.getLogger("").getHandlers()) {
       if (handler instanceof MemoryHandler) {

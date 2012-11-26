@@ -35,6 +35,7 @@ import net.myrrix.client.translating.TranslatingClientRecommender;
 import net.myrrix.client.translating.TranslatingRecommender;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.log.MemoryHandler;
 
 /**
  * <p>A basic command-line interface to the Java client. It is run like so:</p>
@@ -154,6 +155,7 @@ public final class CLI {
     }
 
     if (cliArgs.isVerbose()) {
+      MemoryHandler.setSensibleLogFormat();
       enableDebugLoggingIn(CLI.class, ClientRecommender.class, TranslatingClientRecommender.class);
     }
 
