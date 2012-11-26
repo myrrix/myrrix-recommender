@@ -446,7 +446,8 @@ public final class ClientRecommender implements MyrrixRecommender {
    *  for recommendation. Normally this is {@code false}.
    * @param rescorer must be null
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
-   * @throws NoSuchUserException if the user is not known in the model
+   * @throws NoSuchUserException if <em>none</em> of {@code userIDs} are known in the model. Otherwise unknown
+   *  user IDs are ignored.
    * @throws NotReadyException if the recommender has no model available yet
    * @throws TasteException if another error occurs
    * @throws UnsupportedOperationException if rescorer is not null

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.Reader;
 import java.util.List;
 
+import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.ItemBasedRecommender;
@@ -61,6 +62,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * to {@link #recommend(long, int, boolean, IDRescorer)}.
    *
    * @see #recommend(long, int, boolean, IDRescorer)
+   * @throws NoSuchUserException if <em>none</em> of {@code userIDs} exist in the model. Otherwise, unknown
+   *  users are ignored.
    */
   List<RecommendedItem> recommendToMany(long[] userIDs,
                                         int howMany,

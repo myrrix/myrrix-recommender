@@ -113,7 +113,8 @@ public final class SimpleTest extends AbstractClientTest {
   public void testRecommendToMany() throws Exception {
 
     ClientRecommender client = getClient();
-    List<RecommendedItem> recs = client.recommendToMany(new long[] {1L, 3L}, 3, false, null);
+    // Adding non-existent item to make sure it is ignored
+    List<RecommendedItem> recs = client.recommendToMany(new long[] {1L, 3L, Integer.MAX_VALUE}, 3, false, null);
 
     assertNotNull(recs);
     assertEquals(3, recs.size());
@@ -126,6 +127,16 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(1.0901213f, recs.get(0).getValue());
     assertEquals(1.0796841f, recs.get(1).getValue());
     assertEquals(1.0664749f, recs.get(2).getValue());
+  }
+
+  @Test(expected = NoSuchUserException.class)
+  public void testRecommendToManyNonexistent1() throws Exception {
+    getClient().recommendToMany(new long[] {Integer.MAX_VALUE}, 3, false, null);
+  }
+
+  @Test(expected = NoSuchUserException.class)
+  public void testRecommendToManyNonexistent2() throws Exception {
+    getClient().recommendToMany(new long[] {Integer.MAX_VALUE, Integer.MIN_VALUE}, 3, false, null);
   }
 
   @Test

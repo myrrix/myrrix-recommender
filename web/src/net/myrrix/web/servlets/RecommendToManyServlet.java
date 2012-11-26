@@ -43,6 +43,9 @@ import net.myrrix.online.RescorerProvider;
  * {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}. If {@code considerKnownItems} is not specified,
  * it is considered {@code false}.</p>
  *
+ * <p>Unknown user IDs are ignored, unless all are unknown, in which case a
+ * {@link HttpServletResponse#SC_BAD_REQUEST} status is returned.</p>
+ *
  * <p>Output is in CSV or JSON format. Select output format using the HTTP {@code Accept} header.</p>
  *
  * <p>CSV output contains one recommendation per line, and each line is of the form {@code itemID, strength},

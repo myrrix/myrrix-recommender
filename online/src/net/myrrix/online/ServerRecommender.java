@@ -279,17 +279,20 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     FastByIDMap<float[]> X = generation.getX();
 
     Lock xLock = generation.getXLock().readLock();
-    float[][] userFeatures = new float[userIDs.length][];
+    List<float[]> userFeatures = Lists.newArrayListWithCapacity(userIDs.length);
     xLock.lock();
     try {
-      for (int i = 0; i < userIDs.length; i++) {
-        userFeatures[i] = X.get(userIDs[i]);
-        if (userFeatures[i] == null) {
-          throw new NoSuchUserException(userIDs[i]);
+      for (long userID : userIDs) {
+        float[] theUserFeatures = X.get(userID);
+        if (theUserFeatures != null) {
+          userFeatures.add(theUserFeatures);
         }
       }
     } finally {
       xLock.unlock();
+    }
+    if (userFeatures.isEmpty()) {
+      throw new NoSuchUserException(Arrays.toString(userIDs));
     }
 
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
@@ -304,7 +307,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         for (long userID : userIDs) {
           FastIDSet theKnownItemIDs = knownItemIDs.get(userID);
           if (theKnownItemIDs == null) {
-            throw new NoSuchUserException(userID);
+            continue;
           }
           if (usersKnownItemIDs == null) {
             usersKnownItemIDs = theKnownItemIDs;
@@ -325,10 +328,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
     }
 
+    float[][] userFeaturesArray = userFeatures.toArray(new float[userFeatures.size()][]);
     Lock yLock = generation.getYLock().readLock();
     yLock.lock();
     try {
-      return multithreadedTopN(userFeatures,
+      return multithreadedTopN(userFeaturesArray,
                                usersKnownItemIDs,
                                rescorer, howMany,
                                generation.getCandidateFilter());
