@@ -18,15 +18,11 @@ package net.myrrix.client;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
+import com.lexicalscope.jewel.cli.CliFactory;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
@@ -54,7 +50,7 @@ import net.myrrix.common.collection.FastIDSet;
  *   <li>{@code --contextPath}: sets {@link MyrrixClientConfiguration#getContextPath()}</li>
  *   <li>{@code --userName}: sets {@link MyrrixClientConfiguration#setUserName(String)}</li>
  *   <li>{@code --password}: sets {@link MyrrixClientConfiguration#setPassword(String)}</li>
- *   <li>{@code --keystoreFile}: sets {@link MyrrixClientConfiguration#setKeystoreFilePath(String)}</li>
+ *   <li>{@code --keystoreFile}: sets {@link MyrrixClientConfiguration#setKeystoreFile(File)}</li>
  *   <li>{@code --keystorePassword}: sets {@link MyrrixClientConfiguration#setKeystorePassword(String)}</li>
  *   <li>{@code --allPartitions}: sets {@link MyrrixClientConfiguration#setAllPartitionsSpecification(String)}</li>
  * </ul>
@@ -129,125 +125,106 @@ import net.myrrix.common.collection.FastIDSet;
  */
 public final class CLI {
 
-  private static final String VERBOSE_FLAG = "verbose";
-  private static final String TRANSLATE_USER_FLAG = "translateUser";
-  private static final String TRANSLATE_ITEM_FLAG = "translateItem";
-  private static final String HOST_FLAG = "host";
-  private static final String ALL_PARTITIONS_FLAG = "allPartitions";
-  private static final String PORT_FLAG = "port";
-  private static final String SECURE_FLAG = "secure";
-  private static final String CONTEXT_PATH_FLAG = "contextPath";
-  private static final String USER_NAME_FLAG = "userName";
-  private static final String PASSWORD_FLAG = "password";
-  private static final String KEYSTORE_FILE_FLAG = "keystoreFile";
-  private static final String KEYSTORE_PASSWORD_FLAG = "keystorePassword";
-
   private CLI() {
   }
 
   public static void main(String[] args) throws Exception {
 
-    Options options = buildOptions();
-    CommandLineParser parser = new PosixParser();
-    CommandLine commandLine;
+    CLIArgs cliArgs;
     try {
-      commandLine = parser.parse(options, args);
-    } catch (ParseException pe) {
-      printHelp(options, pe);
+      cliArgs = CliFactory.parseArguments(CLIArgs.class, args);
+    } catch (ArgumentValidationException ave) {
+      printHelp(ave.getMessage());
       return;
     }
-    String[] programArgs = commandLine.getArgs();
 
-    if (programArgs.length == 0) {
-      printHelp(options, null);
+    List<String> programArgsList = cliArgs.getCommands();
+    if (programArgsList == null || programArgsList.isEmpty()) {
+      printHelp("No command specified");
       return;
     }
+    String[] programArgs = programArgsList.toArray(new String[programArgsList.size()]);
 
     CLICommand command;
     try {
       command = CLICommand.valueOf(programArgs[0].toUpperCase(Locale.ENGLISH));
     } catch (IllegalArgumentException iae) {
-      printHelp(options, iae);
+      printHelp(iae.getMessage());
       return;
     }
 
-    if (commandLine.hasOption(VERBOSE_FLAG)) {
+    if (cliArgs.isVerbose()) {
       enableDebugLoggingIn(CLI.class, ClientRecommender.class, TranslatingClientRecommender.class);
     }
 
-    MyrrixClientConfiguration config = buildConfiguration(commandLine);
+    MyrrixClientConfiguration config = buildConfiguration(cliArgs);
     ClientRecommender recommender = new ClientRecommender(config);
 
-    boolean translateUser = commandLine.hasOption(TRANSLATE_USER_FLAG);
-    boolean translateItem = commandLine.hasOption(TRANSLATE_ITEM_FLAG);
+    boolean translateUser = cliArgs.isTranslateUser();
+    String translateFileName = cliArgs.getTranslateItem();
+    boolean translateItem = translateFileName != null;
 
     TranslatingRecommender translatingRecommender = null;
     if (translateUser || translateItem) {
       IDMigrator userTranslator = translateUser ? new OneWayMigrator() : null;
       MemoryIDMigrator itemTranslator = translateItem ? new MemoryIDMigrator() : null;
       translatingRecommender = new TranslatingClientRecommender(recommender, userTranslator, itemTranslator);
-      String translateFileName = commandLine.getOptionValue(TRANSLATE_ITEM_FLAG);
-      if (translateFileName == null) {
-        translateFileName = commandLine.getOptionValue(TRANSLATE_ITEM_FLAG);
-      }
       if (translateFileName != null) {
         File translateFile = new File(translateFileName);
         translatingRecommender.addItemIDs(translateFile);
       }
     }
 
-    boolean success = false;
-    switch (command) {
-      case SETPREFERENCE:
-        success = doSetPreference(programArgs, recommender, translatingRecommender);
-        break;
-      case REMOVEPREFERENCE:
-        success = doRemovePreference(programArgs, recommender, translatingRecommender);
-        break;
-      case INGEST:
-        success = doIngest(programArgs, recommender, translatingRecommender);
-        break;
-      case ESTIMATEPREFERENCE:
-        success = doEstimatePreference(programArgs, recommender, translatingRecommender);
-        break;
-      case RECOMMEND:
-        success = doRecommend(programArgs, recommender, translatingRecommender);
-        break;
-      case RECOMMENDTOANONYMOUS:
-        success = doRecommendToAnonymous(programArgs, recommender, translatingRecommender);
-        break;
-      case MOSTSIMILARITEMS:
-        success = doMostSimilarItems(programArgs, recommender, translatingRecommender);
-        break;
-      case RECOMMENDEDBECAUSE:
-        success = doRecommendedBecause(programArgs, recommender, translatingRecommender);
-        break;
-      case REFRESH:
-        success = doRefresh(programArgs, recommender);
-        break;
-      case ISREADY:
-        success = doIsReady(programArgs, recommender);
-        break;
-      case GETALLUSERIDS:
-        success = doGetAllIDs(programArgs, recommender, translatingRecommender, true);
-        break;
-      case GETALLITEMIDS:
-        success = doGetAllIDs(programArgs, recommender, translatingRecommender, false);
-        break;
+    try {
+      switch (command) {
+        case SETPREFERENCE:
+          doSetPreference(programArgs, recommender, translatingRecommender);
+          break;
+        case REMOVEPREFERENCE:
+          doRemovePreference(programArgs, recommender, translatingRecommender);
+          break;
+        case INGEST:
+          doIngest(programArgs, recommender, translatingRecommender);
+          break;
+        case ESTIMATEPREFERENCE:
+          doEstimatePreference(programArgs, recommender, translatingRecommender);
+          break;
+        case RECOMMEND:
+          doRecommend(programArgs, recommender, translatingRecommender);
+          break;
+        case RECOMMENDTOANONYMOUS:
+          doRecommendToAnonymous(programArgs, recommender, translatingRecommender);
+          break;
+        case MOSTSIMILARITEMS:
+          doMostSimilarItems(programArgs, recommender, translatingRecommender);
+          break;
+        case RECOMMENDEDBECAUSE:
+          doRecommendedBecause(programArgs, recommender, translatingRecommender);
+          break;
+        case REFRESH:
+          doRefresh(programArgs, recommender);
+          break;
+        case ISREADY:
+          doIsReady(programArgs, recommender);
+          break;
+        case GETALLUSERIDS:
+          doGetAllIDs(programArgs, recommender, translatingRecommender, true);
+          break;
+        case GETALLITEMIDS:
+          doGetAllIDs(programArgs, recommender, translatingRecommender, false);
+          break;
+      }
+    } catch (ArgumentValidationException ave) {
+      printHelp(ave.getMessage());
     }
-
-    if (!success) {
-      printHelp(options, null);
-    }
-
   }
 
-  private static boolean doGetAllIDs(String[] programArgs,
-                                     ClientRecommender recommender,
-                                     TranslatingRecommender translatingRecommender,
-                                     boolean isUser) throws TasteException {
+  private static void doGetAllIDs(String[] programArgs,
+                                  ClientRecommender recommender,
+                                  TranslatingRecommender translatingRecommender,
+                                  boolean isUser) throws TasteException {
     if (programArgs.length != 1) {
-      return false;
+      throw new ArgumentValidationException("no arguments");
     }
     if (translatingRecommender == null) {
       FastIDSet ids = isUser ? recommender.getAllUserIDs() : recommender.getAllItemIDs();
@@ -264,30 +241,27 @@ public final class CLI {
         System.out.println(id);
       }
     }
-    return true;
   }
 
-  private static boolean doIsReady(String[] programArgs, ClientRecommender recommender) throws TasteException {
+  private static void doIsReady(String[] programArgs, ClientRecommender recommender) throws TasteException {
     if (programArgs.length != 1) {
-      return false;
+      throw new ArgumentValidationException("no arguments");
     }
     System.out.println(recommender.isReady());
-    return true;
   }
 
-  private static boolean doRefresh(String[] programArgs, ClientRecommender recommender) {
+  private static void doRefresh(String[] programArgs, ClientRecommender recommender) {
     if (programArgs.length != 1) {
-      return false;
+      throw new ArgumentValidationException("no arguments");
     }
     recommender.refresh(null);
-    return true;
   }
 
-  private static boolean doRecommendedBecause(String[] programArgs,
-                                              ClientRecommender recommender,
-                                              TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doRecommendedBecause(String[] programArgs,
+                                           ClientRecommender recommender,
+                                           TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length != 4) {
-      return false;
+      throw new ArgumentValidationException("args are userID itemID howMany");
     }
     int howMany = Integer.parseInt(programArgs[3]);
     if (translatingRecommender == null) {
@@ -299,14 +273,13 @@ public final class CLI {
       String itemID = unquote(programArgs[2]);
       outputTranslated(translatingRecommender.recommendedBecause(userID, itemID, howMany));
     }
-    return true;
   }
 
-  private static boolean doMostSimilarItems(String[] programArgs,
-                                            ClientRecommender recommender,
-                                            TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doMostSimilarItems(String[] programArgs,
+                                         ClientRecommender recommender,
+                                         TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length < 3) {
-      return false;
+      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]] howMany");
     }
     int howMany = Integer.parseInt(programArgs[programArgs.length - 1]);
     if (translatingRecommender == null) {
@@ -322,14 +295,13 @@ public final class CLI {
       }
       outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany));
     }
-    return true;
   }
 
-  private static boolean doRecommendToAnonymous(String[] programArgs,
-                                                ClientRecommender recommender,
-                                                TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doRecommendToAnonymous(String[] programArgs,
+                                             ClientRecommender recommender,
+                                             TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length < 3) {
-      return false;
+      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]] howMany");
     }
     int howMany = Integer.parseInt(programArgs[programArgs.length - 1]);
     if (translatingRecommender == null) {
@@ -345,14 +317,13 @@ public final class CLI {
       }
       outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, howMany));
     }
-    return true;
   }
 
-  private static boolean doRecommend(String[] programArgs,
-                                     ClientRecommender recommender,
-                                     TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doRecommend(String[] programArgs,
+                                  ClientRecommender recommender,
+                                  TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length != 3 && programArgs.length != 4) {
-      return false;
+      throw new ArgumentValidationException("args are userID howMany [considerKnownItems]");
     }
     int howMany = Integer.parseInt(programArgs[2]);
     boolean considerKnownItems = programArgs.length == 4 && Boolean.valueOf(programArgs[3]);
@@ -363,14 +334,13 @@ public final class CLI {
       String userID = unquote(programArgs[1]);
       outputTranslated(translatingRecommender.recommend(userID, howMany, considerKnownItems));
     }
-    return true;
   }
 
-  private static boolean doEstimatePreference(String[] programArgs,
-                                              ClientRecommender recommender,
-                                              TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doEstimatePreference(String[] programArgs,
+                                           ClientRecommender recommender,
+                                           TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length != 3) {
-      return false;
+      throw new ArgumentValidationException("args are userID itemID");
     }
     float estimate;
     if (translatingRecommender == null) {
@@ -383,14 +353,13 @@ public final class CLI {
       estimate = translatingRecommender.estimatePreference(userID, itemID);
     }
     System.out.println(estimate);
-    return true;
   }
 
-  private static boolean doIngest(String[] programArgs,
-                                  ClientRecommender recommender,
-                                  TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doIngest(String[] programArgs,
+                               ClientRecommender recommender,
+                               TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length < 2) {
-      return false;
+      throw new ArgumentValidationException("args are file1 [file2 [file3...]]");
     }
     for (int i = 1; i < programArgs.length; i++) {
       File ingestFile = new File(programArgs[i]);
@@ -400,14 +369,13 @@ public final class CLI {
         translatingRecommender.ingest(ingestFile);
       }
     }
-    return true;
   }
 
-  private static boolean doRemovePreference(String[] programArgs,
-                                            ClientRecommender recommender,
-                                            TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doRemovePreference(String[] programArgs,
+                                         ClientRecommender recommender,
+                                         TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length != 3) {
-      return false;
+      throw new ArgumentValidationException("args are userID itemID");
     }
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
@@ -418,14 +386,13 @@ public final class CLI {
       String itemID = unquote(programArgs[2]);
       translatingRecommender.removePreference(userID, itemID);
     }
-    return true;
   }
 
-  private static boolean doSetPreference(String[] programArgs,
-                                         ClientRecommender recommender,
-                                         TranslatingRecommender translatingRecommender) throws TasteException {
+  private static void doSetPreference(String[] programArgs,
+                                      ClientRecommender recommender,
+                                      TranslatingRecommender translatingRecommender) throws TasteException {
     if (programArgs.length != 3 && programArgs.length != 4) {
-      return false;
+      throw new ArgumentValidationException("args are userID itemID [value]");
     }
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
@@ -446,7 +413,6 @@ public final class CLI {
         translatingRecommender.setPreference(userID, itemID, value);
       }
     }
-    return true;
   }
 
   /**
@@ -460,96 +426,29 @@ public final class CLI {
     return s;
   }
 
-  private static void printHelp(Options options, Exception e) {
-    System.out.println("Myrrix Client command line interface. Copyright 2012 Myrrix Ltd, except for included ");
+  private static void printHelp(String message) {
+    System.out.println();
+    System.out.println("Myrrix Client command line interface. Copyright Myrrix Ltd, except for included ");
     System.out.println("third-party open source software. Full details of licensing at http://myrrix.com/legal/");
     System.out.println();
-    if (e != null) {
-      System.out.println(e.getMessage());
+    if (message != null) {
+      System.out.println(message);
       System.out.println();
     }
-    new HelpFormatter().printHelp(CLI.class.getSimpleName() + " [flags] command [arg0 arg1 ...]", options);
   }
 
-  private static MyrrixClientConfiguration buildConfiguration(CommandLine commandLine) throws ParseException {
+  private static MyrrixClientConfiguration buildConfiguration(CLIArgs cliArgs) {
     MyrrixClientConfiguration config = new MyrrixClientConfiguration();
-
-    boolean hasHost = commandLine.hasOption(HOST_FLAG);
-    if (hasHost) {
-      config.setHost(commandLine.getOptionValue(HOST_FLAG));
-    }
-    boolean hasPort = commandLine.hasOption(PORT_FLAG);
-    if (hasPort) {
-      config.setPort(Integer.parseInt(commandLine.getOptionValue(PORT_FLAG)));
-    }
-    if (commandLine.hasOption(SECURE_FLAG)) {
-      config.setSecure(true);
-    }
-    if (commandLine.hasOption(CONTEXT_PATH_FLAG)) {
-      config.setContextPath(commandLine.getOptionValue(CONTEXT_PATH_FLAG));
-    }
-
-    if (commandLine.hasOption(ALL_PARTITIONS_FLAG)) {
-      String allPartitionsFlagValue = commandLine.getOptionValue(ALL_PARTITIONS_FLAG);
-      config.setAllPartitionsSpecification(allPartitionsFlagValue);
-      if (MyrrixClientConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsFlagValue) && !hasHost) {
-        throw new ParseException(
-            "--allPartitions=" + MyrrixClientConfiguration.AUTO_PARTITION_SPEC + " requires --" + HOST_FLAG);
-      }
-    }
-
-    if (commandLine.hasOption(USER_NAME_FLAG)) {
-      config.setUserName(commandLine.getOptionValue(USER_NAME_FLAG));
-    }
-    if (commandLine.hasOption(PASSWORD_FLAG)) {
-      config.setPassword(commandLine.getOptionValue(PASSWORD_FLAG));
-    }
-
-    if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
-      config.setKeystoreFilePath(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
-    }
-    if (commandLine.hasOption(KEYSTORE_PASSWORD_FLAG)) {
-      config.setKeystorePassword(commandLine.getOptionValue(KEYSTORE_PASSWORD_FLAG));
-    }
-
+    config.setHost(cliArgs.getHost());
+    config.setPort(cliArgs.getPort());
+    config.setSecure(cliArgs.isSecure());
+    config.setContextPath(cliArgs.getContextPath());
+    config.setAllPartitionsSpecification(cliArgs.getAllPartitions());
+    config.setUserName(cliArgs.getUserName());
+    config.setPassword(cliArgs.getPassword());
+    config.setKeystoreFile(cliArgs.getKeystoreFile());
+    config.setKeystorePassword(cliArgs.getKeystorePassword());
     return config;
-  }
-
-  private static Options buildOptions() {
-    Options options = new Options();
-    addOption(options, "Verbose logging", VERBOSE_FLAG, false, true);
-    addOption(options, "Serving Layer host name", HOST_FLAG, true, false);
-    addOption(options, "Serving Layer port number", PORT_FLAG, true, false);
-    addOption(options, "If set, use HTTPS instead of HTTP", SECURE_FLAG, false, true);
-    addOption(options, "Non-root URL context path under which Serving Layer is deployed",
-              CONTEXT_PATH_FLAG, true, true);
-    addOption(options, "User name to authenticate to Serving Layer", USER_NAME_FLAG, true, false);
-    addOption(options, "Password to authenticate to Serving Layer", PASSWORD_FLAG, true, false);
-    addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true, false);
-    addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true, false);
-    addOption(options, "Use String user IDs in client API.", TRANSLATE_USER_FLAG, false, true);
-    addOption(options, "Use String item IDs in client API. Optional file argument contains list of all known item IDs",
-              TRANSLATE_ITEM_FLAG, true, true);
-    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081), or 'auto'",
-              ALL_PARTITIONS_FLAG, true, false);
-    return options;
-  }
-
-  private static void addOption(Options options,
-                                String description,
-                                String longOpt,
-                                boolean hasArg,
-                                boolean argOptional) {
-    if (hasArg) {
-      if (argOptional) {
-        OptionBuilder.hasOptionalArg();
-      } else {
-        OptionBuilder.hasArg();
-      }
-    }
-    OptionBuilder.withDescription(description);
-    OptionBuilder.withLongOpt(longOpt);
-    options.addOption(OptionBuilder.create());
   }
 
   private static void output(Iterable<RecommendedItem> items) {

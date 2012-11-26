@@ -58,7 +58,7 @@
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset src="common/lib/guava-13.0.jar"/>
-      <zipfileset src="common/lib/commons-cli-1.2.jar"/>
+      <zipfileset src="common/lib/jewelcli-0.8.3.jar"/>
       <zipfileset src="common/lib/mahout-core-0.7.jar"/>
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
@@ -80,7 +80,7 @@
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset dir="${online-local.output.dir}"/>
       <zipfileset src="common/lib/guava-13.0.jar"/>
-      <zipfileset src="common/lib/commons-cli-1.2.jar"/>
+      <zipfileset src="common/lib/jewelcli-0.8.3.jar"/>
       <zipfileset src="common/lib/mahout-core-0.7.jar"/>
       <zipfileset src="common/lib/mahout-math-0.7.jar"/>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
@@ -101,7 +101,7 @@
       <classes dir="${online-local.output.dir}"/>
       <lib dir="common/lib">
         <include name="guava-13.0.jar"/>
-        <include name="commons-cli-1.2.jar"/>
+        <include name="jewelcli-0.8.3.jar"/>
         <include name="mahout-core-0.7.jar"/>
         <include name="mahout-math-0.7.jar"/>
         <include name="slf4j-jdk14-1.7.2.jar"/>

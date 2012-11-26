@@ -27,6 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
+import com.lexicalscope.jewel.cli.CliFactory;
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
@@ -45,14 +47,6 @@ import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingOptionException;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +76,7 @@ import net.myrrix.web.servlets.SimilarityServlet;
  * both in stand-alone local mode, and in a distributed mode cooperating with a Computation Layer.</p>
  *
  * <p>This program instantiates a Tomcat-based HTTP server exposing a REST-style API. It is available via
- * HTTP, or HTTPS as well if {@link RunnerConfiguration#getKeystoreFilePath()} is set. It can also be password
+ * HTTP, or HTTPS as well if {@link RunnerConfiguration#getKeystoreFile()} is set. It can also be password
  * protected by setting {@link RunnerConfiguration#getUserName()} and
  * {@link RunnerConfiguration#getPassword()}.</p>
  *
@@ -167,20 +161,6 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
-  private static final String PORT_FLAG = "port";
-  private static final String SECURE_PORT_FLAG = "securePort";
-  private static final String LOCAL_INPUT_DIR_FLAG = "localInputDir";
-  private static final String INSTANCE_ID_FLAG = "instanceID";
-  private static final String BUCKET_FLAG = "bucket";
-  private static final String USER_NAME_FLAG = "userName";
-  private static final String CONSOLE_ONLY_PASSWORD_FLAG = "consoleOnlyPassword";
-  private static final String PASSWORD_FLAG = "password";
-  private static final String KEYSTORE_FILE_FLAG = "keystoreFile";
-  private static final String KEYSTORE_PASSWORD_FLAG = "keystorePassword";
-  private static final String RESCORER_PROVIDER_CLASS_FLAG = "rescorerProviderClass";
-  private static final String PARTITION_FLAG = "partition";
-  private static final String ALL_PARTITIONS_FLAG = "allPartitions";
-
   private static final int[] ERROR_PAGE_STATUSES = {
       HttpServletResponse.SC_BAD_REQUEST,
       HttpServletResponse.SC_UNAUTHORIZED,
@@ -214,21 +194,12 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   public static void main(String[] args) throws Exception {
 
-    Options options = buildOptions();
-    CommandLineParser parser = new PosixParser();
-
     RunnerConfiguration config;
-    CommandLine commandLine;
     try {
-      commandLine = parser.parse(options, args);
-      config = buildConfiguration(commandLine);
-    } catch (ParseException pe) {
-      printHelp(options, pe);
-      return;
-    }
-
-    if (commandLine.getArgs().length > 0) {
-      printHelp(options, null);
+      RunnerArgs runnerArgs = CliFactory.parseArguments(RunnerArgs.class, args);
+      config = buildConfiguration(runnerArgs);
+    } catch (ArgumentValidationException ave) {
+      printHelp(ave.getMessage());
       return;
     }
 
@@ -246,90 +217,42 @@ public final class Runner implements Callable<Boolean>, Closeable {
     runner.close();
   }
 
-  private static RunnerConfiguration buildConfiguration(CommandLine commandLine) throws ParseException {
+  private static RunnerConfiguration buildConfiguration(RunnerArgs runnerArgs) {
 
     RunnerConfiguration config = new RunnerConfiguration();
 
-    if (commandLine.hasOption(PORT_FLAG)) {
-      config.setPort(Integer.parseInt(commandLine.getOptionValue(PORT_FLAG)));
-    }
-    if (commandLine.hasOption(SECURE_PORT_FLAG)) {
-      config.setSecurePort(Integer.parseInt(commandLine.getOptionValue(SECURE_PORT_FLAG)));
-    }
+    config.setPort(runnerArgs.getPort());
+    config.setSecurePort(runnerArgs.getSecurePort());
+    config.setLocalInputDir(runnerArgs.getLocalInputDir());
 
-    if (commandLine.hasOption(LOCAL_INPUT_DIR_FLAG)) {
-      config.setLocalInputDir(new File(commandLine.getOptionValue(LOCAL_INPUT_DIR_FLAG)));
-    }
-    boolean instanceIDSet = commandLine.hasOption(INSTANCE_ID_FLAG);
-    boolean bucketSet = commandLine.hasOption(BUCKET_FLAG);
+    boolean instanceIDSet = runnerArgs.getInstanceID() != null;
+    boolean bucketSet = runnerArgs.getBucket() != null;
     if (instanceIDSet != bucketSet) {
-      throw new MissingOptionException("Must set both --instanceID and --bucket together");
+      throw new ArgumentValidationException("Must set both --instanceID and --bucket together");
     }
     if (instanceIDSet && bucketSet) {
-      config.setInstanceID(commandLine.getOptionValue(INSTANCE_ID_FLAG));
-      config.setBucket(commandLine.getOptionValue(BUCKET_FLAG));
+      config.setInstanceID(runnerArgs.getInstanceID());
+      config.setBucket(runnerArgs.getBucket());
     }
 
-    if (commandLine.hasOption(USER_NAME_FLAG)) {
-      config.setUserName(commandLine.getOptionValue(USER_NAME_FLAG));
-    }
-    if (commandLine.hasOption(PASSWORD_FLAG)) {
-      config.setPassword(commandLine.getOptionValue(PASSWORD_FLAG));
-    }
+    config.setUserName(runnerArgs.getUserName());
+    config.setPassword(runnerArgs.getPassword());
+    config.setConsoleOnlyPassword(runnerArgs.isConsoleOnlyPassword());
+    config.setKeystoreFile(runnerArgs.getKeystoreFile());
+    config.setKeystorePassword(runnerArgs.getKeystorePassword());
+    config.setRescorerProviderClassName(runnerArgs.getRescorerProviderClass());
 
-    config.setConsoleOnlyPassword(commandLine.hasOption(CONSOLE_ONLY_PASSWORD_FLAG));
-
-    if (commandLine.hasOption(KEYSTORE_FILE_FLAG)) {
-      config.setKeystoreFilePath(commandLine.getOptionValue(KEYSTORE_FILE_FLAG));
-    }
-    if (commandLine.hasOption(KEYSTORE_PASSWORD_FLAG)) {
-      config.setKeystorePassword(commandLine.getOptionValue(KEYSTORE_PASSWORD_FLAG));
-    }
-
-    if (commandLine.hasOption(RESCORER_PROVIDER_CLASS_FLAG)) {
-      config.setRescorerProviderClassName(commandLine.getOptionValue(RESCORER_PROVIDER_CLASS_FLAG));
-    }
-
-    boolean hasPartition = commandLine.hasOption(PARTITION_FLAG);
-    boolean hasAllPartitions = commandLine.hasOption(ALL_PARTITIONS_FLAG);
+    boolean hasPartition = runnerArgs.getPartition() != null;
+    boolean hasAllPartitions = runnerArgs.getAllPartitions() != null;
     if (hasPartition != hasAllPartitions) {
-      throw new MissingOptionException("Must set --partition and --allPartitions together");
+      throw new ArgumentValidationException("Must set --partition and --allPartitions together");
     }
 
     if (hasPartition && hasAllPartitions) {
-      config.setAllPartitionsSpecification(commandLine.getOptionValue(ALL_PARTITIONS_FLAG));
-      config.setPartition(Integer.valueOf(commandLine.getOptionValue(PARTITION_FLAG)));
+      config.setAllPartitionsSpecification(runnerArgs.getAllPartitions());
+      config.setPartition(runnerArgs.getPartition());
     }
-
     return config;
-  }
-
-  private static Options buildOptions() {
-    Options options = new Options();
-    addOption(options, "Working directory for input and intermediate files", LOCAL_INPUT_DIR_FLAG, true);
-    addOption(options, "Bucket storing data to access", BUCKET_FLAG, true);
-    addOption(options, "Instance ID to access", INSTANCE_ID_FLAG, true);
-    addOption(options, "HTTP port number", PORT_FLAG, true);
-    addOption(options, "HTTPS port number", SECURE_PORT_FLAG, true);
-    addOption(options, "User name needed to authenticate to this instance", USER_NAME_FLAG, true);
-    addOption(options, "Password to authenticate to this instance", PASSWORD_FLAG, true);
-    addOption(options, "User name and password only apply to admin and console resources",
-              CONSOLE_ONLY_PASSWORD_FLAG, false);
-    addOption(options, "Test SSL certificate keystore to accept", KEYSTORE_FILE_FLAG, true);
-    addOption(options, "Password for keystoreFile", KEYSTORE_PASSWORD_FLAG, true);
-    addOption(options, "RescorerProvider implementation class", RESCORER_PROVIDER_CLASS_FLAG, true);
-    addOption(options, "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081), " +
-                       "or \"auto\" (distributed mode only)",
-              ALL_PARTITIONS_FLAG, true);
-    addOption(options, "Server's partition number (0-based)", PARTITION_FLAG, true);
-    return options;
-  }
-
-  private static void addOption(Options options, String description, String longOpt, boolean hasArg) {
-    OptionBuilder.hasArg(hasArg);
-    OptionBuilder.withDescription(description);
-    OptionBuilder.withLongOpt(longOpt);
-    options.addOption(OptionBuilder.create());
   }
 
   @Override
@@ -397,15 +320,15 @@ public final class Runner implements Callable<Boolean>, Closeable {
     }
   }
 
-  private static void printHelp(Options options, Exception e) {
-    System.out.println("Myrrix Serving Layer. Copyright 2012 Myrrix Ltd, except for included ");
+  private static void printHelp(String message) {
+    System.out.println();
+    System.out.println("Myrrix Serving Layer. Copyright Myrrix Ltd, except for included ");
     System.out.println("third-party open source software. Full details of licensing at http://myrrix.com/legal/");
     System.out.println();
-    if (e != null) {
-      System.out.println(e.getMessage());
+    if (message != null) {
+      System.out.println(message);
       System.out.println();
     }
-    new HelpFormatter().printHelp(Runner.class.getSimpleName() + " [flags]", options);
   }
 
   private void configureTomcat(Tomcat tomcat, Connector connector) {
@@ -441,9 +364,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
   private Connector makeConnector() throws IOException {
     Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
-    String keystoreFilePath = config.getKeystoreFilePath();
+    File keystoreFile = config.getKeystoreFile();
     String keystorePassword = config.getKeystorePassword();
-    if (keystoreFilePath == null && keystorePassword == null) {
+    if (keystoreFile == null && keystorePassword == null) {
       // HTTP connector
       connector.setPort(config.getPort());
       connector.setSecure(false);
@@ -451,7 +374,6 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     } else {
 
-      File keystoreFile = keystoreFilePath == null ? null : new File(keystoreFilePath).getAbsoluteFile();
       if (keystoreFile == null || !keystoreFile.exists()) {
         log.info("Keystore file not found; trying to load remote keystore file if applicable");
         ResourceRetriever resourceRetriever =
@@ -459,7 +381,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
         resourceRetriever.init(config.getBucket());
         keystoreFile = resourceRetriever.getKeystoreFile();
         if (keystoreFile == null) {
-          throw new FileNotFoundException(keystoreFilePath);
+          throw new FileNotFoundException();
         }
       }
 
@@ -470,7 +392,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
       connector.setAttribute("SSLEnabled", "true");
       connector.setAttribute("sslProtocol", "TLS");
       connector.setAttribute("clientAuth", "false");
-      connector.setAttribute("keystoreFile", keystoreFile);
+      connector.setAttribute("keystoreFile", keystoreFile.getAbsoluteFile());
       connector.setAttribute("keystorePass", keystorePassword);
     }
 
@@ -512,7 +434,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());
     servletContext.setAttribute(InitListener.PARTITION_KEY, config.getPartition());
 
-    boolean needHTTPS = config.getKeystoreFilePath() != null;
+    boolean needHTTPS = config.getKeystoreFile() != null;
     boolean needAuthentication = config.getUserName() != null;
 
     if (needHTTPS || needAuthentication) {

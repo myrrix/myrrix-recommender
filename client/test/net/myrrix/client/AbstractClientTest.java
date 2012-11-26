@@ -86,7 +86,7 @@ public abstract class AbstractClientTest extends MyrrixTest {
     if (useSecurity()) {
       runnerConfig.setSecurePort(8443);
       runnerConfig.setKeystorePassword("changeit");
-      runnerConfig.setKeystoreFilePath(new File("testdata/keystore").getAbsolutePath());
+      runnerConfig.setKeystoreFile(new File("testdata/keystore"));
       runnerConfig.setUserName("foo");
       runnerConfig.setPassword("bar");
     }
@@ -95,14 +95,14 @@ public abstract class AbstractClientTest extends MyrrixTest {
     runner = new Runner(runnerConfig);
     runner.call();
 
-    boolean clientSecure = runnerConfig.getKeystoreFilePath() != null;
+    boolean clientSecure = runnerConfig.getKeystoreFile() != null;
     int clientPort = clientSecure ? runnerConfig.getSecurePort() : runnerConfig.getPort();
     MyrrixClientConfiguration clientConfig = new MyrrixClientConfiguration();
     clientConfig.setHost("localhost");
     clientConfig.setPort(clientPort);
     clientConfig.setSecure(clientSecure);
     clientConfig.setKeystorePassword(runnerConfig.getKeystorePassword());
-    clientConfig.setKeystoreFilePath(runnerConfig.getKeystoreFilePath());
+    clientConfig.setKeystoreFile(runnerConfig.getKeystoreFile());
     clientConfig.setUserName(runnerConfig.getUserName());
     clientConfig.setPassword(runnerConfig.getPassword());
     client = new ClientRecommender(clientConfig);

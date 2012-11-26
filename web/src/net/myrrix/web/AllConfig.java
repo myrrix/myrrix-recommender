@@ -19,30 +19,20 @@ package net.myrrix.web;
 import java.io.File;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
+import com.lexicalscope.jewel.cli.ArgumentValidationException;
+import com.lexicalscope.jewel.cli.CliFactory;
 
 import net.myrrix.common.ClassUtils;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * Encapsulates command line configuration for {@link AllRecommendations} and {@link AllItemSimilarities}.
+ * Encapsulates configuration for {@link AllRecommendations} and {@link AllItemSimilarities}.
  *
  * @author Sean Owen
  * @see AllItemSimilarities
  * @see AllRecommendations
  */
 public final class AllConfig {
-
-  private static final String LOCAL_INPUT_DIR_FLAG = "localInputDir";
-  private static final String RESCORER_PROVIDER_CLASS_FLAG = "rescorerProviderClass";
-  private static final String HOW_MANY_FLAG = "howMany";
-  private static final int DEFAULT_HOW_MANY = 10;
 
   private final File localInputDir;
   private final RescorerProvider rescorerProvider;
@@ -69,50 +59,26 @@ public final class AllConfig {
   }
 
   static AllConfig build(String[] args) {
-    Options options = new Options();
 
-    OptionBuilder.hasArg();
-    OptionBuilder.withLongOpt(LOCAL_INPUT_DIR_FLAG);
-    OptionBuilder.isRequired();
-    options.addOption(OptionBuilder.create());
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withLongOpt(RESCORER_PROVIDER_CLASS_FLAG);
-    options.addOption(OptionBuilder.create());
-
-    OptionBuilder.hasArg();
-    OptionBuilder.withLongOpt(HOW_MANY_FLAG);
-    options.addOption(OptionBuilder.create());
-
-    CommandLineParser parser = new PosixParser();
-    CommandLine commandLine;
+    AllUtilityArgs allArgs;
     try {
-      commandLine = parser.parse(options, args);
-    } catch (ParseException pe) {
-      System.out.println(pe.getMessage());
+      allArgs = CliFactory.parseArguments(AllUtilityArgs.class, args);
+    } catch (ArgumentValidationException ave) {
       System.out.println();
-      new HelpFormatter().printHelp(AllItemSimilarities.class.getSimpleName(), options);
+      System.out.println(ave.getMessage());
+      System.out.println();
       return null;
     }
 
-    File localInputDir = new File(commandLine.getOptionValue(LOCAL_INPUT_DIR_FLAG));
-
+    String rescorerProviderClass = allArgs.getRescorerProviderClass();
     RescorerProvider rescorerProvider;
-    if (commandLine.hasOption(RESCORER_PROVIDER_CLASS_FLAG)) {
-      String rescorerProviderClassName = commandLine.getOptionValue(RESCORER_PROVIDER_CLASS_FLAG);
-      rescorerProvider = ClassUtils.loadInstanceOf(rescorerProviderClassName, RescorerProvider.class);
-    } else {
+    if (rescorerProviderClass == null) {
       rescorerProvider = null;
-    }
-
-    int howMany;
-    if (commandLine.hasOption(HOW_MANY_FLAG)) {
-      howMany = Integer.parseInt(commandLine.getOptionValue(HOW_MANY_FLAG));
     } else {
-      howMany = DEFAULT_HOW_MANY;
+      rescorerProvider = ClassUtils.loadInstanceOf(rescorerProviderClass, RescorerProvider.class);
     }
 
-    return new AllConfig(localInputDir, rescorerProvider, howMany);
+    return new AllConfig(allArgs.getLocalInputDir(), rescorerProvider, allArgs.getHowMany());
   }
 
 }

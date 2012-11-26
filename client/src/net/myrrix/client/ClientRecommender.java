@@ -133,7 +133,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       });
     }
 
-    if (config.getKeystoreFilePath() != null) {
+    if (config.getKeystoreFile() != null) {
       log.warn("A keystore file has been specified. " +
                "This should only be done to accept self-signed certificates in development.");
       HttpsURLConnection.setDefaultSSLSocketFactory(buildSSLSocketFactory());
@@ -163,7 +163,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     try {
 
       KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      File trustStoreFile = new File(config.getKeystoreFilePath()).getAbsoluteFile();
+      File trustStoreFile = config.getKeystoreFile().getAbsoluteFile();
       String password = config.getKeystorePassword();
       Preconditions.checkNotNull(password);
 

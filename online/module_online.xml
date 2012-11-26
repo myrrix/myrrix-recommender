@@ -22,7 +22,7 @@
 
   <path id="online.module.production.classpath">
     <pathelement location="${common.output.dir}"/>
-    <pathelement location="common/lib/commons-cli-1.2.jar"/>
+    <pathelement location="common/lib/jewelcli-0.8.3.jar"/>
     <pathelement location="common/lib/guava-13.0.jar"/>
     <pathelement location="common/lib/mahout-core-0.7.jar"/>
     <pathelement location="common/lib/mahout-math-0.7.jar"/>

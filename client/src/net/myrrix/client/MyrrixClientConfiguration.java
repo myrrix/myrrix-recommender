@@ -16,6 +16,7 @@
 
 package net.myrrix.client;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -42,7 +43,7 @@ public final class MyrrixClientConfiguration {
   private int port;
   private boolean secure;
   private String contextPath;
-  private String keystoreFilePath;
+  private File keystoreFile;
   private String keystorePassword;
   private String userName;
   private String password;
@@ -65,7 +66,6 @@ public final class MyrrixClientConfiguration {
    * @param host Serving Layer host to communicate with. Defaults to {@link #DEFAULT_PORT}.
    */
   public void setHost(String host) {
-    Preconditions.checkState(allPartitionsSpecification == null, "allPartitionsSpecification already set");
     this.host = host;
   }
 
@@ -82,7 +82,6 @@ public final class MyrrixClientConfiguration {
    */
   public void setPort(int port) {
     Preconditions.checkArgument(port > 0);
-    Preconditions.checkState(allPartitionsSpecification == null, "allPartitionsSpecification already set");
     this.port = port;
   }
 
@@ -117,16 +116,16 @@ public final class MyrrixClientConfiguration {
    * @return the keystore file containing the server's SSL keys. Only necessary when accessing a server with a
    *  temporary self-signed key, which is not by default trusted by the Java SSL implementation
    */
-  public String getKeystoreFilePath() {
-    return keystoreFilePath;
+  public File getKeystoreFile() {
+    return keystoreFile;
   }
 
-  public void setKeystoreFilePath(String keystoreFilePath) {
-    this.keystoreFilePath = keystoreFilePath;
+  public void setKeystoreFile(File keystoreFile) {
+    this.keystoreFile = keystoreFile;
   }
 
   /**
-   * @return password for {@link #getKeystoreFilePath()}
+   * @return password for {@link #getKeystoreFile()}
    */
   public String getKeystorePassword() {
     return keystorePassword;
@@ -172,7 +171,6 @@ public final class MyrrixClientConfiguration {
   }
 
   /**
-   * Cannot be set if {@link #setHost(String)} was already set.
    * @param allPartitionsSpecification see {@link #getAllPartitionsSpecification()}
    */
   public void setAllPartitionsSpecification(String allPartitionsSpecification) {
