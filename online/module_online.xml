@@ -39,7 +39,6 @@
     <path refid="online.module.production.classpath"/>
     <pathelement location="${online.output.dir}"/>
     <pathelement location="${common.testoutput.dir}"/>
-    <pathelement location="common/lib/junit-4.10.jar"/>
   </path>
 
   <path id="online.runtime.module.classpath">
@@ -48,7 +47,7 @@
     <path refid="common.runtime.module.classpath"/>
   </path>
 
-  <target name="compile.module.online" depends="compile.module.online.production,compile.module.online.tests"/>
+  <target name="compile.module.online" depends="compile.module.online.production"/>
 
   <target name="compile.module.online.production" depends="compile.module.common">
     <mkdir dir="${online.output.dir}"/>
@@ -63,8 +62,6 @@
       <src path="${module.online.basedir}/src"/>
     </javac>
   </target>
-
-  <target name="compile.module.online.tests" depends="compile.module.online.production" unless="skip.tests"/>
 
   <target name="clean.module.online">
     <delete dir="${online.output.dir}"/>

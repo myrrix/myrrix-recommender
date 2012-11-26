@@ -39,16 +39,14 @@
   <path id="common.module.classpath">
     <path refid="common.module.production.classpath"/>
     <pathelement location="${common.output.dir}"/>
-    <pathelement location="common/lib/junit-4.10.jar"/>
   </path>
 
   <path id="common.runtime.module.classpath">
     <path refid="common.module.production.module.classpath"/>
     <pathelement location="${common.testoutput.dir}"/>
-    <pathelement location="common/lib/junit-4.10.jar"/>
   </path>
 
-  <target name="compile.module.common" depends="compile.module.common.production,compile.module.common.tests"/>
+  <target name="compile.module.common" depends="compile.module.common.production"/>
 
   <target name="compile.module.common.production">
     <mkdir dir="${common.output.dir}"/>
@@ -57,16 +55,6 @@
            includeantruntime="false">
       <classpath refid="common.module.production.classpath"/>
       <src path="${module.common.basedir}/src"/>
-    </javac>
-  </target>
-
-  <target name="compile.module.common.tests" depends="compile.module.common.production" unless="skip.tests">
-    <mkdir dir="${common.testoutput.dir}"/>
-    <javac destdir="${common.testoutput.dir}" debug="${compiler.debug}"
-           source="${compiler.level}" target="${compiler.level}" fork="true"
-           includeantruntime="false">
-      <classpath refid="common.module.classpath"/>
-      <src path="${module.common.basedir}/test"/>
     </javac>
   </target>
 

@@ -34,12 +34,11 @@
     <path refid="client.module.production.classpath"/>
     <pathelement location="${client.output.dir}"/>
     <pathelement location="${common.testoutput.dir}"/>
-    <pathelement location="common/lib/junit-4.10.jar"/>
     <pathelement location="${web.testoutput.dir}"/>
     <pathelement location="${web.output.dir}"/>
   </path>
 
-  <target name="compile.module.client" depends="compile.module.client.production,compile.module.client.tests"/>
+  <target name="compile.module.client" depends="compile.module.client.production"/>
 
   <target name="compile.module.client.production" depends="compile.module.common,compile.module.web">
     <mkdir dir="${client.output.dir}"/>
@@ -52,20 +51,6 @@
            includeantruntime="false">
       <classpath refid="client.module.production.classpath"/>
       <src path="${module.client.basedir}/src"/>
-    </javac>
-  </target>
-
-  <target name="compile.module.client.tests" depends="compile.module.client.production" unless="skip.tests">
-    <mkdir dir="${client.testoutput.dir}"/>
-    <javac destdir="${client.testoutput.dir}"
-           debug="${compiler.debug}"
-           optimize="${compiler.optimize}"
-           source="${compiler.level}"
-           target="${compiler.level}"
-           fork="true"
-           includeantruntime="false">
-      <classpath refid="client.module.classpath"/>
-      <src path="${module.client.basedir}/test"/>
     </javac>
   </target>
 

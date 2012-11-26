@@ -22,7 +22,7 @@
 
   <import file="${tomcat.home}/bin/catalina-tasks.xml"/>
 
-  <target name="compile.module.web" depends="compile.module.web.production,compile.module.web.tests"/>
+  <target name="compile.module.web" depends="compile.module.web.production"/>
 
   <target name="compile.module.web.production" depends="compile.module.online">
 
@@ -60,8 +60,6 @@
       <src path="${module.web.basedir}/gen"/>
     </javac>
   </target>
-
-  <target name="compile.module.web.tests" depends="compile.module.web.production" unless="skip.tests"/>
 
   <target name="clean.module.web">
     <delete dir="${web.output.dir}"/>

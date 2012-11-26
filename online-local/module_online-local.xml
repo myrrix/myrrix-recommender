@@ -22,8 +22,7 @@
   <property name="online-local.testoutput.dir"
             value="${module.online-local.basedir}/../out/test/online-local"/>
 
-  <target name="compile.module.online-local"
-          depends="compile.module.online-local.production,compile.module.online-local.tests"/>
+  <target name="compile.module.online-local" depends="compile.module.online-local.production"/>
 
   <target name="compile.module.online-local.production" depends="compile.module.online">
     <mkdir dir="${online-local.output.dir}"/>
@@ -47,10 +46,6 @@
       <src path="${module.online-local.basedir}/src"/>
     </javac>
   </target>
-
-  <target name="compile.module.online-local.tests"
-          depends="compile.module.online-local.production"
-          unless="skip.tests"/>
 
   <target name="clean.module.online-local">
     <delete dir="${online-local.output.dir}"/>
