@@ -38,6 +38,9 @@ import net.myrrix.online.RescorerProvider;
  * and in turn calls {@link MyrrixRecommender#recommendToAnonymous(long[], int)} with the supplied values.
  * If howMany is not specified, defaults to {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}.</p>
  *
+ * <p>Unknown item IDs are ignored, unless all are unknown, in which case a
+ * {@link HttpServletResponse#SC_BAD_REQUEST} status is returned.</p>
+ *
  * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
  *
  * @author Sean Owen

@@ -530,7 +530,8 @@ public final class ClientRecommender implements MyrrixRecommender {
    * @return {@link RecommendedItem}s representing the top recommendations for the user, ordered by quality,
    *  descending. The score associated to it is an opaque value. Larger means more similar, but no further
    *  interpretation may necessarily be applied.
-   * @throws NoSuchItemException if any of the items is not known in the model
+   * @throws NoSuchItemException if <em>none</em> of {@code itemIDs} exist in the model. Otherwise, unknown
+   *  items are ignored.
    * @throws NotReadyException if the recommender has no model available yet
    * @throws TasteException if another error occurs
    */
@@ -604,7 +605,13 @@ public final class ClientRecommender implements MyrrixRecommender {
           case HttpURLConnection.HTTP_OK:
             break;
           case HttpURLConnection.HTTP_NOT_FOUND:
-            throw new NoSuchItemException(userID + '/' + itemID);
+            String connectionMessage = connection.getResponseMessage();
+            if (connectionMessage != null &&
+                connectionMessage.contains(NoSuchUserException.class.getSimpleName())) {
+              throw new NoSuchUserException(userID);
+            } else {
+              throw new NoSuchItemException(itemID);
+            }
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:

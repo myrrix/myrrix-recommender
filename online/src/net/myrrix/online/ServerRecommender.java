@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -424,6 +425,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     float[] anonymousUserFeatures = null;
     Lock yLock = generation.getYLock().readLock();
 
+    boolean anyItemIDFound = false;
     for (long itemID : itemIDs) {
       float[] itemFeatures;
       yLock.lock();
@@ -433,8 +435,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         yLock.unlock();
       }
       if (itemFeatures == null) {
-        throw new NoSuchItemException(itemID);
+        continue;
       }
+      anyItemIDFound = true;
       double[] userFoldIn = MatrixUtils.multiply(ytyInv, itemFeatures);
       if (anonymousUserFeatures == null) {
         anonymousUserFeatures = new float[userFoldIn.length];
@@ -442,6 +445,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       for (int i = 0; i < anonymousUserFeatures.length; i++) {
         anonymousUserFeatures[i] += userFoldIn[i];
       }
+    }
+    if (!anyItemIDFound) {
+      throw new NoSuchItemException(Arrays.toString(itemIDs));
     }
 
     FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.25f);
@@ -839,17 +845,19 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     yLock.lock();
     try {
 
-      float[][] itemFeatures = new float[itemIDs.length][];
-      for (int i = 0; i < itemIDs.length; i++) {
-        long itemID = itemIDs[i];
+      List<float[]> itemFeatures = Lists.newArrayListWithCapacity(itemIDs.length);
+      for (long itemID : itemIDs) {
         float[] features = Y.get(itemID);
-        if (features == null) {
-          throw new NoSuchItemException(itemID);
+        if (features != null) {
+          itemFeatures.add(features);
         }
-        itemFeatures[i] = features;
       }
+      if (itemFeatures.isEmpty()) {
+        throw new NoSuchItemException(Arrays.toString(itemIDs));
+      }
+      float[][] itemFeaturesArray = itemFeatures.toArray(new float[itemFeatures.size()][]);
 
-      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(), itemIDs, itemFeatures, rescorer),
+      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(), itemIDs, itemFeaturesArray, rescorer),
                              howMany);
     } finally {
       yLock.unlock();

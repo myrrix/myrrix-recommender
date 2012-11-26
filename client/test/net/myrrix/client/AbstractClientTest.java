@@ -66,7 +66,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
 
     log.info("Copying files to {}", tempDir);
 
+    boolean runRefresh;
     if (savedModelFile == null) {
+      log.info("No saved model file, building model");
       File[] srcDataFiles = testDataDir.listFiles(new PatternFilenameFilter("[^.].*"));
       if (srcDataFiles != null) {
         for (File srcDataFile : srcDataFiles) {
@@ -74,8 +76,11 @@ public abstract class AbstractClientTest extends MyrrixTest {
           Files.copy(srcDataFile, destFile);
         }
       }
+      runRefresh = true;
     } else {
+      log.info("Found saved model file {} (size {})", savedModelFile, savedModelFile.length());
       Files.copy(savedModelFile, new File(tempDir, "model.bin"));
+      runRefresh = false;
     }
 
     log.info("Configuring recommender...");
@@ -107,7 +112,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
     clientConfig.setPassword(runnerConfig.getPassword());
     client = new ClientRecommender(clientConfig);
 
-    client.refresh(null);
+    if (runRefresh) {
+      client.refresh(null);
+    }
 
     log.info("Waiting for client...");
     client.await();
@@ -118,13 +125,15 @@ public abstract class AbstractClientTest extends MyrrixTest {
   public void tearDown() throws Exception {
     if (runner != null) {
       runner.close();
+      runner = null;
     }
+    client = null;
     synchronized (AbstractClientTest.class) {
       if (savedModelFile == null) {
-        savedModelFile = File.createTempFile("model-", ".bin");
-        savedModelFile.deleteOnExit();
         File modelBinFile = new File(getTestTempDir(), "model.bin");
         if (modelBinFile.exists()) {
+          savedModelFile = File.createTempFile("model-", ".bin");
+          savedModelFile.deleteOnExit();
           Files.copy(modelBinFile, savedModelFile);
         }
       }

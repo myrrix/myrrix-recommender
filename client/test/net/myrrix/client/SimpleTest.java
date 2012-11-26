@@ -129,10 +129,41 @@ public final class SimpleTest extends AbstractClientTest {
   }
 
   @Test
+  public void testRecommendToAnonymous() throws Exception {
+
+    ClientRecommender client = getClient();
+    // Adding non-existent item to make sure it is ignored
+    List<RecommendedItem> recs = client.recommendToAnonymous(new long[] {1L, 3L, Integer.MAX_VALUE}, 3);
+
+    assertNotNull(recs);
+    assertEquals(3, recs.size());
+
+    log.info("{}", recs);
+
+    assertEquals(109L, recs.get(0).getItemID());
+    assertEquals(763L, recs.get(1).getItemID());
+    assertEquals(181L, recs.get(2).getItemID());
+    assertEquals(0.024166174f, recs.get(0).getValue());
+    assertEquals(0.023587672f, recs.get(1).getValue());
+    assertEquals(0.022389986f, recs.get(2).getValue());
+  }
+
+  @Test(expected = NoSuchItemException.class)
+  public void testRecommendToAnonymousNonexistent1() throws Exception {
+    getClient().recommendToAnonymous(new long[] {Integer.MAX_VALUE}, 3);
+  }
+
+  @Test(expected = NoSuchItemException.class)
+  public void testRecommendToAnonymousNonexistent2() throws Exception {
+    getClient().recommendToAnonymous(new long[] {Integer.MAX_VALUE, Integer.MIN_VALUE}, 3);
+  }
+
+  @Test
   public void testMostSimilar() throws Exception {
 
     ClientRecommender client = getClient();
-    List<RecommendedItem> similar = client.mostSimilarItems(449L, 3);
+    // Adding non-existent item to make sure it is ignored
+    List<RecommendedItem> similar = client.mostSimilarItems(new long[] {449L, Integer.MAX_VALUE}, 3);
 
     assertNotNull(similar);
     assertEquals(3, similar.size());
@@ -145,13 +176,16 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(0.8826644f, similar.get(0).getValue());
     assertEquals(0.797932f, similar.get(1).getValue());
     assertEquals(0.7861562f, similar.get(2).getValue());
+  }
 
-    try {
-      client.mostSimilarItems(0L, 3);
-      fail();
-    } catch (NoSuchItemException nsie) {
-      // good
-    }
+  @Test(expected = NoSuchItemException.class)
+  public void testSimilarToNonexistent1() throws Exception {
+    getClient().mostSimilarItems(Integer.MAX_VALUE, 3);
+  }
+
+  @Test(expected = NoSuchItemException.class)
+  public void testSimilarToNonexistent2() throws Exception {
+    getClient().mostSimilarItems(new long[] {Integer.MAX_VALUE, Integer.MIN_VALUE}, 3);
   }
 
   @Test

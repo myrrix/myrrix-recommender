@@ -74,6 +74,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    *
    * @see #recommend(long, int)
    * @throws NotReadyException if the implementation has no usable model yet
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
+   *  exist in the model. Otherwise, unknown items are ignored.
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException;
 
@@ -82,6 +84,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * {@link #recommend(long, int, boolean, IDRescorer)}.
    *
    * @see #recommendToAnonymous(long[], int)
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
+   *  exist in the model. Otherwise, unknown items are ignored.
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer) throws TasteException;
 
