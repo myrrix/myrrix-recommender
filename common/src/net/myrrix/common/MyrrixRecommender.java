@@ -14,17 +14,38 @@
  * limitations under the License.
  */
 
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.myrrix.common;
 
 import java.io.File;
 import java.io.Reader;
 import java.util.List;
 
+import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.ItemBasedRecommender;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.Rescorer;
+import org.apache.mahout.common.LongPair;
 
 import net.myrrix.common.collection.FastIDSet;
 
@@ -37,9 +58,175 @@ import net.myrrix.common.collection.FastIDSet;
  * and {@link #removePreference(long, long)}, retained from Apache Mahout, have a somewhat different meaning
  * than in Mahout. They add to an association strength, rather than replace it. See the javadoc.</p>
  *
+ * <p>Several methods exist here because they are defined in Mahout, but have no useful meaning in this
+ * implementation. These are marked as {@code @Deprecated} and should not be used.</p>
+ *
  * @author Sean Owen
+ * @author Mahout
  */
 public interface MyrrixRecommender extends ItemBasedRecommender {
+
+  // Inherited from Recommender
+
+  /**
+   * @param userID user for which recommendations are to be computed
+   * @param howMany desired number of recommendations
+   * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
+   * @throws NoSuchUserException if the user is not known
+   */
+  @Override
+  List<RecommendedItem> recommend(long userID, int howMany) throws TasteException;
+
+  /**
+   * @param userID user for which recommendations are to be computed
+   * @param howMany desired number of recommendations
+   * @param rescorer rescoring function to apply before final list of recommendations is determined
+   * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
+   * @throws NoSuchUserException if the user is not known
+   */
+  @Override
+  List<RecommendedItem> recommend(long userID, int howMany, IDRescorer rescorer) throws TasteException;
+
+  /**
+   * @param userID user ID whose preference is to be estimated
+   * @param itemID item ID to estimate preference for
+   * @return an estimated preference, which may not be the total strength from the input. This is always an
+   *  estimate built from the model alone. Returns 0 if user or item is not known.
+   */
+  @Override
+  float estimatePreference(long userID, long itemID) throws TasteException;
+
+  /**
+   * <p>Adds to a user-item preference, or association. This is called in response to some action that indicates
+   * the user has a stronger association to an item, like a click or purchase. It is intended to be called many
+   * times for a user and item, as more actions are observed that associate the two. That is, this calls
+   * <em>adds to</em> rather than <em>sets</em> the association.</p>
+   *
+   * <p>To "undo" associations, call this method with negative values, or
+   * see {@link #removePreference(long, long)}.</p>
+   *
+   * <p>Value is <strong>not</strong> a rating, but a strength indicator. It may be negative.
+   * Its magnitude should correspond to the degree to which an observed event suggests an association between
+   * a user and item. A value twice as big should correspond to an event that suggests twice as strong an
+   * association.</p>
+   *
+   * <p>For example, a click on a video might result in a call with value 1.0. Watching half of the video
+   * might result in another call adding value 3.0. Finishing the video, another 3.0. Liking or sharing the video,
+   * an additional 10.0. Clicking away from a video within 10 seconds might result in a -3.0.</p>
+   *
+   * @param userID user involved in the new preference
+   * @param itemID item involved
+   * @param value strength value
+   * @throws TasteException if the preference cannot be updated, due to a server error
+   * @throws NotReadyException if the implementation has no usable model yet
+   */
+  @Override
+  void setPreference(long userID, long itemID, float value) throws TasteException;
+
+  /**
+   * <p>This method will remove an item from the user's set of known items,
+   * making it eligible for recommendation again. If the user has no more items, this method will remove
+   * the user too, such that new calls to {@link #recommend(long, int)} for example
+   * will fail with {@link org.apache.mahout.cf.taste.common.NoSuchUserException}.</p>
+   *
+   * <p>It does not affect any user-item association strengths.</p>
+   *
+   * <p>Contrast with calling {@link #setPreference(long, long, float)} with a negative value,
+   * which merely records a negative association between the user and item.</p>
+   */
+  @Override
+  void removePreference(long userID, long itemID) throws TasteException;
+
+  /**
+   * @deprecated do not call
+   */
+  @Deprecated
+  @Override
+  DataModel getDataModel();
+
+  // Inherited from ItemBasedRecommender
+
+  /**
+   * @param itemID ID of item for which to find most similar other items
+   * @param howMany desired number of most similar items to find
+   * @return items most similar to the given item, ordered from most similar to least
+   * @throws NoSuchItemException if the item is not known
+   */
+  @Override
+  List<RecommendedItem> mostSimilarItems(long itemID, int howMany) throws TasteException;
+
+  /**
+   * @param itemID ID of item for which to find most similar other items
+   * @param howMany desired number of most similar items to find
+   * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
+   *  most similar items
+   * @return items most similar to the given item, ordered from most similar to least
+   * @throws NoSuchItemException if the item is not known
+   */
+  @Override
+  List<RecommendedItem> mostSimilarItems(long itemID, int howMany, Rescorer<LongPair> rescorer) throws TasteException;
+
+  /**
+   * @param itemIDs IDs of item for which to find most similar other items
+   * @param howMany desired number of most similar items to find estimates used to determine most similar items
+   * @return items most similar to the given items, ordered from most similar to least
+   * @throws NoSuchItemException if <em>none</em> of {@code itemIDs} exist in the model. Otherwise, unknown
+   *  items are ignored.
+   */
+  @Override
+  List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException;
+
+  /**
+   * @param itemIDs IDs of item for which to find most similar other items
+   * @param howMany desired number of most similar items to find
+   * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
+   *  most similar items
+   * @return items most similar to the given items, ordered from most similar to least
+   * @throws NoSuchItemException if <em>none</em> of {@code itemIDs} exist in the model. Otherwise, unknown
+   *  items are ignored.
+   */
+  @Override
+  List<RecommendedItem> mostSimilarItems(long[] itemIDs,
+                                         int howMany,
+                                         Rescorer<LongPair> rescorer) throws TasteException;
+
+  /**
+   * @deprecated do not call
+   */
+  @Deprecated
+  @Override
+  List<RecommendedItem> mostSimilarItems(long[] itemIDs,
+                                         int howMany,
+                                         boolean excludeItemIfNotSimilarToAll) throws TasteException;
+
+  /**
+   * @deprecated do not call
+   */
+  @Deprecated
+  @Override
+  List<RecommendedItem> mostSimilarItems(long[] itemIDs,
+                                         int howMany,
+                                         Rescorer<LongPair> rescorer,
+                                         boolean excludeItemIfNotSimilarToAll) throws TasteException;
+
+  /**
+   * <p>Lists the items that were most influential in recommending a given item to a given user. Exactly how this
+   * is determined is left to the implementation, but, generally this will return items that the user prefers
+   * and that are similar to the given item.</p>
+   *
+   * <p>This returns a {@link List} of {@link RecommendedItem} which is a little misleading since it's returning
+   * recommend<strong>ing</strong> items, but, I thought it more natural to just reuse this class since it
+   * encapsulates an item and value. The value here does not necessarily have a consistent interpretation or
+   * expected range; it will be higher the more influential the item was in the recommendation.</p>
+   *
+   * @param userID ID of user who was recommended the item
+   * @param itemID ID of item that was recommended
+   * @param howMany maximum number of items to return
+   * @return {@link List} of {@link RecommendedItem}, ordered from most influential in recommended the
+   *  given item to least
+   */
+  @Override
+  List<RecommendedItem> recommendedBecause(long userID, long itemID, int howMany) throws TasteException;
 
   /**
    * @param userID user for which recommendations are to be computed
@@ -130,47 +317,6 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @throws NotReadyException if the implementation has no usable model yet
    */
   void setPreference(long userID, long itemID) throws TasteException;
-
-  /**
-   * <p>Adds to a user-item preference, or association. This is called in response to some action that indicates
-   * the user has a stronger association to an item, like a click or purchase. It is intended to be called many
-   * times for a user and item, as more actions are observed that associate the two. That is, this calls
-   * <em>adds to</em> rather than <em>sets</em> the association.</p>
-   *
-   * <p>To "undo" associations, call this method with negative values, or
-   * see {@link #removePreference(long, long)}.</p>
-   *
-   * <p>Value is <strong>not</strong> a rating, but a strength indicator. It may be negative.
-   * Its magnitude should correspond to the degree to which an observed event suggests an association between
-   * a user and item. A value twice as big should correspond to an event that suggests twice as strong an
-   * association.</p>
-   *
-   * <p>For example, a click on a video might result in a call with value 1.0. Watching half of the video
-   * might result in another call adding value 3.0. Finishing the video, another 3.0. Liking or sharing the video,
-   * an additional 10.0. Clicking away from a video within 10 seconds might result in a -3.0.</p>
-   *
-   * @param userID user involved in the new preference
-   * @param itemID item involved
-   * @param value strength value
-   * @throws TasteException if the preference cannot be updated, due to a server error
-   * @throws NotReadyException if the implementation has no usable model yet
-   */
-  @Override
-  void setPreference(long userID, long itemID, float value) throws TasteException;
-
-  /**
-   * <p>This method will remove an item from the user's set of known items,
-   * making it eligible for recommendation again. If the user has no more items, this method will remove
-   * the user too, such that new calls to {@link #recommend(long, int)} for example
-   * will fail with {@link org.apache.mahout.cf.taste.common.NoSuchUserException}.</p>
-   *
-   * <p>It does not affect any user-item association strengths.</p>
-   *
-   * <p>Contrast with calling {@link #setPreference(long, long, float)} with a negative value,
-   * which merely records a negative association between the user and item.</p>
-   */
-  @Override
-  void removePreference(long userID, long itemID) throws TasteException;
 
   /**
    * @return true if and only if the instance is ready to make recommendations; may be false for example
