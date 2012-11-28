@@ -77,25 +77,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.mahout</groupId>
-      <artifactId>mahout-math</artifactId>
-      <version>0.7</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-math</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.uncommons.maths</groupId>
-          <artifactId>uncommons-maths</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>jfree</groupId>
-          <artifactId>jcommon</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.mahout</groupId>
       <artifactId>mahout-core</artifactId>
       <version>0.7</version>
       <exclusions>

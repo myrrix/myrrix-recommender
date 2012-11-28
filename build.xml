@@ -58,9 +58,14 @@
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset src="common/lib/guava-13.0.jar"/>
-      <zipfileset src="common/lib/jewelcli-0.8.3.jar"/>
-      <zipfileset src="common/lib/mahout-core-0.7.jar"/>
-      <zipfileset src="common/lib/mahout-math-0.7.jar"/>
+      <zipfileset src="common/lib/jewelcli-0.8.3.jar">
+        <exclude name="uk/co/flamingpenguin/**"/>
+      </zipfileset>
+      <zipfileset src="common/lib/mahout-core-0.7.jar">
+        <include name="org/apache/mahout/cf/taste/**"/>
+        <include name="org/apache/mahout/common/**"/>
+        <include name="org/apache/mahout/math/*.class"/>
+      </zipfileset>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
     </jar>
@@ -80,9 +85,14 @@
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset dir="${online-local.output.dir}"/>
       <zipfileset src="common/lib/guava-13.0.jar"/>
-      <zipfileset src="common/lib/jewelcli-0.8.3.jar"/>
-      <zipfileset src="common/lib/mahout-core-0.7.jar"/>
-      <zipfileset src="common/lib/mahout-math-0.7.jar"/>
+      <zipfileset src="common/lib/jewelcli-0.8.3.jar">
+        <exclude name="uk/co/flamingpenguin/**"/>
+      </zipfileset>
+      <zipfileset src="common/lib/mahout-core-0.7.jar">
+        <include name="org/apache/mahout/cf/taste/**"/>
+        <include name="org/apache/mahout/common/**"/>
+        <include name="org/apache/mahout/math/*.class"/>
+      </zipfileset>
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
       <zipfileset src="common/lib/commons-math3-3.0.jar"/>
@@ -103,7 +113,6 @@
         <include name="guava-13.0.jar"/>
         <include name="jewelcli-0.8.3.jar"/>
         <include name="mahout-core-0.7.jar"/>
-        <include name="mahout-math-0.7.jar"/>
         <include name="slf4j-jdk14-1.7.2.jar"/>
         <include name="slf4j-api-1.7.2.jar"/>
         <include name="commons-math3-3.0.jar"/>
