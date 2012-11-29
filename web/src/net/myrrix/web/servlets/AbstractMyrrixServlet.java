@@ -34,14 +34,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
-import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.Pair;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.ReloadingReference;
-import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.web.common.stats.ServletStats;
 
@@ -70,8 +69,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private RescorerProvider rescorerProvider;
   private ServletStats timing;
   private ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions;
-  private Integer thisPartition;
-  private RandomGenerator random;
+  private int thisPartition;
   private ConcurrentMap<String,ResponseContentType> responseTypeCache;
 
   @Override
@@ -88,7 +86,6 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     allPartitions = theAllPartitions;
 
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
-    random = RandomManager.getRandom();
     responseTypeCache = Maps.newConcurrentMap();
 
     @SuppressWarnings("unchecked")
@@ -112,13 +109,22 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
     if (allPartitions != null) {
       List<List<Pair<String,Integer>>> thePartitions = allPartitions.get(1, TimeUnit.SECONDS);
-      Integer partitionToServe = getPartitionToServe(request, thePartitions.size());
-      if (partitionToServe != null && !partitionToServe.equals(thisPartition)) {
-        String redirectURL = buildRedirectToPartitionURL(request, partitionToServe, thePartitions);
-        response.sendRedirect(redirectURL);
-        return;
+      Long unnormalizedPartitionToServe = getUnnormalizedPartitionToServe(request);
+      if (unnormalizedPartitionToServe != null) {
+        int partitionToServe = LangUtils.mod(unnormalizedPartitionToServe, thePartitions.size());
+        if (partitionToServe != thisPartition) {
+          String redirectURL = buildRedirectToPartitionURL(request,
+                                                           partitionToServe,
+                                                           unnormalizedPartitionToServe,
+                                                           thePartitions);
+          response.sendRedirect(redirectURL);
+          return;
+        }
       }
       // else, we are the right partition to serve or no specific partition needed, so continue
+      // Note that the client will send any traffic that does not require a particular partition to partition 0.
+      // This logic just says that any partition is happy to try to answer such a request rather than forward it
+      // to partition 0, but, it is a difference in behavior.
     }
 
     long start = System.nanoTime();
@@ -135,16 +141,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
-  private String buildRedirectToPartitionURL(HttpServletRequest request,
-                                             int toPartition,
-                                             List<List<Pair<String,Integer>>> thePartitions) {
+  private static String buildRedirectToPartitionURL(HttpServletRequest request,
+                                                    int toPartition,
+                                                    long unnormalizedPartitionToServe,
+                                                    List<List<Pair<String, Integer>>> thePartitions) {
 
     List<Pair<String,Integer>> replicas = thePartitions.get(toPartition);
-    int numReplicas = replicas.size();
-    int chosenReplica;
-    synchronized (random) {
-      chosenReplica = random.nextInt(numReplicas);
-    }
+    // Also determine (first) replica by hashing to preserve a predictable order of access
+    // through the replicas for a given ID
+    int chosenReplica = LangUtils.mod(RandomUtils.md5HashToLong(unnormalizedPartitionToServe), replicas.size());
     Pair<String,Integer> hostPort = replicas.get(chosenReplica);
 
     StringBuilder redirectURL = new StringBuilder();
@@ -159,7 +164,13 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return redirectURL.toString();
   }
 
-  protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
+  /**
+   * @param request request containing info that may determine which partition needs to serve it
+   * @return {@code null} if any partition may serve, or an integral value that should be used to
+   *  determine the partiiton. This is usually an ID value, which will be possibly hashed and
+   *  reduced modulo the number of partitions.
+   */
+  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     return null; // Default: any partition is OK
   }
 

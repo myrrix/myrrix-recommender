@@ -28,7 +28,6 @@ import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
-import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 
@@ -84,7 +83,7 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
   }
 
   @Override
-  protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
+  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
@@ -95,7 +94,7 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
     } catch (NumberFormatException nfe) {
       return null;
     }
-    return LangUtils.mod(userID, numPartitions);
+    return userID;
   }
 
 }

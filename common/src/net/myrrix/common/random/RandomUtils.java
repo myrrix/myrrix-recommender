@@ -33,6 +33,9 @@
 
 package net.myrrix.common.random;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
@@ -46,6 +49,16 @@ public final class RandomUtils {
 
   /** The largest prime less than 2<sup>31</sup>-1 that is the smaller of a twin prime pair. */
   public static final int MAX_INT_SMALLER_TWIN_PRIME = 2147482949;
+
+  private static final MessageDigest MD5_DIGEST;
+  static {
+    try {
+      MD5_DIGEST = MessageDigest.getInstance("MD5");
+    } catch (NoSuchAlgorithmException e) {
+      // Can't happen
+      throw new IllegalStateException(e);
+    }
+  }
 
   private RandomUtils() {
   }
@@ -117,6 +130,23 @@ public final class RandomUtils {
       }
     }
     return false;
+  }
+
+  public static long md5HashToLong(long l) {
+    byte[] hash;
+    synchronized (MD5_DIGEST) {
+      for (int i = 0; i < 8; i++) {
+        MD5_DIGEST.update((byte) l);
+        l >>= 8;
+      }
+      hash = MD5_DIGEST.digest();
+    }
+    long result = 0L;
+    // Use bottom 8 bytes
+    for (int i = 8; i < 16; i++) {
+      result = (result << 4) | (hash[i] & 0xFFL);
+    }
+    return result;
   }
 
 }

@@ -96,4 +96,19 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     }
   }
 
+  @Override
+  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
+    String pathInfo = request.getPathInfo();
+    Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
+    long firstItemID;
+    try {
+      firstItemID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      return null;
+    } catch (NumberFormatException nfe) {
+      return null;
+    }
+    return firstItemID;
+  }
+
 }

@@ -162,7 +162,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
   }
 
   @Override
-  protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
+  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
@@ -173,7 +173,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     } catch (NumberFormatException nfe) {
       return null;
     }
-    return LangUtils.mod(userID, numPartitions);
+    return userID;
   }
 
 }

@@ -40,6 +40,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -52,9 +54,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.io.CharStreams;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
-import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -74,7 +75,7 @@ import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
-import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 
 /**
  * <p>An implementation of {@link MyrrixRecommender} which accesses a remote Serving Layer instance
@@ -104,12 +105,18 @@ public final class ClientRecommender implements MyrrixRecommender {
   private static final String IGNORE_HOSTNAME_KEY = "client.https.ignoreHost";
   private static final String CONNECTION_CLOSE_KEY = "client.connection.close";
 
+  private static final Map<String,String> INGEST_REQUEST_PROPS;
+  static {
+    INGEST_REQUEST_PROPS = Maps.newHashMapWithExpectedSize(2);
+    INGEST_REQUEST_PROPS.put("Content-Type", "text/plain; charset=UTF-8");
+    INGEST_REQUEST_PROPS.put("Content-Encoding", "gzip");
+  }
+
   private final MyrrixClientConfiguration config;
   private final boolean needAuthentication;
   private final boolean closeConnection;
   private final boolean ignoreHTTPSHost;
   private final List<List<Pair<String,Integer>>> partitions;
-  private final RandomGenerator random;
 
   /**
    * Instantiates a new recommender client with the given configuration
@@ -143,7 +150,6 @@ public final class ClientRecommender implements MyrrixRecommender {
     ignoreHTTPSHost = Boolean.valueOf(System.getProperty(IGNORE_HOSTNAME_KEY));
 
     partitions = config.getPartitions();
-    random = RandomManager.getRandom();
   }
 
   private SSLSocketFactory buildSSLSocketFactory() throws IOException {
@@ -196,67 +202,100 @@ public final class ClientRecommender implements MyrrixRecommender {
   /**
    * @param path URL to access (relative to context root)
    * @param method HTTP method to use
-   * @param partitionID ID value that determines partition, or {@code null} if no partition is needed
+   * @param unnormalizedID ID value that determines partition
    * @return a {@link HttpURLConnection} to the Serving Layer with default configuration in place
    */
-  private HttpURLConnection makeConnection(String path, String method, Long partitionID) throws IOException {
+  private HttpURLConnection makeConnection(String path,
+                                           String method,
+                                           long unnormalizedID) throws IOException {
+    return makeConnection(path, method, unnormalizedID, false, false, null);
+  }
+
+  /**
+   * @param path URL to access (relative to context root)
+   * @param method HTTP method to use
+   * @param unnormalizedID ID value that determines partition
+   * @param doOutput if true, will need to write data into the request body
+   * @param chunkedStreaming if true, use chunked streaming to accommodate a large upload, if possible
+   * @param requestProperties additional request key/value pairs or {@code null} for none
+   * @return a {@link HttpURLConnection} to the Serving Layer with default configuration in place
+   */
+  private HttpURLConnection makeConnection(String path,
+                                           String method,
+                                           long unnormalizedID,
+                                           boolean doOutput,
+                                           boolean chunkedStreaming,
+                                           Map<String,String> requestProperties) throws IOException {
+
     String contextPath = config.getContextPath();
     if (contextPath != null) {
       path = '/' + contextPath + path;
     }
     String protocol = config.isSecure() ? "https" : "http";
-    Pair<String,Integer> replica = choosePartitionAndReplica(partitionID);
-    URL url;
-    try {
-      url = new URL(protocol, replica.getFirst(), replica.getSecond(), path);
-    } catch (MalformedURLException mue) {
-      // can't happen
-      throw new IllegalStateException(mue);
-    }
-    if (log.isDebugEnabled()) {
+    List<Pair<String,Integer>> replicas = choosePartitionAndReplicas(unnormalizedID);
+    IOException savedException = null;
+    for (Pair<String,Integer> replica : replicas) {
+      URL url;
+      try {
+        url = new URL(protocol, replica.getFirst(), replica.getSecond(), path);
+      } catch (MalformedURLException mue) {
+        // can't happen
+        throw new IllegalStateException(mue);
+      }
       log.debug("{} to {}", method, url);
-    }
 
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod(method);
-    connection.setDoInput(true);
-    connection.setDoOutput(false);
-    connection.setUseCaches(false);
-    connection.setAllowUserInteraction(false);
-    connection.setRequestProperty("Accept", "text/csv");
-    if (closeConnection) {
-      connection.setRequestProperty("Connection", "close");
-    }
-    return connection;
-  }
-
-  private Pair<String,Integer> choosePartitionAndReplica(Long id) {
-    List<Pair<String,Integer>> replicas;
-    int numPartitions = partitions.size();
-    if (numPartitions == 1) {
-      replicas = partitions.get(0);
-    } else {
-      if (id == null) {
-        // No need to partition, use one at random
-        int whichPartition;
-        synchronized (random) {
-          whichPartition = random.nextInt(numPartitions);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod(method);
+      connection.setDoInput(true);
+      connection.setDoOutput(doOutput);
+      connection.setUseCaches(false);
+      connection.setAllowUserInteraction(false);
+      connection.setRequestProperty("Accept", "text/csv");
+      if (closeConnection) {
+        connection.setRequestProperty("Connection", "close");
+      }
+      if (chunkedStreaming) {
+        if (needAuthentication) {
+          // Must buffer in memory if using authentication since it won't handle the authorization challenge
+          log.debug("Authentication is enabled, so ingest data must be buffered in memory");
+        } else {
+          connection.setChunkedStreamingMode(0); // Use default buffer size
         }
-        replicas = partitions.get(whichPartition);
-      } else {
-        replicas = partitions.get(partition(id));
+      }
+      if (requestProperties != null) {
+        for (Map.Entry<String,String> entry : requestProperties.entrySet()) {
+          connection.setRequestProperty(entry.getKey(), entry.getValue());
+        }
+      }
+
+      try {
+        connection.connect();
+        return connection;
+      } catch (IOException ioe) {
+        // Replica is down, try another
+        log.info("Can't {} to {} ({})", method, url, ioe.toString());
+        savedException = ioe;
       }
     }
-    int numReplicas = replicas.size();
-    int whichReplica;
-    synchronized (random) {
-      whichReplica = random.nextInt(numReplicas);
-    }
-    return numReplicas == 1 ? replicas.get(0) : replicas.get(whichReplica);
+    throw savedException;
   }
 
-  private int partition(long id) {
-    return LangUtils.mod(id, partitions.size());
+  private List<Pair<String,Integer>> choosePartitionAndReplicas(long unnormalizedID) {
+    List<Pair<String,Integer>> replicas = partitions.get(LangUtils.mod(unnormalizedID, partitions.size()));
+    int numReplicas = replicas.size();
+    if (numReplicas <= 1) {
+      return replicas;
+    }
+    // Fix first replica; cycle through remainder in order since the remainder doesn't matter
+    int currentReplica = LangUtils.mod(RandomUtils.md5HashToLong(unnormalizedID), numReplicas);
+    List<Pair<String,Integer>> rotatedReplicas = Lists.newArrayListWithCapacity(numReplicas);
+    for (int i = 0; i < numReplicas; i++) {
+      rotatedReplicas.add(replicas.get(currentReplica));
+      if (++currentReplica == numReplicas) {
+        currentReplica = 0;
+      }
+    }
+    return rotatedReplicas;
   }
 
   /**
@@ -281,8 +320,8 @@ public final class ClientRecommender implements MyrrixRecommender {
     boolean sendValue = value != 1.0f;
     try {
       String method = set ? "POST" : "DELETE";
-      HttpURLConnection connection = makeConnection("/pref/" + userID + '/' + itemID, method, userID);
-      connection.setDoOutput(sendValue);
+      HttpURLConnection connection =
+          makeConnection("/pref/" + userID + '/' + itemID, method, userID, sendValue, false, null);
       try {
         if (sendValue) {
           byte[] bytes = Float.toString(value).getBytes(Charsets.UTF_8);
@@ -468,17 +507,8 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     urlPath.append("?howMany=").append(howMany);
 
-    Integer requiredPartition = null;
-    for (long userID : userIDs) {
-      if (requiredPartition == null) {
-        requiredPartition = partition(userID);
-      } else {
-        if (requiredPartition != partition(userID)) {
-          throw new IllegalArgumentException("Not all user IDs are on the same partition");
-        }
-      }
-    }
-
+    // Note that this assumes that all user IDs are on the same partiiton. It will fail at request
+    // time if not since the partition of the first user doesn't contain the others.
     try {
       HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", userIDs[0]);
       try {
@@ -549,7 +579,10 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     urlPath.append("?howMany=").append(howMany);
     try {
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", null);
+      // "Partitioning" on item ID #1, even though of course the instances are partitioned
+      // by user. Any instance may answer, but this allows a predictable assignment of request
+      // to partition even for these requests.
+      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", itemIDs[0]);
       try {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
@@ -643,31 +676,45 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public void ingest(Reader reader) throws TasteException {
+    Map<Integer,Pair<Writer,HttpURLConnection>> writersAndConnections =
+        Maps.newHashMapWithExpectedSize(partitions.size());
+    BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
-      HttpURLConnection connection = makeConnection("/ingest", "POST", null);
-      connection.setDoOutput(true);
-      connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-      connection.setRequestProperty("Content-Encoding", "gzip");
-      if (needAuthentication) {
-        log.info("Authentication is enabled, so ingest data must be buffered in memory");
-      } else {
-        connection.setChunkedStreamingMode(0); // Use default buffer size
-      }
-      // Must buffer in memory if using authentication since it won't handle the authorization challenge
-      // otherwise -- client will have to buffer all in memory
       try {
-        Writer out = new OutputStreamWriter(new GZIPOutputStream(connection.getOutputStream()), Charsets.UTF_8);
-        try {
-          CharStreams.copy(reader, out);
-        } finally {
-          out.close(); // Want to know of output stream close failed -- maybe failed to write
+        String line;
+        while ((line = buffered.readLine()) != null) {
+          long userID;
+          try {
+            userID = Long.parseLong(COMMA.split(line).iterator().next());
+          } catch (NoSuchElementException nsee) {
+            throw new TasteException(nsee);
+          } catch (NumberFormatException nfe) {
+            throw new TasteException(nfe);
+          }
+          int partition = LangUtils.mod(userID, partitions.size());
+          Pair<Writer,HttpURLConnection> writerAndConnection = writersAndConnections.get(partition);
+          if (writerAndConnection == null) {
+            HttpURLConnection connection =
+                makeConnection("/ingest", "POST", partition, true, true, INGEST_REQUEST_PROPS);
+            Writer writer = new OutputStreamWriter(new GZIPOutputStream(connection.getOutputStream()), Charsets.UTF_8);
+            writerAndConnection = Pair.of(writer, connection);
+            writersAndConnections.put(partition, writerAndConnection);
+          }
+          writerAndConnection.getFirst().write(line + '\n');
         }
-        // Should not be able to return Not Available status
-        if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-          throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        for (Pair<Writer,HttpURLConnection> writerAndConnection : writersAndConnections.values()) {
+          // Want to know of output stream close failed -- maybe failed to write
+          writerAndConnection.getFirst().close();
+          HttpURLConnection connection = writerAndConnection.getSecond();
+          if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+          }
         }
       } finally {
-        connection.disconnect();
+        for (Pair<Writer,HttpURLConnection> writerAndConnection : writersAndConnections.values()) {
+          Closeables.closeQuietly(writerAndConnection.getFirst());
+          writerAndConnection.getSecond().disconnect();
+        }
       }
     } catch (IOException ioe) {
       throw new TasteException(ioe);
@@ -682,11 +729,21 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public void refresh(Collection<Refreshable> alreadyRefreshed) {
+    if (alreadyRefreshed != null) {
+      log.warn("Ignoring argument {}", alreadyRefreshed);
+    }
+    int numPartitions = partitions.size();
+    for (int i = 0; i < numPartitions; i++) {
+      refreshPartition(i);
+    }
+  }
+
+  private void refreshPartition(int partition) {
     try {
-      HttpURLConnection connection = makeConnection("/refresh", "POST", null);
+      HttpURLConnection connection = makeConnection("/refresh", "POST", partition);
       try {
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-          log.warn("Unable to refresh; continuing");
+          log.warn("Unable to refresh partition {}; continuing", partition);
         }
       } finally {
         connection.disconnect();
@@ -799,8 +856,18 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public boolean isReady() throws TasteException {
+    int numPartitions = partitions.size();
+    for (int i = 0; i < numPartitions; i++) {
+      if (!isPartitionReady(i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean isPartitionReady(int partition) throws TasteException {
     try {
-      HttpURLConnection connection = makeConnection("/ready", "HEAD", null);
+      HttpURLConnection connection = makeConnection("/ready", "HEAD", partition);
       try {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
@@ -835,7 +902,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       FastIDSet result = new FastIDSet();
       int numPartitions = partitions.size();
       for (int i = 0; i < numPartitions; i++) {
-        getAllUserIDsFromPartition(i, result);
+        getAllIDsFromPartition(i, true, result);
       }
       return result;
     } catch (IOException ioe) {
@@ -843,8 +910,27 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
   }
 
-  private void getAllUserIDsFromPartition(int partition, FastIDSet result) throws IOException, TasteException {
-    HttpURLConnection connection = makeConnection("/user/allIDs", "GET", (long) partition);
+
+  @Override
+  public FastIDSet getAllItemIDs() throws TasteException {
+    // Yes, loop over all partitions. Most item IDs will be returned from all partitions but it's
+    // possible for some to exist only on a few.
+    try {
+      FastIDSet result = new FastIDSet();
+      int numPartitions = partitions.size();
+      for (int i = 0; i < numPartitions; i++) {
+        getAllIDsFromPartition(i, false, result);
+      }
+      return result;
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
+  private void getAllIDsFromPartition(int partition, boolean user, FastIDSet result)
+      throws IOException, TasteException {
+    String path = '/' + (user ? "user" : "item") + "/allIDs";
+    HttpURLConnection connection = makeConnection(path, "GET", (long) partition);
     try {
       switch (connection.getResponseCode()) {
         case HttpURLConnection.HTTP_OK:
@@ -858,35 +944,6 @@ public final class ClientRecommender implements MyrrixRecommender {
     } finally {
       connection.disconnect();
     }
-  }
-
-  @Override
-  public FastIDSet getAllItemIDs() throws TasteException {
-    try {
-      HttpURLConnection connection = makeConnection("/item/allIDs", "GET", null);
-      try {
-        switch (connection.getResponseCode()) {
-          case HttpURLConnection.HTTP_OK:
-            break;
-          case HttpURLConnection.HTTP_UNAVAILABLE:
-            throw new NotReadyException();
-          default:
-            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
-        }
-        return consumeIDs(connection);
-      } finally {
-        connection.disconnect();
-      }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
-    }
-  }
-
-
-  private static FastIDSet consumeIDs(HttpURLConnection connection) throws IOException {
-    FastIDSet result = new FastIDSet();
-    consumeIDs(connection, result);
-    return result;
   }
 
   private static void consumeIDs(HttpURLConnection connection, FastIDSet result) throws IOException {

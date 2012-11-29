@@ -97,29 +97,20 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
   }
 
   @Override
-  protected Integer getPartitionToServe(HttpServletRequest request, int numPartitions) {
+  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    Integer partitionToServe = null;
-    while (pathComponents.hasNext()) {
-      long userID;
-      try {
-        userID = Long.parseLong(pathComponents.next());
-      } catch (NoSuchElementException nsee) {
-        return null;
-      } catch (NumberFormatException nfe) {
-        return null;
-      }
-      int nextPartitionToServe = LangUtils.mod(userID, numPartitions);
-      if (partitionToServe == null) {
-        partitionToServe = nextPartitionToServe;
-      } else {
-        if (partitionToServe != nextPartitionToServe) {
-          throw new IllegalArgumentException("Not all users are on one partition");
-        }
-      }
+    long firstUserID;
+    try {
+      firstUserID = Long.parseLong(pathComponents.next());
+    } catch (NoSuchElementException nsee) {
+      return null;
+    } catch (NumberFormatException nfe) {
+      return null;
     }
-    return partitionToServe;
+    return firstUserID;
+    // This assumes all users are on one partition. If not, this will later fail anyway with
+    // NoSuchUserException as the partition for user 1 won't have the others.
   }
 
 }
