@@ -213,7 +213,11 @@ public final class InitListener implements ServletContextListener {
     ServletContext context = event.getServletContext();
     Closeable recommender = (Closeable) context.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
     if (recommender != null) {
-      Closeables.closeQuietly(recommender);
+      try {
+        recommender.close();
+      } catch (IOException e) {
+        log.warn("Unexpected error while closing", e);
+      }
     }
     IOUtils.deleteRecursively(tempDirToDelete);
     log.info("Myrrix is uninitialized");
