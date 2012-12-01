@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -35,6 +36,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.mahout.common.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -48,6 +51,8 @@ import org.xml.sax.SAXException;
  * @author Sean Owen
  */
 public final class PartitionsUtils {
+
+  private static final Logger log = LoggerFactory.getLogger(PartitionsUtils.class);
 
   private static final Pattern SEMICOLON = Pattern.compile(";");
   private static final Pattern COMMA = Pattern.compile(",");
@@ -84,6 +89,8 @@ public final class PartitionsUtils {
       Preconditions.checkArgument(!partition.isEmpty());
       allPartitions.add(partition);
     }
+
+    log(allPartitions);
     return allPartitions;
   }
 
@@ -142,6 +149,18 @@ public final class PartitionsUtils {
     }
 
     return result;
+  }
+
+  private static void log(Collection<List<Pair<String, Integer>>> allPartitions) {
+    if (allPartitions.isEmpty()) {
+      log.info("No partitions parsed");
+    } else {
+      int partitionNumber = 0;
+      for (List<Pair<String,Integer>> partition : allPartitions) {
+        log.info("Partition {}: {}", partitionNumber, partition);
+        partitionNumber++;
+      }
+    }
   }
 
 }
