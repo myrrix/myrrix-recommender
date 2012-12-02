@@ -170,11 +170,22 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany) throws TasteException {
+    return mostSimilarItems(itemIDs, howMany, null);
+  }
+
+  @Override
+  public List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany, String contextUserID)
+      throws TasteException {
     long[] longItemIDs = new long[itemIDs.length];
     for (int i = 0; i < itemIDs.length; i++) {
       longItemIDs[i] = translateItem(itemIDs[i]);
     }
-    List<RecommendedItem> originals = delegate.mostSimilarItems(longItemIDs, howMany);
+    List<RecommendedItem> originals;
+    if (contextUserID == null) {
+      originals = delegate.mostSimilarItems(longItemIDs, howMany);
+    } else {
+      originals = delegate.mostSimilarItems(longItemIDs, howMany, translateUser(contextUserID));
+    }
     return translate(originals);
   }
 
@@ -189,11 +200,22 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany) throws TasteException {
+    return recommendToAnonymous(itemIDs, howMany, null);
+  }
+
+  @Override
+  public List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany, String contextUserID)
+      throws TasteException {
     long[] longItemIDs = new long[itemIDs.length];
     for (int i = 0; i < itemIDs.length; i++) {
       longItemIDs[i] = translateItem(itemIDs[i]);
     }
-    List<RecommendedItem> originals = delegate.recommendToAnonymous(longItemIDs, howMany);
+    List<RecommendedItem> originals;
+    if (contextUserID == null) {
+      originals = delegate.recommendToAnonymous(longItemIDs, howMany);
+    } else {
+      originals = delegate.recommendToAnonymous(longItemIDs, howMany, translateUser(contextUserID));
+    }
     return translate(originals);
   }
 

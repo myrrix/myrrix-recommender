@@ -138,7 +138,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   void removePreference(long userID, long itemID) throws TasteException;
 
   /**
-   * @deprecated do not call
+   * @deprecated do not call; only present to satisfy Mahout API
+   * @throws UnsupportedOperationException in general
    */
   @Deprecated
   @Override
@@ -191,7 +192,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
                                          Rescorer<LongPair> rescorer) throws TasteException;
 
   /**
-   * @deprecated do not call
+   * @deprecated do not call; only present to satisfy Mahout API
+   * @throws UnsupportedOperationException in general
    */
   @Deprecated
   @Override
@@ -200,7 +202,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
                                          boolean excludeItemIfNotSimilarToAll) throws TasteException;
 
   /**
-   * @deprecated do not call
+   * @deprecated do not call; only present to satisfy Mahout API
+   * @throws UnsupportedOperationException in general
    */
   @Deprecated
   @Override

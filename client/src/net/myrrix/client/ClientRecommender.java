@@ -534,22 +534,20 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException {
-    return recommendToAnonymous(itemIDs, howMany, null);
+    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous", null);
   }
 
   /**
-   * <p>Note that {@link IDRescorer} is not supported in the client now and must be null.</p>
-   *
-   * @param rescorer must be null
+   * Like {@link #recommendToAnonymous(long[], int), but allows caller to specify the user for which the request
+   * is being made. This information does not directly affect the computation, but affects <em>routing</em>
+   * of the request in a distributed context. This is always recommended when there is a user in whose context
+   * the request is being made, as it will ensure that the request can take into account all the latest information
+   * from the user, including very new items that may be in {@code itemIDs}.
    */
-  @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
                                                     int howMany,
-                                                    IDRescorer rescorer) throws TasteException {
-    if (rescorer != null) {
-      throw new UnsupportedOperationException();
-    }
-    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous");
+                                                    long contextUserID) throws TasteException {
+    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous", contextUserID);
   }
 
   /**
@@ -568,10 +566,26 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException {
-    return anonymousOrSimilar(itemIDs, howMany, "/similarity");
+    return anonymousOrSimilar(itemIDs, howMany, "/similarity", null);
   }
 
-  private List<RecommendedItem> anonymousOrSimilar(long[] itemIDs, int howMany, String path) throws TasteException {
+  /**
+   * Like {@link #mostSimilarItems(long[], int), but allows caller to specify the user for which the request
+   * is being made. This information does not directly affect the computation, but affects <em>routing</em>
+   * of the request in a distributed context. This is always recommended when there is a user in whose context
+   * the request is being made, as it will ensure that the request can take into account all the latest information
+   * from the user, including very new items that may be in {@code itemIDs}.
+   */
+  public List<RecommendedItem> mostSimilarItems(long[] itemIDs,
+                                                int howMany,
+                                                long contextUserID) throws TasteException {
+    return anonymousOrSimilar(itemIDs, howMany, "/similarity", contextUserID);
+  }
+
+  private List<RecommendedItem> anonymousOrSimilar(long[] itemIDs,
+                                                   int howMany,
+                                                   String path,
+                                                   Long contextUserID) throws TasteException {
     StringBuilder urlPath = new StringBuilder();
     urlPath.append(path);
     for (long itemID : itemIDs) {
@@ -579,10 +593,12 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     urlPath.append("?howMany=").append(howMany);
     try {
-      // "Partitioning" on item ID #1, even though of course the instances are partitioned
-      // by user. Any instance may answer, but this allows a predictable assignment of request
-      // to partition even for these requests.
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", itemIDs[0]);
+      // Requests are typically partitioned by user, but this request does not directly depend on a user.
+      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+      // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
+      // deterministic.
+      long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
+      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
       try {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
@@ -780,6 +796,24 @@ public final class ClientRecommender implements MyrrixRecommender {
       throw new UnsupportedOperationException();
     }
     return recommend(userID, howMany);
+  }
+
+  /**
+   * Note that {@link IDRescorer} is not supported in the client now and must be null.
+   *
+   * @return {@link #recommendToAnonymous(long[], int)} if rescorer is null
+   * @throws UnsupportedOperationException otherwise
+   * @deprecated use {@link #recommendToAnonymous(long[], int)} instead
+   */
+  @Deprecated
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                                    int howMany,
+                                                    IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
+    return recommendToAnonymous(itemIDs, howMany);
   }
 
   /**

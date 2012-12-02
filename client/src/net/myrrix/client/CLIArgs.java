@@ -73,4 +73,17 @@ public interface CLIArgs {
   @Unparsed
   List<String> getCommands();
 
+  @Option(defaultValue = "10", description = "How many recommendations or items to retrieve")
+  int getHowMany();
+
+  @Option(defaultValue = "false",
+          description = "Allow items which the user is already connected to in " +
+                        "the result of the recommend method")
+  boolean isConsiderKnownItems();
+
+  @Option(defaultToNull = true,
+          description = "For commands that do not directly involve a user, " +
+                        "specifies the user for which the request is made for routing")
+  String getContextUserID();
+
 }

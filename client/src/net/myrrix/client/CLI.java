@@ -69,22 +69,35 @@ import net.myrrix.common.log.MemoryHandler;
  *   <li>{@code --verbose}: log more messages to standard out</li>
  * </ul>
  *
+ * <p>Finally "options" may also include a few optional arguments which affect the results of
+ * some of the commands:</p>
+ *
+ * <ul>
+ *   <li>{@code --howMany}: how many items to return from commands like {@code recommend} or
+ *     {@code mostSimilarItems}. Optional.</li>
+ *   <li>{@code --considerKnownItems}: in {@code recommend}, allow items that the user is already connected to
+ *     to be returned in results. Optional.</li>
+ *   <li>{@code --contextUserID}: in {@code mostSimilarItems} or {@code recommendToAnonymous}, supplies the
+ *     user for which the request is made, which is used only for proper routing. Optional.</li>
+ * </ul>
+ *
  * <p>"command" may be any value of {@link CLICommand}, in lower case if you like; "estimatePreference" and
  * "recommend" are valid values for example. These correspond to the methods of
  * {@link net.myrrix.common.MyrrixRecommender}</p>
  *
  * <p>The remaining arguments are arguments to the method named by command, and are likewise analogous to the
- * method arguments seen in {@link net.myrrix.common.MyrrixRecommender}:</p>
+ * method arguments seen in {@link net.myrrix.common.MyrrixRecommender}, where some arguments are taken from
+ * command line flags like {@code --howMany} above:</p>
  *
  * <ul>
  *   <li>{@code setPreference userID itemID [value]}</li>
  *   <li>{@code removePreference userID itemID}</li>
  *   <li>{@code ingest csvFile [csvFile2 ...]}</li>
  *   <li>{@code estimatePreference userID itemID}</li>
- *   <li>{@code recommend userID howMany [considerKnownItems]}</li>
- *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...] howMany}</li>
- *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...] howMany}</li>
- *   <li>{@code recommendedBecause userID itemID howMany}</li>
+ *   <li>{@code recommend userID}</li>
+ *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
+ *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...]}</li>
+ *   <li>{@code recommendedBecause userID itemID}</li>
  *   <li>{@code refresh}</li>
  *   <li>{@code isReady}</li>
  *   <li>{@code getAllUserIDs}</li>
@@ -99,7 +112,7 @@ import net.myrrix.common.log.MemoryHandler;
  *
  * <p>For example, to make 3 recommendations for user 35, one might run:</p>
  *
- * <p>{@code java -jar myrrix-client-X.Y.jar --host=example.com --port=8080 recommend 35 3}</p>
+ * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com --port 8080 --howMany 3 recommend 35}</p>
  *
  * <p>... and output might be:</p>
  *
@@ -111,8 +124,8 @@ import net.myrrix.common.log.MemoryHandler;
  *
  * <p>If using string IDs, it might look more like:</p>
  *
- * <p>{@code java -jar myrrix-client-X.Y.jar --host=example.com --port=8080
- *   --translateUser --translateItem ids.txt recommend Jane 3}</p>
+ * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com --port 8080
+ *   --translateUser --translateItem ids.txt --howMany 3 recommend Jane}</p>
  *
  * <p>... and output might be:</p>
  *
@@ -144,11 +157,11 @@ public final class CLI {
       printHelp("No command specified");
       return;
     }
-    String[] programArgs = programArgsList.toArray(new String[programArgsList.size()]);
+    String[] commandArgs = programArgsList.toArray(new String[programArgsList.size()]);
 
     CLICommand command;
     try {
-      command = CLICommand.valueOf(programArgs[0].toUpperCase(Locale.ENGLISH));
+      command = CLICommand.valueOf(commandArgs[0].toUpperCase(Locale.ENGLISH));
     } catch (IllegalArgumentException iae) {
       printHelp(iae.getMessage());
       return;
@@ -180,40 +193,40 @@ public final class CLI {
     try {
       switch (command) {
         case SETPREFERENCE:
-          doSetPreference(programArgs, recommender, translatingRecommender);
+          doSetPreference(commandArgs, recommender, translatingRecommender);
           break;
         case REMOVEPREFERENCE:
-          doRemovePreference(programArgs, recommender, translatingRecommender);
+          doRemovePreference(commandArgs, recommender, translatingRecommender);
           break;
         case INGEST:
-          doIngest(programArgs, recommender, translatingRecommender);
+          doIngest(commandArgs, recommender, translatingRecommender);
           break;
         case ESTIMATEPREFERENCE:
-          doEstimatePreference(programArgs, recommender, translatingRecommender);
+          doEstimatePreference(commandArgs, recommender, translatingRecommender);
           break;
         case RECOMMEND:
-          doRecommend(programArgs, recommender, translatingRecommender);
+          doRecommend(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case RECOMMENDTOANONYMOUS:
-          doRecommendToAnonymous(programArgs, recommender, translatingRecommender);
+          doRecommendToAnonymous(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case MOSTSIMILARITEMS:
-          doMostSimilarItems(programArgs, recommender, translatingRecommender);
+          doMostSimilarItems(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case RECOMMENDEDBECAUSE:
-          doRecommendedBecause(programArgs, recommender, translatingRecommender);
+          doRecommendedBecause(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case REFRESH:
-          doRefresh(programArgs, recommender);
+          doRefresh(commandArgs, recommender);
           break;
         case ISREADY:
-          doIsReady(programArgs, recommender);
+          doIsReady(commandArgs, recommender);
           break;
         case GETALLUSERIDS:
-          doGetAllIDs(programArgs, recommender, translatingRecommender, true);
+          doGetAllIDs(commandArgs, recommender, translatingRecommender, true);
           break;
         case GETALLITEMIDS:
-          doGetAllIDs(programArgs, recommender, translatingRecommender, false);
+          doGetAllIDs(commandArgs, recommender, translatingRecommender, false);
           break;
       }
     } catch (ArgumentValidationException ave) {
@@ -259,13 +272,14 @@ public final class CLI {
     recommender.refresh(null);
   }
 
-  private static void doRecommendedBecause(String[] programArgs,
+  private static void doRecommendedBecause(CLIArgs cliArgs,
+                                           String[] programArgs,
                                            ClientRecommender recommender,
                                            TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length != 4) {
-      throw new ArgumentValidationException("args are userID itemID howMany");
+    if (programArgs.length != 3) {
+      throw new ArgumentValidationException("args are userID itemID");
     }
-    int howMany = Integer.parseInt(programArgs[3]);
+    int howMany = cliArgs.getHowMany();
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
       long itemID = Long.parseLong(unquote(programArgs[2]));
@@ -277,58 +291,75 @@ public final class CLI {
     }
   }
 
-  private static void doMostSimilarItems(String[] programArgs,
+  private static void doMostSimilarItems(CLIArgs cliArgs,
+                                         String[] programArgs,
                                          ClientRecommender recommender,
                                          TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length < 3) {
-      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]] howMany");
+    if (programArgs.length < 2) {
+      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]]");
     }
-    int howMany = Integer.parseInt(programArgs[programArgs.length - 1]);
+    int howMany = cliArgs.getHowMany();
+    String contextUserIDString = cliArgs.getContextUserID();
     if (translatingRecommender == null) {
-      long[] itemIDs = new long[programArgs.length - 2];
-      for (int i = 1; i < programArgs.length - 1; i++) {
+      long[] itemIDs = new long[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
-      output(recommender.mostSimilarItems(itemIDs, howMany));
+      List<RecommendedItem> result;
+      if (contextUserIDString == null) {
+        result = recommender.mostSimilarItems(itemIDs, howMany);
+      } else {
+        result = recommender.mostSimilarItems(itemIDs, howMany, Long.parseLong(contextUserIDString));
+      }
+      output(result);
     } else {
-      String[] itemIDs = new String[programArgs.length - 2];
-      for (int i = 1; i < programArgs.length - 1; i++) {
+      String[] itemIDs = new String[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = unquote(programArgs[i]);
       }
-      outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany));
+      outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany, contextUserIDString));
     }
   }
 
-  private static void doRecommendToAnonymous(String[] programArgs,
+  private static void doRecommendToAnonymous(CLIArgs cliArgs,
+                                             String[] programArgs,
                                              ClientRecommender recommender,
                                              TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length < 3) {
-      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]] howMany");
+    if (programArgs.length < 2) {
+      throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]]");
     }
-    int howMany = Integer.parseInt(programArgs[programArgs.length - 1]);
+    int howMany = cliArgs.getHowMany();
+    String contextUserIDString = cliArgs.getContextUserID();
     if (translatingRecommender == null) {
-      long[] itemIDs = new long[programArgs.length - 2];
-      for (int i = 1; i < programArgs.length - 1; i++) {
+      long[] itemIDs = new long[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
-      output(recommender.recommendToAnonymous(itemIDs, howMany));
+      List<RecommendedItem> result;
+      if (contextUserIDString == null) {
+        result = recommender.recommendToAnonymous(itemIDs, howMany);
+      } else {
+        result = recommender.recommendToAnonymous(itemIDs, howMany, Long.parseLong(contextUserIDString));
+      }
+      output(result);
     } else {
-      String[] itemIDs = new String[programArgs.length - 2];
-      for (int i = 1; i < programArgs.length - 1; i++) {
+      String[] itemIDs = new String[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = unquote(programArgs[i]);
       }
-      outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, howMany));
+      outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, howMany, contextUserIDString));
     }
   }
 
-  private static void doRecommend(String[] programArgs,
+  private static void doRecommend(CLIArgs cliArgs,
+                                  String[] programArgs,
                                   ClientRecommender recommender,
                                   TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length != 3 && programArgs.length != 4) {
-      throw new ArgumentValidationException("args are userID howMany [considerKnownItems]");
+    if (programArgs.length != 2) {
+      throw new ArgumentValidationException("args are userID");
     }
-    int howMany = Integer.parseInt(programArgs[2]);
-    boolean considerKnownItems = programArgs.length == 4 && Boolean.valueOf(programArgs[3]);
+    int howMany = cliArgs.getHowMany();
+    boolean considerKnownItems = cliArgs.isConsiderKnownItems();
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
       output(recommender.recommend(userID, howMany, considerKnownItems, null));

@@ -92,6 +92,12 @@ public interface TranslatingRecommender {
   List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany) throws TasteException;
 
   /**
+   * @see net.myrrix.client.ClientRecommender#mostSimilarItems(long[], int, long)
+   */
+  List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany, String contextUserID)
+      throws TasteException;
+
+  /**
    * @see net.myrrix.common.MyrrixRecommender#recommendedBecause(long, long, int)
    */
   List<TranslatedRecommendedItem> recommendedBecause(String userID, String itemID, int howMany)
@@ -101,6 +107,12 @@ public interface TranslatingRecommender {
    * @see net.myrrix.common.MyrrixRecommender#recommendToAnonymous(long[], int)
    */
   List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany) throws TasteException;
+
+  /**
+   * @see net.myrrix.client.ClientRecommender#recommendToAnonymous(long[], int, long)
+   */
+  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany, String contextUserID)
+      throws TasteException;
 
   /**
    * @see net.myrrix.common.MyrrixRecommender#ingest(Reader)
