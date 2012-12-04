@@ -246,46 +246,49 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   final ResponseContentType determineResponseType(HttpServletRequest request) {
 
     String acceptHeader = request.getHeader("Accept");
+    if (acceptHeader == null) {
+      return ResponseContentType.JSON;
+    }
     ResponseContentType cached = responseTypeCache.get(acceptHeader);
     if (cached != null) {
       return cached;
     }
 
     SortedMap<Double,ResponseContentType> types = Maps.newTreeMap();
-    if (acceptHeader != null) {
-      for (String accept : COMMA.split(acceptHeader)) {
-        double preference;
-        String type;
-        int semiColon = accept.indexOf(';');
-        if (semiColon < 0) {
+    for (String accept : COMMA.split(acceptHeader)) {
+      double preference;
+      String type;
+      int semiColon = accept.indexOf(';');
+      if (semiColon < 0) {
+        preference = 1.0;
+        type = accept;
+      } else {
+        String valueString = accept.substring(semiColon + 1).trim();
+        if (valueString.startsWith("q=")) {
+          valueString = valueString.substring(2);
+        }
+        try {
+          preference = LangUtils.parseDouble(valueString);
+        } catch (IllegalArgumentException iae) {
           preference = 1.0;
-          type = accept;
-        } else {
-          String valueString = accept.substring(semiColon + 1).trim();
-          if (valueString.startsWith("q=")) {
-            valueString = valueString.substring(2);
-          }
-          try {
-            preference = LangUtils.parseDouble(valueString);
-          } catch (IllegalArgumentException iae) {
-            preference = 1.0;
-          }
-          type = accept.substring(semiColon);
         }
-        ResponseContentType parsedType = null;
-        if ("text/csv".equals(type) || "text/plain".equals(type)) {
-          parsedType = ResponseContentType.CSV;
-        } else if ("application/json".equals(type)) {
-          parsedType = ResponseContentType.JSON;
-        }
-        if (parsedType != null) {
-          types.put(preference, parsedType);
-        }
+        type = accept.substring(semiColon);
+      }
+      ResponseContentType parsedType = null;
+      if ("text/csv".equals(type) || "text/plain".equals(type)) {
+        parsedType = ResponseContentType.CSV;
+      } else if ("application/json".equals(type)) {
+        parsedType = ResponseContentType.JSON;
+      }
+      if (parsedType != null) {
+        types.put(preference, parsedType);
       }
     }
 
-    ResponseContentType finalType = ResponseContentType.JSON;
-    if (!types.isEmpty()) {
+    ResponseContentType finalType;
+    if (types.isEmpty()) {
+      finalType = ResponseContentType.JSON;
+    } else {
       finalType = types.values().iterator().next();
     }
 
