@@ -48,7 +48,7 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
                     Iterator<FastByIDMap.MapEntry<float[]>> Yiterator,
                     FastIDSet knownItemIDs,
                     IDRescorer rescorer) {
-    Preconditions.checkArgument(features.length > 0);
+    Preconditions.checkArgument(features.length > 0, "features must not be empty");
     delegate = new MutableRecommendedItem();
     this.features = features;
     this.Yiterator = Yiterator;

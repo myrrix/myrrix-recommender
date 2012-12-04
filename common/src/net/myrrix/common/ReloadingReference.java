@@ -56,7 +56,7 @@ public final class ReloadingReference<V> {
     if (duration == NO_RELOAD) {
       durationMS = NO_RELOAD;
     } else {
-      Preconditions.checkArgument(duration > 0);
+      Preconditions.checkArgument(duration > 0, "Duration must be positive: %s", duration);
       Preconditions.checkNotNull(timeUnit);
       durationMS = TimeUnit.MILLISECONDS.convert(duration, timeUnit);
     }

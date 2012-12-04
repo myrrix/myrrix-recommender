@@ -28,9 +28,9 @@ final class IRStatisticsImpl implements IRStatistics, EvaluationResult, Serializ
   private final double nDCG;
 
   IRStatisticsImpl(double precision, double recall, double nDCG) {
-    Preconditions.checkArgument(precision >= 0.0 && precision <= 1.0, "Illegal precision: " + precision);
-    Preconditions.checkArgument(recall >= 0.0 && recall <= 1.0, "Illegal recall: " + recall);
-    Preconditions.checkArgument(nDCG >= 0.0 && nDCG <= 1.0, "Illegal nDCG: " + nDCG);
+    Preconditions.checkArgument(precision >= 0.0 && precision <= 1.0, "Illegal precision: %s", precision);
+    Preconditions.checkArgument(recall >= 0.0 && recall <= 1.0, "Illegal recall: %s", recall);
+    Preconditions.checkArgument(nDCG >= 0.0 && nDCG <= 1.0, "Illegal nDCG: %s", nDCG);
     this.precision = precision;
     this.recall = recall;
     this.nDCG = nDCG;

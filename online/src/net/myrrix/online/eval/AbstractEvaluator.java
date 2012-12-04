@@ -95,8 +95,10 @@ public abstract class AbstractEvaluator {
                                          double trainingPercentage,
                                          double evaluationPercentage) throws TasteException {
 
-    Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0);
-    Preconditions.checkArgument(evaluationPercentage > 0.0 && evaluationPercentage <= 1.0);
+    Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0,
+                                "Training % must be in (0,1): %s", trainingPercentage);
+    Preconditions.checkArgument(evaluationPercentage > 0.0 && evaluationPercentage <= 1.0,
+                                "Eval % must be in (0,1): %s", evaluationPercentage);
     Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory(),
                                 "%s is not a directory", originalDataDir);
 

@@ -40,7 +40,7 @@ public final class AllConfig {
 
   public AllConfig(File localInputDir, RescorerProvider rescorerProvider, int howMany) {
     Preconditions.checkNotNull(localInputDir);
-    Preconditions.checkArgument(howMany > 0);
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive: %s", howMany);
     this.localInputDir = localInputDir;
     this.rescorerProvider = rescorerProvider;
     this.howMany = howMany;

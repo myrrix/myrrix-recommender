@@ -71,8 +71,10 @@ public final class LocationSensitiveHash implements CandidateFilter {
       Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
   private static final int NUM_HASHES = Integer.parseInt(System.getProperty("model.lsh.numHashes", "20"));
   static {
-    Preconditions.checkArgument(LSH_SAMPLE_RATIO > 0.0 && LSH_SAMPLE_RATIO <= 1.0);
-    Preconditions.checkArgument(NUM_HASHES >= 1 && NUM_HASHES <= 64);
+    Preconditions.checkArgument(LSH_SAMPLE_RATIO > 0.0 && LSH_SAMPLE_RATIO <= 1.0,
+                                "Bad LSH ratio: %s", LSH_SAMPLE_RATIO);
+    Preconditions.checkArgument(NUM_HASHES >= 1 && NUM_HASHES <= 64,
+                                "Bad # hashes: %s", NUM_HASHES);
   }
 
   private final FastByIDMap<float[]> Y;

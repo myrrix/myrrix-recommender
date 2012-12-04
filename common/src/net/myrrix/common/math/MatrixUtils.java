@@ -270,7 +270,7 @@ public final class MatrixUtils {
         }
       }
     }
-    Preconditions.checkState(result != null);
+    Preconditions.checkNotNull(result);
     return result;
   }
 

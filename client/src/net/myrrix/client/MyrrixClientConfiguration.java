@@ -81,7 +81,7 @@ public final class MyrrixClientConfiguration {
    * @param port Serving Layer port to communicate with
    */
   public void setPort(int port) {
-    Preconditions.checkArgument(port > 0);
+    Preconditions.checkArgument(port > 0, "port must be positive: %s", port);
     this.port = port;
   }
 

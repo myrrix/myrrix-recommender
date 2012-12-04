@@ -78,7 +78,8 @@ public final class DelegateGenerationManager implements GenerationManager {
   static {
     WRITES_BETWEEN_REBUILD =
           Integer.parseInt(System.getProperty("model.local.writesBetweenRebuild", "100000"));
-    Preconditions.checkArgument(WRITES_BETWEEN_REBUILD > 0);
+    Preconditions.checkArgument(WRITES_BETWEEN_REBUILD > 0,
+                                "Bad model.local.writesBetweenRebuild: %s", WRITES_BETWEEN_REBUILD);
   }
 
   /**

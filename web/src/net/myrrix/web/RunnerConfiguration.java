@@ -82,7 +82,7 @@ public final class RunnerConfiguration {
   }
 
   public void setPort(int port) {
-    Preconditions.checkArgument(port >= 0);
+    Preconditions.checkArgument(port >= 0, "port must be nonnegative: %s", port);
     this.port = port;
   }
 
@@ -94,7 +94,7 @@ public final class RunnerConfiguration {
   }
 
   public void setSecurePort(int securePort) {
-    Preconditions.checkArgument(securePort >= 0);
+    Preconditions.checkArgument(securePort >= 0, "securePort must be nonnegative: %s", securePort);
     this.securePort = securePort;
   }
 

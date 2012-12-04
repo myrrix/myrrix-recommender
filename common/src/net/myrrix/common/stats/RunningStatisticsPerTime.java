@@ -35,7 +35,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
 
   public RunningStatisticsPerTime(TimeUnit timeUnit) {
     int timeUnitOrdinal = timeUnit.ordinal();
-    Preconditions.checkArgument(timeUnitOrdinal >= TimeUnit.MINUTES.ordinal());
+    Preconditions.checkArgument(timeUnitOrdinal >= TimeUnit.MINUTES.ordinal(), "Unsupported time unit: %s", timeUnit);
     TimeUnit subTimeUnit = TimeUnit.values()[timeUnitOrdinal - 1];
     int numBuckets = (int) subTimeUnit.convert(1, timeUnit);
 

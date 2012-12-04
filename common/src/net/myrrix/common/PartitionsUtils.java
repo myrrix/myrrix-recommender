@@ -82,11 +82,11 @@ public final class PartitionsUtils {
         String[] hostPort = COLON.split(replicaString);
         String host = hostPort[0];
         Integer port = Integer.valueOf(hostPort[1]);
-        Preconditions.checkArgument(port > 0);
+        Preconditions.checkArgument(port > 0, "port must be positive: %s", port);
         Pair<String,Integer> replica = new Pair<String,Integer>(host, port);
         partition.add(replica);
       }
-      Preconditions.checkArgument(!partition.isEmpty());
+      Preconditions.checkArgument(!partition.isEmpty(), "At least one partition must be specified");
       allPartitions.add(partition);
     }
 

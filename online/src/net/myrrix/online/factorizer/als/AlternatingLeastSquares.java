@@ -102,8 +102,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
                                  FastByIDMap<FastByIDFloatMap> RbyColumn,
                                  int features,
                                  int iterations) {
-    Preconditions.checkArgument(features > 0);
-    Preconditions.checkArgument(iterations > 0);
+    Preconditions.checkArgument(features > 0, "features must be positive: %s", features);
+    Preconditions.checkArgument(iterations > 0, "iterations must be positive: %s", iterations);
     this.RbyRow = RbyRow;
     this.RbyColumn = RbyColumn;
     this.features = features;
