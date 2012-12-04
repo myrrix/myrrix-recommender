@@ -270,7 +270,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;Item ID 2</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;<em>(Item ID 2)</em></td><td></td></tr>
   <tr><td><code>/recommendToAnonymous</code></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
@@ -278,7 +278,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
   <tr><td colspan="4"><hr/></td></tr>
 
-  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;Item ID 2</td><td></td></tr>
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;<em>(Item ID 2)</em></td><td></td></tr>
   <tr><td><code>/similarity</code></td>
     <td><code>/</code><input type="text" id="similarity-itemid1" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
     <td><code>/</code><input type="text" id="similarity-itemid2" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
