@@ -30,7 +30,7 @@ import net.myrrix.common.collection.FastByIDMap;
 public interface MatrixFactorizer extends Callable<Void> {
 
   /** Default number of iterations to run. */
-  int DEFAULT_ITERATIONS = 3;
+  int DEFAULT_ITERATIONS = 2;
 
   /** Default number of features to use when building the model. */
   int DEFAULT_FEATURES = 30;

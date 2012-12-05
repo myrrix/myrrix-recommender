@@ -21,6 +21,7 @@ hr {margin:20px 0 10px 0}
   <li>Choice of partition and replica is now deterministic in the client. This avoids problems where two
     replicas presented slightly different results to the client on successive requests.</li>
   <li>Removed "_LOCK" file mechanism in Computation Layer in favor of querying the live cluster state</li>
+  <li>Stand-alone serving layer avoids a possible exception when recomputing a new model on new items</li>
 </ul>
 
 <h2>Other</h2>

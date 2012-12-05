@@ -147,12 +147,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     if (previousY == null ||
         previousY.isEmpty() ||
         previousY.entrySet().iterator().next().getValue().length != features) {
-      log.info("Constructing initial Y and adding 1 iteration to compute it...");
-      Y = constructInitialY();
-      iterationsToRun = iterations + 1;
+      log.info("Starting from random Y matrix; doubling usual number of iterations");
+      Y = constructInitialY(null);
+      iterationsToRun = 2 * iterations;
     } else {
-      log.info("Starting from previous generation Y...");
-      Y = previousY;
+      log.info("Starting from previous generation's Y matrix");
+      Y = constructInitialY(previousY);
       iterationsToRun = iterations;
     }
 
@@ -180,11 +180,14 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     return null;
   }
 
-  private FastByIDMap<float[]> constructInitialY() {
-    FastByIDMap<float[]> randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
+  private FastByIDMap<float[]> constructInitialY(FastByIDMap<float[]> previousY) {
+    FastByIDMap<float[]> randomY = previousY == null ? new FastByIDMap<float[]>(RbyColumn.size(), 1.25f) : previousY;
     RandomGenerator random = RandomManager.getRandom();
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
-      randomY.put(entry.getKey(), RandomUtils.randomUnitVector(features, random));
+      long id = entry.getKey();
+      if (!randomY.containsKey(id)) {
+        randomY.put(id, RandomUtils.randomUnitVector(features, random));
+      }
     }
     return randomY;
   }
