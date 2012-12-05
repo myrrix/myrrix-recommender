@@ -27,7 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.common.TasteException;
 
-import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
 

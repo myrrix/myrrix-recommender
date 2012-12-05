@@ -25,7 +25,6 @@ import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
@@ -36,6 +35,7 @@ import net.myrrix.client.translating.TranslatingRecommender;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.log.MemoryHandler;
+import net.myrrix.common.random.MemoryIDMigrator;
 
 /**
  * <p>A basic command-line interface to the Java client. It is run like so:</p>

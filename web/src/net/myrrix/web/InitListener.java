@@ -27,7 +27,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;

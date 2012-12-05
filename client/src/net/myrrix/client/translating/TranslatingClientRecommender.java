@@ -35,7 +35,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.cf.taste.impl.model.MemoryIDMigrator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.iterator.FileLineIterable;
@@ -45,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.client.ClientRecommender;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
+import net.myrrix.common.random.MemoryIDMigrator;
 
 /**
  * Default implementation of {@link TranslatingRecommender}. It delegates to an underlying {@link ClientRecommender}
