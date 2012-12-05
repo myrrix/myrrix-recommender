@@ -538,7 +538,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
-   * Like {@link #recommendToAnonymous(long[], int), but allows caller to specify the user for which the request
+   * Like {@link #recommendToAnonymous(long[], int)}, but allows caller to specify the user for which the request
    * is being made. This information does not directly affect the computation, but affects <em>routing</em>
    * of the request in a distributed context. This is always recommended when there is a user in whose context
    * the request is being made, as it will ensure that the request can take into account all the latest information
@@ -570,7 +570,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
-   * Like {@link #mostSimilarItems(long[], int), but allows caller to specify the user for which the request
+   * Like {@link #mostSimilarItems(long[], int)}, but allows caller to specify the user for which the request
    * is being made. This information does not directly affect the computation, but affects <em>routing</em>
    * of the request in a distributed context. This is always recommended when there is a user in whose context
    * the request is being made, as it will ensure that the request can take into account all the latest information
