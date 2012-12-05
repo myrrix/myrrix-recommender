@@ -318,18 +318,30 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private void doSetOrRemove(long userID, long itemID, float value, boolean set) throws TasteException {
     boolean sendValue = value != 1.0f;
+    Map<String,String> requestProperties;
+    byte[] bytes;
+    if (sendValue) {
+      requestProperties = Maps.newHashMapWithExpectedSize(2);
+      bytes = Float.toString(value).getBytes(Charsets.UTF_8);
+      requestProperties.put("Content-Type", "text/plain; charset=UTF-8");
+      requestProperties.put("Content-Length", Integer.toString(bytes.length));
+    } else {
+      requestProperties = null;
+      bytes = null;
+    }
+
     try {
-      String method = set ? "POST" : "DELETE";
-      HttpURLConnection connection =
-          makeConnection("/pref/" + userID + '/' + itemID, method, userID, sendValue, false, null);
+      HttpURLConnection connection = makeConnection("/pref/" + userID + '/' + itemID,
+                                                    set ? "POST" : "DELETE",
+                                                    userID,
+                                                    sendValue,
+                                                    false,
+                                                    requestProperties);
       try {
         if (sendValue) {
-          byte[] bytes = Float.toString(value).getBytes(Charsets.UTF_8);
-          connection.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
-          connection.setRequestProperty("Content-Length", Integer.toString(bytes.length));
           OutputStream out = connection.getOutputStream();
           out.write(bytes);
-          Closeables.closeQuietly(out);
+          out.close();
         }
         // Should not be able to return Not Available status
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
