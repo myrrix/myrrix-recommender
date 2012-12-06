@@ -417,6 +417,18 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer)
       throws NotReadyException, NoSuchItemException {
+    return recommendToAnonymous(itemIDs, null, howMany, rescorer);
+  }
+
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                                    float[] values,
+                                                    int howMany,
+                                                    IDRescorer rescorer)
+      throws NotReadyException, NoSuchItemException {
+
+    Preconditions.checkArgument(values == null || values.length == itemIDs.length,
+                                "Number of values doesn't match number of items");
 
     Generation generation = getCurrentGeneration();
 
@@ -430,7 +442,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Lock yLock = generation.getYLock().readLock();
 
     boolean anyItemIDFound = false;
-    for (long itemID : itemIDs) {
+    for (int j = 0; j < itemIDs.length; j++) {
+      long itemID = itemIDs[j];
       float[] itemFeatures;
       yLock.lock();
       try {
@@ -446,8 +459,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       if (anonymousUserFeatures == null) {
         anonymousUserFeatures = new float[userFoldIn.length];
       }
+      double signedFoldInWeight = values == null ? 1.0 : foldInWeight(values[j]);
       for (int i = 0; i < anonymousUserFeatures.length; i++) {
-        anonymousUserFeatures[i] += userFoldIn[i];
+        anonymousUserFeatures[i] += (float) (signedFoldInWeight * userFoldIn[i]);
       }
     }
     if (!anyItemIDFound) {
@@ -619,13 +633,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (userFeatures != null && itemFeatures != null) {
 
-      // This is analogous to the weight function in the ALS algorithm.
-      double cu = 1 + FOLDIN_LEARN_RATE * FastMath.abs(value);
-      // Distance from 1 reduced proportionally with cu
-      double foldInWeight = 1.0 - 1.0 / cu;
-      // Negative values treated as literally the opposite of positive values in short-term fold in
-      // This is not the same as the case of negative overall values in input to ALS.
-      double signedFoldInWeight = FastMath.signum(value) * foldInWeight;
+      double signedFoldInWeight = foldInWeight(value);
 
       // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
       // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
@@ -696,6 +704,16 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private static int countFeatures(FastByIDMap<float[]> M) {
     // assumes the read lock is held
     return M.isEmpty() ? 0 : M.entrySet().iterator().next().getValue().length;
+  }
+
+  private static double foldInWeight(float value) {
+    // This is analogous to the weight function in the ALS algorithm.
+    double cu = 1 + FOLDIN_LEARN_RATE * FastMath.abs(value);
+    // Distance from 1 reduced proportionally with cu
+    double foldInWeight = 1.0 - 1.0 / cu;
+    // Negative values treated as literally the opposite of positive values in short-term fold in
+    // This is not the same as the case of negative overall values in input to ALS.
+    return FastMath.signum(value) * foldInWeight;
   }
 
   @Override

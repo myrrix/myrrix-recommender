@@ -154,9 +154,9 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(181L, recs.get(0).getItemID());
     assertEquals(50L, recs.get(1).getItemID());
     assertEquals(127L, recs.get(2).getItemID());
-    assertEquals(0.023732195f, recs.get(0).getValue());
-    assertEquals(0.02364187f, recs.get(1).getValue());
-    assertEquals(0.023541192f, recs.get(2).getValue());
+    assertEquals(0.011866097f, recs.get(0).getValue());
+    assertEquals(0.011820935f, recs.get(1).getValue());
+    assertEquals(0.011770596f, recs.get(2).getValue());
   }
 
   @Test(expected = NoSuchItemException.class)
@@ -265,9 +265,63 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(198L, recs.get(0).getItemID());
     assertEquals(45L, recs.get(1).getItemID());
     assertEquals(510L, recs.get(2).getItemID());
-    assertEquals(0.014930906f, recs.get(0).getValue());
-    assertEquals(0.014744747f, recs.get(1).getValue());
-    assertEquals(0.014339817f, recs.get(2).getValue());
+    assertEquals(0.007465453f, recs.get(0).getValue());
+    assertEquals(0.0073723735f, recs.get(1).getValue());
+    assertEquals(0.0071699085f , recs.get(2).getValue());
+
+    try {
+      client.recommendToAnonymous(new long[]{0L}, 3);
+      fail();
+    } catch (NoSuchItemException nsie) {
+      // good
+    }
+  }
+
+  @Test
+  public void testAnonymous2() throws Exception {
+
+    ClientRecommender client = getClient();
+    List<RecommendedItem> recs =
+        client.recommendToAnonymous(new long[] {190L}, new float[] {1.0f}, 3);
+
+    assertNotNull(recs);
+    assertEquals(3, recs.size());
+
+    log.info("{}", recs);
+
+    assertEquals(198L, recs.get(0).getItemID());
+    assertEquals(45L, recs.get(1).getItemID());
+    assertEquals(510L, recs.get(2).getItemID());
+    assertEquals(0.007465453f, recs.get(0).getValue());
+    assertEquals(0.0073723735f, recs.get(1).getValue());
+    assertEquals(0.0071699085f , recs.get(2).getValue());
+
+    try {
+      client.recommendToAnonymous(new long[]{0L}, 3);
+      fail();
+    } catch (NoSuchItemException nsie) {
+      // good
+    }
+  }
+
+  @Test
+  public void testAnonymous3() throws Exception {
+
+    ClientRecommender client = getClient();
+    List<RecommendedItem> recs =
+        client.recommendToAnonymous(new long[] {190L, 200L}, new float[] {2.0f, 3.0f}, 3);
+
+    assertNotNull(recs);
+    assertEquals(3, recs.size());
+
+    log.info("{}", recs);
+
+    assertEquals(198L, recs.get(0).getItemID());
+    assertEquals(657L, recs.get(1).getItemID());
+    assertEquals(45L, recs.get(2).getItemID());
+    assertEquals(0.011495121f, recs.get(0).getValue());
+    assertEquals(0.010191502f, recs.get(1).getValue());
+    assertEquals(0.009922848f , recs.get(2).getValue());
 
     try {
       client.recommendToAnonymous(new long[]{0L}, 3);

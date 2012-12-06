@@ -546,7 +546,11 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException {
-    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous", null);
+    return recommendToAnonymous(itemIDs, null, howMany);
+  }
+
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany) throws TasteException {
+    return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", null);
   }
 
   /**
@@ -559,7 +563,14 @@ public final class ClientRecommender implements MyrrixRecommender {
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
                                                     int howMany,
                                                     long contextUserID) throws TasteException {
-    return anonymousOrSimilar(itemIDs, howMany, "/recommendToAnonymous", contextUserID);
+    return recommendToAnonymous(itemIDs, null, howMany, contextUserID);
+  }
+
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                                    float[] values,
+                                                    int howMany,
+                                                    long contextUserID) throws TasteException {
+    return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", contextUserID);
   }
 
   /**
@@ -578,7 +589,7 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException {
-    return anonymousOrSimilar(itemIDs, howMany, "/similarity", null);
+    return anonymousOrSimilar(itemIDs, null, howMany, "/similarity", null);
   }
 
   /**
@@ -591,17 +602,23 @@ public final class ClientRecommender implements MyrrixRecommender {
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs,
                                                 int howMany,
                                                 long contextUserID) throws TasteException {
-    return anonymousOrSimilar(itemIDs, howMany, "/similarity", contextUserID);
+    return anonymousOrSimilar(itemIDs, null, howMany, "/similarity", contextUserID);
   }
 
   private List<RecommendedItem> anonymousOrSimilar(long[] itemIDs,
+                                                   float[] values,
                                                    int howMany,
                                                    String path,
                                                    Long contextUserID) throws TasteException {
+    Preconditions.checkArgument(values == null || values.length == itemIDs.length,
+                                "Number of values doesn't match number of items");
     StringBuilder urlPath = new StringBuilder();
     urlPath.append(path);
-    for (long itemID : itemIDs) {
-      urlPath.append('/').append(itemID);
+    for (int i = 0; i < itemIDs.length; i++) {
+      urlPath.append('/').append(itemIDs[i]);
+      if (values != null) {
+        urlPath.append('=').append(values[i]);
+      }
     }
     urlPath.append("?howMany=").append(howMany);
     try {
@@ -826,6 +843,25 @@ public final class ClientRecommender implements MyrrixRecommender {
       throw new UnsupportedOperationException();
     }
     return recommendToAnonymous(itemIDs, howMany);
+  }
+
+  /**
+   * Note that {@link IDRescorer} is not supported in the client now and must be null.
+   *
+   * @return {@link #recommendToAnonymous(long[], float[], int)} if rescorer is null
+   * @throws UnsupportedOperationException otherwise
+   * @deprecated use {@link #recommendToAnonymous(long[], float[], int)} instead
+   */
+  @Deprecated
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                                    float[] values,
+                                                    int howMany,
+                                                    IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
+    return recommendToAnonymous(itemIDs, values, howMany);
   }
 
   /**

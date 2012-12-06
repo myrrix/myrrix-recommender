@@ -274,13 +274,28 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
 
   /**
    * Like {@link #recommendToAnonymous(long[], int)} but rescorer results like
-   * {@link #recommend(long, int, boolean, IDRescorer)}.
+   * {@link #recommend(long, int, boolean, IDRescorer)}. All items are assumed to be equally important
+   * to the anonymous users -- strength "1".
    *
    * @see #recommendToAnonymous(long[], int)
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
    *  exist in the model. Otherwise, unknown items are ignored.
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer) throws TasteException;
+
+  /**
+   * Like {@link #recommendToAnonymous(long[], int, IDRescorer)} but lets caller specify strength scores associated
+   * to each of the items.
+   *
+   * @param values values corresponding to {@code itemIDs}
+   * @see #recommendToAnonymous(long[], int, IDRescorer)
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
+   *  exist in the model. Otherwise, unknown items are ignored.
+   */
+  List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
+                                             float[] values,
+                                             int howMany,
+                                             IDRescorer rescorer) throws TasteException;
 
   /**
    * A bulk version of {@link #estimatePreference(long, long)}, suitable for computing many estimates
