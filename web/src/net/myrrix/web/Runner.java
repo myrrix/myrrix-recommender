@@ -95,6 +95,7 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *   as the root user to access port 80.</li>
  *   <li>{@code --securePort}: Port on which to listen for HTTPS requests. Defaults to 443. Likewise note that
  *   using port 443 requires running as root.</li>
+ *   <li>{@code --readOnly}: If set, disables methods and endpoints that add, remove or change data</li>
  *   <li>{@code --keystoreFile}: File containing the SSL key to use for HTTPS. Setting this flag
  *   enables HTTPS connections, and so requires that option {@code --keystorePassword} be set. In distributed
  *   mode, if not set, will attempt to load a keystore file from the distributed file system,

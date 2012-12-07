@@ -14,6 +14,8 @@ PORT=8080
 # Set to listen for HTTPS connections on the given port. This or PORT must be set.
 #SECURE_PORT=8443
 
+#READ_ONLY=true
+
 # Set the keystore file to enable SSL / HTTPS, and supply the password if needed.
 #KEYSTORE_FILE=/path/to/keystore
 #KEYSTORE_PASSWORD=password
@@ -36,7 +38,7 @@ PORT=8080
 # -------- Distributed-mode settings
 
 # Set these to the instance and bucket from which to read a model
-#INSTANCE_ID=123
+#INSTANCE_ID=myinstance
 #BUCKET=mybucket
 
 # When using multiple partitioned Serving Layers, set ALL_PARTITIONS describing all Serving Layers,
@@ -47,7 +49,7 @@ PORT=8080
 # -------- JVM settings
 
 # Set to a value that can be used with the -Xmx flag, like 1200m or 4G or 4g
-HEAP_SIZE=4g
+HEAP_SIZE=2g
 
 # -------- Apache Hadoop-specific settings
 
@@ -70,6 +72,10 @@ if [ -n "${PORT}" ]; then
 fi
 if [ -n "${SECURE_PORT}" ]; then
   ALL_ARGS="${ALL_ARGS} --securePort=${SECURE_PORT}"
+fi
+
+if [ -n "${READ_ONLY}" ]; then
+  ALL_ARGS="${ALL_ARGS} --readOnly"
 fi
 
 if [ -n "${KEYSTORE_FILE}" ]; then
