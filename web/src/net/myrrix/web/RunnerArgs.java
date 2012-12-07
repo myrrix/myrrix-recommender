@@ -42,6 +42,9 @@ public interface RunnerArgs {
   @Option(defaultValue = "443", description = "HTTPS port number")
   int getSecurePort();
 
+  @Option(description = "Disables all API methods that add or change data")
+  boolean isReadOnly();
+
   @Option(defaultToNull = true, description = "User name needed to authenticate to this instance")
   String getUserName();
 

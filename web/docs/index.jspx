@@ -134,6 +134,8 @@ pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
 pageContext.setAttribute("rec", rec);
 
+boolean readOnly = (Boolean) application.getAttribute(AbstractMyrrixServlet.READ_ONLY_KEY);
+
 String localInputDir = String.valueOf(application.getAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY));
 pageContext.setAttribute("localInputDir", localInputDir);
 
@@ -302,6 +304,16 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
   <tr><td colspan="4"><hr/></td></tr>
 
+  <jsp:scriptlet>
+    if (readOnly) {
+  </jsp:scriptlet>
+
+  <tr><td colspan="4" style="text-align:center"><em>(Read-only Mode)</em></td></tr>
+
+  <jsp:scriptlet>
+    } else {
+  </jsp:scriptlet>
+
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/pref</code></td>
     <td><code>/</code><input type="text" id="pref-userid" onkeyup="return handleReturn(event,'pref',false,new Array('userid','itemid'))"/></td>
@@ -323,6 +335,10 @@ pageContext.setAttribute("numPartitions", numPartitions);
     <td colspan="2"></td>
     <td><a href="#" class="arrow" onclick="return doQuery('refresh',false)">&amp;#x27AC;</a></td>
   </tr>
+
+  <jsp:scriptlet>
+    }
+  </jsp:scriptlet>
 
 </table>
 </form>

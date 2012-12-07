@@ -35,6 +35,7 @@ public final class RunnerConfiguration {
   private String instanceID;
   private int port;
   private int securePort;
+  private boolean readOnly;
   private File keystoreFile;
   private String keystorePassword;
   private File localInputDir;
@@ -96,6 +97,17 @@ public final class RunnerConfiguration {
   public void setSecurePort(int securePort) {
     Preconditions.checkArgument(securePort >= 0, "securePort must be nonnegative: %s", securePort);
     this.securePort = securePort;
+  }
+
+  /**
+   * @return if true, disable API methods that add or change data
+   */
+  public boolean isReadOnly() {
+    return readOnly;
+  }
+
+  public void setReadOnly(boolean readOnly) {
+    this.readOnly = readOnly;
   }
 
   /**

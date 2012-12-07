@@ -56,6 +56,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   static final int DEFAULT_HOW_MANY = 10;
 
   private static final String KEY_PREFIX = AbstractMyrrixServlet.class.getName();
+  public static final String READ_ONLY_KEY = KEY_PREFIX + ".READ_ONLY";
   public static final String RECOMMENDER_KEY = KEY_PREFIX + ".RECOMMENDER";
   public static final String RESCORER_PROVIDER_KEY = KEY_PREFIX + ".RESCORER_PROVIDER";
   public static final String TIMINGS_KEY = KEY_PREFIX + ".TIMINGS";

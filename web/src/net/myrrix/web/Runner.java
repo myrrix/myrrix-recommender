@@ -222,6 +222,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     config.setPort(runnerArgs.getPort());
     config.setSecurePort(runnerArgs.getSecurePort());
+    config.setReadOnly(runnerArgs.isReadOnly());
     config.setLocalInputDir(runnerArgs.getLocalInputDir());
 
     boolean instanceIDSet = runnerArgs.getInstanceID() != null;
@@ -268,18 +269,22 @@ public final class Runner implements Callable<Boolean>, Closeable {
     configureHost(tomcat.getHost());
     Context context = makeContext(tomcat, noSuchBaseDir, connector.getPort());
 
-    addServlet(context, new PreferenceServlet(), "/pref/*");
-    addServlet(context, new IngestServlet(), "/ingest/*");
     addServlet(context, new RecommendServlet(), "/recommend/*");
     addServlet(context, new RecommendToManyServlet(), "/recommendToMany/*");
     addServlet(context, new RecommendToAnonymousServlet(), "/recommendToAnonymous/*");
     addServlet(context, new SimilarityServlet(), "/similarity/*");
     addServlet(context, new EstimateServlet(), "/estimate/*");
     addServlet(context, new BecauseServlet(), "/because/*");
-    addServlet(context, new RefreshServlet(), "/refresh/*");
     addServlet(context, new ReadyServlet(), "/ready/*");
     addServlet(context, new AllUserIDsServlet(), "/user/allIDs/*");
     addServlet(context, new AllItemIDsServlet(), "/item/allIDs/*");
+
+    if (!config.isReadOnly()) {
+      addServlet(context, new PreferenceServlet(), "/pref/*");
+      addServlet(context, new IngestServlet(), "/ingest/*");
+      addServlet(context, new RefreshServlet(), "/refresh/*");
+    }
+
     addServlet(context, new index_jspx(), "/index.jspx");
     addServlet(context, new status_jspx(), "/status.jspx");
     addServlet(context, new error_jspx(), "/error.jspx");
@@ -431,6 +436,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.RESCORER_PROVIDER_CLASS_KEY, config.getRescorerProviderClassName());
     servletContext.setAttribute(InitListener.LOCAL_INPUT_DIR_KEY, config.getLocalInputDir());
     servletContext.setAttribute(InitListener.PORT_KEY, port);
+    servletContext.setAttribute(InitListener.READ_ONLY_KEY, config.isReadOnly());
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());
     servletContext.setAttribute(InitListener.PARTITION_KEY, config.getPartition());
 

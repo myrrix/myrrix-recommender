@@ -58,6 +58,7 @@ public final class InitListener implements ServletContextListener {
   public static final String LOG_HANDLER = KEY_PREFIX + ".LOG_HANDLER";
   public static final String LOCAL_INPUT_DIR_KEY = KEY_PREFIX + ".LOCAL_INPUT_DIR";
   public static final String PORT_KEY = KEY_PREFIX + ".PORT";
+  public static final String READ_ONLY_KEY = KEY_PREFIX + ".READ_ONLY";
   public static final String BUCKET_KEY = KEY_PREFIX + ".BUCKET";
   public static final String INSTANCE_ID_KEY = KEY_PREFIX + ".INSTANCE_ID";
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
@@ -128,6 +129,9 @@ public final class InitListener implements ServletContextListener {
     if (rescorerProvider != null) {
       context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
     }
+
+    boolean readOnly = Boolean.parseBoolean(getAttributeOrParam(context, READ_ONLY_KEY));
+    context.setAttribute(AbstractMyrrixServlet.READ_ONLY_KEY, readOnly);
 
     final String portString = getAttributeOrParam(context, PORT_KEY);
     final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
