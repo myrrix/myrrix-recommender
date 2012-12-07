@@ -188,9 +188,10 @@ public final class MyrrixClientConfiguration {
 
   private List<List<Pair<String,Integer>>> parseAutoPartitionSpecification() throws IOException {
     String scheme = isSecure() ? "https" : "http";
+    String path = contextPath == null ? "/status.jspx" : '/' + contextPath + "/status.jspx";
     URL statusURL;
     try {
-      statusURL = new URL(scheme, host, port, "/status.jspx");
+      statusURL = new URL(scheme, host, port, path);
     } catch (MalformedURLException e) {
       throw new IllegalStateException(e); // Can't happen
     }
