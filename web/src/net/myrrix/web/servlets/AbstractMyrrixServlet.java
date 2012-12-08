@@ -89,12 +89,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
     responseTypeCache = Maps.newConcurrentMap();
 
-    @SuppressWarnings("unchecked")
-    Map<String,ServletStats> timings = (Map<String,ServletStats>) context.getAttribute(TIMINGS_KEY);
-    if (timings == null) {
-      timings = Maps.newHashMap();
-      context.setAttribute(TIMINGS_KEY, timings);
+    Map<String,ServletStats> timings;
+    synchronized (context) {
+      timings = (Map<String,ServletStats>) context.getAttribute(TIMINGS_KEY);
+      if (timings == null) {
+        timings = Maps.newTreeMap();
+        context.setAttribute(TIMINGS_KEY, timings);
+      }
     }
+
     String key = getClass().getSimpleName();
     ServletStats theTiming = timings.get(key);
     if (theTiming == null) {
