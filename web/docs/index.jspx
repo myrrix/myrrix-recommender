@@ -261,46 +261,55 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
 <table class="layout" style="width:100%"><tr><td style="width:60%">
 
-<form action="#" style="padding:10px">
 <table class="layout">
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td colspan="2"></td></tr>
   <tr><td><code>/recommend</code></td>
     <td><code>/</code><input type="text" id="recommend-userid" onkeyup="return handleReturn(event, 'recommend',true,new Array('userid'))"/></td>
     <td></td>
     <td><a href="#" class="arrow" onclick="return doQuery('recommend',true,new Array('userid'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;<em>(Item ID 2)</em></td><td></td></tr>
   <tr><td><code>/recommendToAnonymous</code></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid1" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
     <td><code>/</code><input type="text" id="recommendToAnonymous-itemid2" onkeyup="return handleReturn(event,'recommendToAnonymous',true,new Array('itemid1','itemid2'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('recommendToAnonymous',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;Item ID 1</td><td>&amp;nbsp;&amp;nbsp;<em>(Item ID 2)</em></td><td></td></tr>
   <tr><td><code>/similarity</code></td>
     <td><code>/</code><input type="text" id="similarity-itemid1" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
     <td><code>/</code><input type="text" id="similarity-itemid2" onkeyup="return handleReturn(event,'similarity',true,new Array('itemid1','itemid2'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('similarity',true,new Array('itemid1','itemid2'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/estimate</code></td>
     <td><code>/</code><input type="text" id="estimate-userid" onkeyup="return handleReturn(event,'estimate',true,new Array('userid','itemid'))"/></td>
     <td><code>/</code><input type="text" id="estimate-itemid" onkeyup="return handleReturn(event,'estimate',true,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('estimate',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/because</code></td>
     <td><code>/</code><input type="text" id="because-userid" onkeyup="return handleReturn(event,'because',true,new Array('userid','itemid'))"/></td>
     <td><code>/</code><input type="text" id="because-itemid" onkeyup="return handleReturn(event,'because',true,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('because',true,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
@@ -314,34 +323,50 @@ pageContext.setAttribute("numPartitions", numPartitions);
     } else {
   </jsp:scriptlet>
 
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/pref</code></td>
     <td><code>/</code><input type="text" id="pref-userid" onkeyup="return handleReturn(event,'pref',false,new Array('userid','itemid'))"/></td>
     <td><code>/</code><input type="text" id="pref-itemid" onkeyup="return handleReturn(event,'pref',false,new Array('userid','itemid'))"/></td>
     <td><a href="#" class="arrow" onclick="return doQuery('pref',false,new Array('userid','itemid'))">&amp;#x27AC;</a></td></tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="ingest" method="post" enctype="multipart/form-data" style="padding:10px" id="ingestFileForm">
+  <tr><td><code>/ingest</code></td>
+    <td colspan="2">
+      <input type="file" name="ingestedFile" style="width:140px"/>
+    </td>
+    <td><a href="#" class="arrow" onclick="document.getElementById('ingestFileForm').submit()">&amp;#x27AC;</a></td>
+  </tr>
+</form>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+<form action="#" style="padding:10px">
   <tr><td><code>/ingest</code></td>
     <td colspan="2">
       <textarea rows="20" id="ingestData">userID,itemID[,value]...</textarea>
     </td>
     <td><a href="#" class="arrow" onclick="return doQuery('ingest',false,[],'ingestData')">&amp;#x27AC;</a></td>
   </tr>
+</form>
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
   <tr><td><code>/refresh</code></td>
     <td colspan="2"></td>
     <td><a href="#" class="arrow" onclick="return doQuery('refresh',false)">&amp;#x27AC;</a></td>
   </tr>
+</form>
 
   <jsp:scriptlet>
     }
   </jsp:scriptlet>
 
 </table>
-</form>
 
 </td><td style="width:40%">
 
@@ -351,7 +376,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
 </td></tr></table>
 
-<p>&amp;copy;2012 <a href="http://myrrix.com" target="_blank">Myrrix Ltd</a>, except for included third-party open source software.
+<p>&amp;copy; <a href="http://myrrix.com" target="_blank">Myrrix Ltd</a>, except for included third-party open source software.
 Full details of licensing at <a href="http://myrrix.com/legal/" target="_blank">http://myrrix.com/legal/</a></p>
 
 </div>

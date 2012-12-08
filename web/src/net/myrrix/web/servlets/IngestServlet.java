@@ -53,8 +53,10 @@ public final class IngestServlet extends AbstractMyrrixServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
     MyrrixRecommender recommender = getRecommender();
 
+    boolean fromBrowserUpload = request.getContentType().startsWith("multipart/form-data");
+
     Reader reader;
-    if (request.getContentType().startsWith("multipart/form-data")) {
+    if (fromBrowserUpload) {
 
       Collection<Part> parts = request.getParts();
       if (parts == null || parts.isEmpty()) {
@@ -91,12 +93,21 @@ public final class IngestServlet extends AbstractMyrrixServlet {
       recommender.ingest(reader);
     } catch (IllegalArgumentException iae) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, iae.toString());
+      return;
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
+      return;
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
+      return;
     }
+
+    String referer = request.getHeader("Referer");
+    if (fromBrowserUpload && referer != null) {
+      response.sendRedirect(referer);
+    }
+
   }
 
 }
