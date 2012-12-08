@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
@@ -37,6 +38,7 @@ import org.apache.catalina.LifecycleEvent;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleListener;
 import org.apache.catalina.Server;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.authenticator.DigestAuthenticator;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.JasperListener;
@@ -282,7 +284,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     if (!config.isReadOnly()) {
       addServlet(context, new PreferenceServlet(), "/pref/*");
-      addServlet(context, new IngestServlet(), "/ingest/*");
+      Wrapper ingestWrapper = addServlet(context, new IngestServlet(), "/ingest/*");
+      ingestWrapper.setMultipartConfigElement(new MultipartConfigElement("/tmp"));
       addServlet(context, new RefreshServlet(), "/refresh/*");
     }
 
@@ -483,10 +486,12 @@ public final class Runner implements Callable<Boolean>, Closeable {
     return context;
   }
 
-  private static void addServlet(Context context, Servlet servlet, String path) {
+  private static Wrapper addServlet(Context context, Servlet servlet, String path) {
     String name = servlet.getClass().getSimpleName();
-    Tomcat.addServlet(context, name, servlet).setLoadOnStartup(1);
+    Wrapper servletWrapper = Tomcat.addServlet(context, name, servlet);
+    servletWrapper.setLoadOnStartup(1);
     context.addServletMapping(path, name);
+    return servletWrapper;
   }
 
   private static void addErrorPages(Context context) {

@@ -50,6 +50,9 @@
     <servlet-name>IngestServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.IngestServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
+    <multipart-config>
+      <location>/tmp</location>
+    </multipart-config>
   </servlet>
   <servlet>
     <servlet-name>RecommendServlet</servlet-name>
