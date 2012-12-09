@@ -63,7 +63,9 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   to/from numeric item IDs when contacting the server. This may be used to avoid sending sensitive IDs to
  *   an external server, while still using them locally for convenience. The optional file argument names
  *   a file containing all known item IDs. This is needed so that the client can reverse translate any
- *   value from the server.</li>
+ *   value from the server. "file" may be set to "oneWay" to only translate the item IDs and not build
+ *   a dictionary from known items; this is faster for clients that only write, such as a command-line invocation
+ *   to just ingest a file.</li>
  *   <li>{@code --translateUser}: Same as above, but controls translating user IDs. Since they need never be
  *   translated back, no list of values is required.</li>
  *   <li>{@code --verbose}: log more messages to standard out</li>
@@ -184,7 +186,7 @@ public final class CLI {
       IDMigrator userTranslator = translateUser ? new OneWayMigrator() : null;
       MemoryIDMigrator itemTranslator = translateItem ? new MemoryIDMigrator() : null;
       translatingRecommender = new TranslatingClientRecommender(recommender, userTranslator, itemTranslator);
-      if (translateFileName != null) {
+      if (translateFileName != null && !"oneWay".equals(translateFileName)) {
         File translateFile = new File(translateFileName);
         translatingRecommender.addItemIDs(translateFile);
       }

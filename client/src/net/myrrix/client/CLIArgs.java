@@ -64,7 +64,7 @@ public interface CLIArgs {
   boolean isTranslateUser();
 
   @Option(defaultToNull = true, description = "Use String item IDs in client API. " +
-                                              "Optional file argument contains list of all known item IDs")
+                                              "File argument contains list of all known item IDs or is set to 'oneWay'")
   String getTranslateItem();
 
   @Option(helpRequest = true)

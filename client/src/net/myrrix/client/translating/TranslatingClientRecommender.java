@@ -27,6 +27,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -235,12 +236,12 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   private File copyAndTranslateToTempFile(Reader reader) throws IOException {
-    File tempFile = File.createTempFile("myrrix-", ".csv");
+    File tempFile = File.createTempFile("myrrix-", ".csv.gz");
     tempFile.deleteOnExit();
     BufferedReader buffered =
         reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
-      Writer out = new OutputStreamWriter(new FileOutputStream(tempFile), Charsets.UTF_8);
+      Writer out = new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(tempFile)), Charsets.UTF_8);
       try {
         String line;
         while ((line = buffered.readLine()) != null) {
