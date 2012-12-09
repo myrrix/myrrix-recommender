@@ -728,6 +728,9 @@ public final class ClientRecommender implements MyrrixRecommender {
       try {
         String line;
         while ((line = buffered.readLine()) != null) {
+          if (line.isEmpty() || line.charAt(0) == '#') {
+            continue;
+          }
           long userID;
           try {
             userID = Long.parseLong(COMMA.split(line).iterator().next());

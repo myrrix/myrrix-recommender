@@ -186,6 +186,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         if (++count % 1000000 == 0) {
           log.info("Ingested {} lines", count);
         }
+        if (line.isEmpty() || line.charAt(0) == '#') {
+          continue;
+        }
 
         Iterator<String> tokens = DELIMITER.split(line).iterator();
         long userID = Long.parseLong(tokens.next());
