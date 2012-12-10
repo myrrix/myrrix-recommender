@@ -272,7 +272,6 @@ public final class DelegateGenerationManager implements GenerationManager {
 
           } finally {
             refreshSemaphore.release();
-            log.info("Refresh done");
           }
           return null;
         }
