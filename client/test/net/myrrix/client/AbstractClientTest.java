@@ -87,9 +87,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
 
     RunnerConfiguration runnerConfig = new RunnerConfiguration();
     runnerConfig.setInstanceID("test");
-    runnerConfig.setPort(8080);
+    runnerConfig.setPort(8090); // Odd ports to avoid conflicts
     if (useSecurity()) {
-      runnerConfig.setSecurePort(8443);
+      runnerConfig.setSecurePort(8453); // Odd ports to avoid conflicts
       runnerConfig.setKeystorePassword("changeit");
       runnerConfig.setKeystoreFile(new File("testdata/keystore"));
       runnerConfig.setUserName("foo");

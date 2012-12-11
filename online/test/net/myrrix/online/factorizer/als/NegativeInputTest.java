@@ -64,9 +64,9 @@ public final class NegativeInputTest extends MyrrixTest {
 
     /*
      Octave result:
-     9.8238e-01   9.8428e-01   9.9606e-01  -2.0683e-04
-     2.2860e-01   5.3762e-01   9.7808e-01   9.9154e-01
-    -4.1319e-01  -1.0845e-01   3.2001e-01   9.8192e-01
+   0.83870   0.84350   0.93644   0.69230
+   0.55670   0.56371   0.83513   0.89458
+   0.33828   0.34512   0.65170   0.83742
      */
 
     StringBuilder productString = new StringBuilder(100);
@@ -76,13 +76,13 @@ public final class NegativeInputTest extends MyrrixTest {
     log.info("{}", productString);
 
     assertArrayEquals(
-        new double[] {0.9823756814002991, 0.9842802286148071, 0.9960648342967033, -2.06679105758667E-4},
+        new double[] {0.8386964797973633, 0.8435029536485672, 0.9364429116249084, 0.692302331328392},
         product.getRow(0));
     assertArrayEquals(
-        new double[] {0.2285962700843811, 0.5376167446374893, 0.9780800342559814, 0.991536557674408},
+        new double[] {0.5566975474357605, 0.5637081563472748, 0.8351274281740189, 0.8945793211460114},
         product.getRow(1));
     assertArrayEquals(
-        new double[] {-0.41318875923752785, -0.10844806581735611, 0.3200104311108589, 0.981917155906558},
+        new double[] {0.3382817953824997, 0.34512191265821457, 0.6516955867409706, 0.837417971342802},
         product.getRow(2));
   }
 

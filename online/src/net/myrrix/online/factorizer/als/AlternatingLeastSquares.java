@@ -67,7 +67,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /** Default alpha from the ALS algorithm. Shouldn't really need to change it. */
   public static final double DEFAULT_ALPHA = 40.0;
   /** Default lambda factor; this is multiplied by alpha. */
-  public static final double DEFAULT_LAMBDA = 0.01;
+  public static final double DEFAULT_LAMBDA = 0.1;
 
   private static final double LN_E_MINUS_1 = FastMath.log(FastMath.E - 1.0);
 
