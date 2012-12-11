@@ -260,10 +260,10 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
           out.write(translatedLine + '\n');
         }
       } finally {
-        out.close(); // Want to know of output stream close failed -- maybe failed to write
+        out.close(); // Want to know if output stream close failed -- maybe failed to write
       }
     } finally {
-      Closeables.closeQuietly(buffered);
+      Closeables.close(buffered, true);
     }
     return tempFile;
   }
@@ -277,7 +277,11 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     } finally {
-      Closeables.closeQuietly(reader);
+      try {
+        Closeables.close(reader, true);
+      } catch (IOException e) {
+        // Can't happen, continue
+      }
     }
   }
 

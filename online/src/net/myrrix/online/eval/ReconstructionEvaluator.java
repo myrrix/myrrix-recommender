@@ -99,7 +99,11 @@ public final class ReconstructionEvaluator {
 
       return new EvaluationResultImpl(averageError.getAverage());
     } finally {
-      Closeables.closeQuietly(recommender);
+      try {
+        recommender.close();
+      } catch (IOException e) {
+        throw new TasteException(e);
+      }
       IOUtils.deleteRecursively(tempDir);
     }
   }

@@ -149,7 +149,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     try {
       line = reader.readLine();
     } finally {
-      Closeables.closeQuietly(reader);
+      Closeables.close(reader, true);
     }
     if (line == null || line.isEmpty()) {
       return 1.0f;

@@ -172,7 +172,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     } finally {
-      Closeables.closeQuietly(reader);
+      try {
+        Closeables.close(reader, true);
+      } catch (IOException e) {
+        // Can't happen, continue
+      }
     }
   }
 

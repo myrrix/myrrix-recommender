@@ -120,7 +120,11 @@ public abstract class AbstractEvaluator {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     } finally {
-      Closeables.closeQuietly(recommender);
+      try {
+        recommender.close();
+      } catch (IOException e) {
+        throw new TasteException(e);
+      }
       IOUtils.deleteRecursively(trainingDataDir);
     }
   }

@@ -44,7 +44,7 @@ public final class PrintGeneration {
     try {
       serializer = (GenerationSerializer) ois.readObject();
     } finally {
-      Closeables.closeQuietly(ois);
+      Closeables.close(ois, true);
     }
     Generation generation = serializer.getGeneration();
     print(generation);

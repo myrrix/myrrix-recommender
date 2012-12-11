@@ -123,7 +123,7 @@ public final class IOUtils {
     try {
       copyStreamToFile(in, file);
     } finally {
-      Closeables.closeQuietly(in);
+      Closeables.close(in, true);
     }
   }
 
@@ -132,7 +132,7 @@ public final class IOUtils {
     try {
       return CharStreams.toString(in);
     } finally {
-      Closeables.closeQuietly(in);
+      Closeables.close(in, true);
     }
   }
 

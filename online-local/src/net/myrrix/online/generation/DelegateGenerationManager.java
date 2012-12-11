@@ -306,7 +306,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     } catch (ClassNotFoundException cnfe) {
       throw new IOException(cnfe);
     } finally {
-      Closeables.closeQuietly(in);
+      Closeables.close(in, true);
     }
   }
 

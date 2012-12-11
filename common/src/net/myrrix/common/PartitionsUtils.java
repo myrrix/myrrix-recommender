@@ -127,7 +127,7 @@ public final class PartitionsUtils {
     } catch (SAXException saxe) {
       throw new IllegalStateException(saxe);
     } finally {
-      Closeables.closeQuietly(reader);
+      Closeables.close(reader, true);
     }
 
     Element docElement = doc.getDocumentElement();

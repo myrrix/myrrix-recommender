@@ -177,7 +177,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       try {
         keyStore.load(in, password.toCharArray());
       } finally {
-        Closeables.closeQuietly(in);
+        Closeables.close(in, true);
       }
 
       TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -397,7 +397,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           }
           return result;
         } finally {
-          Closeables.closeQuietly(reader);
+          Closeables.close(reader, true);
         }
       } finally {
         connection.disconnect();
@@ -483,7 +483,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         result.add(new GenericRecommendedItem(itemID, value));
       }
     } finally {
-      Closeables.closeQuietly(reader);
+      Closeables.close(reader, true);
     }
     return result;
   }
@@ -715,7 +715,11 @@ public final class ClientRecommender implements MyrrixRecommender {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     } finally {
-      Closeables.closeQuietly(reader);
+      try {
+        Closeables.close(reader, true);
+      } catch (IOException e) {
+        // Can't happen, continue
+      }
     }
   }
 
@@ -760,7 +764,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         }
       } finally {
         for (Pair<Writer,HttpURLConnection> writerAndConnection : writersAndConnections.values()) {
-          Closeables.closeQuietly(writerAndConnection.getFirst());
+          Closeables.close(writerAndConnection.getFirst(), true);
           writerAndConnection.getSecond().disconnect();
         }
       }
@@ -1039,7 +1043,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         result.add(Long.parseLong(line));
       }
     } finally {
-      Closeables.closeQuietly(reader);
+      Closeables.close(reader, true);
     }
   }
 
