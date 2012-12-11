@@ -64,6 +64,7 @@ public final class InitListener implements ServletContextListener {
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
   public static final String ALL_PARTITIONS_SPEC_KEY = KEY_PREFIX + ".ALL_PARTITIONS_SPEC";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
+  public static final String LICENSE_FILE_KEY = KEY_PREFIX + ".LICENSE_FILE";
 
   private File tempDirToDelete;
 
@@ -160,8 +161,10 @@ public final class InitListener implements ServletContextListener {
       context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY, allPartitionsReference);
     }
 
+    File licenseFile = (File) context.getAttribute(LICENSE_FILE_KEY);
+
     MyrrixRecommender recommender =
-        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference);
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference, licenseFile);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
 
     log.info("Myrrix is initialized");

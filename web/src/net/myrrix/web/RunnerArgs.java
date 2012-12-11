@@ -71,6 +71,9 @@ public interface RunnerArgs {
   @Option(defaultToNull = true, description = "Server's partition number (0-based)")
   Integer getPartition();
 
+  @Option(defaultToNull = true, description = "License key file [subject].lic")
+  File getLicenseFile();
+
   @Option(helpRequest = true)
   boolean getHelp();
 

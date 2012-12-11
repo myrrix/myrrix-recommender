@@ -31,6 +31,12 @@
     <param-value>CHANGEME</param-value>
   </context-param>
    -->
+  <!--
+  <context-param>
+    <param-name>net.myrrix.web.InitListener.LICENSE_FILE</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
 
   <description>Myrrix Serving Layer web application</description>
   <display-name>Myrrix</display-name>

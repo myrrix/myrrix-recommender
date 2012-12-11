@@ -104,7 +104,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final Semaphore refreshSemaphore;
 
   public DelegateGenerationManager(File localInputDir) throws IOException {
-    this(null, null, localInputDir, 0, null);
+    this(null, null, localInputDir, 0, null, null);
   }
 
   /**
@@ -116,12 +116,14 @@ public final class DelegateGenerationManager implements GenerationManager {
    *  contain lines of the form "userID,itemID(,value)".
    * @param partition not used; required for API compatibility internally
    * @param allPartitions not used; required for API compatibility internally
+   * @param licenseFile not used; required for API compatibility internally
    */
   public DelegateGenerationManager(String bucket,
                                    String instanceID,
                                    File localInputDir,
                                    int partition,
-                                   ReloadingReference<List<?>> allPartitions) throws IOException {
+                                   ReloadingReference<List<?>> allPartitions,
+                                   File licenseFile) throws IOException {
 
     this.bucket = bucket;
     this.instanceID = instanceID;

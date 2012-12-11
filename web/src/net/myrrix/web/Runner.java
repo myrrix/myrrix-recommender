@@ -125,6 +125,10 @@ import net.myrrix.web.servlets.SimilarityServlet;
  *     "foo:80,foo2:8080;bar:8080;baz2:80,baz3:80"</li>
  *   <li>{@code --partition}: Optional, but must be set with {@code --allPartitions}.
  *     The partition (0-based) that this is Serving Layer is serving.</li>
+ *   <li>{@code --licenseFile}: (Optional in standalone mode). location of a license file named [subject].lic,
+ *     where [subject] is the subject name authorized in the license. The license file should be valid at the
+ *     time the app is run, and contain authorization to use the amount of parallelism (max simultaneous
+ *     Hadoop workers) requested.</li>
  * </ul>
  *
  * <p>When run in local mode, the Serving Layer instance will compute a model locally and save it as the file
@@ -255,6 +259,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
       config.setAllPartitionsSpecification(runnerArgs.getAllPartitions());
       config.setPartition(runnerArgs.getPartition());
     }
+
+    config.setLicenseFile(runnerArgs.getLicenseFile());
+
     return config;
   }
 
@@ -443,6 +450,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.READ_ONLY_KEY, config.isReadOnly());
     servletContext.setAttribute(InitListener.ALL_PARTITIONS_SPEC_KEY, config.getAllPartitionsSpecification());
     servletContext.setAttribute(InitListener.PARTITION_KEY, config.getPartition());
+    servletContext.setAttribute(InitListener.LICENSE_FILE_KEY, config.getLicenseFile());
 
     boolean needHTTPS = config.getKeystoreFile() != null;
     boolean needAuthentication = config.getUserName() != null;

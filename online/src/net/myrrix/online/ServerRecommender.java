@@ -100,11 +100,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private final ReloadingReference<ExecutorService> executor;
 
   /**
-   * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference)} for simple local mode,
+   * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference, File)} for simple local mode,
    * with no bucket, instance ID 0, and no partitions (partition 0 of 1 total).
    */
   public ServerRecommender(File localInputDir) {
-    this(null, null, localInputDir, 0, null);
+    this(null, null, localInputDir, 0, null, null);
   }
 
   /**
@@ -113,12 +113,14 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @param localInputDir local input and model file directory
    * @param partition partition number in a partitioned distributed mode. 0 if not partitioned.
    * @param allPartitions reference to an object that can describe all parititions; only used to get their count
+   * @param licenseFile see {@code RunnerConfiguration} for name and contents. Only used in distributed mode.
    */
   public ServerRecommender(String bucket,
                            String instanceID,
                            File localInputDir,
                            int partition,
-                           ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions) {
+                           ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions,
+                           File licenseFile) {
     Preconditions.checkNotNull(localInputDir, "No local dir");
 
     if (bucket == null || instanceID == null) {
@@ -131,8 +133,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     generationManager = ClassUtils.loadInstanceOf(
         "net.myrrix.online.generation.DelegateGenerationManager",
         GenerationManager.class,
-        new Class<?>[] { String.class, String.class, File.class, int.class, ReloadingReference.class },
-        new Object[] { bucket, instanceID, localInputDir, partition, allPartitions });
+        new Class<?>[] { String.class, String.class, File.class, int.class, ReloadingReference.class, File.class },
+        new Object[] { bucket, instanceID, localInputDir, partition, allPartitions, licenseFile });
 
     numCores = Runtime.getRuntime().availableProcessors();
     executor = new ReloadingReference<ExecutorService>(new Callable<ExecutorService>() {

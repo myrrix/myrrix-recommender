@@ -46,6 +46,9 @@ PORT=8080
 #PARTITION=1
 #ALL_PARTITIONS=foo:80,foo2:8080;bar:8080;baz2:80,baz3:80
 
+# Set this to the location of your license file ([subject].lic); only needed in distributed mode
+#LICENSE_FILE=/path/to/license
+
 # -------- JVM settings
 
 # Set to a value that can be used with the -Xmx flag, like 1200m or 4G or 4g
@@ -114,6 +117,10 @@ fi
 
 if [ -n "${ALL_PARTITIONS}" ]; then
   ALL_ARGS="${ALL_ARGS} --allPartitions=${ALL_PARTITIONS}"
+fi
+
+if [ -n "${LICENSE_FILE}" ]; then
+  ALL_ARGS="${ALL_ARGS} --licenseFile=${LICENSE_FILE}"
 fi
 
 if [ -n "${OTHER_ARGS}" ]; then
