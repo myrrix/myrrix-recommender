@@ -20,6 +20,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.Servlet;
@@ -49,6 +51,7 @@ import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.startup.Tomcat;
+import org.apache.tomcat.util.http.parser.HttpParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -479,6 +482,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
         securityConstraint.addAuthRole(InMemoryRealm.AUTH_ROLE);
 
+        enableHttpDigestHack();
+
         context.addSecurityRole(InMemoryRealm.AUTH_ROLE);
         DigestAuthenticator authenticator = new DigestAuthenticator();
         authenticator.setNonceValidity(10 * 1000L); // Shorten from 5 minutes to 10 seconds
@@ -513,6 +518,37 @@ public final class Runner implements Callable<Boolean>, Closeable {
     errorPage.setExceptionType(Throwable.class.getName());
     errorPage.setLocation("/error.jspx");
     context.addErrorPage(errorPage);
+  }
+
+  /**
+   * See https://issues.apache.org/bugzilla/show_bug.cgi?id=54060
+   * TODO hopefully remove this one day
+   */
+  private static void enableHttpDigestHack() {
+    try {
+      Field fieldTypeQuotedStringField = HttpParser.class.getDeclaredField("FIELD_TYPE_QUOTED_STRING");
+      fieldTypeQuotedStringField.setAccessible(true);
+      Integer FIELD_TYPE_QUOTED_STRING = (Integer) fieldTypeQuotedStringField.get(null);
+
+      Field fieldTypesField = HttpParser.class.getDeclaredField("fieldTypes");
+      fieldTypesField.setAccessible(true);
+      Map<String,Integer> fieldTypes = (Map<String,Integer>) fieldTypesField.get(null);
+
+      // Clients are sending DIGEST responses with algorithm="MD5" instead of algorithm=MD5, which
+      // is evidently correct by RFC 2617. Or qop="auth" instead of the correct qop=auth.
+      // Tomcat 7.0.30+ got stricter. This change makes it lenient again.
+      // The JVM, curl, and Safari seem to send these headers incorrectly!
+
+      fieldTypes.put("algorithm", FIELD_TYPE_QUOTED_STRING);
+      fieldTypes.put("qop", FIELD_TYPE_QUOTED_STRING);
+
+    } catch (NoSuchFieldException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
+    } catch (IllegalAccessException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
+    }
   }
 
 }
