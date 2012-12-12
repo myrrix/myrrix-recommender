@@ -795,7 +795,8 @@ public final class ClientRecommender implements MyrrixRecommender {
       HttpURLConnection connection = makeConnection("/refresh", "POST", partition);
       try {
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-          log.warn("Unable to refresh partition {}; continuing", partition);
+          log.warn("Unable to refresh partition {} ({} {}); continuing",
+                   partition, connection.getResponseCode(), connection.getResponseMessage());
         }
       } finally {
         connection.disconnect();

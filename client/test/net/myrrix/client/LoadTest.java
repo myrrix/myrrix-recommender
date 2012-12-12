@@ -17,6 +17,7 @@
 package net.myrrix.client;
 
 import java.io.File;
+import java.io.StringReader;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -87,6 +88,8 @@ public final class LoadTest extends AbstractClientTest {
     final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
     final RunningAverage setPreference = new FullRunningAverageAndStdDev();
     final RunningAverage removePreference = new FullRunningAverageAndStdDev();
+    final RunningAverage ingest = new FullRunningAverageAndStdDev();
+    final RunningAverage refresh = new FullRunningAverageAndStdDev();
     final RunningAverage estimatePreference = new FullRunningAverageAndStdDev();
     final RunningAverage mostSimilarItems = new FullRunningAverageAndStdDev();
     final RunningAverage recommendToMany = new FullRunningAverageAndStdDev();
@@ -120,6 +123,13 @@ public final class LoadTest extends AbstractClientTest {
           } else if (r < 0.11) {
             client.removePreference(userID, itemID);
             removePreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.13) {
+            StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
+            client.ingest(reader);
+            ingest.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.15) {
+            client.refresh(null);
+            refresh.addDatum(System.currentTimeMillis() - stepStart);
           } else if (r < 0.20) {
             client.estimatePreference(userID, itemID);
             estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
@@ -160,6 +170,8 @@ public final class LoadTest extends AbstractClientTest {
     log.info("recommendedBecause: {}", recommendedBecause);
     log.info("setPreference: {}", setPreference);
     log.info("removePreference: {}", removePreference);
+    log.info("ingest: {}", ingest);
+    log.info("refresh: {}", refresh);
     log.info("estimatePreference: {}", estimatePreference);
     log.info("mostSimilarItems: {}", mostSimilarItems);
     log.info("recommendToMany: {}", recommendToMany);
