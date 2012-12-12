@@ -307,6 +307,11 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
+  public void refresh() {
+    delegate.refresh(null);
+  }
+
+  @Override
   public void await() throws TasteException {
     delegate.await();
   }

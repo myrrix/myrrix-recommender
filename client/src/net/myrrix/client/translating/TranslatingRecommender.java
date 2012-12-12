@@ -147,6 +147,11 @@ public interface TranslatingRecommender {
   boolean isReady() throws TasteException;
 
   /**
+   * @see net.myrrix.common.MyrrixRecommender#refresh(Collection)
+   */
+  void refresh();
+
+  /**
    * Blocks until {@link #isReady()} returns {@code true}.
    */
   void await() throws TasteException;
