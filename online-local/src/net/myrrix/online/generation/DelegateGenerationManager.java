@@ -413,7 +413,18 @@ public final class DelegateGenerationManager implements GenerationManager {
     if (currentGeneration != null) {
       FastByIDMap<float[]> previousY = currentGeneration.getY();
       if (previousY != null) {
-        als.setPreviousY(previousY);
+        FastByIDMap<float[]> previousYClone;
+        Lock yLock = currentGeneration.getYLock().readLock();
+        yLock.lock();
+        try {
+          previousYClone = new FastByIDMap<float[]>(previousY.size());
+          for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
+            previousYClone.put(entry.getKey(), entry.getValue().clone());
+          }
+        } finally {
+          yLock.unlock();
+        }
+        als.setPreviousY(previousYClone);
       }
     }
 
