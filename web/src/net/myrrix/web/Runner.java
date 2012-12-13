@@ -51,7 +51,6 @@ import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.util.http.parser.HttpParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -526,11 +525,12 @@ public final class Runner implements Callable<Boolean>, Closeable {
    */
   private static void enableHttpDigestHack() {
     try {
-      Field fieldTypeQuotedStringField = HttpParser.class.getDeclaredField("FIELD_TYPE_QUOTED_STRING");
+      Class<?> httpParserClass = Class.forName("org.apache.tomcat.util.http.parser.HttpParser");
+      Field fieldTypeQuotedStringField = httpParserClass.getDeclaredField("FIELD_TYPE_QUOTED_STRING");
       fieldTypeQuotedStringField.setAccessible(true);
       Integer FIELD_TYPE_QUOTED_STRING = (Integer) fieldTypeQuotedStringField.get(null);
 
-      Field fieldTypesField = HttpParser.class.getDeclaredField("fieldTypes");
+      Field fieldTypesField = httpParserClass.getDeclaredField("fieldTypes");
       fieldTypesField.setAccessible(true);
       Map<String,Integer> fieldTypes = (Map<String,Integer>) fieldTypesField.get(null);
 
@@ -542,6 +542,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
       fieldTypes.put("algorithm", FIELD_TYPE_QUOTED_STRING);
       fieldTypes.put("qop", FIELD_TYPE_QUOTED_STRING);
 
+    } catch (ClassNotFoundException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
     } catch (NoSuchFieldException e) {
       log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
                e.toString());
