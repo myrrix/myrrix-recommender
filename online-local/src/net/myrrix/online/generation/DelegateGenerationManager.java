@@ -519,10 +519,14 @@ public final class DelegateGenerationManager implements GenerationManager {
       long id = it.nextLong();
       if (!newMatrix.containsKey(id)) {
         currentLock.lock();
+        V currentValue;
         try {
-          newMatrix.put(id, currentMatrix.get(id));
+          currentValue = currentMatrix.get(id);
         } finally {
           currentLock.unlock();
+        }
+        if (currentValue != null) {
+          newMatrix.put(id, currentValue);
         }
       }
     }
