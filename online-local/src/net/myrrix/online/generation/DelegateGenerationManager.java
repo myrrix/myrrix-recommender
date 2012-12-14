@@ -234,7 +234,6 @@ public final class DelegateGenerationManager implements GenerationManager {
   @Override
   public void refresh(Collection<Refreshable> alreadyRefreshed) {
     if (refreshSemaphore.tryAcquire()) {
-      log.info("Starting new refresh");
       refreshExecutor.submit(new Callable<Void>() {
         @Override
         public Void call() {

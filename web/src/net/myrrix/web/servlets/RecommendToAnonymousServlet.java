@@ -36,7 +36,8 @@ import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * <p>Responds to a GET request to {@code /recommendToAnonymous/[itemID1(=value1)](/[itemID2(=value2)]/...)?howMany=n},
+ * <p>Responds to a GET request to
+ * {@code /recommendToAnonymous/[itemID1(=value1)](/[itemID2(=value2)]/...)?howMany=n[&rescorerParams=...]},
  * and in turn calls {@link MyrrixRecommender#recommendToAnonymous(long[], float[], int, IDRescorer)}
  * with the supplied values. That is, 1 or more item IDs are supplied, which may each optionally correspond to
  * a value or else default to 1. If howMany is not specified, defaults to
