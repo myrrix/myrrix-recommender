@@ -158,7 +158,7 @@ public final class MatrixUtils {
     try {
       inverse = solver.getInverse();
     } catch (SingularMatrixException sme) {
-      log.warn("Matrix is near-singular; add more data or decrease the value of model.features", sme);
+      log.warn("Matrix is near-singular; add more data or decrease the value of model.features ({})", sme.toString());
       double[] rDiag;
       try {
         rDiag = (double[]) RDIAG_FIELD.get(decomposition);

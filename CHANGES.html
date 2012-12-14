@@ -30,6 +30,9 @@ hr {margin:20px 0 10px 0}
     replicas presented slightly different results to the client on successive requests.</li>
   <li>Removed "_LOCK" file mechanism in Computation Layer in favor of querying the live cluster state</li>
   <li>Stand-alone serving layer avoids a possible exception when recomputing a new model on new items</li>
+  <li>Client library now supports rescorer parameters</li>
+  <li>Added missing <code>recommendToMany</code> to client CLI, changed some APIs to be more consistent,
+    and fixed other small issues in the CLI.</li>
 </ul>
 
 <h2>Other</h2>

@@ -43,18 +43,20 @@ public interface TranslatingRecommender {
   List<TranslatedRecommendedItem> recommend(String userID, int howMany) throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#recommend(long, int, boolean, org.apache.mahout.cf.taste.recommender.IDRescorer)
+   * @see net.myrrix.client.ClientRecommender#recommend(long, int, boolean, String[])
    */
   List<TranslatedRecommendedItem> recommend(String userID,
                                             int howMany,
-                                            boolean considerKnownItems) throws TasteException;
+                                            boolean considerKnownItems,
+                                            String[] rescorerParams) throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#recommendToMany(long[], int, boolean, org.apache.mahout.cf.taste.recommender.IDRescorer)
+   * @see net.myrrix.client.ClientRecommender#recommendToMany(long[], int, boolean, String[])
    */
   List<TranslatedRecommendedItem> recommendToMany(String[] userIDs,
                                                   int howMany,
-                                                  boolean considerKnownItems) throws TasteException;
+                                                  boolean considerKnownItems,
+                                                  String[] rescorerParams) throws TasteException;
 
   /**
    * @see net.myrrix.common.MyrrixRecommender#estimatePreference(long, long)
@@ -92,9 +94,12 @@ public interface TranslatingRecommender {
   List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany) throws TasteException;
 
   /**
-   * @see net.myrrix.client.ClientRecommender#mostSimilarItems(long[], int, long)
+   * @see net.myrrix.client.ClientRecommender#mostSimilarItems(long[], int, String[], Long)
    */
-  List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs, int howMany, String contextUserID)
+  List<TranslatedRecommendedItem> mostSimilarItems(String[] itemIDs,
+                                                   int howMany,
+                                                   String[] rescorerParams,
+                                                   String contextUserID)
       throws TasteException;
 
   /**
@@ -104,14 +109,25 @@ public interface TranslatingRecommender {
       throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#recommendToAnonymous(long[], int)
+   * @see net.myrrix.common.MyrrixRecommender(long[], int)
    */
-  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany) throws TasteException;
+  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany)
+      throws TasteException;
 
   /**
-   * @see net.myrrix.client.ClientRecommender#recommendToAnonymous(long[], int, long)
+   * @see net.myrrix.common.MyrrixRecommender(long[], float[], int)
    */
-  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany, String contextUserID)
+  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, float[] values, int howMany)
+      throws TasteException;
+
+  /**
+   * @see net.myrrix.client.ClientRecommender#recommendToAnonymous(long[], float[], int, String[], Long)
+   */
+  List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs,
+                                                       float[] values,
+                                                       int howMany,
+                                                       String[] rescorerParams,
+                                                       String contextUserID)
       throws TasteException;
 
   /**

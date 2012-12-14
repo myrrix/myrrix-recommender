@@ -25,12 +25,14 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -413,40 +415,30 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> recommend(long userID, int howMany) throws TasteException {
-    return recommend(userID, howMany, false, null);
+    return recommend(userID, howMany, false, (String[]) null);
   }
 
   /**
-   * <p>Note that {@link IDRescorer} is not supported in the client now and must be null.</p>
-   *
    * @param userID user for which recommendations are to be computed
    * @param howMany desired number of recommendations
    * @param considerKnownItems if true, items that the user is already associated to are candidates
    *  for recommendation. Normally this is {@code false}.
-   * @param rescorer must be null
+   * @param rescorerParams optional parameters to send to the server's {@code RescorerProvider}
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
    * @throws NoSuchUserException if the user is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
    * @throws TasteException if another error occurs
    * @throws UnsupportedOperationException if rescorer is not null
    */
-  @Override
   public List<RecommendedItem> recommend(long userID,
                                          int howMany,
                                          boolean considerKnownItems,
-                                         IDRescorer rescorer) throws TasteException {
-
-    if (rescorer != null) {
-      throw new UnsupportedOperationException();
-    }
+                                         String[] rescorerParams) throws TasteException {
 
     StringBuilder urlPath = new StringBuilder();
     urlPath.append("/recommend/");
     urlPath.append(userID);
-    urlPath.append("?howMany=").append(howMany);
-    if (considerKnownItems) {
-      urlPath.append("&considerKnownItems=true");
-    }
+    appendCommonQueryParams(howMany, considerKnownItems, rescorerParams, urlPath);
 
     try {
       HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", userID);
@@ -489,13 +481,11 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
-   * <p>Note that {@link IDRescorer} is not supported in the client now and must be null.</p>
-   *
    * @param userIDs users for which recommendations are to be computed
    * @param howMany desired number of recommendations
    * @param considerKnownItems if true, items that the user is already associated to are candidates
    *  for recommendation. Normally this is {@code false}.
-   * @param rescorer must be null
+   * @param rescorerParams optional parameters to send to the server's {@code RescorerProvider}
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
    * @throws NoSuchUserException if <em>none</em> of {@code userIDs} are known in the model. Otherwise unknown
    *  user IDs are ignored.
@@ -503,21 +493,17 @@ public final class ClientRecommender implements MyrrixRecommender {
    * @throws TasteException if another error occurs
    * @throws UnsupportedOperationException if rescorer is not null
    */
-  @Override
   public List<RecommendedItem> recommendToMany(long[] userIDs,
                                                int howMany,
                                                boolean considerKnownItems,
-                                               IDRescorer rescorer) throws TasteException {
-    if (rescorer != null) {
-      throw new UnsupportedOperationException();
-    }
+                                               String[] rescorerParams) throws TasteException {
 
     StringBuilder urlPath = new StringBuilder();
     urlPath.append("/recommendToMany");
     for (long userID : userIDs) {
       urlPath.append('/').append(userID);
     }
-    urlPath.append("?howMany=").append(howMany);
+    appendCommonQueryParams(howMany, considerKnownItems, rescorerParams, urlPath);
 
     // Note that this assumes that all user IDs are on the same partiiton. It will fail at request
     // time if not since the partition of the first user doesn't contain the others.
@@ -549,28 +535,26 @@ public final class ClientRecommender implements MyrrixRecommender {
     return recommendToAnonymous(itemIDs, null, howMany);
   }
 
-  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany) throws TasteException {
-    return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", null);
+  @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany)
+      throws TasteException {
+    return recommendToAnonymous(itemIDs, values, howMany, null, null);
   }
 
   /**
-   * Like {@link #recommendToAnonymous(long[], int)}, but allows caller to specify the user for which the request
-   * is being made. This information does not directly affect the computation, but affects <em>routing</em>
-   * of the request in a distributed context. This is always recommended when there is a user in whose context
-   * the request is being made, as it will ensure that the request can take into account all the latest information
-   * from the user, including very new items that may be in {@code itemIDs}.
+   * Like {@link #recommendToAnonymous(long[], float[], int)}, but allows caller to specify the user for
+   * which the request is being made. This information does not directly affect the computation,
+   * but affects <em>routing</em> of the request in a distributed context. This is always recommended
+   * when there is a user in whose context the request is being made, as it will ensure that the
+   * request can take into account all the latest information from the user, including very new
+   * items that may be in {@code itemIDs}.
    */
-  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
-                                                    int howMany,
-                                                    long contextUserID) throws TasteException {
-    return recommendToAnonymous(itemIDs, null, howMany, contextUserID);
-  }
-
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs,
                                                     float[] values,
                                                     int howMany,
-                                                    long contextUserID) throws TasteException {
-    return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", contextUserID);
+                                                    String[] rescorerParams,
+                                                    Long contextUserID) throws TasteException {
+    return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", rescorerParams, contextUserID);
   }
 
   /**
@@ -589,7 +573,7 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException {
-    return anonymousOrSimilar(itemIDs, null, howMany, "/similarity", null);
+    return mostSimilarItems(itemIDs, howMany, null, null);
   }
 
   /**
@@ -601,14 +585,16 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs,
                                                 int howMany,
-                                                long contextUserID) throws TasteException {
-    return anonymousOrSimilar(itemIDs, null, howMany, "/similarity", contextUserID);
+                                                String[] rescorerParams,
+                                                Long contextUserID) throws TasteException {
+    return anonymousOrSimilar(itemIDs, null, howMany, "/similarity", rescorerParams, contextUserID);
   }
 
   private List<RecommendedItem> anonymousOrSimilar(long[] itemIDs,
                                                    float[] values,
                                                    int howMany,
                                                    String path,
+                                                   String[] rescorerParams,
                                                    Long contextUserID) throws TasteException {
     Preconditions.checkArgument(values == null || values.length == itemIDs.length,
                                 "Number of values doesn't match number of items");
@@ -620,7 +606,8 @@ public final class ClientRecommender implements MyrrixRecommender {
         urlPath.append('=').append(values[i]);
       }
     }
-    urlPath.append("?howMany=").append(howMany);
+    appendCommonQueryParams(howMany, false, rescorerParams, urlPath);
+
     try {
       // Requests are typically partitioned by user, but this request does not directly depend on a user.
       // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
@@ -836,6 +823,37 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
+   * {@link Rescorer}s are not available at this time in the model.
+   *
+   * @return {@link #recommend(long, int, boolean, String[])} if rescorer is null
+   * @throws UnsupportedOperationException otherwise
+   * @deprecated use {@link #recommend(long, int, boolean, String[])} instead
+   */
+  @Deprecated
+  @Override
+  public List<RecommendedItem> recommend(long userID,
+                                         int howMany,
+                                         boolean considerKnownItems,
+                                         IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
+    return recommend(userID, howMany, considerKnownItems, (String[]) null);
+  }
+
+  @Deprecated
+  @Override
+  public List<RecommendedItem> recommendToMany(long[] userIDs,
+                                               int howMany,
+                                               boolean considerKnownItems,
+                                               IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
+    return recommendToMany(userIDs, howMany, considerKnownItems, (String[]) null);
+  }
+
+  /**
    * Note that {@link IDRescorer} is not supported in the client now and must be null.
    *
    * @return {@link #recommendToAnonymous(long[], int)} if rescorer is null
@@ -1045,6 +1063,26 @@ public final class ClientRecommender implements MyrrixRecommender {
       }
     } finally {
       Closeables.close(reader, true);
+    }
+  }
+
+  private static void appendCommonQueryParams(int howMany,
+                                              boolean considerKnownItems,
+                                              String[] rescorerParams,
+                                              StringBuilder urlPath) {
+    urlPath.append("?howMany=").append(howMany);
+    if (considerKnownItems) {
+      urlPath.append("&considerKnownItems=true");
+    }
+    if (rescorerParams != null) {
+      for (String rescorerParam : rescorerParams) {
+        try {
+          urlPath.append("&rescorerParams=").append(URLEncoder.encode(rescorerParam, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+          // Can't happen
+          throw new IllegalStateException(e);
+        }
+      }
     }
   }
 

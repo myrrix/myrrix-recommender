@@ -137,7 +137,7 @@ public final class LoadTest extends AbstractClientTest {
             client.mostSimilarItems(new long[] {itemID}, 10);
             mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
           } else if (r < 0.30) {
-            client.recommendToMany(new long[] { userID, userID }, 10, true, null);
+            client.recommendToMany(new long[] { userID, userID }, 10, true, (String[]) null);
             recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
           } else {
             client.recommend(userID, 10);

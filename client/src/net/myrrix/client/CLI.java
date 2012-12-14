@@ -27,6 +27,8 @@ import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.client.translating.OneWayMigrator;
 import net.myrrix.client.translating.TranslatedRecommendedItem;
@@ -79,6 +81,8 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *     {@code mostSimilarItems}. Optional.</li>
  *   <li>{@code --considerKnownItems}: in {@code recommend}, allow items that the user is already connected to
  *     to be returned in results. Optional.</li>
+ *   <li>{@code --rescorerParams}: Specifies one argument to be sent with the requests, to be passed to the
+ *     server's {@code RescorerProvider} as a {@code rescorerParams} argument. Optional, may be repeated.</li>
  *   <li>{@code --contextUserID}: in {@code mostSimilarItems} or {@code recommendToAnonymous}, supplies the
  *     user for which the request is made, which is used only for proper routing. Optional.</li>
  * </ul>
@@ -98,6 +102,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code estimatePreference userID itemID}</li>
  *   <li>{@code recommend userID}</li>
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
+ *   <li>{@code recommendToMany userID0 [userID1 userID2 ...]}</li>
  *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendedBecause userID itemID}</li>
  *   <li>{@code refresh}</li>
@@ -119,7 +124,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  * <p>... and output might be:</p>
  *
  * <p>{@code
- * 352352,0.559
+ * 352352, 0.559
  * 9898,0.4034
  * 209,0.03339
  * }</p>
@@ -132,7 +137,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  * <p>... and output might be:</p>
  *
  * <p>{@code
- * Apple,0.559
+ * Apple, 0.559
  * Orange,0.4034
  * Banana,0.03339
  * }</p>
@@ -140,6 +145,8 @@ import net.myrrix.common.random.MemoryIDMigrator;
  * @author Sean Owen
  */
 public final class CLI {
+
+  private static final Logger log = LoggerFactory.getLogger(CLI.class);
 
   private CLI() {
   }
@@ -172,6 +179,7 @@ public final class CLI {
     if (cliArgs.isVerbose()) {
       MemoryHandler.setSensibleLogFormat();
       enableDebugLoggingIn(CLI.class, ClientRecommender.class, TranslatingClientRecommender.class);
+      log.debug("{}", cliArgs);
     }
 
     MyrrixClientConfiguration config = buildConfiguration(cliArgs);
@@ -211,6 +219,9 @@ public final class CLI {
           break;
         case RECOMMENDTOANONYMOUS:
           doRecommendToAnonymous(cliArgs, commandArgs, recommender, translatingRecommender);
+          break;
+        case RECOMMENDTOMANY:
+          doRecommendToMany(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case MOSTSIMILARITEMS:
           doMostSimilarItems(cliArgs, commandArgs, recommender, translatingRecommender);
@@ -301,6 +312,9 @@ public final class CLI {
       throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]]");
     }
     int howMany = cliArgs.getHowMany();
+    List<String> rescorerParamsList = cliArgs.getRescorerParams();
+    String[] rescorerParams = rescorerParamsList == null ? null :
+        rescorerParamsList.toArray(new String[rescorerParamsList.size()]);
     String contextUserIDString = cliArgs.getContextUserID();
     if (translatingRecommender == null) {
       long[] itemIDs = new long[programArgs.length - 1];
@@ -309,9 +323,9 @@ public final class CLI {
       }
       List<RecommendedItem> result;
       if (contextUserIDString == null) {
-        result = recommender.mostSimilarItems(itemIDs, howMany);
+        result = recommender.mostSimilarItems(itemIDs, howMany, rescorerParams, null);
       } else {
-        result = recommender.mostSimilarItems(itemIDs, howMany, Long.parseLong(contextUserIDString));
+        result = recommender.mostSimilarItems(itemIDs, howMany, rescorerParams, Long.parseLong(contextUserIDString));
       }
       output(result);
     } else {
@@ -319,7 +333,7 @@ public final class CLI {
       for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = unquote(programArgs[i]);
       }
-      outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany, contextUserIDString));
+      outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany, rescorerParams, contextUserIDString));
     }
   }
 
@@ -331,6 +345,9 @@ public final class CLI {
       throw new ArgumentValidationException("args are itemID1 [itemID2 [itemID3...]]");
     }
     int howMany = cliArgs.getHowMany();
+    List<String> rescorerParamsList = cliArgs.getRescorerParams();
+    String[] rescorerParams = rescorerParamsList == null ? null :
+        rescorerParamsList.toArray(new String[rescorerParamsList.size()]);
     String contextUserIDString = cliArgs.getContextUserID();
     if (translatingRecommender == null) {
       long[] itemIDs = new long[programArgs.length - 1];
@@ -339,9 +356,10 @@ public final class CLI {
       }
       List<RecommendedItem> result;
       if (contextUserIDString == null) {
-        result = recommender.recommendToAnonymous(itemIDs, howMany);
+        result = recommender.recommendToAnonymous(itemIDs, null, howMany, rescorerParams, null);
       } else {
-        result = recommender.recommendToAnonymous(itemIDs, howMany, Long.parseLong(contextUserIDString));
+        result = recommender.recommendToAnonymous(itemIDs, null, howMany, rescorerParams,
+                                                  Long.parseLong(contextUserIDString));
       }
       output(result);
     } else {
@@ -349,7 +367,36 @@ public final class CLI {
       for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = unquote(programArgs[i]);
       }
-      outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, howMany, contextUserIDString));
+      outputTranslated(translatingRecommender.recommendToAnonymous(itemIDs, null, howMany, rescorerParams,
+                                                                   contextUserIDString));
+    }
+  }
+
+  private static void doRecommendToMany(CLIArgs cliArgs,
+                                        String[] programArgs,
+                                        ClientRecommender recommender,
+                                        TranslatingRecommender translatingRecommender) throws TasteException {
+    if (programArgs.length < 2) {
+      throw new ArgumentValidationException("args are userID1 [userID2 [userID3...]]");
+    }
+    int howMany = cliArgs.getHowMany();
+    List<String> rescorerParamsList = cliArgs.getRescorerParams();
+    String[] rescorerParams = rescorerParamsList == null ? null :
+        rescorerParamsList.toArray(new String[rescorerParamsList.size()]);
+    boolean considerKnownItems = cliArgs.isConsiderKnownItems();
+    if (translatingRecommender == null) {
+      long[] userIDs = new long[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
+        userIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
+      }
+      List<RecommendedItem> result = recommender.recommendToMany(userIDs, howMany, considerKnownItems, rescorerParams);
+      output(result);
+    } else {
+      String[] userIDs = new String[programArgs.length - 1];
+      for (int i = 1; i < programArgs.length; i++) {
+        userIDs[i - 1] = unquote(programArgs[i]);
+      }
+      outputTranslated(translatingRecommender.recommendToMany(userIDs, howMany, considerKnownItems, rescorerParams));
     }
   }
 
@@ -361,13 +408,16 @@ public final class CLI {
       throw new ArgumentValidationException("args are userID");
     }
     int howMany = cliArgs.getHowMany();
+    List<String> rescorerParamsList = cliArgs.getRescorerParams();
+    String[] rescorerParams = rescorerParamsList == null ? null :
+        rescorerParamsList.toArray(new String[rescorerParamsList.size()]);
     boolean considerKnownItems = cliArgs.isConsiderKnownItems();
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
-      output(recommender.recommend(userID, howMany, considerKnownItems, null));
+      output(recommender.recommend(userID, howMany, considerKnownItems, rescorerParams));
     } else {
       String userID = unquote(programArgs[1]);
-      outputTranslated(translatingRecommender.recommend(userID, howMany, considerKnownItems));
+      outputTranslated(translatingRecommender.recommend(userID, howMany, considerKnownItems, rescorerParams));
     }
   }
 

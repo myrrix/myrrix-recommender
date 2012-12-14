@@ -273,6 +273,14 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany) throws TasteException;
 
   /**
+   * Like {@link #recommendToAnonymous(long[], int)} but allows specifying values associated with items.
+   *
+   * @param values values associated with given {@code itemIDs}. If not null, must be as many values as
+   *  there are item IDs
+   */
+  List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany) throws TasteException;
+
+  /**
    * Like {@link #recommendToAnonymous(long[], int)} but rescorer results like
    * {@link #recommend(long, int, boolean, IDRescorer)}. All items are assumed to be equally important
    * to the anonymous users -- strength "1".

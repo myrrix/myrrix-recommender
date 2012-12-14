@@ -57,6 +57,10 @@ public interface CLIArgs {
                                               "(e.g. foo1:8080,foo2:80,bar1:8081), or 'auto'")
   String getAllPartitions();
 
+  @Option(defaultToNull = true,
+          description = "May be specified several times to specify arguments to the server's rescorer implementation")
+  List<String> getRescorerParams();
+
   @Option(defaultToNull = true, description = "Non-root URL context path under which Serving Layer is deployed")
   String getContextPath();
 
@@ -76,8 +80,7 @@ public interface CLIArgs {
   @Option(defaultValue = "10", description = "How many recommendations or items to retrieve")
   int getHowMany();
 
-  @Option(defaultValue = "false",
-          description = "Allow items which the user is already connected to in " +
+  @Option(description = "Allow items which the user is already connected to in " +
                         "the result of the recommend method")
   boolean isConsiderKnownItems();
 

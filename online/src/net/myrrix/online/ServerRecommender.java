@@ -424,6 +424,12 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   }
 
   @Override
+  public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany)
+      throws NotReadyException, NoSuchItemException {
+    return recommendToAnonymous(itemIDs, values, howMany, null);
+  }
+
+  @Override
   public List<RecommendedItem> recommendToAnonymous(long[] itemIDs, int howMany, IDRescorer rescorer)
       throws NotReadyException, NoSuchItemException {
     return recommendToAnonymous(itemIDs, null, howMany, rescorer);
