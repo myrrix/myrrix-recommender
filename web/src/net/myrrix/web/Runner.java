@@ -526,9 +526,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
   private static void enableHttpDigestHack() {
     try {
       Class<?> httpParserClass = Class.forName("org.apache.tomcat.util.http.parser.HttpParser");
-      Field fieldTypeQuotedStringField = httpParserClass.getDeclaredField("FIELD_TYPE_QUOTED_STRING");
-      fieldTypeQuotedStringField.setAccessible(true);
-      Integer FIELD_TYPE_QUOTED_STRING = (Integer) fieldTypeQuotedStringField.get(null);
+      Field fieldTypeField = httpParserClass.getDeclaredField("FIELD_TYPE_TOKEN_OR_QUOTED_STRING");
+      fieldTypeField.setAccessible(true);
+      Integer FIELD_TYPE_TOKEN_OR_QUOTED_STRING = (Integer) fieldTypeField.get(null);
 
       Field fieldTypesField = httpParserClass.getDeclaredField("fieldTypes");
       fieldTypesField.setAccessible(true);
@@ -539,8 +539,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
       // Tomcat 7.0.30+ got stricter. This change makes it lenient again.
       // The JVM, curl, and Safari seem to send these headers incorrectly!
 
-      fieldTypes.put("algorithm", FIELD_TYPE_QUOTED_STRING);
-      fieldTypes.put("qop", FIELD_TYPE_QUOTED_STRING);
+      fieldTypes.put("algorithm", FIELD_TYPE_TOKEN_OR_QUOTED_STRING);
+      fieldTypes.put("qop", FIELD_TYPE_TOKEN_OR_QUOTED_STRING);
 
     } catch (ClassNotFoundException e) {
       log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",

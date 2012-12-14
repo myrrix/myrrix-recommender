@@ -26,6 +26,7 @@ hr {margin:20px 0 10px 0}
 
 <ul>
   <li>Standalone Serving Layer .war file deployment works again</li>
+  <li>HTTP DIGEST authentication is now made compatible with all clients and the latest Tomcat again</li>
   <li>Choice of partition and replica is now deterministic in the client. This avoids problems where two
     replicas presented slightly different results to the client on successive requests.</li>
   <li>Removed "_LOCK" file mechanism in Computation Layer in favor of querying the live cluster state</li>
