@@ -38,7 +38,7 @@ body {background-color:#202020}
 body,p,th,td,h1,h2,h3 {font-family:"Gill Sans","Gill Sans MT",Helvetica,sans-serif;font-weight:300;color:white}
 a {text-decoration:none}
 table,th,td {border:1px dotted black}
-th,td {padding:10px;white-space:nowrap;vertical-align:top}
+th,td {padding:5px;white-space:nowrap;vertical-align:top}
 td {text-align:right}
 table.layout > tbody > tr > th, table.layout > tbody > tr > td, table.layout {border:0;padding:0;text-align:left}
 table {border-collapse:collapse}
@@ -188,7 +188,8 @@ pageContext.setAttribute("numPartitions", numPartitions);
 <jsp:scriptlet>
   }
 </jsp:scriptlet>
-  <tr><td>Local Input Dir</td><td style="text-align:left"><a href="file://${localInputDir}"><code>${localInputDirDisplay}</code></a></td></tr>
+  <tr><td>Local Input Dir</td><td style="text-align:left"><code>${localInputDirDisplay}</code></td></tr>
+  <tr><td>Ready?</td><td style="text-align:left">${rec.ready}</td></tr>
   <tr><td>User Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numUsers}</td></tr>
   <tr><td>Item Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numItems}</td></tr>
   <tr><td>Avg. Estimate Error (beta)</td><td style="text-align:left">${avgEstimateError}</td></tr>

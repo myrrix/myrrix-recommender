@@ -35,6 +35,7 @@ import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.NotReadyException;
 
 /**
  * <p>Responds to a POST request to {@code /pref/[userID]/[itemID]} and in turn calls
@@ -103,6 +104,8 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
         } catch (NoSuchUserException nsue) {
           // continue
         } catch (NoSuchItemException nsie) {
+          // continue
+        } catch (NotReadyException nre) {
           // continue
         }
       }

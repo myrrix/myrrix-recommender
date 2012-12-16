@@ -253,11 +253,15 @@ public final class DelegateGenerationManager implements GenerationManager {
               }
               if (newGeneration == null) {
                 newGeneration = computeModel(inputDir, currentGeneration);
-                saveModel(newGeneration, modelFile);
               }
-              log.info("New generation has {} users, {} items",
-                       newGeneration.getNumUsers(), newGeneration.getNumItems());
-              currentGeneration = newGeneration;
+              if (newGeneration == null) {
+                log.info("No data yet");
+              } else {
+                saveModel(newGeneration, modelFile);
+                log.info("New generation has {} users, {} items",
+                         newGeneration.getNumUsers(), newGeneration.getNumItems());
+                currentGeneration = newGeneration;
+              }
             } catch (OutOfMemoryError oome) {
               log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
                        "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
@@ -356,9 +360,7 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
       // No data yet
-      return new Generation(null,
-                            new FastByIDMap<float[]>(),
-                            new FastByIDMap<float[]>());
+      return null;
     }
 
     MatrixFactorizer als = runFactorization(currentGeneration, RbyRow, RbyColumn);
