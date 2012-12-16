@@ -87,6 +87,9 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
       double dot = SimpleVectorMath.dot(itemFeatures, oneUserFeatures);
       if (hasRescorer) {
         dot = rescorer.rescore(itemID, dot);
+        if (!LangUtils.isFinite(dot)) {
+          return null;
+        }
       }
       sum += dot;
       count++;
