@@ -18,8 +18,13 @@ package net.myrrix.online.generation;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 
 import net.myrrix.common.collection.FastByIDMap;
@@ -39,6 +44,7 @@ public final class PrintGeneration {
 
   public static void main(String[] args) throws Exception {
     File modelFile = new File(args[0]);
+    File outFile = args.length > 1 ? new File(args[1]) : null;
     GenerationSerializer serializer;
     ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modelFile));
     try {
@@ -47,28 +53,38 @@ public final class PrintGeneration {
       Closeables.close(ois, true);
     }
     Generation generation = serializer.getGeneration();
-    print(generation);
+
+    if (outFile == null) {
+      print(generation, System.out);
+    } else {
+      Writer out = new OutputStreamWriter(new FileOutputStream(outFile), Charsets.UTF_8);
+      try {
+        print(generation, out);
+      } finally {
+        out.close();
+      }
+    }
   }
 
-  public static void print(Generation generation) {
-    System.out.println("X:");
-    printFeatureMatrix(generation.getX());
-    System.out.println();
+  public static void print(Generation generation, Appendable out) throws IOException {
+    out.append("X:\n");
+    printFeatureMatrix(generation.getX(), out);
+    out.append('\n');
 
-    System.out.println("Y:");
-    printFeatureMatrix(generation.getY());
-    System.out.println();
+    out.append("Y:\n");
+    printFeatureMatrix(generation.getY(), out);
+    out.append('\n');
 
-    //System.out.println("knownUserIDs:");
-    //printKnownItems(generation.getKnownUserIDs());
-    //System.out.println();
+    //out.append("knownUserIDs:\n");
+    //printKnownItems(generation.getKnownUserIDs(), out);
+    //out.append('\n');
 
-    System.out.println("knownItemIDs:");
-    printKnownItems(generation.getKnownItemIDs());
-    System.out.println();
+    out.append("knownItemIDs:\n");
+    printKnownItems(generation.getKnownItemIDs(), out);
+    out.append('\n');
   }
 
-  private static void printFeatureMatrix(FastByIDMap<float[]> M) {
+  private static void printFeatureMatrix(FastByIDMap<float[]> M, Appendable out) throws IOException {
     if (M != null) {
       for (FastByIDMap.MapEntry<float[]> entry : M.entrySet()) {
         long id = entry.getKey();
@@ -78,12 +94,12 @@ public final class PrintGeneration {
         for (float value : values) {
           line.append('\t').append(value);
         }
-        System.out.println(line);
+        out.append(line).append('\n');
       }
     }
   }
 
-  private static void printKnownItems(FastByIDMap<FastIDSet> known) {
+  private static void printKnownItems(FastByIDMap<FastIDSet> known, Appendable out) throws IOException {
     if (known != null) {
       for (FastByIDMap.MapEntry<FastIDSet> entry : known.entrySet()) {
         long id = entry.getKey();
@@ -93,7 +109,7 @@ public final class PrintGeneration {
         for (long key : keys) {
           line.append('\t').append(key);
         }
-        System.out.println(line);
+        out.append(line).append('\n');
       }
     }
   }

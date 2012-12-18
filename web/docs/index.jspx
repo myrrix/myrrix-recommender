@@ -189,7 +189,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
   }
 </jsp:scriptlet>
   <tr><td>Local Input Dir</td><td style="text-align:left"><code>${localInputDirDisplay}</code></td></tr>
-  <tr><td>Ready?</td><td style="text-align:left">${rec.ready}</td></tr>
+  <tr><td>Ready?</td><td style="text-align:left"><code>${rec.ready}</code></td></tr>
   <tr><td>User Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numUsers}</td></tr>
   <tr><td>Item Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numItems}</td></tr>
   <tr><td>Avg. Estimate Error (beta)</td><td style="text-align:left">${avgEstimateError}</td></tr>
