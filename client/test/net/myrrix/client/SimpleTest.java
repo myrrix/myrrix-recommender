@@ -346,7 +346,7 @@ public final class SimpleTest extends AbstractClientTest {
 
     client.setPreference(0L, 2L, -3.0f);
     recs = client.recommend(0L, 1);
-    assertEquals(50L, recs.get(0).getItemID());
+    assertEquals(1016L, recs.get(0).getItemID());
 
     client.setPreference(0L, 1L, -1.0f);
     // Don't really know/care what will be recommend at this point; the feature vec is nearly 0

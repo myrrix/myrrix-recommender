@@ -474,9 +474,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       if (anonymousUserFeatures == null) {
         anonymousUserFeatures = new float[userFoldIn.length];
       }
-      double signedFoldInWeight = values == null ? 1.0 : foldInWeight(values[j]);
-      for (int i = 0; i < anonymousUserFeatures.length; i++) {
-        anonymousUserFeatures[i] += (float) (signedFoldInWeight * userFoldIn[i]);
+      double signedFoldInWeight = foldInWeight(0.0, values == null ? 1.0f : values[j]);
+      if (signedFoldInWeight != 0.0) {
+        for (int i = 0; i < anonymousUserFeatures.length; i++) {
+          anonymousUserFeatures[i] += (float) (signedFoldInWeight * userFoldIn[i]);
+        }
       }
     }
     if (!anyItemIDFound) {
@@ -648,40 +650,41 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     if (userFeatures != null && itemFeatures != null) {
 
-      double signedFoldInWeight = foldInWeight(value);
+      double signedFoldInWeight = foldInWeight(SimpleVectorMath.dot(userFeatures, itemFeatures), value);
+      if (signedFoldInWeight != 0.0) {
+        // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
+        // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
+        // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
+        // we scale to complete the multiplication of the fold-in and add it in.
+        RealMatrix xtxInverse = generation.getXTXInverse();
+        double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
 
-      // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
-      // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
-      // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
-      // we scale by 'value' to complete the multiplication of the fold-in and add it in.
-      RealMatrix xtxInverse = generation.getXTXInverse();
-      double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
+        // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
+        // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
+        // the same method above to carry out the multiply; the result is conceptually a row vector.
+        // The result is scaled and added in.
+        RealMatrix ytyInverse = generation.getYTYInverse();
+        double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
 
-      // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
-      // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
-      // the same method above to carry out the multiply; the result is conceptually a row vector.
-      // The result is scaled by 'value' and added in.
-      RealMatrix ytyInverse = generation.getYTYInverse();
-      double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
-
-      if (itemFoldIn != null) {
-        if (SimpleVectorMath.norm(itemFoldIn) > FastMath.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
-          log.warn("Item fold in vector is large; bug?");
+        if (itemFoldIn != null) {
+          if (SimpleVectorMath.norm(itemFoldIn) > FastMath.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
+            log.warn("Item fold in vector is large; bug?");
+          }
+          for (int i = 0; i < itemFeatures.length; i++) {
+            double delta = signedFoldInWeight * itemFoldIn[i];
+            Preconditions.checkState(LangUtils.isFinite(delta));
+            itemFeatures[i] += (float) delta;
+          }
         }
-        for (int i = 0; i < itemFeatures.length; i++) {
-          double delta = signedFoldInWeight * itemFoldIn[i];
-          Preconditions.checkState(LangUtils.isFinite(delta));
-          itemFeatures[i] += (float) delta;
-        }
-      }
-      if (userFoldIn != null) {
-        if (SimpleVectorMath.norm(userFoldIn) > FastMath.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
-          log.warn("User fold in vector is large; bug?");
-        }
-        for (int i = 0; i < userFeatures.length; i++) {
-          double delta = signedFoldInWeight * userFoldIn[i];
-          Preconditions.checkState(LangUtils.isFinite(delta));
-          userFeatures[i] += (float) delta;
+        if (userFoldIn != null) {
+          if (SimpleVectorMath.norm(userFoldIn) > FastMath.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
+            log.warn("User fold in vector is large; bug?");
+          }
+          for (int i = 0; i < userFeatures.length; i++) {
+            double delta = signedFoldInWeight * userFoldIn[i];
+            Preconditions.checkState(LangUtils.isFinite(delta));
+            userFeatures[i] += (float) delta;
+          }
         }
       }
     }
@@ -721,14 +724,25 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     return M.isEmpty() ? 0 : M.entrySet().iterator().next().getValue().length;
   }
 
-  private static double foldInWeight(float value) {
-    // This is analogous to the weight function in the ALS algorithm.
-    double cu = 1 + FOLDIN_LEARN_RATE * FastMath.abs(value);
-    // Distance from 1 reduced proportionally with cu
-    double foldInWeight = 1.0 - 1.0 / cu;
-    // Negative values treated as literally the opposite of positive values in short-term fold in
-    // This is not the same as the case of negative overall values in input to ALS.
-    return FastMath.signum(value) * foldInWeight;
+  /**
+   * This function decides how much of a folded-in user or item vector should be added to a target item or user
+   * vector, respectively, on a new action. The idea is that a positive value should push the current value towards
+   * 1, but not further, and a negative value should push towards 0, but not further. How much to move should be
+   * mostly proportional to the size of the value. 0 should move the result not at all; 2 ought to move twice as
+   * much as 1, etc. This isn't quite possible but can be approximated by moving a fraction 1-1/(1+value) of the
+   * distance towards 1, or 0.
+   */
+  private static double foldInWeight(double estimate, float value) {
+    Preconditions.checkState(LangUtils.isFinite(estimate));
+    double signedFoldInWeight;
+    if (value > 0.0f && estimate < 1.0) {
+      signedFoldInWeight = (1.0 - 1.0 / (1.0 + value)) * (1.0 - estimate);
+    } else if (value < 0.0f && estimate > 0.0) {
+      signedFoldInWeight = (1.0 - 1.0 / (1.0 - value)) * -estimate;
+    } else {
+      signedFoldInWeight = 0.0;
+    }
+    return FOLDIN_LEARN_RATE * signedFoldInWeight;
   }
 
   @Override
