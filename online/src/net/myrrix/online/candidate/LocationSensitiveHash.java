@@ -91,7 +91,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
     this.Y = Y;
 
-    if (LSH_SAMPLE_RATIO >= 1.0) {
+    if (LSH_SAMPLE_RATIO >= 1.0 || Y.isEmpty()) {
 
       randomVectors = null;
       meanVector = null;
