@@ -421,7 +421,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     // Basic tuning params:
     connector.setAttribute("maxThreads", 400);
     connector.setAttribute("acceptCount", 50);
-    connector.setAttribute("connectionTimeout", 2000);
+    //connector.setAttribute("connectionTimeout", 2000);
     connector.setAttribute("maxKeepAliveRequests", 100);
 
     // Avoid running out of ephemeral ports under heavy load?
