@@ -111,26 +111,6 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
-    <servlet-name>index_jspx</servlet-name>
-    <servlet-class>net.myrrix.web.index_jspx</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet>
-    <servlet-name>status_jspx</servlet-name>
-    <servlet-class>net.myrrix.web.status_jspx</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet>
-    <servlet-name>error_jspx</servlet-name>
-    <servlet-class>net.myrrix.web.error_jspx</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet>
-    <servlet-name>som_jspx</servlet-name>
-    <servlet-class>net.myrrix.web.som_jspx</servlet-class>
-    <load-on-startup>1</load-on-startup>
-  </servlet>
-  <servlet>
     <servlet-name>LogServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -183,22 +163,6 @@
   <servlet-mapping>
     <servlet-name>AllItemIDsServlet</servlet-name>
     <url-pattern>/item/allIDs</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>index_jspx</servlet-name>
-    <url-pattern>/index.jspx</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>status_jspx</servlet-name>
-    <url-pattern>/status.jspx</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>error_jspx</servlet-name>
-    <url-pattern>/error.jspx</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>som_jspx</servlet-name>
-    <url-pattern>/som.jspx</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>LogServlet</servlet-name>
