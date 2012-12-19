@@ -54,7 +54,7 @@ public final class Generation {
   private RealMatrix XTXinv;
   private final FastByIDMap<float[]> Y;
   private RealMatrix YTYinv;
-  private final CandidateFilter candidateFilter;
+  private CandidateFilter candidateFilter;
   private final ReadWriteLock xLock;
   private final ReadWriteLock yLock;
   private final ReadWriteLock knownItemLock;
@@ -73,13 +73,13 @@ public final class Generation {
          null,
          Y,
          null,
-         new LocationSensitiveHash(Y),
+         null,
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
          null // not used yet
          );
-    recomputeInverses();
+    recomputeState();
   }
 
   private Generation(FastByIDMap<FastIDSet> knownItemIDs,
@@ -120,12 +120,10 @@ public final class Generation {
                           knownItemLock);
   }
 
-  /**
-   * Normally only called from specialized {@code DelegateGenerationManager} methods.
-   */
-  void recomputeInverses() {
+  void recomputeState() {
     XTXinv = recomputeInverse(X, xLock.readLock());
     YTYinv = recomputeInverse(Y, yLock.readLock());
+    candidateFilter = new LocationSensitiveHash(Y);
   }
 
   private static RealMatrix recomputeInverse(FastByIDMap<float[]> M, Lock readLock) {
