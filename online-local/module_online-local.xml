@@ -40,7 +40,7 @@
         <pathelement location="common/lib/guava-13.0.jar"/>
         <pathelement location="common/lib/mahout-core-0.7.jar"/>
         <pathelement location="common/lib/slf4j-api-1.7.2.jar"/>
-        <pathelement location="common/lib/commons-math3-3.0.jar"/>
+        <pathelement location="common/lib/commons-math3-3.1.jar"/>
       </classpath>
       <src path="${module.online-local.basedir}/src"/>
     </javac>
