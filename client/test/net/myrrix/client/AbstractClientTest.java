@@ -46,6 +46,10 @@ public abstract class AbstractClientTest extends MyrrixTest {
     return false;
   }
 
+  protected boolean callAwait() {
+    return true;
+  }
+
   protected final Runner getRunner() {
     return runner;
   }
@@ -116,8 +120,10 @@ public abstract class AbstractClientTest extends MyrrixTest {
       client.refresh(null);
     }
 
-    log.info("Waiting for client...");
-    client.await();
+    if (callAwait()) {
+      log.info("Waiting for client...");
+      client.await();
+    }
   }
 
   @Override
