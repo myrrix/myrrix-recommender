@@ -77,7 +77,7 @@ if (generation != null) {
           Iterator&lt;Pair&lt;Double,Long&gt;&gt; it = contentIDs.iterator();
           int k = 0;
           while (k &lt; nodeMaxSize &amp;&amp; it.hasNext()) {
-            out.write(String.valueOf(it.next().getSecond()));
+            out.write(Long.toString(it.next().getSecond()));
             out.write(' ');
             if ((k+1) % rowSize == 0 &amp;&amp; k != n-1) {
               out.write("&lt;br/&gt;");
@@ -121,7 +121,7 @@ private static String percentageToHexByte(double d) {
   if (value < 16) {
     return "0" + byteToHexChar(value);
   }
-  return String.valueOf(byteToHexChar(value / 16)) + byteToHexChar(value % 16);
+  return String.valueOf(new char[] { byteToHexChar(value / 16), byteToHexChar(value % 16) });
 }
 private static char byteToHexChar(int value) {
   if (value < 10) {

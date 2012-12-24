@@ -25,7 +25,6 @@ import java.util.SortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.junit.Test;
@@ -47,7 +46,7 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
   private static final int NUM_ITEMS = 2000000;
   private static final int NUM_RECS = 10;
   private static final int ITERATIONS = 20;
-  private static final double LN2 = FastMath.log(2.0);
+  private static final double LN2 = Math.log(2.0);
 
   @Test
   public void testLSH() {
@@ -86,9 +85,9 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
     log.info(avgNDCG.toString());
     log.info(avgPercentAllItemsConsidered.toString());
 
-    assertTrue(avgPercentTopRecsConsidered.getAverage() > 0.65);
-    assertTrue(avgNDCG.getAverage() > 0.65);
-    assertTrue(avgPercentAllItemsConsidered.getAverage() < 0.07);
+    assertTrue(avgPercentTopRecsConsidered.getAverage() > 0.55);
+    assertTrue(avgNDCG.getAverage() > 0.55);
+    assertTrue(avgPercentAllItemsConsidered.getAverage() < 0.075);
   }
 
   private static double[] doTestRandomVecs(FastByIDMap<float[]> Y, float[] userVec) {
@@ -109,7 +108,7 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
     double maxScore = 0.0;
     int intersectionSize = 0;
     for (int i = 0; i < topIDs.size(); i++) {
-      double value = LN2 / FastMath.log(2.0 + i);
+      double value = LN2 / Math.log(2.0 + i);
       long id = topIDs.get(i);
       if (candidates.contains(id)) {
         intersectionSize++;

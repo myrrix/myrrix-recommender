@@ -69,7 +69,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.1;
 
-  private static final double LN_E_MINUS_1 = FastMath.log(FastMath.E - 1.0);
+  private static final double LN_E_MINUS_1 = Math.log(FastMath.E - 1.0);
 
   private static final int WORK_UNIT_SIZE = 100;
 
@@ -316,7 +316,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
           double xu = entry.getValue();
           // Actually treat this as a two part function to avoid overflow:
-          double cu = xu < 0.0 ? FastMath.log1p(FastMath.exp(alpha * (xu + LN_E_MINUS_1 / alpha))) : 1.0 + alpha * xu;
+          double cu = xu < 0.0 ? Math.log1p(FastMath.exp(alpha * (xu + LN_E_MINUS_1 / alpha))) : 1.0 + alpha * xu;
 
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {

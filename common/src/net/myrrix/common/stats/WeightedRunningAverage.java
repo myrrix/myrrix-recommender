@@ -103,7 +103,7 @@ public final class WeightedRunningAverage implements RunningAverage, Serializabl
   
   @Override
   public synchronized String toString() {
-    return String.valueOf(average);
+    return Double.toString(average);
   }
   
 }

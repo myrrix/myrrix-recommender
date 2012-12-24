@@ -124,7 +124,7 @@ public final class SelfOrganizingMaps {
 
   private void sketchMapParallel(FastByIDMap<float[]> vectors, double samplingRate, Node[][] map) {
     int mapSize = map.length;
-    double sigma = (vectors.size() * samplingRate) / FastMath.log(mapSize);
+    double sigma = (vectors.size() * samplingRate) / Math.log(mapSize);
     int t = 0;
     for (FastByIDMap.MapEntry<float[]> entry : vectors.entrySet()) {
       float[] V = entry.getValue();
@@ -168,11 +168,9 @@ public final class SelfOrganizingMaps {
       // No sampling at all, we can't fill the map with one pass even
       pascalDistribution = null;
     } else {
-      // Change this in Commons Math 3.1:
-      //pascalDistribution = new PascalDistribution(RandomManager.getRandom(), 1, p);
       // Number of un-selected elements to skip between selections is geometrically distributed with
       // parameter p; this is the same as a negative binomial / Pascal distribution with r=1:
-      pascalDistribution = new PascalDistribution(1, p);
+      pascalDistribution = new PascalDistribution(RandomManager.getRandom(), 1, p);
     }
 
     LongPrimitiveIterator keyIterator = vectors.keySetIterator();

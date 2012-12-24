@@ -31,6 +31,8 @@ hr {margin:20px 0 10px 0}
     replicas presented slightly different results to the client on successive requests.</li>
   <li>Removed "_LOCK" file mechanism in Computation Layer in favor of querying the live cluster state</li>
   <li>Stand-alone serving layer avoids a possible exception when recomputing a new model on new items</li>
+  <li>Repeated updates from new users and items should not be able to produce extreme values in the model
+    now even after many updates</li>
   <li>Client library now supports rescorer parameters</li>
   <li>Added missing <code>recommendToMany</code> to client CLI, changed some APIs to be more consistent,
     and fixed other small issues in the CLI.</li>
@@ -47,6 +49,7 @@ hr {margin:20px 0 10px 0}
     at least one item exists, rather than if all exist</li>
   <li>Update to support Hadoop 1.1.1, latest Amazon EMR releases</li>
   <li>Update to Tomcat 7.0.34</li>
+  <li>Update to Commons Math 3.1</li>
 </ul>
 
 <h1>Version 0.8</h1>
