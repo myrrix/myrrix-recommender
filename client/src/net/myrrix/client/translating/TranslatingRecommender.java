@@ -109,13 +109,13 @@ public interface TranslatingRecommender {
       throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender(long[], int)
+   * @see net.myrrix.common.MyrrixRecommender#recommendToAnonymous(long[], int)
    */
   List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, int howMany)
       throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender(long[], float[], int)
+   * @see net.myrrix.common.MyrrixRecommender#recommendToAnonymous(long[], float[], int)
    */
   List<TranslatedRecommendedItem> recommendToAnonymous(String[] itemIDs, float[] values, int howMany)
       throws TasteException;
