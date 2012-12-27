@@ -59,6 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.collection.FastIDSet;
@@ -229,7 +230,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     generationManager.close();
     ExecutorService executorService = executor.maybeGet();
     if (executorService != null) {
-      executorService.shutdownNow();
+      ExecutorUtils.shutdownNowAndAwait(executorService);
     }
   }
 

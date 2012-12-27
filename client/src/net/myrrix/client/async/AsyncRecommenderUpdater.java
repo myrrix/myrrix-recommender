@@ -29,6 +29,7 @@ import org.apache.mahout.cf.taste.common.Refreshable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.MyrrixRecommender;
 
 /**
@@ -154,7 +155,7 @@ public final class AsyncRecommenderUpdater implements Closeable {
 
   @Override
   public void close() {
-    executor.shutdown();
+    ExecutorUtils.shutdownNowAndAwait(executor);
   }
 
 }

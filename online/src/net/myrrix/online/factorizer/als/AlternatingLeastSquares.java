@@ -36,6 +36,7 @@ import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
@@ -176,7 +177,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         log.info("Avg squared difference of feature vectors vs prior iteration: {}", avgSquaredDiff);
       }
     } finally {
-      executor.shutdown();
+      ExecutorUtils.shutdownNowAndAwait(executor);
     }
     return null;
   }

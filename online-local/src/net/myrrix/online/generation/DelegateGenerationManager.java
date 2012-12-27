@@ -53,6 +53,7 @@ import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
@@ -227,7 +228,7 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   @Override
   public void close() throws IOException {
-    refreshExecutor.shutdown();
+    ExecutorUtils.shutdownNowAndAwait(refreshExecutor);
     closeAppender();
   }
 
@@ -431,13 +432,13 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     try {
       als.call();
+      log.info("Factorization complete");
     } catch (ExecutionException ee) {
       throw new IOException(ee.getCause());
     } catch (InterruptedException ie) {
-      throw new IOException(ie);
+      log.warn("ALS computation was interrupted");
     }
 
-    log.info("Factorization complete");
     return als;
   }
 

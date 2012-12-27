@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.random.RandomManager;
 
@@ -80,9 +81,6 @@ public final class LoadTest extends AbstractClientTest {
     RandomGenerator random = RandomManager.getRandom();
     final ClientRecommender client = getClient();
 
-    ExecutorService executor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LoadTest-%d").build());
     Collection<Future<?>> futures = Lists.newArrayList();
 
     final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
@@ -101,68 +99,76 @@ public final class LoadTest extends AbstractClientTest {
 
     long start = System.currentTimeMillis();
 
-    for (int i = 0; i < ITERATIONS; i++) {
-      final double r = random.nextDouble();
-      final long userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
-      final long itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
-      final float value = (float) random.nextInt(10);
-      futures.add(executor.submit(new Callable<Void>() {
-        @Override
-        public Void call() throws TasteException {
+    ExecutorService executor =
+        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
+                                     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LoadTest-%d").build());
 
-          long stepStart = System.currentTimeMillis();
-          if (r < 0.05) {
-            client.recommendedBecause(userID, itemID, 10);
-            recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.07) {
-            client.setPreference(userID, itemID);
-            setPreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.1) {
-            client.setPreference(userID, itemID, value);
-            setPreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.11) {
-            client.removePreference(userID, itemID);
-            removePreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.13) {
-            StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
-            client.ingest(reader);
-            ingest.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.15) {
-            client.refresh(null);
-            refresh.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.20) {
-            client.estimatePreference(userID, itemID);
-            estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.25) {
-            client.mostSimilarItems(new long[] {itemID}, 10);
-            mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
-          } else if (r < 0.30) {
-            client.recommendToMany(new long[] { userID, userID }, 10, true, (String[]) null);
-            recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
-          } else {
-            client.recommend(userID, 10);
-            recommend.addDatum(System.currentTimeMillis() - stepStart);
+    try {
+
+      for (int i = 0; i < ITERATIONS; i++) {
+        final double r = random.nextDouble();
+        final long userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
+        final long itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
+        final float value = (float) random.nextInt(10);
+        futures.add(executor.submit(new Callable<Void>() {
+          @Override
+          public Void call() throws TasteException {
+
+            long stepStart = System.currentTimeMillis();
+            if (r < 0.05) {
+              client.recommendedBecause(userID, itemID, 10);
+              recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.07) {
+              client.setPreference(userID, itemID);
+              setPreference.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.1) {
+              client.setPreference(userID, itemID, value);
+              setPreference.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.11) {
+              client.removePreference(userID, itemID);
+              removePreference.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.13) {
+              StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
+              client.ingest(reader);
+              ingest.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.15) {
+              client.refresh(null);
+              refresh.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.20) {
+              client.estimatePreference(userID, itemID);
+              estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.25) {
+              client.mostSimilarItems(new long[] {itemID}, 10);
+              mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
+            } else if (r < 0.30) {
+              client.recommendToMany(new long[] { userID, userID }, 10, true, (String[]) null);
+              recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
+            } else {
+              client.recommend(userID, 10);
+              recommend.addDatum(System.currentTimeMillis() - stepStart);
+            }
+
+            int stepsFinished = count.incrementAndGet();
+            if (stepsFinished % 1000 == 0) {
+              log.info("Finished {} load steps", stepsFinished);
+            }
+
+            return null;
           }
-
-          int stepsFinished = count.incrementAndGet();
-          if (stepsFinished % 1000 == 0) {
-            log.info("Finished {} load steps", stepsFinished);
-          }
-
-          return null;
-        }
-      }));
-    }
-
-    for (Future<?> future : futures) {
-      try {
-        future.get();
-      } catch (ExecutionException ee) {
-        log.warn("Error in execution", ee.getCause());
+        }));
       }
-    }
 
-    executor.shutdown();
+      for (Future<?> future : futures) {
+        try {
+          future.get();
+        } catch (ExecutionException ee) {
+          log.warn("Error in execution", ee.getCause());
+        }
+      }
+
+    } finally {
+      ExecutorUtils.shutdownNowAndAwait(executor);
+    }
 
     long end = System.currentTimeMillis();
     log.info("Finished {} steps in {}ms", ITERATIONS, end - start);
