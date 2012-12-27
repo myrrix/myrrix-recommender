@@ -213,13 +213,14 @@ public final class Runner implements Callable<Boolean>, Closeable {
     }
 
     final Runner runner = new Runner(config);
+    runner.call();
+
     SignalManager.register(new Runnable() {
         @Override
         public void run() {
           runner.close();
         }
       }, SignalType.INT, SignalType.TERM);
-    runner.call();
 
     runner.await();
     runner.close();

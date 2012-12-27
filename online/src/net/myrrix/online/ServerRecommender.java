@@ -140,8 +140,9 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     executor = new ReloadingReference<ExecutorService>(new Callable<ExecutorService>() {
       @Override
       public ExecutorService call() {
-        return Executors.newFixedThreadPool(2 * numCores,
-                                            new ThreadFactoryBuilder().setNameFormat("ServerRecommender-%d").build());
+        return Executors.newFixedThreadPool(
+            2 * numCores,
+            new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ServerRecommender-%d").build());
       }
     });
   }

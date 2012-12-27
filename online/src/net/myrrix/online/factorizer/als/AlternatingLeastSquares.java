@@ -162,7 +162,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     int numThreads =
         threadsString == null ? Runtime.getRuntime().availableProcessors() : Integer.parseInt(threadsString);
     ExecutorService executor =
-        Executors.newFixedThreadPool(numThreads, new ThreadFactoryBuilder().setNameFormat("ALS-%d").build());
+        Executors.newFixedThreadPool(numThreads,
+                                     new ThreadFactoryBuilder().setNameFormat("ALS-%d").setDaemon(true).build());
 
     log.info("Starting {} iterations with {} threads", iterationsToRun, numThreads);
 
