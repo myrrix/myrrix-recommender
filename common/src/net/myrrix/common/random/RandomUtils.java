@@ -36,8 +36,12 @@ package net.myrrix.common.random;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
+
+import net.myrrix.common.collection.FastIDSet;
 
 /**
  * Helpful methods related to randomness and related functions. Some parts derived from Mahout.
@@ -147,6 +151,19 @@ public final class RandomUtils {
       result = (result << 4) | (hash[i] & 0xFFL);
     }
     return result;
+  }
+
+  /**
+   * @param set to choose from
+   * @param random random number generator
+   * @return element of the set chosen uniformly at random
+   */
+  public static int randomFrom(FastIDSet set, RandomGenerator random) {
+    int size = set.size();
+    Preconditions.checkArgument(size > 0);
+    LongPrimitiveIterator it = set.iterator();
+    it.skip(random.nextInt(size));
+    return (int) it.nextLong();
   }
 
 }

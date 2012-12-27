@@ -16,21 +16,23 @@
 
 package net.myrrix.online.eval;
 
-import java.util.List;
+import java.util.Collection;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.random.RandomUtils;
 
 /**
  * This implementation calculates Area under curve (AUC), which may be understood as the probability
@@ -50,6 +52,20 @@ public final class AUCEvaluator extends AbstractEvaluator {
   @Override
   public EvaluationResult evaluate(MyrrixRecommender recommender,
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
+    FastByIDMap<FastIDSet> converted = new FastByIDMap<FastIDSet>(testData.size(), 1.25f);
+    for (long userID : testData.keySet()) {
+      Collection<RecommendedItem> userTestData = testData.get(userID);
+      FastIDSet itemIDs = new FastIDSet(userTestData.size(), 1.25f);
+      converted.put(userID, itemIDs);
+      for (RecommendedItem datum : userTestData) {
+        itemIDs.add(datum.getItemID());
+      }
+    }
+    return evaluate(recommender, converted);
+  }
+
+  public EvaluationResult evaluate(MyrrixRecommender recommender,
+                                   FastByIDMap<FastIDSet> testData) throws TasteException {
 
     int count = 0;
     int underCurve = 0;
@@ -58,23 +74,19 @@ public final class AUCEvaluator extends AbstractEvaluator {
     long[] allItemIDs = recommender.getAllItemIDs().toArray();
     RandomGenerator random = RandomManager.getRandom();
 
-    FastIDSet testItemIDs = new FastIDSet();
+    LongPrimitiveIterator it = testData.keySetIterator();
+    while (it.hasNext()) {
+      long userID = it.nextLong();
 
-    for (long userID : testData.keySet()) {
-
-      List<RecommendedItem> testValues = Lists.newArrayList(testData.get(userID));
-      int numTest = testValues.size();
+      FastIDSet testItemIDs = testData.get(userID);
+      int numTest = testItemIDs.size();
       if (numTest == 0) {
         continue;
-      }
-      testItemIDs.clear();
-      for (RecommendedItem testValue : testValues) {
-        testItemIDs.add(testValue.getItemID());
       }
 
       for (int i = 0; i < numTest; i++) {
 
-        long randomTestItemID = testValues.get(random.nextInt(testValues.size())).getItemID();
+        long randomTestItemID = RandomUtils.randomFrom(testItemIDs, random);
         long randomTrainingItemID;
         do {
           randomTrainingItemID = allItemIDs[random.nextInt(allItemIDs.length)];
