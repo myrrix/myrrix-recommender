@@ -61,7 +61,7 @@ public final class RunningStatisticsPerTimeTest extends MyrrixTest {
     assertEquals(1.6, perTime.getAverage());
     assertEquals(2, perTime.getCount());
 
-    Thread.sleep(59000L);
+    Thread.sleep(58000L);
     perTime.refresh();
 
     assertEquals(2.0, perTime.getMin());
