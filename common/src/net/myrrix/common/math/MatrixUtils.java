@@ -158,7 +158,9 @@ public final class MatrixUtils {
     try {
       inverse = solver.getInverse();
     } catch (SingularMatrixException sme) {
-      log.warn("Matrix is near-singular; add more data or decrease the value of model.features ({})", sme.toString());
+      log.warn("{} x {} matrix is near-singular (threshold {}); add more data or decrease the value " +
+               "of model.features ({})",
+               M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD, sme.toString());
       double[] rDiag;
       try {
         rDiag = (double[]) RDIAG_FIELD.get(decomposition);
@@ -166,6 +168,7 @@ public final class MatrixUtils {
         log.warn("Can't read QR decomposition fields to suggest dimensionality");
         throw sme;
       }
+      log.info("QR decomposition diagonal: {}", Arrays.toString(rDiag));
       for (int i = 0; i < rDiag.length; i++) {
         if (FastMath.abs(rDiag[i]) <= SINGULARITY_THRESHOLD) {
           log.info("Suggested value of -Dmodel.features is about {} or less", i);
