@@ -14,12 +14,15 @@ hr {margin:20px 0 10px 0}
 
 <h1>Version 0.9</h1>
 
+<p>December 31 2012</p>
+
 <h2>New Features</h2>
 
 <ul>
   <li>Serving Layer can now run in read-only mode to serve a model but not accept updates</li>
   <li><code>/ingest</code> endpoint can now accept web-browser-style file uploads</li>
-  <li>New unified license system is in place. Obtain a trial license from myrrix.com</li>
+  <li>New unified license system is in place. Obtain a trial license from
+    <a href="http://myrrix.com">myrrix.com</a></li>
 </ul>
 
 <h2>Fixes</h2>
@@ -31,9 +34,10 @@ hr {margin:20px 0 10px 0}
     replicas presented slightly different results to the client on successive requests.</li>
   <li>Removed "_LOCK" file mechanism in Computation Layer in favor of querying the live cluster state</li>
   <li>Stand-alone serving layer avoids a possible exception when recomputing a new model on new items</li>
+  <li>Several fixes for problems in computing models over very small input</li>
   <li>Repeated updates from new users and items should not be able to produce extreme values in the model
     now even after many updates</li>
-  <li>Client library now supports rescorer parameters</li>
+  <li>Java client library now supports rescorer parameters</li>
   <li>Added missing <code>recommendToMany</code> to client CLI, changed some APIs to be more consistent,
     and fixed other small issues in the CLI.</li>
 </ul>
@@ -42,14 +46,11 @@ hr {margin:20px 0 10px 0}
 
 <ul>
   <li>Faster display of self-organizing map visualization for moderate to large data sets.</li>
-  <li>New command line processing library, JewelCli</li>
   <li>Client command line has changed slightly, to take optional argument like "howMany" as a flag
     (e.g. <code>--howMany 5</code> instead of stand-alone argument</li>
-  <li><code>mostSimilarItems</code> and <code>recommendToAnonymous</code> will return an answer if
-    at least one item exists, rather than if all exist</li>
-  <li>Update to support Hadoop 1.1.1, latest Amazon EMR releases</li>
-  <li>Update to Tomcat 7.0.34</li>
-  <li>Update to Commons Math 3.1</li>
+  <li><code>mostSimilarItems</code> and <code>recommendToAnonymous</code> will return a result if
+    at least one argument item exists, rather than if all exist</li>
+  <li>Update to support Hadoop 1.1.1 and latest Amazon EMR releases</li>
 </ul>
 
 <h1>Version 0.8</h1>
