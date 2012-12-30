@@ -28,6 +28,12 @@
   <version>0.9-SNAPSHOT</version>
   <description>Contains configuration common to all modules</description>
 
+  <scm>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk</developerConnection>
+  </scm>
+
   <inceptionYear>2012</inceptionYear>
   <licenses>
     <license>
