@@ -18,7 +18,7 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -26,20 +26,20 @@
   <artifactId>myrrix-online</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Online</name>
-  <version>0.9-SNAPSHOT</version>
+  <version>0.9</version>
   <description>Generic online recommender core of the Myrrix Serving Layer, for embedding</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/online</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/online</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/online</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.9</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.9</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-online-0.9</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-common</artifactId>
-      <version>0.9-SNAPSHOT</version>
+      <version>0.9</version>
     </dependency>
     <!--
     <dependency>
