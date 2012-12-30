@@ -18,7 +18,7 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.9</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -26,20 +26,20 @@
   <artifactId>myrrix-web</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Web</name>
-  <version>0.9-SNAPSHOT</version>
+  <version>0.9</version>
   <description>Web application source code from Serving Layer standalone mode</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-0.9</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-0.9</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-0.9</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-web-common</artifactId>
-      <version>0.9-SNAPSHOT</version>
+      <version>0.9</version>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
