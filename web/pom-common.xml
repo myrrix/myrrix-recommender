@@ -99,6 +99,13 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+      	<artifactId>maven-release-plugin</artifactId>
+      	<configuration>
+      		<pomFileName>pom-common.xml</pomFileName>
+      		<arguments>-f pom-common.xml</arguments>
+      	</configuration>
+      </plugin>
     </plugins>
   </build>
 

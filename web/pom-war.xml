@@ -63,6 +63,13 @@
           <webXml>docs/WEB-INF/web.xml</webXml>
         </configuration>
       </plugin>
+      <plugin>
+      	<artifactId>maven-release-plugin</artifactId>
+      	<configuration>
+      		<pomFileName>pom-war.xml</pomFileName>
+      		<arguments>-f pom-war.xml</arguments>
+      	</configuration>
+      </plugin>
     </plugins>
   </build>
 
