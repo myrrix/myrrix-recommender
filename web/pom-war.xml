@@ -18,7 +18,7 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>0.9</version>
+    <version>0.10-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
@@ -26,20 +26,20 @@
   <artifactId>myrrix-web-war</artifactId>
   <packaging>war</packaging>
   <name>Myrrix Web (WAR)</name>
-  <version>0.9</version>
+  <version>0.10-SNAPSHOT</version>
   <description>Web application source code from Serving Layer standalone mode (WAR packaging)</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-war-0.9</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-war-0.9</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-web-war-0.9</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-web-common</artifactId>
-      <version>0.9</version>
+      <version>0.10-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
