@@ -155,7 +155,7 @@ public abstract class AbstractEvaluator {
         }
         // else leave sorted in time order
 
-        int numTraining = (int) (trainPercentage * userPrefs.size());
+        int numTraining = FastMath.max(1, (int) (trainPercentage * userPrefs.size()));
         for (RecommendedItem rec : userPrefs.subList(0, numTraining)) {
           trainingOut.write(Long.toString(userID) + DELIMITER + rec.getItemID() + DELIMITER + rec.getValue() + '\n');
         }
@@ -169,6 +169,8 @@ public abstract class AbstractEvaluator {
     } finally {
       trainingOut.close(); // Want to know of output stream close failed -- maybe failed to write
     }
+
+    log.info("{} users in test data", testData.size());
 
     return testData;
   }

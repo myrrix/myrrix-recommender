@@ -171,7 +171,7 @@ public final class MatrixUtils {
       log.info("QR decomposition diagonal: {}", Arrays.toString(rDiag));
       for (int i = 0; i < rDiag.length; i++) {
         if (FastMath.abs(rDiag[i]) <= SINGULARITY_THRESHOLD) {
-          log.info("Suggested value of -Dmodel.features is about {} or less", i);
+          log.info("Suggested value of -Dmodel.features is less than {}", i);
           break;
         }
       }
