@@ -389,10 +389,12 @@ public final class DelegateGenerationManager implements GenerationManager {
                             currentGeneration.getYLock().readLock(),
                             Y);
 
-      restoreRecentlyActive(recentlyActiveUsers,
-                            currentGeneration.getKnownItemIDs(),
-                            currentGeneration.getKnownItemLock().readLock(),
-                            knownItemIDs);
+      if (currentGeneration.getKnownItemIDs() != null) {
+        restoreRecentlyActive(recentlyActiveUsers,
+                              currentGeneration.getKnownItemIDs(),
+                              currentGeneration.getKnownItemLock().readLock(),
+                              knownItemIDs);
+      }
     }
 
     return new Generation(knownItemIDs, X, Y);

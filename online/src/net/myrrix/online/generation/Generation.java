@@ -60,12 +60,6 @@ public final class Generation {
   private final ReadWriteLock knownItemLock;
   private final ReadWriteLock knownUserLock;
 
-  public Generation() {
-    this(new FastByIDMap<FastIDSet>(10000, 1.25f),
-         new FastByIDMap<float[]>(10000, 1.25f),
-         new FastByIDMap<float[]>(10000, 1.25f));
-  }
-  
   public Generation(FastByIDMap<FastIDSet> knownItemIDs, FastByIDMap<float[]> X, FastByIDMap<float[]> Y) {
     this(knownItemIDs,
          null, // Not used yet
