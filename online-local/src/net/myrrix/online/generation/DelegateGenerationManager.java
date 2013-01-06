@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -59,6 +60,7 @@ import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.io.InvertedFilenameFilter;
 import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
 import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
@@ -449,7 +451,16 @@ public final class DelegateGenerationManager implements GenerationManager {
                                      FastByIDMap<FastByIDFloatMap> rbyColumn,
                                      File inputDir) throws IOException {
 
-    File[] inputFiles = inputDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"));
+    FilenameFilter csvFilter = new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?");
+
+    File[] otherFiles = inputDir.listFiles(new InvertedFilenameFilter(csvFilter));
+    if (otherFiles != null) {
+      for (File otherFile : otherFiles) {
+        log.info("Skipping file {}", otherFile.getName());
+      }
+    }
+
+    File[] inputFiles = inputDir.listFiles(csvFilter);
     if (inputFiles == null) {
       log.info("No input files in {}", inputDir);
       return;
