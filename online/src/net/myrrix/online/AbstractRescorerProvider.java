@@ -20,6 +20,8 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
+import net.myrrix.common.MyrrixRecommender;
+
 /**
  * Abstract implementation of {@link RescorerProvider} which implements all methods to return {@code null}.
  *
@@ -31,24 +33,51 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
    * @return {@code null}
    */
   @Override
+  public IDRescorer getRecommendRescorer(long[] userIDs, MyrrixRecommender recommender, String... args) {
+    return null;
+  }
+
+  /**
+   * @return {@link #getRecommendRescorer(long[], MyrrixRecommender, String...)}
+   */
+  @Override
+  @Deprecated
   public IDRescorer getRecommendRescorer(long[] userIDs, String... args) {
-    return null;
+    return getRecommendRescorer(userIDs, null, args);
   }
 
   /**
    * @return {@code null}
    */
   @Override
+  public IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, MyrrixRecommender recommender, String... args) {
+    return null;
+  }
+
+  /**
+   * @return {@link #getRecommendToAnonymousRescorer(long[], MyrrixRecommender, String...)}
+   */
+  @Override
+  @Deprecated
   public IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args) {
-    return null;
+    return getRecommendToAnonymousRescorer(itemIDs, null, args);
   }
 
   /**
    * @return {@code null}
    */
   @Override
-  public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
+  public Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args) {
     return null;
+  }
+
+  /**
+   * @return {@link #getMostSimilarItemsRescorer(MyrrixRecommender, String...)}
+   */
+  @Override
+  @Deprecated
+  public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
+    return getMostSimilarItemsRescorer(null, args);
   }
 
 }

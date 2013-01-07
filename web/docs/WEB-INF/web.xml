@@ -81,6 +81,11 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>SimilarityToItemServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.SimilarityToItemServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>EstimateServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.EstimateServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -139,6 +144,10 @@
   <servlet-mapping>
     <servlet-name>SimilarityServlet</servlet-name>
     <url-pattern>/similarity/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SimilarityToItemServlet</servlet-name>
+    <url-pattern>/similarityToItem/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>EstimateServlet</servlet-name>

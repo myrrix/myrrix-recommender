@@ -295,6 +295,16 @@ pageContext.setAttribute("numPartitions", numPartitions);
   <tr><td colspan="4"><hr/></td></tr>
 
 <form action="#" style="padding:10px">
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;To Item</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
+  <tr><td><code>/similarityToItem</code></td>
+    <td><code>/</code><input type="text" id="similarityToItem-toitem" onkeyup="return handleReturn(event,'similarityToItem',true,new Array('toitem','itemid'))"/></td>
+    <td><code>/</code><input type="text" id="similarityToItem-itemid" onkeyup="return handleReturn(event,'similarityToItem',true,new Array('toitem','itemid'))"/></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('similarityToItem',true,new Array('toitem','itemid'))">&amp;#x27AC;</a></td></tr>
+</form>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
+<form action="#" style="padding:10px">
   <tr><td></td><td>&amp;nbsp;&amp;nbsp;User ID</td><td>&amp;nbsp;&amp;nbsp;Item ID</td><td></td></tr>
   <tr><td><code>/estimate</code></td>
     <td><code>/</code><input type="text" id="estimate-userid" onkeyup="return handleReturn(event,'estimate',true,new Array('userid','itemid'))"/></td>

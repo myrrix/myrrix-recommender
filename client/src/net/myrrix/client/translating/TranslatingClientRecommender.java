@@ -197,6 +197,21 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
+  public float[] similarityToItem(String toItemID, String... itemIDs) throws TasteException {
+    return similarityToItem(toItemID, itemIDs, null);
+  }
+
+  @Override
+  public float[] similarityToItem(String toItemID, String[] itemIDs, String contextUserID) throws TasteException {
+    long longToItemID = translateItem(toItemID);
+    long[] longItemIDs = new long[itemIDs.length];
+    for (int i = 0; i < itemIDs.length; i++) {
+      longItemIDs[i] = translateItem(itemIDs[i]);
+    }
+    return delegate.similarityToItem(longToItemID, longItemIDs);
+  }
+
+  @Override
   public List<TranslatedRecommendedItem> recommendedBecause(String userID, String itemID, int howMany)
       throws TasteException {
     long longUserID = translateUser(userID);

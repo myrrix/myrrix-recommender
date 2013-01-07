@@ -88,7 +88,7 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
     IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, getRescorerParams(request));
+        rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, recommender, getRescorerParams(request));
     try {
       List<RecommendedItem> recommended =
           recommender.recommendToAnonymous(itemIDs, values, getHowMany(request), rescorer);
@@ -101,21 +101,6 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
     }
-  }
-
-  @Override
-  protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
-    String pathInfo = request.getPathInfo();
-    Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    long firstItemID;
-    try {
-      firstItemID = parseItemValue(pathComponents.next()).getFirst();
-    } catch (NoSuchElementException nsee) {
-      return null;
-    } catch (NumberFormatException nfe) {
-      return null;
-    }
-    return firstItemID;
   }
 
   private static Pair<Long,Float> parseItemValue(String s) {

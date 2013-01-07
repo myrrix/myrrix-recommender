@@ -91,7 +91,7 @@ public final class AllRecommendations implements Callable<Object> {
         @Override
         public Void call() throws Exception {
           IDRescorer rescorer =
-              rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID});
+              rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID}, recommender);
           List<RecommendedItem> recs = recommender.recommend(userID, howMany, rescorer);
           StringBuilder line = new StringBuilder(30);
           synchronized (out) {

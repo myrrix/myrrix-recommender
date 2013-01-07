@@ -17,48 +17,44 @@
 package net.myrrix.web.servlets;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.cf.taste.recommender.Rescorer;
-import org.apache.mahout.common.LongPair;
 
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
-import net.myrrix.common.collection.FastIDSet;
-import net.myrrix.online.RescorerProvider;
 
 /**
- * <p>Responds to a GET request to {@code /similarity/[itemID1](/[itemID2]/...)?howMany=n(&rescorerParams=...)},
- * and in turn calls {@link MyrrixRecommender#mostSimilarItems(long[], int)} with the supplied values.
- * If howMany is not specified, defaults to {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}.</p>
+ * <p>Responds to a GET request to {@code /similarityToItem/[toItemID]/itemID1(/[itemID2]/...)},
+ * and in turn calls {@link MyrrixRecommender#similarityToItem(long, long...)} with the supplied values.</p>
  *
- * <p>Unknown item IDs are ignored, unless all are unknown, in which case a
+ * <p>Unknown item IDs are ignored, unless all are unknown or {@code toItemID} is unknown, in which case a
  * {@link HttpServletResponse#SC_BAD_REQUEST} status is returned.</p>
  *
- * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
+ * <p>The output are similarities, in the same order as the item IDs, one per line.</p>
  *
  * @author Sean Owen
  */
-public final class SimilarityServlet extends AbstractMyrrixServlet {
+public final class SimilarityToItemServlet extends AbstractMyrrixServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    int howMany = getHowMany(request);
-
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-    FastIDSet itemIDSet = new FastIDSet();
+    long toItemID;
+    List<Long> itemIDsList = Lists.newArrayList();
     try {
+      toItemID = Long.parseLong(pathComponents.next());
       while (pathComponents.hasNext()) {
-        itemIDSet.add(Long.parseLong(pathComponents.next()));
+        itemIDsList.add(Long.parseLong(pathComponents.next()));
       }
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
@@ -67,26 +63,22 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nfe.toString());
       return;
     }
-
-    if (itemIDSet.isEmpty()) {
+    if (itemIDsList.isEmpty()) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
+    long[] itemIDs = new long[itemIDsList.size()];
+    for (int i = 0; i < itemIDs.length; i++) {
+      itemIDs[i] = itemIDsList.get(i);
+    }
 
     MyrrixRecommender recommender = getRecommender();
-    RescorerProvider rescorerProvider = getRescorerProvider();
     try {
-      List<RecommendedItem> similar;
-      if (rescorerProvider == null) {
-        similar = recommender.mostSimilarItems(itemIDSet.toArray(), howMany);
-      } else {
-        Rescorer<LongPair> rescorer =
-            rescorerProvider.getMostSimilarItemsRescorer(recommender, getRescorerParams(request));
-        similar = recommender.mostSimilarItems(itemIDSet.toArray(),
-                                               howMany,
-                                               rescorer);
+      float[] similarities = recommender.similarityToItem(toItemID, itemIDs);
+      PrintWriter out = response.getWriter();
+      for (float similarity : similarities) {
+        out.println(Float.toString(similarity));
       }
-      output(request, response, similar);
     } catch (NoSuchItemException nsie) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND, nsie.toString());
     } catch (NotReadyException nre) {

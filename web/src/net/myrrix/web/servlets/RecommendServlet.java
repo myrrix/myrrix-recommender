@@ -75,7 +75,7 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
     IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getRecommendRescorer(new long[] {userID}, getRescorerParams(request));
+        rescorerProvider.getRecommendRescorer(new long[] {userID}, recommender, getRescorerParams(request));
     try {
       List<RecommendedItem> recommended =
           recommender.recommend(userID, getHowMany(request), getConsiderKnownItems(request), rescorer);

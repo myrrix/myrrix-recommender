@@ -643,6 +643,62 @@ public final class ClientRecommender implements MyrrixRecommender {
     return mostSimilarItems(new long[] { itemID }, howMany);
   }
 
+  @Override
+  public float[] similarityToItem(long toItemID, long... itemIDs) throws TasteException {
+    return similarityToItem(toItemID, itemIDs, null);
+  }
+
+  /**
+   * Like {@link #similarityToItem(long, long[])}, but allows caller to specify the user for which the request
+   * is being made. This information does not directly affect the computation, but affects <em>routing</em>
+   * of the request in a distributed context. This is always recommended when there is a user in whose context
+   * the request is being made, as it will ensure that the request can take into account all the latest information
+   * from the user, including very new items that may be in {@code itemIDs}.
+   */
+  public float[] similarityToItem(long toItemID, long[] itemIDs, Long contextUserID) throws TasteException {
+    StringBuilder urlPath = new StringBuilder();
+    urlPath.append("/similarityToItem/");
+    urlPath.append(toItemID);
+    for (long itemID : itemIDs) {
+      urlPath.append('/').append(itemID);
+    }
+    try {
+      // Requests are typically partitioned by user, but this request does not directly depend on a user.
+      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+      // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
+      // deterministic.
+      long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
+      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_NOT_FOUND:
+            throw new NoSuchItemException(connection.getResponseMessage());
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+        try {
+          float[] result = new float[itemIDs.length];
+          for (int i = 0; i < itemIDs.length; i++) {
+            result[i] = LangUtils.parseFloat(reader.readLine());
+          }
+          return result;
+        } finally {
+          Closeables.close(reader, true);
+        }
+      } finally {
+        connection.disconnect();
+      }
+
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
   /**
    * <p>Lists the items that were most influential in recommending a given item to a given user. Exactly how this
    * is determined is left to the implementation, but, generally this will return items that the user prefers

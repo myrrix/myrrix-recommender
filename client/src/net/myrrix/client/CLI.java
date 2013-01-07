@@ -104,6 +104,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendToMany userID0 [userID1 userID2 ...]}</li>
  *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...]}</li>
+ *   <li>{@code similarityToItem toItemID itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendedBecause userID itemID}</li>
  *   <li>{@code refresh}</li>
  *   <li>{@code isReady}</li>
@@ -119,7 +120,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *
  * <p>For example, to make 3 recommendations for user 35, one might run:</p>
  *
- * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com --port 8080 --howMany 3 recommend 35}</p>
+ * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com --howMany 3 recommend 35}</p>
  *
  * <p>... and output might be:</p>
  *
@@ -225,6 +226,9 @@ public final class CLI {
           break;
         case MOSTSIMILARITEMS:
           doMostSimilarItems(cliArgs, commandArgs, recommender, translatingRecommender);
+          break;
+        case SIMILARITYTOITEM:
+          doSimilarityToItem(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
         case RECOMMENDEDBECAUSE:
           doRecommendedBecause(cliArgs, commandArgs, recommender, translatingRecommender);
@@ -334,6 +338,38 @@ public final class CLI {
         itemIDs[i - 1] = unquote(programArgs[i]);
       }
       outputTranslated(translatingRecommender.mostSimilarItems(itemIDs, howMany, rescorerParams, contextUserIDString));
+    }
+  }
+
+  private static void doSimilarityToItem(CLIArgs cliArgs,
+                                         String[] programArgs,
+                                         ClientRecommender recommender,
+                                         TranslatingRecommender translatingRecommender) throws TasteException {
+    if (programArgs.length < 3) {
+      throw new ArgumentValidationException("args are toItemID itemID1 [itemID2 [itemID3...]]");
+    }
+    String contextUserIDString = cliArgs.getContextUserID();
+    float[] result;
+    if (translatingRecommender == null) {
+      long toItemID = Long.parseLong(programArgs[1]);
+      long[] itemIDs = new long[programArgs.length - 2];
+      for (int i = 2; i < programArgs.length; i++) {
+        itemIDs[i - 2] = Long.parseLong(unquote(programArgs[i]));
+      }
+      if (contextUserIDString == null) {
+        result = recommender.similarityToItem(toItemID, itemIDs);
+      } else {
+        result = recommender.similarityToItem(toItemID, itemIDs, Long.parseLong(contextUserIDString));
+      }
+    } else {
+      String[] itemIDs = new String[programArgs.length - 2];
+      for (int i = 2; i < programArgs.length; i++) {
+        itemIDs[i - 2] = programArgs[i];
+      }
+      result = translatingRecommender.similarityToItem(programArgs[1], itemIDs, contextUserIDString);
+    }
+    for (float similarity : result) {
+      System.out.println(similarity);
     }
   }
 

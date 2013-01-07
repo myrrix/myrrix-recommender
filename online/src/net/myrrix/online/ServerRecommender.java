@@ -917,6 +917,45 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
   }
 
+  @Override
+  public float[] similarityToItem(long toItemID, long... itemIDs) throws TasteException {
+
+    Generation generation = getCurrentGeneration();
+    FastByIDMap<float[]> Y = generation.getY();
+
+    float[] similarities = new float[itemIDs.length];
+    Lock yLock = generation.getYLock().readLock();
+    yLock.lock();
+    try {
+
+      float[] toFeatures = Y.get(toItemID);
+      if (toFeatures == null) {
+        throw new NoSuchItemException(toItemID);
+      }
+      double toFeaturesNorm = SimpleVectorMath.norm(toFeatures);
+
+      boolean anyFound = false;
+      for (int i = 0; i < similarities.length; i++) {
+        float[] features = Y.get(itemIDs[i]);
+        if (features == null) {
+          similarities[i] = Float.NaN;
+        } else {
+          anyFound = true;
+          double featuresNorm = SimpleVectorMath.norm(features);
+          similarities[i] = (float) (SimpleVectorMath.dot(features, toFeatures) / (featuresNorm * toFeaturesNorm));
+        }
+      }
+      if (!anyFound) {
+        throw new NoSuchItemException(Arrays.toString(itemIDs));
+      }
+
+    } finally {
+      yLock.unlock();
+    }
+
+    return similarities;
+  }
+
   /**
    * <p>Lists the items that were most influential in recommending a given item to a given user. Exactly how this
    * is determined is left to the implementation, but, generally this will return items that the user prefers

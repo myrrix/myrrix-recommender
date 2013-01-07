@@ -20,6 +20,8 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
+import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.online.AbstractRescorerProvider;
 import net.myrrix.online.RescorerProvider;
 
 /**
@@ -33,10 +35,10 @@ import net.myrrix.online.RescorerProvider;
  *
  * @author Sean Owen
  */
-public final class FilterHalfRescorerProvider implements RescorerProvider {
+public final class FilterHalfRescorerProvider extends AbstractRescorerProvider {
 
   @Override
-  public IDRescorer getRecommendRescorer(final long[] userIDs, String... args) {
+  public IDRescorer getRecommendRescorer(final long[] userIDs, MyrrixRecommender recommender, String... args) {
     final boolean odd = args.length > 0 && "odd".equalsIgnoreCase(args[0]);
     return new IDRescorer() {
       @Override
@@ -56,7 +58,9 @@ public final class FilterHalfRescorerProvider implements RescorerProvider {
   }
 
   @Override
-  public IDRescorer getRecommendToAnonymousRescorer(final long[] itemIDs, String... args) {
+  public IDRescorer getRecommendToAnonymousRescorer(final long[] itemIDs,
+                                                    MyrrixRecommender recommender,
+                                                    String... args) {
     final boolean odd = args.length > 0 && "odd".equalsIgnoreCase(args[0]);
     return new IDRescorer() {
       @Override
@@ -76,7 +80,7 @@ public final class FilterHalfRescorerProvider implements RescorerProvider {
   }
 
   @Override
-  public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
+  public Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args) {
     final boolean odd = args.length > 0 && Boolean.valueOf(args[0]);
     return new Rescorer<LongPair>() {
       @Override

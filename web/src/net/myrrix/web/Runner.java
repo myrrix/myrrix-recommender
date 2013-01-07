@@ -73,6 +73,7 @@ import net.myrrix.web.servlets.RecommendToAnonymousServlet;
 import net.myrrix.web.servlets.RecommendToManyServlet;
 import net.myrrix.web.servlets.RefreshServlet;
 import net.myrrix.web.servlets.SimilarityServlet;
+import net.myrrix.web.servlets.SimilarityToItemServlet;
 
 /**
  * <p>This is the runnable class which starts the Serving Layer and its Tomcat-based HTTP server. It is
@@ -286,6 +287,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new RecommendToManyServlet(), "/recommendToMany/*");
     addServlet(context, new RecommendToAnonymousServlet(), "/recommendToAnonymous/*");
     addServlet(context, new SimilarityServlet(), "/similarity/*");
+    addServlet(context, new SimilarityToItemServlet(), "/similarityToItem/*");
     addServlet(context, new EstimateServlet(), "/estimate/*");
     addServlet(context, new BecauseServlet(), "/because/*");
     addServlet(context, new ReadyServlet(), "/ready/*");

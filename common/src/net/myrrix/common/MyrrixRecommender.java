@@ -306,6 +306,15 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
                                              IDRescorer rescorer) throws TasteException;
 
   /**
+   * @param toItemID item to calculate similarity to
+   * @param itemIDs items to calculate similarity from
+   * @return similarity of each item to the given. The values are opaque; higher means more similar.
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
+   *  exist in the model or if {@code toItemID} does not exist. Otherwise, unknown items are ignored.
+   */
+  float[] similarityToItem(long toItemID, long... itemIDs) throws TasteException;
+
+  /**
    * A bulk version of {@link #estimatePreference(long, long)}, suitable for computing many estimates
    * at once. The return values correspond, in order, to the item IDs provided, in order.
    *

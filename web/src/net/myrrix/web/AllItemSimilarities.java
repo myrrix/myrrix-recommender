@@ -92,7 +92,7 @@ public final class AllItemSimilarities implements Callable<Object> {
         @Override
         public Void call() throws Exception {
           Rescorer<LongPair> rescorer =
-              rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer();
+              rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
           List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
           StringBuilder line = new StringBuilder(30);
           synchronized (out) {

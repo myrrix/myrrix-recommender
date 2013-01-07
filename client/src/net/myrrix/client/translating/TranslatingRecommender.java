@@ -103,6 +103,16 @@ public interface TranslatingRecommender {
       throws TasteException;
 
   /**
+   * @see net.myrrix.client.ClientRecommender#similarityToItem(long, long...)
+   */
+  float[] similarityToItem(String toItemID, String... itemIDs) throws TasteException;
+
+  /**
+   * @see net.myrrix.client.ClientRecommender#similarityToItem(long, long[], Long)
+   */
+  float[] similarityToItem(String toItemID, String[] itemIDs, String contextUserID) throws TasteException;
+
+  /**
    * @see net.myrrix.common.MyrrixRecommender#recommendedBecause(long, long, int)
    */
   List<TranslatedRecommendedItem> recommendedBecause(String userID, String itemID, int howMany)

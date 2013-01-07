@@ -20,6 +20,8 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
+import net.myrrix.common.MyrrixRecommender;
+
 /**
  * <p>Implementations of this interface provide, optionally, objects that can be used to modify and influence
  * the results of:</p>
@@ -42,18 +44,20 @@ import org.apache.mahout.common.LongPair;
  * or modifies the scores of item candidates that are not filtered ({@link IDRescorer#rescore(long, double)})
  * based on the item ID and original score.</p>
  *
- * <p>The factory methods, like {@link #getRecommendRescorer(long[], String...)}, take optional
+ * <p>The factory methods, like {@link #getRecommendRescorer(long[], MyrrixRecommender, String...)}, take optional
  * {@code String} arguments. These are passed from the REST API, as a {@code String}, from URL parameter
  * {@code rescorerParams}. The implementation may need this information to initialize its rescoring
  * logic for the request.  For example, the argument may be the user's current location, used to filter
  * results by location.</p>
  *
  * @author Sean Owen
+ * @see MultiRescorer
  */
 public interface RescorerProvider {
 
   /**
    * @param userIDs user(s) for which recommendations are being made, which may be needed in the rescoring logic.
+   * @param recommender the recommender instance that is rescoring results
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
@@ -62,10 +66,17 @@ public interface RescorerProvider {
    *  item ID to {@link IDRescorer#isFiltered(long)}, and each non-filtered candidate with its original score
    *  to {@link IDRescorer#rescore(long, double)}
    */
+  IDRescorer getRecommendRescorer(long[] userIDs, MyrrixRecommender recommender, String... args);
+
+  /**
+   * @deprecated use {@link #getRecommendRescorer(long[], MyrrixRecommender, String...)}
+   */
+  @Deprecated
   IDRescorer getRecommendRescorer(long[] userIDs, String... args);
 
   /**
    * @param itemIDs items that the anonymous user is associated to
+   * @param recommender the recommender instance that is rescoring results
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
@@ -74,9 +85,16 @@ public interface RescorerProvider {
    *  item ID to {@link IDRescorer#isFiltered(long)}, and each non-filtered candidate with its original score
    *  to {@link IDRescorer#rescore(long, double)}
    */
+  IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, MyrrixRecommender recommender, String... args);
+
+  /**
+   * @deprecated use {@link #getRecommendToAnonymousRescorer(long[], MyrrixRecommender, String...)}
+   */
+  @Deprecated
   IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args);
 
   /**
+   * @param recommender the recommender instance that is rescoring results
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
@@ -86,6 +104,12 @@ public interface RescorerProvider {
    *  and each non-filtered candidate item ID pair with its original score to
    *  {@link Rescorer#rescore(Object, double)}
    */
+  Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args);
+
+  /**
+   * @deprecated use {@link #getMostSimilarItemsRescorer(MyrrixRecommender, String...)}
+   */
+  @Deprecated
   Rescorer<LongPair> getMostSimilarItemsRescorer(String... args);
 
 }
