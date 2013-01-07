@@ -33,6 +33,12 @@ import net.myrrix.common.MyrrixRecommender;
  */
 final class SimilarToItemRescorer implements IDRescorer {
 
+  /**
+   * The extent to which the new, rescored value is returned vs the old value. 1.0 uses
+   * the new rescored value completely.
+   */
+  private static final double RESCORE_RATE = 1.0;
+
   private final long toItemID;
   private final MyrrixRecommender recommender;
 
@@ -47,11 +53,13 @@ final class SimilarToItemRescorer implements IDRescorer {
     if (toItemID == itemID) {
       return Double.NaN;
     }
+    double similarity;
     try {
-      return value * recommender.similarityToItem(toItemID, itemID)[0];
+      similarity = recommender.similarityToItem(toItemID, itemID)[0];
     } catch (TasteException e) {
       return Double.NaN;
     }
+    return value * (1.0 - RESCORE_RATE + RESCORE_RATE * similarity);
   }
 
   @Override
