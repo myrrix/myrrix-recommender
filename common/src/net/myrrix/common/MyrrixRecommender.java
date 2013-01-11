@@ -306,6 +306,16 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
                                              IDRescorer rescorer) throws TasteException;
 
   /**
+   * @param howMany how many items to return
+   * @return most popular items, where popularity is measured by the number of users interacting with
+   *  the item
+   * @throws NotReadyException if the implementation has no usable model yet
+   * @throws UnsupportedOperationException if known items for each user have been configured to not
+   *  be loaded or recorded
+   */
+  List<RecommendedItem> mostPopularItems(int howMany) throws TasteException;
+
+  /**
    * @param toItemID item to calculate similarity to
    * @param itemIDs items to calculate similarity from
    * @return similarity of each item to the given. The values are opaque; higher means more similar.

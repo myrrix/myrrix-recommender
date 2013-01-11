@@ -157,11 +157,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     if (line == null || line.isEmpty()) {
       return 1.0f;
     }
-    try {
-      return LangUtils.parseFloat(line);
-    } catch (NumberFormatException nfe) {
-      return 1.0f;
-    }
+    return LangUtils.parseFloat(line);
   }
 
   @Override

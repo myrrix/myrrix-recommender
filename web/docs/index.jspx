@@ -324,6 +324,14 @@ pageContext.setAttribute("numPartitions", numPartitions);
 
   <tr><td colspan="4"><hr/></td></tr>
 
+<form action="#" style="padding:10px">
+  <tr><td><code>/mostPopularItems</code></td>
+    <td colspan="2"/>
+    <td><a href="#" class="arrow" onclick="return doQuery('mostPopularItems',true)">&amp;#x27AC;</a></td></tr>
+</form>
+
+  <tr><td colspan="4"><hr/></td></tr>
+
   <jsp:scriptlet>
     if (readOnly) {
   </jsp:scriptlet>

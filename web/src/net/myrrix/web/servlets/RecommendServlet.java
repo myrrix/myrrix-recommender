@@ -87,6 +87,8 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
+    } catch (IllegalArgumentException iae) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, iae.toString());
     } catch (UnsupportedOperationException uoe) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, uoe.toString());
     }

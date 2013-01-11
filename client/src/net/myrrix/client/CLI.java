@@ -103,6 +103,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code recommend userID}</li>
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendToMany userID0 [userID1 userID2 ...]}</li>
+ *   <li>{@code mostPopularItems</li>
  *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code similarityToItem toItemID itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendedBecause userID itemID}</li>
@@ -224,6 +225,9 @@ public final class CLI {
         case RECOMMENDTOMANY:
           doRecommendToMany(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
+        case MOSTPOPULARITEMS:
+          doMostPopularItems(cliArgs, commandArgs, recommender, translatingRecommender);
+          break;
         case MOSTSIMILARITEMS:
           doMostSimilarItems(cliArgs, commandArgs, recommender, translatingRecommender);
           break;
@@ -308,6 +312,21 @@ public final class CLI {
     }
   }
 
+  private static void doMostPopularItems(CLIArgs cliArgs,
+                                         String[] programArgs,
+                                         ClientRecommender recommender,
+                                         TranslatingRecommender translatingRecommender) throws TasteException {
+    if (programArgs.length != 1) {
+      throw new ArgumentValidationException("no args");
+    }
+    int howMany = cliArgs.getHowMany();
+    if (translatingRecommender == null) {
+      output(recommender.mostPopularItems(howMany));
+    } else {
+      outputTranslated(translatingRecommender.mostPopularItems(howMany));
+    }
+  }
+
   private static void doMostSimilarItems(CLIArgs cliArgs,
                                          String[] programArgs,
                                          ClientRecommender recommender,
@@ -363,9 +382,7 @@ public final class CLI {
       }
     } else {
       String[] itemIDs = new String[programArgs.length - 2];
-      for (int i = 2; i < programArgs.length; i++) {
-        itemIDs[i - 2] = programArgs[i];
-      }
+      System.arraycopy(programArgs, 2, itemIDs, 0, programArgs.length - 2);
       result = translatingRecommender.similarityToItem(programArgs[1], itemIDs, contextUserIDString);
     }
     for (float similarity : result) {

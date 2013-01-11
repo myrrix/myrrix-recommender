@@ -171,6 +171,25 @@ public final class SimpleTest extends AbstractClientTest {
   }
 
   @Test
+  public void testMostPopular() throws Exception {
+
+    ClientRecommender client = getClient();
+    List<RecommendedItem> popular = client.mostPopularItems(3);
+
+    assertNotNull(popular);
+    assertEquals(3, popular.size());
+
+    log.info("{}", popular);
+
+    assertEquals(50L, popular.get(0).getItemID());
+    assertEquals(100L, popular.get(1).getItemID());
+    assertEquals(181L, popular.get(2).getItemID());
+    assertEquals(501.0f, popular.get(0).getValue());
+    assertEquals(406.0f, popular.get(1).getValue());
+    assertEquals(379.0f, popular.get(2).getValue());
+  }
+
+  @Test
   public void testMostSimilar() throws Exception {
 
     ClientRecommender client = getClient();

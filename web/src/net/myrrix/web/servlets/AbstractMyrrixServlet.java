@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -195,11 +196,9 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     if (howManyString == null) {
       return DEFAULT_HOW_MANY;
     }
-    try {
-      return Integer.parseInt(howManyString);
-    } catch (NumberFormatException nfe) {
-      return DEFAULT_HOW_MANY;
-    }
+    int howMany = Integer.parseInt(howManyString);
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
+    return howMany;
   }
 
   protected static String[] getRescorerParams(ServletRequest request) {

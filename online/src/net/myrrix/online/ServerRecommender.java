@@ -62,6 +62,7 @@ import net.myrrix.common.ClassUtils;
 import net.myrrix.common.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
+import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
@@ -286,6 +287,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                                                boolean considerKnownItems,
                                                IDRescorer rescorer) throws NoSuchUserException, NotReadyException {
 
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
+
     Generation generation = getCurrentGeneration();
     FastByIDMap<float[]> X = generation.getX();
 
@@ -345,7 +348,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       return multithreadedTopN(userFeaturesArray,
                                usersKnownItemIDs,
-                               rescorer, howMany,
+                               rescorer,
+                               howMany,
                                generation.getCandidateFilter());
     } finally {
       yLock.unlock();
@@ -446,6 +450,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     Preconditions.checkArgument(values == null || values.length == itemIDs.length,
                                 "Number of values doesn't match number of items");
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
 
     Generation generation = getCurrentGeneration();
 
@@ -504,6 +509,37 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     } finally {
       yLock.unlock();
     }
+  }
+
+  @Override
+  public List<RecommendedItem> mostPopularItems(int howMany) throws NotReadyException {
+
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
+
+    Generation generation = getCurrentGeneration();
+    FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
+    if (knownItemIDs == null) {
+      throw new UnsupportedOperationException();
+    }
+
+    FastByIDFloatMap itemCounts = new FastByIDFloatMap();
+    Lock knownItemReadLock = generation.getKnownItemLock().readLock();
+    knownItemReadLock.lock();
+    try {
+      for (FastIDSet itemIDs : generation.getKnownItemIDs().values()) {
+        synchronized (itemIDs) {
+          LongPrimitiveIterator it = itemIDs.iterator();
+          while (it.hasNext()) {
+            long itemID = it.nextLong();
+            itemCounts.increment(itemID, 1.0f);
+          }
+        }
+      }
+    } finally {
+      knownItemReadLock.unlock();
+    }
+
+    return TopN.selectTopN(new MostPopularItemsIterator(itemCounts.entrySet().iterator()), howMany);
   }
 
   /**
@@ -842,6 +878,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public List<RecommendedItem> mostSimilarItems(long itemID, int howMany, Rescorer<LongPair> rescorer)
       throws NoSuchItemException, NotReadyException {
 
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
+
     Generation generation = getCurrentGeneration();
     FastByIDMap<float[]> Y = generation.getY();
 
@@ -890,6 +928,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany, Rescorer<LongPair> rescorer)
       throws NoSuchItemException, NotReadyException {
+
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
 
     Generation generation = getCurrentGeneration();
     FastByIDMap<float[]> Y = generation.getY();
@@ -976,6 +1016,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public List<RecommendedItem> recommendedBecause(long userID, long itemID, int howMany)
       throws NoSuchUserException, NoSuchItemException, NotReadyException {
+
+    Preconditions.checkArgument(howMany > 0, "howMany must be positive");
 
     Generation generation = getCurrentGeneration();
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();

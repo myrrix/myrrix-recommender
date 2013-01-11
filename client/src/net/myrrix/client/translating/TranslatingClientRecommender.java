@@ -254,6 +254,11 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
+  public List<TranslatedRecommendedItem> mostPopularItems(int howMany) throws TasteException {
+    return translate(delegate.mostPopularItems(howMany));
+  }
+
+  @Override
   public void ingest(Reader reader) throws TasteException {
     File tempFile = null;
     try {

@@ -141,6 +141,11 @@ public interface TranslatingRecommender {
       throws TasteException;
 
   /**
+   * @see net.myrrix.common.MyrrixRecommender#mostPopularItems(int)
+   */
+  List<TranslatedRecommendedItem> mostPopularItems(int howMany) throws TasteException;
+
+  /**
    * @see net.myrrix.common.MyrrixRecommender#ingest(Reader)
    */
   void ingest(Reader reader) throws TasteException;

@@ -93,8 +93,6 @@ public final class DelegateGenerationManager implements GenerationManager {
   private static final float ZERO_THRESHOLD =
       Float.parseFloat(System.getProperty("model.decay.zeroThreshold", "0.0001"));
 
-  private final String bucket;
-  private final String instanceID;
   private final File inputDir;
   private final File modelFile;
   private final File appendFile;
@@ -127,12 +125,7 @@ public final class DelegateGenerationManager implements GenerationManager {
                                    int partition,
                                    ReloadingReference<List<?>> allPartitions,
                                    File licenseFile) throws IOException {
-
-    this.bucket = bucket;
-    this.instanceID = instanceID;
-
-    // Arguments above are unused but here for compatibility with other DelegateGenerationManager
-
+    // Most arguments above are unused but here for compatibility with other DelegateGenerationManager
     log.info("Using local computation, and data in {}", localInputDir);
     inputDir = localInputDir;
     if (!inputDir.exists() || !inputDir.isDirectory()) {
@@ -154,18 +147,20 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   /**
    * Not used.
+   * @return null
    */
   @Override
   public String getBucket() {
-    return bucket;
+    return null;
   }
 
   /**
    * Not used.
+   * @return null
    */
   @Override
   public String getInstanceID() {
-    return instanceID;
+    return null;
   }
 
   @Override

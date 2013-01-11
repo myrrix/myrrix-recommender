@@ -557,6 +557,33 @@ public final class ClientRecommender implements MyrrixRecommender {
     return anonymousOrSimilar(itemIDs, values, howMany, "/recommendToAnonymous", rescorerParams, contextUserID);
   }
 
+  @Override
+  public List<RecommendedItem> mostPopularItems(int howMany) throws TasteException {
+    StringBuilder urlPath = new StringBuilder();
+    urlPath.append("/mostPopularItems");
+    appendCommonQueryParams(howMany, false, null, urlPath);
+    try {
+      // TODO does it make sense to force this to partition 0?
+      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", 0L);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        return consumeItems(connection);
+      } finally {
+        connection.disconnect();
+      }
+
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
   /**
    * Computes items most similar to an item or items. The returned items have the highest average similarity
    * to the given items.

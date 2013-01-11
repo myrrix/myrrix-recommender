@@ -51,8 +51,6 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    int howMany = getHowMany(request);
-
     String pathInfo = request.getPathInfo();
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     FastIDSet itemIDSet = new FastIDSet();
@@ -76,6 +74,7 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
     try {
+      int howMany = getHowMany(request);
       List<RecommendedItem> similar;
       if (rescorerProvider == null) {
         similar = recommender.mostSimilarItems(itemIDSet.toArray(), howMany);
@@ -94,6 +93,8 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
+    } catch (IllegalArgumentException iae) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, iae.toString());
     }
   }
 
