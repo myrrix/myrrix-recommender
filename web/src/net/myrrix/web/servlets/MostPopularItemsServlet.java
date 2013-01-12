@@ -28,7 +28,7 @@ import net.myrrix.common.NotReadyException;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * <p>Responds to a GET request to {@code /mostPopularItems(?howMany=n)
+ * <p>Responds to a GET request to {@code /mostPopularItems(?howMany=n)}
  * and in turn calls
  * {@link MyrrixRecommender#mostPopularItems(int)}. If {@code howMany} is not specified, defaults to
  * {@link AbstractMyrrixServlet#DEFAULT_HOW_MANY}.
