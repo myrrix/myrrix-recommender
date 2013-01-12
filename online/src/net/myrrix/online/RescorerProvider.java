@@ -98,6 +98,16 @@ public interface RescorerProvider {
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
+   * @return {@link IDRescorer} to use with {@link ServerRecommender#mostPopularItems(int, IDRescorer)}
+   *  or {@code null} if none should be used.
+   */
+  IDRescorer getMostPopularItemsRescorer(MyrrixRecommender recommender, String... args);
+
+  /**
+   * @param recommender the recommender instance that is rescoring results
+   * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
+   *  information from the request that may be necessary to its logic, like current location. What it means
+   *  is up to the implementation.
    * @return {@link Rescorer} to use with {@link ServerRecommender#mostSimilarItems(long[], int, Rescorer)}
    *  or {@code null} if none should be used. The resulting {@code Rescorer&lt;LongPair&gt;} will be passed
    *  each candidate item ID pair (IDs of the two similar items) to {@link Rescorer#isFiltered(Object)},

@@ -513,6 +513,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   @Override
   public List<RecommendedItem> mostPopularItems(int howMany) throws NotReadyException {
+    return mostPopularItems(howMany, null);
+  }
+
+  @Override
+  public List<RecommendedItem> mostPopularItems(int howMany, IDRescorer rescorer) throws NotReadyException {
 
     Preconditions.checkArgument(howMany > 0, "howMany must be positive");
 
@@ -539,7 +544,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       knownItemReadLock.unlock();
     }
 
-    return TopN.selectTopN(new MostPopularItemsIterator(itemCounts.entrySet().iterator()), howMany);
+    return TopN.selectTopN(new MostPopularItemsIterator(itemCounts.entrySet().iterator(), rescorer), howMany);
   }
 
   /**

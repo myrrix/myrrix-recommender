@@ -21,9 +21,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.recommender.IDRescorer;
 
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
+import net.myrrix.online.RescorerProvider;
 
 /**
  * <p>Responds to a GET request to {@code /mostPopularItems(?howMany=n)
@@ -40,8 +42,11 @@ public final class MostPopularItemsServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     MyrrixRecommender recommender = getRecommender();
+    RescorerProvider rescorerProvider = getRescorerProvider();
+    IDRescorer rescorer = rescorerProvider == null ? null :
+        rescorerProvider.getMostPopularItemsRescorer(recommender, getRescorerParams(request));
     try {
-      output(request, response, recommender.mostPopularItems(getHowMany(request)));
+      output(request, response, recommender.mostPopularItems(getHowMany(request), rescorer));
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {

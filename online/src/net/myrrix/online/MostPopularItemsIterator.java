@@ -18,8 +18,10 @@ package net.myrrix.online;
 
 import java.util.Iterator;
 
+import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.collection.FastByIDFloatMap;
 
@@ -32,10 +34,12 @@ final class MostPopularItemsIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final Iterator<FastByIDFloatMap.MapEntry> countsIterator;
+  private final IDRescorer rescorer;
 
-  MostPopularItemsIterator(Iterator<FastByIDFloatMap.MapEntry> countsIterator) {
+  MostPopularItemsIterator(Iterator<FastByIDFloatMap.MapEntry> countsIterator, IDRescorer rescorer) {
     delegate = new MutableRecommendedItem();
     this.countsIterator = countsIterator;
+    this.rescorer = rescorer;
   }
 
   @Override
@@ -46,7 +50,18 @@ final class MostPopularItemsIterator implements Iterator<RecommendedItem> {
   @Override
   public RecommendedItem next() {
     FastByIDFloatMap.MapEntry entry = countsIterator.next();
-    delegate.set(entry.getKey(), entry.getValue());
+    long id = entry.getKey();
+    float value = entry.getValue();
+    if (rescorer != null) {
+      if (rescorer.isFiltered(id)) {
+        return null;
+      }
+      value = (float) rescorer.rescore(id, value);
+      if (!LangUtils.isFinite(value)) {
+        return null;
+      }
+    }
+    delegate.set(id, value);
     return delegate;
   }
 

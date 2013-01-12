@@ -80,6 +80,21 @@ public final class FilterHalfRescorerProvider extends AbstractRescorerProvider {
   }
 
   @Override
+  public IDRescorer getMostPopularItemsRescorer(MyrrixRecommender recommender, String... args) {
+    final boolean odd = args.length > 0 && "odd".equalsIgnoreCase(args[0]);
+    return new IDRescorer() {
+      @Override
+      public double rescore(long itemID, double score) {
+        return isFiltered(itemID) ? Double.NaN : 10.0 * score;
+      }
+      @Override
+      public boolean isFiltered(long itemID) {
+        return odd == ((itemID & 0x01) == 1);
+      }
+    };
+  }
+
+  @Override
   public Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args) {
     final boolean odd = args.length > 0 && Boolean.valueOf(args[0]);
     return new Rescorer<LongPair>() {

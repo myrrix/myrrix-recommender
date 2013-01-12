@@ -67,6 +67,14 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
    * @return {@code null}
    */
   @Override
+  public IDRescorer getMostPopularItemsRescorer(MyrrixRecommender recommender, String... args) {
+    return null;
+  }
+
+  /**
+   * @return {@code null}
+   */
+  @Override
   public Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args) {
     return null;
   }

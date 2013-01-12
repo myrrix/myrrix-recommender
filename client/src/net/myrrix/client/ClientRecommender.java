@@ -974,6 +974,22 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
+   * Note that {@link IDRescorer} is not supported in the client now and must be null.
+   *
+   * @return {@link #mostPopularItems(int)} if rescorer is null
+   * @throws UnsupportedOperationException otherwise
+   * @deprecated use {@link #mostPopularItems(int)} instead
+   */
+  @Deprecated
+  @Override
+  public List<RecommendedItem> mostPopularItems(int howMany, IDRescorer rescorer) throws TasteException {
+    if (rescorer != null) {
+      throw new UnsupportedOperationException();
+    }
+    return mostPopularItems(howMany);
+  }
+
+  /**
    * {@link Rescorer}s are not available at this time in the model.
    *
    * @return {@link #mostSimilarItems(long, int)} if rescorer is null

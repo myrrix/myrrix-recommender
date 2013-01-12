@@ -315,6 +315,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    */
   List<RecommendedItem> mostPopularItems(int howMany) throws TasteException;
 
+  List<RecommendedItem> mostPopularItems(int howMany, IDRescorer rescorer) throws TasteException;
+
   /**
    * @param toItemID item to calculate similarity to
    * @param itemIDs items to calculate similarity from
