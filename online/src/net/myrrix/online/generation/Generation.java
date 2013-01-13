@@ -16,10 +16,12 @@
 
 package net.myrrix.online.generation;
 
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.math3.linear.RealMatrix;
 
 import net.myrrix.common.collection.FastByIDMap;
@@ -39,6 +41,8 @@ import net.myrrix.online.candidate.LocationSensitiveHash;
  *   <li>YTRightInverse, the right inverse of Y transpose</li>
  *   <li>numFeatures, the column dimension of X and Y</li>
  *   <li>knownItemIDs, the item IDs already associated to each user</li>
+ *   <li>clusters of item IDs (in distributed mode), with centroids</li>
+ *   <li>clusters of user IDs (in distributed mode), with centroids</li>
  * </ul>
  *
  * @author Sean Owen
@@ -54,25 +58,40 @@ public final class Generation {
   private RealMatrix XTXinv;
   private final FastByIDMap<float[]> Y;
   private RealMatrix YTYinv;
+  private final List<IDCluster> userClusters;
+  private final List<IDCluster> itemClusters;
   private CandidateFilter candidateFilter;
   private final ReadWriteLock xLock;
   private final ReadWriteLock yLock;
   private final ReadWriteLock knownItemLock;
   private final ReadWriteLock knownUserLock;
+  private final ReadWriteLock userClustersLock;
+  private final ReadWriteLock itemClustersLock;
 
   public Generation(FastByIDMap<FastIDSet> knownItemIDs, FastByIDMap<float[]> X, FastByIDMap<float[]> Y) {
+    this(knownItemIDs, X, Y, Lists.<IDCluster>newArrayList(), Lists.<IDCluster>newArrayList());
+  }
+
+  public Generation(FastByIDMap<FastIDSet> knownItemIDs,
+                    FastByIDMap<float[]> X,
+                    FastByIDMap<float[]> Y,
+                    List<IDCluster> userClusters,
+                    List<IDCluster> itemClusters) {
     this(knownItemIDs,
          null, // Not used yet
          X,
          null,
          Y,
          null,
+         userClusters,
+         itemClusters,
          null,
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
          new ReentrantReadWriteLock(),
-         null // not used yet
-         );
+         null, // not used yet
+         new ReentrantReadWriteLock(),
+         new ReentrantReadWriteLock());
     recomputeState();
   }
 
@@ -82,36 +101,30 @@ public final class Generation {
                      RealMatrix XTXinv,
                      FastByIDMap<float[]> Y,
                      RealMatrix YTYinv,
+                     List<IDCluster> userClusters,
+                     List<IDCluster> itemClusters,
                      CandidateFilter candidateFilter,
                      ReadWriteLock xLock,
                      ReadWriteLock yLock,
                      ReadWriteLock knownItemLock,
-                     ReadWriteLock knownUserLock) {
+                     ReadWriteLock knownUserLock,
+                     ReadWriteLock userClustersLock,
+                     ReadWriteLock itemClustersLock) {
     this.knownItemIDs = knownItemIDs;
     this.knownUserIDs = knownUserIDs;
     this.X = X;
     this.XTXinv = XTXinv;
     this.Y = Y;
     this.YTYinv = YTYinv;
+    this.userClusters = userClusters;
+    this.itemClusters = itemClusters;
     this.candidateFilter = candidateFilter;
     this.xLock = xLock;
     this.yLock = yLock;
     this.knownItemLock = knownItemLock;
     this.knownUserLock = knownUserLock;
-  }
-
-  public Generation buildTransposedGeneration() {
-    return new Generation(knownUserIDs,
-                          knownItemIDs,
-                          Y,
-                          YTYinv,
-                          X,
-                          XTXinv,
-                          new LocationSensitiveHash(X),
-                          yLock,
-                          xLock,
-                          knownUserLock,
-                          knownItemLock);
+    this.userClustersLock = userClustersLock;
+    this.itemClustersLock = itemClustersLock;
   }
 
   void recomputeState() {
@@ -186,6 +199,20 @@ public final class Generation {
     return knownUserIDs;
   }
 
+  /**
+   * @return clusters of user IDs, or {@code null} if not in distributed mode
+   */
+  public List<IDCluster> getUserClusters() {
+    return userClusters;
+  }
+
+  /**
+   * @return clusters of item IDs, or {@code null} if not in distributed mode
+   */
+  public List<IDCluster> getItemClusters() {
+    return itemClusters;
+  }
+
   public CandidateFilter getCandidateFilter() {
     return candidateFilter;
   }
@@ -217,6 +244,20 @@ public final class Generation {
    */
   public ReadWriteLock getKnownUserLock() {
     return knownUserLock;
+  }
+
+  /**
+   * Acquire this read/write lock before using {@link #getUserClusters()}.
+   */
+  public ReadWriteLock getUserClustersLock() {
+    return userClustersLock;
+  }
+
+  /**
+   * Acquire this read/write lock before using {@link #getItemClusters()}.
+   */
+  public ReadWriteLock getItemClustersLock() {
+    return itemClustersLock;
   }
 
 }

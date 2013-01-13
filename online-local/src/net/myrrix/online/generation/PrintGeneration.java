@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
@@ -75,12 +76,18 @@ public final class PrintGeneration {
     printFeatureMatrix(generation.getY(), out);
     out.append('\n');
 
-    //out.append("knownUserIDs:\n");
+    //out.append("Known User IDs:\n");
     //printKnownItems(generation.getKnownUserIDs(), out);
     //out.append('\n');
 
-    out.append("knownItemIDs:\n");
+    out.append("Known Item IDs:\n");
     printKnownItems(generation.getKnownItemIDs(), out);
+    out.append('\n');
+
+    out.append("User Clusters / Centroids:\n");
+    printCentroids(generation.getUserClusters(), out);
+    out.append("Item Clusters / Centroids:\n");
+    printCentroids(generation.getItemClusters(), out);
     out.append('\n');
   }
 
@@ -110,6 +117,15 @@ public final class PrintGeneration {
           line.append('\t').append(key);
         }
         out.append(line).append('\n');
+      }
+    }
+  }
+
+  private static void printCentroids(Iterable<IDCluster> clusters, Appendable out) throws IOException {
+    if (clusters != null) {
+      for (IDCluster cluster : clusters) {
+        out.append(Arrays.toString(cluster.getCentroid())).append('\n');
+        out.append(cluster.getMembers().toString()).append('\n');
       }
     }
   }

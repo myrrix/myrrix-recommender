@@ -20,8 +20,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.LangUtils;
@@ -52,25 +55,27 @@ public final class GenerationSerializer implements Serializable {
 
   private void writeObject(ObjectOutputStream out) throws IOException {
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
-    if (knownItemIDs == null) {
-      out.writeInt(0);
-    } else {
-      out.writeInt(knownItemIDs.size());
-      for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {
-        out.writeLong(entry.getKey());
-        FastIDSet itemIDs = entry.getValue();
-        out.writeInt(itemIDs.size());
-        LongPrimitiveIterator it = itemIDs.iterator();
-        while (it.hasNext()) {
-          out.writeLong(it.nextLong());
-        }
-      }
-    }
+    writeKnownIDs(out, knownItemIDs);
     writeMatrix(generation.getX(), out);
     writeMatrix(generation.getY(), out);
+    writeClusters(generation.getUserClusters(), out);
+    writeClusters(generation.getItemClusters(), out);
   }
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    FastByIDMap<FastIDSet> newKnownItemIDs = readKnownIDs(in);
+    FastByIDMap<float[]> newX = readMatrix(in);
+    FastByIDMap<float[]> newY = readMatrix(in);
+    List<IDCluster> userClusters = readClusters(in);
+    List<IDCluster> itemClusters = readClusters(in);
+    generation = new Generation(newKnownItemIDs,
+                                newX,
+                                newY,
+                                userClusters,
+                                itemClusters);
+  }
+
+  private static FastByIDMap<FastIDSet> readKnownIDs(ObjectInputStream in) throws IOException {
     int knownItemIDsCount = in.readInt();
     FastByIDMap<FastIDSet> newKnownItemIDs;
     if (knownItemIDsCount == 0) {
@@ -87,9 +92,24 @@ public final class GenerationSerializer implements Serializable {
         newKnownItemIDs.put(id, set);
       }
     }
-    FastByIDMap<float[]> newX = readMatrix(in);
-    FastByIDMap<float[]> newY = readMatrix(in);
-    generation = new Generation(newKnownItemIDs, newX, newY);
+    return newKnownItemIDs;
+  }
+
+  private static void writeKnownIDs(ObjectOutputStream out, FastByIDMap<FastIDSet> knownItemIDs) throws IOException {
+    if (knownItemIDs == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(knownItemIDs.size());
+      for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {
+        out.writeLong(entry.getKey());
+        FastIDSet itemIDs = entry.getValue();
+        out.writeInt(itemIDs.size());
+        LongPrimitiveIterator it = itemIDs.iterator();
+        while (it.hasNext()) {
+          out.writeLong(it.nextLong());
+        }
+      }
+    }
   }
 
   /**
@@ -124,6 +144,49 @@ public final class GenerationSerializer implements Serializable {
       for (float f : features) {
         Preconditions.checkState(LangUtils.isFinite(f));
         out.writeFloat(f);
+      }
+    }
+  }
+
+  private static List<IDCluster> readClusters(ObjectInputStream in) throws IOException {
+    int count = in.readInt();
+    if (count == 0) {
+      return null;
+    }
+    List<IDCluster> clusters = Lists.newArrayListWithCapacity(count);
+    for (int i = 0; i < count; i++) {
+      int membersSize = in.readInt();
+      FastIDSet members = new FastIDSet(membersSize);
+      for (int j = 0; j < membersSize; j++) {
+        members.add(in.readLong());
+      }
+      int centroidSize = in.readInt();
+      float[] centroid = new float[centroidSize];
+      for (int j = 0; j < centroidSize; j++) {
+        centroid[j] = in.readFloat();
+      }
+      clusters.add(new IDCluster(members, centroid));
+    }
+    return clusters;
+  }
+
+  private static void writeClusters(Collection<IDCluster> clusters, ObjectOutputStream out) throws IOException {
+    if (clusters == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(clusters.size());
+      for (IDCluster cluster : clusters) {
+        FastIDSet members = cluster.getMembers();
+        out.writeInt(members.size());
+        LongPrimitiveIterator it = members.iterator();
+        while (it.hasNext()) {
+          out.writeLong(it.nextLong());
+        }
+        float[] centroid = cluster.getCentroid();
+        out.writeInt(centroid.length);
+        for (float f : centroid) {
+          out.writeFloat(f);
+        }
       }
     }
   }
