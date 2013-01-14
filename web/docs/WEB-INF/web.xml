@@ -121,6 +121,16 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>UserClusterServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.UserClusterServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>ItemClusterServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.ItemClusterServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>LogServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.LogServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -181,6 +191,14 @@
   <servlet-mapping>
     <servlet-name>MostPopularItemsServlet</servlet-name>
     <url-pattern>/mostPopularItems/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>UserClusterServlet</servlet-name>
+    <url-pattern>/user/clusters/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>ItemClusterServlet</servlet-name>
+    <url-pattern>/item/clusters/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>LogServlet</servlet-name>

@@ -75,6 +75,7 @@ import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.online.generation.Generation;
 import net.myrrix.online.generation.GenerationManager;
+import net.myrrix.online.generation.IDCluster;
 
 /**
  * <p>The core implementation of {@link org.apache.mahout.cf.taste.recommender.Recommender} and furthermore
@@ -1113,6 +1114,78 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       return ids;
     } finally {
       readLock.unlock();
+    }
+  }
+
+  @Override
+  public int getNumUserClusters() throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    List<IDCluster> clusters = generation.getUserClusters();
+    if (clusters == null) {
+      throw new UnsupportedOperationException();
+    }
+    Lock lock = generation.getUserClustersLock().readLock();
+    lock.lock();
+    try {
+      return clusters.size();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  @Override
+  public int getNumItemClusters() throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    List<IDCluster> clusters = generation.getItemClusters();
+    if (clusters == null) {
+      throw new UnsupportedOperationException();
+    }
+    Lock lock = generation.getItemClustersLock().readLock();
+    lock.lock();
+    try {
+      return clusters.size();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  @Override
+  public FastIDSet getUserCluster(int n) throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    List<IDCluster> clusters = generation.getUserClusters();
+    if (clusters == null) {
+      throw new UnsupportedOperationException();
+    }
+    Lock lock = generation.getUserClustersLock().readLock();
+    FastIDSet members;
+    lock.lock();
+    try {
+      members = clusters.get(n).getMembers();
+    } finally {
+      lock.unlock();
+    }
+    synchronized (members) {
+      return members.clone();
+    }
+  }
+
+  @Override
+  public FastIDSet getItemCluster(int n) throws NotReadyException {
+    Generation generation = getCurrentGeneration();
+    List<IDCluster> clusters = generation.getItemClusters();
+    if (clusters == null) {
+      throw new UnsupportedOperationException();
+    }
+    Lock lock = generation.getItemClustersLock().readLock();
+    FastIDSet members;
+    lock.lock();
+    try {
+      members = clusters.get(n).getMembers();
+    } finally {
+      lock.unlock();
+    }
+    synchronized (members) {
+      return members.clone();
     }
   }
 

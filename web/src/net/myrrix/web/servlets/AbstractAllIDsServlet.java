@@ -17,13 +17,10 @@
 package net.myrrix.web.servlets;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.NotReadyException;
@@ -34,7 +31,8 @@ import net.myrrix.common.collection.FastIDSet;
  * {@link MyrrixRecommender#getAllUserIDs()} or {@link MyrrixRecommender#getAllItemIDs()}, depending on
  * {@link #isUserIDs()}.</p>
  *
- * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
+ * <p>Outputs IDs in CSV or JSON format. When outputting CSV, one ID is written per line. When outputting
+ * JSON, the output is an array of IDs.</p>
  *
  * @author Sean Owen
  */
@@ -55,35 +53,5 @@ public abstract class AbstractAllIDsServlet extends AbstractMyrrixServlet {
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
     }
   }
-
-  final void outputIDs(HttpServletRequest request,ServletResponse response, FastIDSet ids) throws IOException {
-
-    PrintWriter writer = response.getWriter();
-    LongPrimitiveIterator it = ids.iterator();
-    switch (determineResponseType(request)) {
-      case JSON:
-        writer.write('[');
-        boolean first = true;
-        while (it.hasNext()) {
-          if (first) {
-            first = false;
-          } else {
-            writer.write(',');
-          }
-          writer.write(Long.toString(it.nextLong()));
-        }
-        writer.write(']');
-        break;
-      case CSV:
-        while (it.hasNext()) {
-          writer.write(Long.toString(it.nextLong()));
-          writer.write('\n');
-        }
-        break;
-      default:
-        throw new IllegalStateException("Unknown response type");
-    }
-  }
-
 
 }

@@ -65,6 +65,7 @@ import net.myrrix.web.servlets.AllUserIDsServlet;
 import net.myrrix.web.servlets.BecauseServlet;
 import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
+import net.myrrix.web.servlets.ItemClusterServlet;
 import net.myrrix.web.servlets.LogServlet;
 import net.myrrix.web.servlets.MostPopularItemsServlet;
 import net.myrrix.web.servlets.PreferenceServlet;
@@ -75,6 +76,7 @@ import net.myrrix.web.servlets.RecommendToManyServlet;
 import net.myrrix.web.servlets.RefreshServlet;
 import net.myrrix.web.servlets.SimilarityServlet;
 import net.myrrix.web.servlets.SimilarityToItemServlet;
+import net.myrrix.web.servlets.UserClusterServlet;
 
 /**
  * <p>This is the runnable class which starts the Serving Layer and its Tomcat-based HTTP server. It is
@@ -294,6 +296,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new ReadyServlet(), "/ready/*");
     addServlet(context, new AllUserIDsServlet(), "/user/allIDs/*");
     addServlet(context, new AllItemIDsServlet(), "/item/allIDs/*");
+    addServlet(context, new UserClusterServlet(), "/user/clusters/*");
+    addServlet(context, new ItemClusterServlet(), "/item/clusters/*");
     addServlet(context, new MostPopularItemsServlet(), "/mostPopularItems/*");
 
     if (!config.isReadOnly()) {

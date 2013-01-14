@@ -111,6 +111,10 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code isReady}</li>
  *   <li>{@code getAllUserIDs}</li>
  *   <li>{@code getAllItemIDs}</li>
+ *   <li>{@code getNumUserClusters}</li>
+ *   <li>{@code getNumItemClusters}</li>
+ *   <li>{@code getUserCluster n}</li>
+ *   <li>{@code getItemCluster n}</li>
  * </ul>
  *
  * <p>Methods that return {@code void} in {@link net.myrrix.common.MyrrixRecommender} produce no output. Methods
@@ -249,6 +253,18 @@ public final class CLI {
         case GETALLITEMIDS:
           doGetAllIDs(commandArgs, recommender, translatingRecommender, false);
           break;
+        case GETNUMUSERCLUSTERS:
+          getNumClusters(commandArgs, recommender, true);
+          break;
+        case GETNUMITEMCLUSTERS:
+          getNumClusters(commandArgs, recommender, false);
+          break;
+        case GETUSERCLUSTER:
+          doGetCluster(commandArgs, recommender, translatingRecommender, true);
+          break;
+        case GETITEMCLUSTER:
+          doGetCluster(commandArgs, recommender, translatingRecommender, false);
+          break;
       }
     } catch (ArgumentValidationException ave) {
       printHelp(ave.getMessage());
@@ -273,6 +289,39 @@ public final class CLI {
         throw new UnsupportedOperationException();
       }
       Collection<String> ids = translatingRecommender.getAllItemIDs();
+      for (String id : ids) {
+        System.out.println(id);
+      }
+    }
+  }
+
+  private static void getNumClusters(String[] programArgs,
+                                     ClientRecommender recommender,
+                                     boolean isUser) throws TasteException {
+    if (programArgs.length != 1) {
+      throw new ArgumentValidationException("no arguments");
+    }
+    int count = isUser ? recommender.getNumUserClusters() : recommender.getNumItemClusters();
+    System.out.println(count);
+  }
+
+  private static void doGetCluster(String[] programArgs,
+                                   ClientRecommender recommender,
+                                   TranslatingRecommender translatingRecommender,
+                                   boolean isUser) throws TasteException {
+    if (programArgs.length != 2) {
+      throw new ArgumentValidationException("args are n");
+    }
+    int n = Integer.parseInt(programArgs[1]);
+    if (translatingRecommender == null) {
+      FastIDSet ids = isUser ? recommender.getUserCluster(n) : recommender.getItemCluster(n);
+      LongPrimitiveIterator it = ids.iterator();
+      while (it.hasNext()) {
+        System.out.println(Long.toString(it.nextLong()));
+      }
+    } else {
+      Collection<String> ids =
+          isUser ? translatingRecommender.getUserCluster(n) : translatingRecommender.getItemCluster(n);
       for (String id : ids) {
         System.out.println(id);
       }

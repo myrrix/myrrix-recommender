@@ -192,4 +192,24 @@ public interface TranslatingRecommender {
    */
   Collection<String> getAllItemIDs() throws TasteException;
 
+  /**
+   * @see net.myrrix.common.MyrrixRecommender#getNumUserClusters()
+   */
+  int getNumUserClusters() throws TasteException;
+
+  /**
+   * @see net.myrrix.common.MyrrixRecommender#getNumItemClusters()
+   */
+  int getNumItemClusters() throws TasteException;
+
+  /**
+   * @see net.myrrix.common.MyrrixRecommender#getUserCluster(int)
+   */
+  Collection<String> getUserCluster(int n) throws TasteException;
+
+  /**
+   * @see net.myrrix.common.MyrrixRecommender#getItemCluster(int)
+   */
+  Collection<String> getItemCluster(int n) throws TasteException;
+
 }

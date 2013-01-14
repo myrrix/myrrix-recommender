@@ -1165,6 +1165,75 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
   }
 
+  @Override
+  public int getNumUserClusters() throws TasteException {
+    return getNumClusters(true);
+  }
+
+  @Override
+  public int getNumItemClusters() throws TasteException {
+    return getNumClusters(false);
+  }
+
+  private int getNumClusters(boolean user) throws TasteException {
+    try {
+      HttpURLConnection connection = makeConnection('/' + (user ? "user" : "item") + "/clusters/count", "GET", 0L);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+        try {
+          return Integer.parseInt(reader.readLine());
+        } finally {
+          Closeables.close(reader, true);
+        }
+      } finally {
+        connection.disconnect();
+      }
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
+  @Override
+  public FastIDSet getUserCluster(int n) throws TasteException {
+    return getCluster(n, true);
+  }
+
+  @Override
+  public FastIDSet getItemCluster(int n) throws TasteException {
+    return getCluster(n, false);
+  }
+
+  private FastIDSet getCluster(int n, boolean user) throws TasteException {
+    try {
+      HttpURLConnection connection = makeConnection('/' + (user ? "user" : "item") + "/clusters/" + n, "GET", 0L);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        FastIDSet members = new FastIDSet();
+        consumeIDs(connection, members);
+        return members;
+      } finally {
+        connection.disconnect();
+      }
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
+
   private static void appendCommonQueryParams(int howMany,
                                               boolean considerKnownItems,
                                               String[] rescorerParams,

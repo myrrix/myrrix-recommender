@@ -386,4 +386,32 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    */
   FastIDSet getAllItemIDs() throws TasteException;
 
+  /**
+   * @return number of user clusters
+   * @throws UnsupportedOperationException if the instance does not support clusters
+   */
+  int getNumUserClusters() throws TasteException;
+
+  /**
+   * @return number of item clusters
+   * @throws UnsupportedOperationException if the instance does not support clusters
+   */
+  int getNumItemClusters() throws TasteException;
+
+  /**
+   * @param n cluster number to retrieve (0-based)
+   * @return set of all user IDs in cluster n
+   * @throws UnsupportedOperationException if the instance does not support clusters
+   * @throws IndexOutOfBoundsException if cluster number if out of bounds
+   */
+  FastIDSet getUserCluster(int n) throws TasteException;
+
+  /**
+   * @param n cluster number to retrieve (0-based)
+   * @return set of all item IDs in cluster n
+   * @throws UnsupportedOperationException if the instance does not support clusters
+   * @throws IndexOutOfBoundsException if cluster number if out of bounds
+   */
+  FastIDSet getItemCluster(int n) throws TasteException;
+
 }

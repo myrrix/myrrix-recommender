@@ -356,13 +356,27 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public Collection<String> getAllItemIDs() throws TasteException {
-    FastIDSet itemIDs = delegate.getAllItemIDs();
-    Collection<String> result = Lists.newArrayListWithCapacity(itemIDs.size());
-    LongPrimitiveIterator it = itemIDs.iterator();
-    while (it.hasNext()) {
-      result.add(untranslateItem(it.nextLong()));
-    }
-    return result;
+    return translate(delegate.getAllItemIDs());
+  }
+
+  @Override
+  public int getNumUserClusters() throws TasteException {
+    return delegate.getNumUserClusters();
+  }
+
+  @Override
+  public int getNumItemClusters() throws TasteException {
+    return delegate.getNumItemClusters();
+  }
+
+  @Override
+  public Collection<String> getUserCluster(int n) throws TasteException {
+    return translate(delegate.getUserCluster(n));
+  }
+
+  @Override
+  public Collection<String> getItemCluster(int n) throws TasteException {
+    return translate(delegate.getItemCluster(n));
   }
 
   private List<TranslatedRecommendedItem> translate(Collection<RecommendedItem> originals) {
@@ -374,6 +388,15 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
       translated.add(new GenericTranslatedRecommendedItem(translatedItemID, original.getValue()));
     }
     return translated;
+  }
+
+  private Collection<String> translate(FastIDSet itemIDs) {
+    Collection<String> result = Lists.newArrayListWithCapacity(itemIDs.size());
+    LongPrimitiveIterator it = itemIDs.iterator();
+    while (it.hasNext()) {
+      result.add(untranslateItem(it.nextLong()));
+    }
+    return result;
   }
 
 }

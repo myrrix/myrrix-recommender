@@ -14,34 +14,13 @@
  * limitations under the License.
  */
 
-package net.myrrix.client;
+package net.myrrix.web.servlets;
 
-/**
- * Enumerates supported commands from {@link CLI}. Values here correspond to methods in
- * {@link ClientRecommender}.
- *
- * @author Sean Owen
- */
-public enum CLICommand {
+public final class UserClusterServlet extends AbstractClusterServlet {
 
-  SETPREFERENCE,
-  REMOVEPREFERENCE,
-  INGEST,
-  ESTIMATEPREFERENCE,
-  RECOMMEND,
-  RECOMMENDTOANONYMOUS,
-  RECOMMENDTOMANY,
-  MOSTPOPULARITEMS,
-  MOSTSIMILARITEMS,
-  SIMILARITYTOITEM,
-  RECOMMENDEDBECAUSE,
-  REFRESH,
-  ISREADY,
-  GETALLUSERIDS,
-  GETALLITEMIDS,
-  GETNUMUSERCLUSTERS,
-  GETNUMITEMCLUSTERS,
-  GETUSERCLUSTER,
-  GETITEMCLUSTER,
+  @Override
+  protected boolean isUser() {
+    return true;
+  }
 
 }

@@ -35,12 +35,14 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.Pair;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.ReloadingReference;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.random.RandomUtils;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.web.common.stats.ServletStats;
@@ -210,6 +212,15 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return Boolean.valueOf(request.getParameter("considerKnownItems"));
   }
 
+  /**
+   * <p>Outputs items in CSV or JSON format based on the HTTP {@code Accept} header.</p>
+   *
+   * <p>CSV output contains one recommendation per line, and each line is of the form {@code itemID, strength},
+   * like {@code 325, 0.53}. Strength is an opaque indicator of the relative quality of the recommendation.</p>
+   *
+   * <p>JSON output is an array of arrays, with each sub-array containing an item ID and strength.
+   * Example: {@code [[325, 0.53], [98, 0.499]]}.</p>
+   */
   protected final void output(HttpServletRequest request,
                               ServletResponse response,
                               Iterable<RecommendedItem> items) throws IOException {
@@ -246,6 +257,10 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     }
   }
 
+  /**
+   * Determines the appropriate content type for the response based on request headers. At the moment these
+   * are chosen from the values in {@link ResponseContentType}.
+   */
   final ResponseContentType determineResponseType(HttpServletRequest request) {
 
     String acceptHeader = request.getHeader("Accept");
@@ -299,6 +314,42 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return finalType;
   }
 
+  /**
+   * Outputs IDs in CSV or JSON format. When outputting CSV, one ID is written per line. When outputting
+   * JSON, the output is an array of IDs.
+   */
+  final void outputIDs(HttpServletRequest request,ServletResponse response, FastIDSet ids) throws IOException {
+
+    PrintWriter writer = response.getWriter();
+    LongPrimitiveIterator it = ids.iterator();
+    switch (determineResponseType(request)) {
+      case JSON:
+        writer.write('[');
+        boolean first = true;
+        while (it.hasNext()) {
+          if (first) {
+            first = false;
+          } else {
+            writer.write(',');
+          }
+          writer.write(Long.toString(it.nextLong()));
+        }
+        writer.write(']');
+        break;
+      case CSV:
+        while (it.hasNext()) {
+          writer.write(Long.toString(it.nextLong()));
+          writer.write('\n');
+        }
+        break;
+      default:
+        throw new IllegalStateException("Unknown response type");
+    }
+  }
+
+  /**
+   * Available content types / formats for response bodies.
+   */
   enum ResponseContentType {
     JSON,
     CSV,
