@@ -81,7 +81,7 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
         }
         resultElement.innerHTML = responseText;
       } else {
-        resultElement.innerHTML = "[HTTP Error " + httpStatus + "]";
+        resultElement.innerHTML = "[HTTP Error " + httpStatus + " " + xmlHttp.statusText + "]";
       }
     }
   };
