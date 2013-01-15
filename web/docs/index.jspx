@@ -62,8 +62,10 @@ function doQuery(endpoint, isGet, paramSuffixes, postBodyElement) {
   var httpmethod = isGet ? "GET" : "POST";
   var pathElements = [];
   pathElements.push(endpoint);
+  
+  var paramPrefix = endpoint.replace("/", "");  
   for (var i = 0; i < paramSuffixes.length; i++) {
-    var elementValue = document.getElementById(endpoint + "-" + paramSuffixes[i]).value;
+    var elementValue = document.getElementById(paramPrefix + "-" + paramSuffixes[i]).value;
     pathElements.push(elementValue);
   }
   var path = pathElements.join("/");
@@ -328,6 +330,26 @@ pageContext.setAttribute("numPartitions", numPartitions);
   <tr><td><code>/mostPopularItems</code></td>
     <td colspan="2"/>
     <td><a href="#" class="arrow" onclick="return doQuery('mostPopularItems',true)">&amp;#x27AC;</a></td></tr>
+</form>
+  
+  <tr><td colspan="4"><hr/></td></tr>
+
+<form action="#" style="padding:10px">
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;n</td><td/><td></td></tr>
+  <tr><td><code>/user/clusters</code></td>
+    <td><code>/</code><input type="text" id="userclusters-n" onkeyup="return handleReturn(event,'user/clusters',true,new Array('n'))"/></td>
+    <td></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('user/clusters',true,new Array('n'))">&amp;#x27AC;</a></td></tr>
+</form>
+  
+  <tr><td colspan="4"><hr/></td></tr>
+
+<form action="#" style="padding:10px">
+  <tr><td></td><td>&amp;nbsp;&amp;nbsp;n</td><td/><td></td></tr>
+  <tr><td><code>/item/clusters</code></td>
+    <td><code>/</code><input type="text" id="itemclusters-n" onkeyup="return handleReturn(event,'item/clusters',true,new Array('n'))"/></td>
+    <td></td>
+    <td><a href="#" class="arrow" onclick="return doQuery('item/clusters',true,new Array('n'))">&amp;#x27AC;</a></td></tr>
 </form>
 
   <tr><td colspan="4"><hr/></td></tr>

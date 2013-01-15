@@ -234,6 +234,10 @@
     <location>/error.jspx</location>
   </error-page>
   <error-page>
+    <error-code>501</error-code>
+    <location>/error.jspx</location>
+  </error-page>
+  <error-page>
     <error-code>503</error-code>
     <location>/error.jspx</location>
   </error-page>

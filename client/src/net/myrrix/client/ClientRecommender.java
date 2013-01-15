@@ -1182,6 +1182,8 @@ public final class ClientRecommender implements MyrrixRecommender {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
             break;
+          case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
+            throw new UnsupportedOperationException();
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
@@ -1218,6 +1220,8 @@ public final class ClientRecommender implements MyrrixRecommender {
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
             break;
+          case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
+            throw new UnsupportedOperationException();
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:

@@ -137,13 +137,13 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *
  * <p>If using string IDs, it might look more like:</p>
  *
- * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com --port 8080
+ * <p>{@code java -jar myrrix-client-X.Y.jar --host example.com
  *   --translateUser --translateItem ids.txt --howMany 3 recommend Jane}</p>
  *
  * <p>... and output might be:</p>
  *
  * <p>{@code
- * Apple, 0.559
+ * Apple,0.559
  * Orange,0.4034
  * Banana,0.03339
  * }</p>

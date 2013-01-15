@@ -180,6 +180,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
       HttpServletResponse.SC_NOT_FOUND,
       HttpServletResponse.SC_METHOD_NOT_ALLOWED,
       HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+      HttpServletResponse.SC_NOT_IMPLEMENTED,      
       HttpServletResponse.SC_SERVICE_UNAVAILABLE,
   };
 

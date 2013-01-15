@@ -388,20 +388,22 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
 
   /**
    * @return number of user clusters
-   * @throws UnsupportedOperationException if the instance does not support clusters
+   * @throws UnsupportedOperationException if not running in distributed mode, or not computing
+   *  clusters in the Computation Layer
    */
   int getNumUserClusters() throws TasteException;
 
   /**
    * @return number of item clusters
-   * @throws UnsupportedOperationException if the instance does not support clusters
-   */
+   * @throws UnsupportedOperationException if not running in distributed mode, or not computing
+   *  clusters in the Computation Layer   */
   int getNumItemClusters() throws TasteException;
 
   /**
    * @param n cluster number to retrieve (0-based)
    * @return set of all user IDs in cluster n
-   * @throws UnsupportedOperationException if the instance does not support clusters
+   * @throws UnsupportedOperationException if not running in distributed mode, or not computing
+   *  clusters in the Computation Layer
    * @throws IndexOutOfBoundsException if cluster number if out of bounds
    */
   FastIDSet getUserCluster(int n) throws TasteException;
@@ -409,7 +411,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   /**
    * @param n cluster number to retrieve (0-based)
    * @return set of all item IDs in cluster n
-   * @throws UnsupportedOperationException if the instance does not support clusters
+   * @throws UnsupportedOperationException if not running in distributed mode, or not computing
+   *  clusters in the Computation Layer
    * @throws IndexOutOfBoundsException if cluster number if out of bounds
    */
   FastIDSet getItemCluster(int n) throws TasteException;

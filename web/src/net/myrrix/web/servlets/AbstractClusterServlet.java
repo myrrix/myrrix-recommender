@@ -38,6 +38,8 @@ import net.myrrix.common.collection.FastIDSet;
  *
  * <p>Outputs IDs in CSV or JSON format. When outputting CSV, one ID is written per line. When outputting
  * JSON, the output is an array of IDs.</p>
+ * 
+ * <p>This is only supported in distributed mode, and when computing clusters in the Computation Layer.</p>
  *
  * @author Sean Owen
  */
@@ -85,7 +87,7 @@ public abstract class AbstractClusterServlet extends AbstractMyrrixServlet {
       }
 
     } catch (UnsupportedOperationException uoe) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, uoe.toString());
+      response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED, uoe.toString());
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
     } catch (TasteException te) {

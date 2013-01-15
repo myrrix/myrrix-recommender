@@ -19,17 +19,20 @@ package net.myrrix.online.generation;
 import com.google.common.base.Preconditions;
 
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.math.SimpleVectorMath;
 
 public final class IDCluster {
 
   private final FastIDSet members;
   private final float[] centroid;
+  private final double centroidNorm;
 
   public IDCluster(FastIDSet members, float[] centroid) {
     Preconditions.checkNotNull(members);
     Preconditions.checkNotNull(centroid);
     this.members = members;
     this.centroid = centroid;
+    this.centroidNorm = SimpleVectorMath.norm(centroid);
   }
 
   public FastIDSet getMembers() {
@@ -38,6 +41,10 @@ public final class IDCluster {
 
   public float[] getCentroid() {
     return centroid;
+  }
+  
+  public double getCentroidNorm() {
+    return centroidNorm;
   }
 
 }

@@ -761,6 +761,60 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         userKnownItemIDs.add(itemID);
       }
     }
+    
+    updateClusters(userID, userFeatures, generation.getUserClusters(), generation.getUserClustersLock().readLock());
+    updateClusters(itemID, itemFeatures, generation.getItemClusters(), generation.getItemClustersLock().readLock());
+  }
+  
+  private static void updateClusters(long id, float[] featureVector, Collection<IDCluster> clusters, Lock readLock) {
+    if (featureVector == null || clusters == null || clusters.isEmpty()) {
+      return;
+    } 
+    
+    FastIDSet newMembers;
+    readLock.lock();
+    try {
+      newMembers = findClosestCentroid(featureVector, clusters).getMembers();
+    } finally {
+      readLock.unlock();
+    }
+    
+    boolean removeFromCurrentCluster;        
+    synchronized (newMembers) {
+      // Wasn't already present, so was present elsewhere; find and remove it        
+      removeFromCurrentCluster = newMembers.add(id);
+    }
+    
+    if (removeFromCurrentCluster) {
+      readLock.lock();
+      try {
+        for (IDCluster cluster : clusters) {
+          FastIDSet oldMembers = cluster.getMembers();
+          synchronized (oldMembers) {
+            if (oldMembers.remove(id)) {
+              break;
+            }
+          }
+        }
+      } finally {
+        readLock.unlock();
+      }
+    }
+  }
+  
+  private static IDCluster findClosestCentroid(float[] vector, Iterable<IDCluster> clusters) {
+    double vectorNorm = SimpleVectorMath.norm(vector);
+    IDCluster closestCentroid = null;
+    double highestDot = Double.NEGATIVE_INFINITY;
+    for (IDCluster cluster : clusters) {
+      double dot = SimpleVectorMath.dot(cluster.getCentroid(), vector) / cluster.getCentroidNorm() / vectorNorm;
+      if (LangUtils.isFinite(dot) && dot > highestDot) {
+        highestDot = dot;
+        closestCentroid = cluster;
+      }
+    }
+    Preconditions.checkNotNull(closestCentroid, "Could not find closest centroid?");
+    return closestCentroid;
   }
 
   private static int countFeatures(FastByIDMap<float[]> M) {
@@ -1121,7 +1175,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public int getNumUserClusters() throws NotReadyException {
     Generation generation = getCurrentGeneration();
     List<IDCluster> clusters = generation.getUserClusters();
-    if (clusters == null) {
+    if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }
     Lock lock = generation.getUserClustersLock().readLock();
@@ -1137,7 +1191,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public int getNumItemClusters() throws NotReadyException {
     Generation generation = getCurrentGeneration();
     List<IDCluster> clusters = generation.getItemClusters();
-    if (clusters == null) {
+    if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }
     Lock lock = generation.getItemClustersLock().readLock();
@@ -1153,7 +1207,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public FastIDSet getUserCluster(int n) throws NotReadyException {
     Generation generation = getCurrentGeneration();
     List<IDCluster> clusters = generation.getUserClusters();
-    if (clusters == null) {
+    if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }
     Lock lock = generation.getUserClustersLock().readLock();
@@ -1173,7 +1227,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public FastIDSet getItemCluster(int n) throws NotReadyException {
     Generation generation = getCurrentGeneration();
     List<IDCluster> clusters = generation.getItemClusters();
-    if (clusters == null) {
+    if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }
     Lock lock = generation.getItemClustersLock().readLock();

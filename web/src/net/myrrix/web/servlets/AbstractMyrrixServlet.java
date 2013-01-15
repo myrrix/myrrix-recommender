@@ -48,7 +48,20 @@ import net.myrrix.online.RescorerProvider;
 import net.myrrix.web.common.stats.ServletStats;
 
 /**
- * Superclass of {@link HttpServlet}s used in the application.
+ * Superclass of {@link HttpServlet}s used in the application. All API methods return the following 
+ * HTTP statuses in certain situations:
+ *
+ * <ul>
+ *  <li>{@code 302 Temporary Redirect} if, in a distributed environment, another partition should 
+ *  handle the request</li>
+ *  <li>{@code 400 Bad Request} if the arguments are invalid, like a non-numeric ID</li>
+ *  <li>{@code 401 Unauthorized} if a username/password is required, but not supplied correctly 
+ *  in the request via HTTP DIGEST</li>
+ *  <li>{@code 405 Method Not Allowed} if an incorrect HTTP method is used, like {@code GET} 
+ *  where {@code POST} is required</li>
+ *  <li>{@code 500 Internal Server Error} if an unexpected server-side exception occurs</li>
+ *  <li>{@code 503 Service Unavailable} if no model is yet available to serve requests</li>
+ * </ul>
  *
  * @author Sean Owen
  */
