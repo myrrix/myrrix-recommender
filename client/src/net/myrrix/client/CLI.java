@@ -99,7 +99,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code setPreference userID itemID [value]}</li>
  *   <li>{@code removePreference userID itemID}</li>
  *   <li>{@code ingest csvFile [csvFile2 ...]}</li>
- *   <li>{@code estimatePreference userID itemID}</li>
+ *   <li>{@code estimatePreference userID itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommend userID}</li>
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendToMany userID0 [userID1 userID2 ...]}</li>
@@ -526,20 +526,22 @@ public final class CLI {
   private static void doEstimatePreference(String[] programArgs,
                                            ClientRecommender recommender,
                                            TranslatingRecommender translatingRecommender) throws TasteException {
-    if (programArgs.length != 3) {
-      throw new ArgumentValidationException("args are userID itemID");
+    if (programArgs.length < 3) {
+      throw new ArgumentValidationException("args are userID itemID1 [itemID2 [itemID3...]]");
     }
-    float estimate;
     if (translatingRecommender == null) {
       long userID = Long.parseLong(unquote(programArgs[1]));
-      long itemID = Long.parseLong(unquote(programArgs[2]));
-      estimate = recommender.estimatePreference(userID, itemID);
+      for (int i = 2; i < programArgs.length; i++) {
+        long itemID = Long.parseLong(unquote(programArgs[i]));
+        System.out.println(recommender.estimatePreference(userID, itemID));        
+      }
     } else {
       String userID = unquote(programArgs[1]);
-      String itemID = unquote(programArgs[2]);
-      estimate = translatingRecommender.estimatePreference(userID, itemID);
+      for (int i = 2; i < programArgs.length; i++) {
+        String itemID = unquote(programArgs[i]);
+        System.out.println(translatingRecommender.estimatePreference(userID, itemID));        
+      }
     }
-    System.out.println(estimate);
   }
 
   private static void doIngest(String[] programArgs,
