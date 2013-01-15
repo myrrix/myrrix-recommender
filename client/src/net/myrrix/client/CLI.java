@@ -103,7 +103,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code recommend userID}</li>
  *   <li>{@code recommendToAnonymous itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendToMany userID0 [userID1 userID2 ...]}</li>
- *   <li>{@code mostPopularItems</li>
+ *   <li>{@code mostPopularItems}</li>
  *   <li>{@code mostSimilarItems itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code similarityToItem toItemID itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommendedBecause userID itemID}</li>
