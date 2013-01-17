@@ -20,16 +20,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -41,27 +37,20 @@ import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import com.google.common.io.PatternFilenameFilter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ExecutorUtils;
-import net.myrrix.common.LangUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
-import net.myrrix.common.io.InvertedFilenameFilter;
-import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
 import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 
@@ -75,8 +64,6 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   private static final Logger log = LoggerFactory.getLogger(DelegateGenerationManager.class);
 
-  private static final Splitter COMMA = Splitter.on(',');
-
   private static final int WRITES_BETWEEN_REBUILD;
   static {
     WRITES_BETWEEN_REBUILD =
@@ -84,14 +71,6 @@ public final class DelegateGenerationManager implements GenerationManager {
     Preconditions.checkArgument(WRITES_BETWEEN_REBUILD > 0,
                                 "Bad model.local.writesBetweenRebuild: %s", WRITES_BETWEEN_REBUILD);
   }
-
-  /**
-   * Values with absolute value less than this in the input are considered 0.
-   * Values are generally assumed to be > 1, actually,
-   * and usually not negative, though they need not be.
-   */
-  private static final float ZERO_THRESHOLD =
-      Float.parseFloat(System.getProperty("model.decay.zeroThreshold", "0.0001"));
 
   private final File inputDir;
   private final File modelFile;
@@ -321,16 +300,13 @@ public final class DelegateGenerationManager implements GenerationManager {
     File newModelFile = File.createTempFile(DelegateGenerationManager.class.getSimpleName(), ".bin");
     log.info("Writing model to {}", newModelFile);
 
-    ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(newModelFile));
     try {
-      out.writeObject(new GenerationSerializer(generation));
+      GenerationSerializer.writeGeneration(generation, modelFile);
     } catch (IOException ioe) {
       if (newModelFile.exists() && !newModelFile.delete()) {
         log.warn("Could not delete {}", newModelFile);
       }
       throw ioe;
-    } finally {
-      out.close(); // Want to know of output stream close failed -- maybe failed to write
     }
 
     log.info("Done, moving into place at {}", modelFile);
@@ -351,10 +327,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
 
-    readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputDir);
-
-    removeSmall(RbyRow);
-    removeSmall(RbyColumn);
+    InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputDir);
 
     if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
       // No data yet
@@ -439,86 +412,6 @@ public final class DelegateGenerationManager implements GenerationManager {
     }
 
     return als;
-  }
-
-  private static void readInputFiles(FastByIDMap<FastIDSet> knownItemIDs,
-                                     FastByIDMap<FastByIDFloatMap> rbyRow,
-                                     FastByIDMap<FastByIDFloatMap> rbyColumn,
-                                     File inputDir) throws IOException {
-
-    FilenameFilter csvFilter = new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?");
-
-    File[] otherFiles = inputDir.listFiles(new InvertedFilenameFilter(csvFilter));
-    if (otherFiles != null) {
-      for (File otherFile : otherFiles) {
-        log.info("Skipping file {}", otherFile.getName());
-      }
-    }
-
-    File[] inputFiles = inputDir.listFiles(csvFilter);
-    if (inputFiles == null) {
-      log.info("No input files in {}", inputDir);
-      return;
-    }
-    Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
-
-    int lines = 0;
-    for (File inputFile : inputFiles) {
-      log.info("Reading {}", inputFile);
-      for (CharSequence line : new FileLineIterable(inputFile)) {
-        Iterator<String> it = COMMA.split(line).iterator();
-        long userID = Long.parseLong(it.next());
-        long itemID = Long.parseLong(it.next());
-        float value;
-        if (it.hasNext()) {
-          String valueToken = it.next().trim();
-          value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
-        } else {
-          value = 1.0f;
-        }
-
-        if (Float.isNaN(value)) {
-          // Remove, not set
-          MatrixUtils.remove(userID, itemID, rbyRow, rbyColumn);
-        } else {
-          MatrixUtils.addTo(userID, itemID, value, rbyRow, rbyColumn);
-        }
-
-        if (knownItemIDs != null) {
-          FastIDSet itemIDs = knownItemIDs.get(userID);
-          if (Float.isNaN(value)) {
-            // Remove, not set
-            if (itemIDs != null) {
-              itemIDs.remove(itemID);
-              if (itemIDs.isEmpty()) {
-                knownItemIDs.remove(userID);
-              }
-            }
-          } else {
-            if (itemIDs == null) {
-              itemIDs = new FastIDSet();
-              knownItemIDs.put(userID, itemIDs);
-            }
-            itemIDs.add(itemID);
-          }
-        }
-
-        if (++lines % 1000000 == 0) {
-          log.info("Finished {} lines", lines);
-        }
-      }
-    }
-  }
-
-  private static void removeSmall(FastByIDMap<FastByIDFloatMap> matrix) {
-    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : matrix.entrySet()) {
-      for (Iterator<FastByIDFloatMap.MapEntry> it = entry.getValue().entrySet().iterator(); it.hasNext();) {
-        FastByIDFloatMap.MapEntry entry2 = it.next();
-        if (FastMath.abs(entry2.getValue()) < ZERO_THRESHOLD) {
-          it.remove();
-        }
-      }
-    }
   }
 
   private static <V> void restoreRecentlyActive(FastIDSet recentlyActive,

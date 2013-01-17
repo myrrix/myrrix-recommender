@@ -17,11 +17,7 @@
 package net.myrrix.online.generation;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -57,8 +53,8 @@ public final class MergeModels {
 
   public static void merge(File model1File, File model2File, File mergedModelFile) throws IOException {
 
-    Generation model1 = readGeneration(model1File);
-    Generation model2 = readGeneration(model2File);
+    Generation model1 = GenerationSerializer.readGeneration(model1File);
+    Generation model2 = GenerationSerializer.readGeneration(model2File);
 
     FastByIDMap<float[]> x1 = model1.getX();
     FastByIDMap<float[]> y1 = model1.getY();
@@ -77,28 +73,7 @@ public final class MergeModels {
     }
 
     Generation merged = new Generation(knownItems, xMerged, y2);
-    writeGeneration(merged, mergedModelFile);
-  }
-
-  private static Generation readGeneration(File f) throws IOException {
-    ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
-    try {
-      GenerationSerializer serializer = (GenerationSerializer) in.readObject();
-      return serializer.getGeneration();
-    } catch (ClassNotFoundException cnfe) {
-      throw new IllegalStateException(cnfe);
-    } finally {
-      in.close();
-    }
-  }
-
-  private static void writeGeneration(Generation generation, File f) throws IOException {
-    ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
-    try {
-      out.writeObject(new GenerationSerializer(generation));
-    } finally {
-      out.close();
-    }
+    GenerationSerializer.writeGeneration(merged, mergedModelFile);
   }
 
   private static RealMatrix multiply(FastByIDMap<float[]> left, FastByIDMap<float[]> right) {

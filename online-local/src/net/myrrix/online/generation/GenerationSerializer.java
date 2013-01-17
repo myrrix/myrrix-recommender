@@ -16,6 +16,9 @@
 
 package net.myrrix.online.generation;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -33,7 +36,8 @@ import net.myrrix.common.collection.FastIDSet;
 
 /**
  * A {@link Serializable} wrapper around a {@link Generation} that lets it easily write
- * to a file or stream.
+ * to a file or stream, with convenience methods {@link #readGeneration(File)} and
+ * {@link #writeGeneration(Generation, File)} to do so.
  *
  * @author Sean Owen
  */
@@ -51,6 +55,35 @@ public final class GenerationSerializer implements Serializable {
 
   public Generation getGeneration() {
     return generation;
+  }
+
+  /**
+   * @param f file to read {@code GenerationSerializer} from
+   * @return {@link Generation} it serializes
+   */
+  public static Generation readGeneration(File f) throws IOException {
+    ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
+    try {
+      GenerationSerializer serializer = (GenerationSerializer) in.readObject();
+      return serializer.getGeneration();
+    } catch (ClassNotFoundException cnfe) {
+      throw new IllegalStateException(cnfe);
+    } finally {
+      in.close();
+    }
+  }
+
+  /**
+   * @param generation {@link Generation} to serialize
+   * @param f file to serialize a {@code GenerationSerializer} to
+   */
+  public static void writeGeneration(Generation generation, File f) throws IOException {
+    ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+    try {
+      out.writeObject(new GenerationSerializer(generation));
+    } finally {
+      out.close();
+    }
   }
 
   private void writeObject(ObjectOutputStream out) throws IOException {
