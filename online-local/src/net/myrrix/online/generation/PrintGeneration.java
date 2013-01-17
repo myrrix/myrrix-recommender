@@ -17,16 +17,13 @@
 package net.myrrix.online.generation;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Arrays;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Closeables;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
@@ -46,14 +43,8 @@ public final class PrintGeneration {
   public static void main(String[] args) throws Exception {
     File modelFile = new File(args[0]);
     File outFile = args.length > 1 ? new File(args[1]) : null;
-    GenerationSerializer serializer;
-    ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modelFile));
-    try {
-      serializer = (GenerationSerializer) ois.readObject();
-    } finally {
-      Closeables.close(ois, true);
-    }
-    Generation generation = serializer.getGeneration();
+
+    Generation generation = GenerationSerializer.readGeneration(modelFile);
 
     if (outFile == null) {
       print(generation, System.out);

@@ -17,11 +17,9 @@
 package net.myrrix.online.generation;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -37,7 +35,6 @@ import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.SingularMatrixException;
@@ -276,17 +273,11 @@ public final class DelegateGenerationManager implements GenerationManager {
    */
   private static Generation readModel(File modelFile) throws IOException {
     log.info("Reading model from {}", modelFile);
-    ObjectInputStream in = new ObjectInputStream(new FileInputStream(modelFile));
     try {
-      GenerationSerializer serializer = (GenerationSerializer) in.readObject();
-      return serializer.getGeneration();
+      return GenerationSerializer.readGeneration(modelFile);
     } catch (ObjectStreamException ose) {
       log.warn("Model file was not readable, rebuilding ({})", ose);
       return null;
-    } catch (ClassNotFoundException cnfe) {
-      throw new IOException(cnfe);
-    } finally {
-      Closeables.close(in, true);
     }
   }
 
