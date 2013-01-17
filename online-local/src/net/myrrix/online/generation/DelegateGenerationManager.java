@@ -292,7 +292,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     log.info("Writing model to {}", newModelFile);
 
     try {
-      GenerationSerializer.writeGeneration(generation, modelFile);
+      GenerationSerializer.writeGeneration(generation, newModelFile);
     } catch (IOException ioe) {
       if (newModelFile.exists() && !newModelFile.delete()) {
         log.warn("Could not delete {}", newModelFile);
