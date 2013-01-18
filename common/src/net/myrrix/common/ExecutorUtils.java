@@ -40,9 +40,11 @@ public final class ExecutorUtils {
   public static void shutdownNowAndAwait(ExecutorService executor) {
     if (!executor.isTerminated()) {
       if (!executor.isShutdown()) {
+        log.info("Shutting down executor {}", executor);
         executor.shutdownNow();
       }
       try {
+        log.info("Waiting briefly for termination of {}", executor);
         executor.awaitTermination(5L, TimeUnit.SECONDS);
       } catch (InterruptedException ie) {
         log.warn("Interrupted while shutting down executor");
