@@ -371,7 +371,13 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
 
   @Override
   public Collection<String> getUserCluster(int n) throws TasteException {
-    return translate(delegate.getUserCluster(n));
+    FastIDSet userIDs = delegate.getUserCluster(n);
+    Collection<String> translated = Lists.newArrayListWithCapacity(userIDs.size());
+    LongPrimitiveIterator it = userIDs.iterator();
+    while (it.hasNext()) {
+      translated.add(Long.toString(it.nextLong()));
+    }
+    return translated;
   }
 
   @Override
