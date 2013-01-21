@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
@@ -62,7 +63,7 @@ public final class ReconstructionEvaluator {
 
   private static final Splitter COMMA_TAB_SPLIT = Splitter.on(CharMatcher.anyOf(",\t")).omitEmptyStrings();
 
-  public EvaluationResult evaluate(File originalDataDir) throws TasteException {
+  public EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException {
 
     Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory(),
                                 "%s is not a directory", originalDataDir);
@@ -98,11 +99,7 @@ public final class ReconstructionEvaluator {
 
       return new EvaluationResultImpl(averageError.getAverage());
     } finally {
-      try {
-        recommender.close();
-      } catch (IOException e) {
-        throw new TasteException(e);
-      }
+      Closeables.close(recommender, true);
       IOUtils.deleteRecursively(tempDir);
     }
   }

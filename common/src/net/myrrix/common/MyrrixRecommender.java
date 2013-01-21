@@ -37,8 +37,6 @@ import java.io.File;
 import java.io.Reader;
 import java.util.List;
 
-import org.apache.mahout.cf.taste.common.NoSuchItemException;
-import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
@@ -72,7 +70,7 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param userID user for which recommendations are to be computed
    * @param howMany desired number of recommendations
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
-   * @throws NoSuchUserException if the user is not known
+   * @throws org.apache.mahout.cf.taste.common.NoSuchUserException if the user is not known
    */
   @Override
   List<RecommendedItem> recommend(long userID, int howMany) throws TasteException;
@@ -82,7 +80,7 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param howMany desired number of recommendations
    * @param rescorer rescoring function to apply before final list of recommendations is determined
    * @return {@link List} of recommended {@link RecommendedItem}s, ordered from most strongly recommend to least
-   * @throws NoSuchUserException if the user is not known
+   * @throws org.apache.mahout.cf.taste.common.NoSuchUserException if the user is not known
    */
   @Override
   List<RecommendedItem> recommend(long userID, int howMany, IDRescorer rescorer) throws TasteException;
@@ -151,7 +149,7 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param itemID ID of item for which to find most similar other items
    * @param howMany desired number of most similar items to find
    * @return items most similar to the given item, ordered from most similar to least
-   * @throws NoSuchItemException if the item is not known
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if the item is not known
    */
   @Override
   List<RecommendedItem> mostSimilarItems(long itemID, int howMany) throws TasteException;
@@ -162,7 +160,7 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
    *  most similar items
    * @return items most similar to the given item, ordered from most similar to least
-   * @throws NoSuchItemException if the item is not known
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if the item is not known
    */
   @Override
   List<RecommendedItem> mostSimilarItems(long itemID, int howMany, Rescorer<LongPair> rescorer) throws TasteException;
@@ -171,8 +169,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param itemIDs IDs of item for which to find most similar other items
    * @param howMany desired number of most similar items to find estimates used to determine most similar items
    * @return items most similar to the given items, ordered from most similar to least
-   * @throws NoSuchItemException if <em>none</em> of {@code itemIDs} exist in the model. Otherwise, unknown
-   *  items are ignored.
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs} 
+   *  exist in the model. Otherwise, unknown items are ignored.
    */
   @Override
   List<RecommendedItem> mostSimilarItems(long[] itemIDs, int howMany) throws TasteException;
@@ -183,8 +181,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
    *  most similar items
    * @return items most similar to the given items, ordered from most similar to least
-   * @throws NoSuchItemException if <em>none</em> of {@code itemIDs} exist in the model. Otherwise, unknown
-   *  items are ignored.
+   * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs} 
+   *  exist in the model. Otherwise, unknown items are ignored.
    */
   @Override
   List<RecommendedItem> mostSimilarItems(long[] itemIDs,
@@ -252,8 +250,8 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * to {@link #recommend(long, int, boolean, IDRescorer)}.
    *
    * @see #recommend(long, int, boolean, IDRescorer)
-   * @throws NoSuchUserException if <em>none</em> of {@code userIDs} exist in the model. Otherwise, unknown
-   *  users are ignored.
+   * @throws org.apache.mahout.cf.taste.common.NoSuchUserException if <em>none</em> of {@code userIDs} 
+   *  exist in the model. Otherwise, unknown users are ignored.
    */
   List<RecommendedItem> recommendToMany(long[] userIDs,
                                         int howMany,

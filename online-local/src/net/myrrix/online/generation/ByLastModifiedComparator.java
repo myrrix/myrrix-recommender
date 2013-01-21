@@ -28,7 +28,7 @@ import java.util.Comparator;
  */
 final class ByLastModifiedComparator implements Comparator<File>, Serializable {
 
-  static final ByLastModifiedComparator INSTANCE = new ByLastModifiedComparator();
+  static final Comparator<File> INSTANCE = new ByLastModifiedComparator();
 
   private ByLastModifiedComparator() {
   }

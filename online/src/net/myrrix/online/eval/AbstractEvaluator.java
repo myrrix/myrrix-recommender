@@ -35,6 +35,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
@@ -92,7 +93,7 @@ public abstract class AbstractEvaluator {
    */
   public final EvaluationResult evaluate(File originalDataDir,
                                          double trainingPercentage,
-                                         double evaluationPercentage) throws TasteException {
+                                         double evaluationPercentage) throws TasteException, IOException {
 
     Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0,
                                 "Training % must be in (0,1): %s", trainingPercentage);
@@ -115,15 +116,8 @@ public abstract class AbstractEvaluator {
       recommender.await();
 
       return evaluate(recommender, testData);
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     } finally {
-      try {
-        recommender.close();
-      } catch (IOException e) {
-        throw new TasteException(e);
-      }
+      Closeables.close(recommender, true);
       IOUtils.deleteRecursively(trainingDataDir);
     }
   }
