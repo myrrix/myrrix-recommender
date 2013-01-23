@@ -40,6 +40,7 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
 
   private final MutableRecommendedItem delegate;
   private final float[][] itemFeatures;
+  private final double[] itemFeatureNorms;
   private final Iterator<FastByIDMap.MapEntry<float[]>> Yiterator;
   private final long[] toItemIDs;
   private final Rescorer<LongPair> rescorer;
@@ -53,6 +54,10 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
     this.itemFeatures = itemFeatures;
     this.Yiterator = Yiterator;
     this.rescorer = rescorer;
+    itemFeatureNorms = new double[itemFeatures.length];
+    for (int i = 0; i < itemFeatures.length; i++) {
+      itemFeatureNorms[i] = SimpleVectorMath.norm(itemFeatures[i]);
+    }
   }
 
   @Override
@@ -81,9 +86,8 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
       if (rescorer1 != null && rescorer1.isFiltered(new LongPair(itemID, toItemID))) {
         return null;
       }
-      float[] features = itemFeatures[i];
-      double featuresNorm = SimpleVectorMath.norm(features);
-      double similarity = SimpleVectorMath.dot(candidateFeatures, features) / (candidateFeaturesNorm * featuresNorm);
+      double similarity = SimpleVectorMath.dot(candidateFeatures, itemFeatures[i]) / 
+          (candidateFeaturesNorm * itemFeatureNorms[i]);
       if (!LangUtils.isFinite(similarity)) {
         return null;
       }
