@@ -84,6 +84,19 @@ public abstract class AbstractEvaluator {
 
   /**
    * Convenience method which sets up a {@link MyrrixRecommender}, splits data in a given location into test/training
+   * data, trains the recommender, then invokes {@link #evaluate(MyrrixRecommender, Multimap)}. Defaults to
+   * use 90% of the data for training and 10% for test; no sampling is performed, and all original data is used
+   * as either test or training data.
+   *
+   * @param originalDataDir directory containing recommender input data, as (possibly compressed) CSV files
+   *  sets. This is useful for quickly evaluating using a subset of a large data set.
+   */
+  public final EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException {
+    return evaluate(originalDataDir, 0.9, 1.0);
+  }
+
+  /**
+   * Convenience method which sets up a {@link MyrrixRecommender}, splits data in a given location into test/training
    * data, trains the recommender, then invokes {@link #evaluate(MyrrixRecommender, Multimap)}.
    *
    * @param originalDataDir directory containing recommender input data, as (possibly compressed) CSV files

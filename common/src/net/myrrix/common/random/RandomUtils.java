@@ -42,6 +42,7 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.collection.SamplingLongPrimitiveIterator;
 
 /**
  * Helpful methods related to randomness and related functions. Some parts derived from Mahout.
@@ -164,6 +165,30 @@ public final class RandomUtils {
     LongPrimitiveIterator it = set.iterator();
     it.skip(random.nextInt(size));
     return (int) it.nextLong();
+  }
+
+  /**
+   * @param n approximate number of items to choose
+   * @param stream stream to choose from randomly
+   * @param streamSize (approximate) stream size
+   * @param random random number generator
+   * @return up to n elements chosen uninformly at random from the stream
+   */
+  public static long[] chooseAboutNFromStream(int n, 
+                                              LongPrimitiveIterator stream,
+                                              int streamSize, 
+                                              RandomGenerator random) {
+    LongPrimitiveIterator it;
+    if (n < streamSize) {
+      it = new SamplingLongPrimitiveIterator(random, stream, (double) n / (double) streamSize);      
+    } else {
+      it = stream;
+    }
+    FastIDSet chosen = new FastIDSet(n);    
+    while (it.hasNext()) {
+      chosen.add(it.nextLong());
+    }
+    return chosen.toArray();
   }
 
 }

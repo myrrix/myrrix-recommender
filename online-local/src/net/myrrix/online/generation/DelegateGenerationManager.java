@@ -369,11 +369,19 @@ public final class DelegateGenerationManager implements GenerationManager {
     String featuresString = System.getProperty("model.features");
     int features = featuresString == null ?
         MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
-    String iterationsString = System.getProperty("model.iterations");
-    int iterations = iterationsString == null ?
-        MatrixFactorizer.DEFAULT_ITERATIONS : Integer.parseInt(iterationsString);
 
-    MatrixFactorizer als = new AlternatingLeastSquares(rbyRow, rbyColumn, features, iterations);
+    if (System.getProperty("model.iterations") != null) {
+      log.warn("model.iterations system property is deprecated and ignored; " +
+               "use model.als.iterations.convergenceThreshold");
+    }
+
+    String iterationsConvergenceString = System.getProperty("model.als.iterations.convergenceThreshold");
+    MatrixFactorizer als;
+    if (iterationsConvergenceString == null) {
+      als = new AlternatingLeastSquares(rbyRow, rbyColumn, features);
+    } else {
+      als = new AlternatingLeastSquares(rbyRow, rbyColumn, features, Double.parseDouble(iterationsConvergenceString));
+    }
 
     if (currentGeneration != null) {
       FastByIDMap<float[]> previousY = currentGeneration.getY();

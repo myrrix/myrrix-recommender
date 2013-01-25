@@ -69,47 +69,74 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   public static final double DEFAULT_ALPHA = 40.0;
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.1;
+  public static final double DEFAULT_CONVERGENCE_THRESHOLD = 0.001;
 
   private static final double LN_E_MINUS_1 = Math.log(FastMath.E - 1.0);
 
   private static final int WORK_UNIT_SIZE = 100;
+  private static final int NUM_USER_ITEMS_TO_TEST_CONVERGENCE = 100;
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
   private final int features;
-  private final int iterations;
+  private final double estimateErrorConvergenceThreshold;
   private FastByIDMap<float[]> X;
   private FastByIDMap<float[]> Y;
   private FastByIDMap<float[]> previousY;
 
   /**
-   * Uses default number of feature and iterations.
+   * Uses default number of feature and convergence threshold.
    *
    * @param RbyRow the input R matrix, indexed by row
    * @param RbyColumn the input R matrix, indexed by column
    */
   public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
                                  FastByIDMap<FastByIDFloatMap> RbyColumn) {
-    this(RbyRow, RbyColumn, DEFAULT_FEATURES, DEFAULT_ITERATIONS);
+    this(RbyRow, RbyColumn, DEFAULT_FEATURES, DEFAULT_CONVERGENCE_THRESHOLD);
   }
 
   /**
    * @param RbyRow the input R matrix, indexed by row
    * @param RbyColumn the input R matrix, indexed by column
    * @param features number of features, must be positive
-   * @param iterations number of iterations, must be positive
+   */
+  public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
+                                 FastByIDMap<FastByIDFloatMap> RbyColumn,
+                                 int features) {
+    this(RbyRow, RbyColumn, features, DEFAULT_CONVERGENCE_THRESHOLD);
+  }
+
+  /**
+   * @param RbyRow the input R matrix, indexed by row
+   * @param RbyColumn the input R matrix, indexed by column
+   * @param features number of features, must be positive
+   * @param estimateErrorConvergenceThreshold when the average absolute difference in estimated user-item
+   *   scores falls below this threshold between iterations, iterations will stop
    */
   public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
                                  FastByIDMap<FastByIDFloatMap> RbyColumn,
                                  int features,
-                                 int iterations) {
+                                 double estimateErrorConvergenceThreshold) {
+    Preconditions.checkNotNull(RbyRow);
+    Preconditions.checkNotNull(RbyColumn);
     Preconditions.checkArgument(features > 0, "features must be positive: %s", features);
-    Preconditions.checkArgument(iterations > 0, "iterations must be positive: %s", iterations);
+    Preconditions.checkArgument(estimateErrorConvergenceThreshold > 0.0 && estimateErrorConvergenceThreshold < 1.0,
+                                "threshold must be in (0,1): %s", estimateErrorConvergenceThreshold);
     this.RbyRow = RbyRow;
     this.RbyColumn = RbyColumn;
     this.features = features;
-    this.iterations = iterations;
+    this.estimateErrorConvergenceThreshold = estimateErrorConvergenceThreshold;
+  }
 
+  /**
+   * @deprecated use {@link #AlternatingLeastSquares(FastByIDMap, FastByIDMap, int)}
+   */
+  @Deprecated
+  public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
+                                 FastByIDMap<FastByIDFloatMap> RbyColumn,
+                                 int features,
+                                 int iterations) {
+    this(RbyRow, RbyColumn, features);
   }
 
   @Override
@@ -144,17 +171,14 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     X = new FastByIDMap<float[]>(RbyRow.size(), 1.25f);
 
-    int iterationsToRun;
     if (previousY == null ||
         previousY.isEmpty() ||
         previousY.entrySet().iterator().next().getValue().length != features) {
-      log.info("Starting from random Y matrix; doubling usual number of iterations");
+      log.info("Starting from random Y matrix");
       Y = constructInitialY(null);
-      iterationsToRun = 2 * iterations;
     } else {
       log.info("Starting from previous generation's Y matrix");
       Y = constructInitialY(previousY);
-      iterationsToRun = iterations;
     }
 
     // This will be used to compute rows/columns in parallel during iteration
@@ -166,15 +190,55 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         Executors.newFixedThreadPool(numThreads,
                                      new ThreadFactoryBuilder().setNameFormat("ALS-%d").setDaemon(true).build());
 
-    log.info("Starting {} iterations with {} threads", iterationsToRun, numThreads);
+    log.info("Iterating using {} threads", numThreads);
+
+    RandomGenerator random = RandomManager.getRandom();
+    long[] testUserIDs = RandomUtils.chooseAboutNFromStream(NUM_USER_ITEMS_TO_TEST_CONVERGENCE, 
+                                                            RbyRow.keySetIterator(), 
+                                                            RbyRow.size(), 
+                                                            random);
+    long[] testItemIDs = RandomUtils.chooseAboutNFromStream(NUM_USER_ITEMS_TO_TEST_CONVERGENCE, 
+                                                            RbyColumn.keySetIterator(), 
+                                                            RbyColumn.size(), 
+                                                            random);
+    double[][] estimates = new double[testUserIDs.length][testItemIDs.length];
+    if (!X.isEmpty()) {
+      for (int i = 0; i < testUserIDs.length; i++) {
+        for (int j = 0; j < testItemIDs.length; j++) {
+          estimates[i][j] = SimpleVectorMath.dot(X.get(testUserIDs[i]), Y.get(testItemIDs[j])); 
+        }
+      }
+    }
+    // Otherwise X is empty because it's the first ever iteration. Estimates can be left at initial 0 value
 
     try {
-      for (int i = 0; i < iterationsToRun; i++) {
-        RunningAverage avgSquaredDiff = new FullRunningAverage();
-        iterateXFromY(executor, avgSquaredDiff);
-        iterateYFromX(executor, avgSquaredDiff);
-        log.info("Finished iteration {} of {}", i + 1, iterationsToRun);
-        log.info("Avg squared difference of feature vectors vs prior iteration: {}", avgSquaredDiff);
+      int iterationNumber = 0;
+      while (true) {
+        iterateXFromY(executor);
+        iterateYFromX(executor);
+
+        RunningAverage averageAbsoluteEstimateDiff = new FullRunningAverage();        
+        for (int i = 0; i < testUserIDs.length; i++) {
+          for (int j = 0; j < testItemIDs.length; j++) {
+            double newValue = SimpleVectorMath.dot(X.get(testUserIDs[i]), Y.get(testItemIDs[j]));            
+            double oldValue = estimates[i][j];
+            estimates[i][j] = newValue;
+            averageAbsoluteEstimateDiff.addDatum(FastMath.abs(newValue - oldValue));
+          }
+        }
+      
+        iterationNumber++;
+        log.info("Finished iteration {}", iterationNumber);
+        log.info("Avg absolute difference in estimate vs prior iteration: {}", averageAbsoluteEstimateDiff);
+        double convergenceValue = averageAbsoluteEstimateDiff.getAverage();
+        if (!LangUtils.isFinite(convergenceValue)) {
+          log.warn("Invalid convergence value, aborting iteration! {}", convergenceValue);
+          break;
+        }
+        if (convergenceValue < estimateErrorConvergenceThreshold) {
+          log.info("Converged");          
+          break;
+        }
       }
     } finally {
       ExecutorUtils.shutdownNowAndAwait(executor);
@@ -197,8 +261,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /**
    * Runs one iteration to compute X from Y.
    */
-  private void iterateXFromY(ExecutorService executor, RunningAverage avgSquaredDiff)
-      throws ExecutionException, InterruptedException {
+  private void iterateXFromY(ExecutorService executor) throws ExecutionException, InterruptedException {
 
     RealMatrix YTY = MatrixUtils.transposeTimesSelf(Y);
     Collection<Future<?>> futures = Lists.newArrayList();
@@ -207,12 +270,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyRow.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit, avgSquaredDiff)));
+        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit, avgSquaredDiff)));
+      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
     }
 
     int count = 0;
@@ -236,8 +299,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /**
    * Runs one iteration to compute Y from X.
    */
-  private void iterateYFromX(ExecutorService executor, RunningAverage avgSquaredDiff)
-      throws ExecutionException, InterruptedException {
+  private void iterateYFromX(ExecutorService executor) throws ExecutionException, InterruptedException {
 
     RealMatrix XTX = MatrixUtils.transposeTimesSelf(X);
     Collection<Future<?>> futures = Lists.newArrayList();
@@ -246,12 +308,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
       workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
       if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit, avgSquaredDiff)));
+        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
         workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
       }
     }
     if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit, avgSquaredDiff)));
+      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
     }
 
     int count = 0;
@@ -274,20 +336,17 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     private final RealMatrix YTY;
     private final FastByIDMap<float[]> X;
     private final List<Pair<Long,FastByIDFloatMap>> workUnit;
-    private final RunningAverage avgSquaredDiff;
 
     private Worker(int features,
                    FastByIDMap<float[]> Y,
                    RealMatrix YTY,
                    FastByIDMap<float[]> X,
-                   List<Pair<Long,FastByIDFloatMap>> workUnit,
-                   RunningAverage avgSquaredDiff) {
+                   List<Pair<Long,FastByIDFloatMap>> workUnit) {
       this.features = features;
       this.Y = Y;
       this.YTY = YTY;
       this.X = X;
       this.workUnit = workUnit;
-      this.avgSquaredDiff = avgSquaredDiff;
     }
 
     @Override
@@ -361,15 +420,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         }
 
         // Store result:
-        float[] oldXu;
         synchronized (X) {
-          oldXu = X.put(work.getFirst(), xu);
-        }
-        if (oldXu != null) {
-          double distSquared = SimpleVectorMath.distanceSquared(xu, oldXu);
-          synchronized (avgSquaredDiff) {
-            avgSquaredDiff.addDatum(distSquared);
-          }
+          X.put(work.getFirst(), xu);
         }
 
         // Process is identical for computing Y from X. Swap X in for Y, Y for X, i for u, etc.

@@ -37,12 +37,12 @@ public final class PrecisionRecallEvaluationTest extends MyrrixTest {
   @Test
   public void testEval() throws Exception {
     PrecisionRecallEvaluator evaluator = new PrecisionRecallEvaluator();
-    IRStatistics stats = (IRStatistics) evaluator.evaluate(new File("testdata/grouplens10M"), 0.9, 0.5);
+    IRStatistics stats = (IRStatistics) evaluator.evaluate(new File("testdata/grouplens10M"));
     log.info(stats.toString());
-    assertTrue(stats.getPrecision() > 0.13);
-    assertTrue(stats.getRecall() > 0.13);
-    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.15);
-    assertTrue(stats.getF1Measure() > 0.13);
+    assertTrue(stats.getPrecision() > 0.175);
+    assertTrue(stats.getRecall() > 0.175);
+    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.185);
+    assertTrue(stats.getF1Measure() > 0.175);
   }
 
 }

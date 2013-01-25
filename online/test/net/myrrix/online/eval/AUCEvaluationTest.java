@@ -36,9 +36,9 @@ public final class AUCEvaluationTest extends MyrrixTest {
   @Test
   public void testEval() throws Exception {
     AUCEvaluator evaluator = new AUCEvaluator();
-    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"), 0.9, 0.5);
+    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"));
     log.info(stats.toString());
-    assertTrue(stats.getScore() > 0.94);
+    assertTrue(stats.getScore() > 0.955);
   }
 
 }

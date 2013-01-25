@@ -158,8 +158,9 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *   <li>{@code model.features}: The number of features used in building the underlying user-feature and
  *   item-feature matrices. Typical values are 30-100. Defaults to
  *   {@code MatrixFactorizer#DEFAULT_FEATURES}.</li>
- *   <li>{@code model.iterations}: The number of iterations used to refine the model. Typical values are 3-10.
- *   Defaults to {@code MatrixFactorizer#DEFAULT_ITERATIONS}.</li>
+ *   <li>{@code model.als.iterations.convergenceThreshold}: Controls when model building iterations stop. 
+ *    When the average change in the scores estimated for user-item pairs falls below this threshold, 
+ *    iteration stops.</li>
  *   <li>{@code model.als.lambda}: Controls the lambda overfitting parameter in the ALS algorithm.
  *    Typical values are near 0.1. Do not change this, in general. Defaults to
  *    {@code AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
