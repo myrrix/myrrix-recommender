@@ -20,6 +20,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.Servlet;
@@ -488,6 +490,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
         context.setLoginConfig(loginConfig);
 
         securityConstraint.addAuthRole(InMemoryRealm.AUTH_ROLE);
+        
+        enableHttpDigestHack();
 
         context.addSecurityRole(InMemoryRealm.AUTH_ROLE);
         DigestAuthenticator authenticator = new DigestAuthenticator();
@@ -523,6 +527,40 @@ public final class Runner implements Callable<Boolean>, Closeable {
     errorPage.setExceptionType(Throwable.class.getName());
     errorPage.setLocation("/error.jspx");
     context.addErrorPage(errorPage);
+  }
+  
+  /**
+   * See https://issues.apache.org/bugzilla/show_bug.cgi?id=54060
+   * TODO hopefully remove this one day
+   */
+  private static void enableHttpDigestHack() {
+    try {
+      Class<?> httpParserClass = Class.forName("org.apache.tomcat.util.http.parser.HttpParser");
+      Field fieldTypeField = httpParserClass.getDeclaredField("FIELD_TYPE_TOKEN_OR_QUOTED_STRING");
+      fieldTypeField.setAccessible(true);
+      Integer FIELD_TYPE_TOKEN_OR_QUOTED_STRING = (Integer) fieldTypeField.get(null);
+
+      Field fieldTypesField = httpParserClass.getDeclaredField("fieldTypes");
+      fieldTypesField.setAccessible(true);
+      Map<String,Integer> fieldTypes = (Map<String,Integer>) fieldTypesField.get(null);
+
+      // Clients are sending DIGEST responses with algorithm="MD5" instead of algorithm=MD5, which
+      // is evidently correct by RFC 2617. Or qop="auth" instead of the correct qop=auth.
+      // Tomcat 7.0.30+ got stricter. Tomcat 7.0.35 worked around qop but not algorithm.
+      // This change makes it lenient again. The JVM seems to send 'algorithm' incorrectly!
+
+      fieldTypes.put("algorithm", FIELD_TYPE_TOKEN_OR_QUOTED_STRING);
+
+    } catch (ClassNotFoundException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
+    } catch (NoSuchFieldException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
+    } catch (IllegalAccessException e) {
+      log.warn("HTTP DIGEST auth workaround for Tomcat 7 isn't working here; maybe we're not in Tomcat? {}",
+               e.toString());
+    }
   }
 
 }
