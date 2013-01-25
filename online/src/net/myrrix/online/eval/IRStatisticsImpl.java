@@ -19,21 +19,24 @@ package net.myrrix.online.eval;
 import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.cf.taste.eval.IRStatistics;
 
-final class IRStatisticsImpl implements IRStatistics, EvaluationResult, Serializable {
+final class IRStatisticsImpl implements MyrrixIRStatistics, EvaluationResult, Serializable {
 
   private final double precision;
   private final double recall;
   private final double nDCG;
+  private final double meanAveragePrecision;
 
-  IRStatisticsImpl(double precision, double recall, double nDCG) {
+  IRStatisticsImpl(double precision, double recall, double nDCG, double meanAveragePrecision) {
     Preconditions.checkArgument(precision >= 0.0 && precision <= 1.0, "Illegal precision: %s", precision);
     Preconditions.checkArgument(recall >= 0.0 && recall <= 1.0, "Illegal recall: %s", recall);
     Preconditions.checkArgument(nDCG >= 0.0 && nDCG <= 1.0, "Illegal nDCG: %s", nDCG);
+    Preconditions.checkArgument(meanAveragePrecision >= 0.0 && meanAveragePrecision <= 1.0, 
+                                "Illegal meanAveragePrecision: %s", meanAveragePrecision);    
     this.precision = precision;
     this.recall = recall;
     this.nDCG = nDCG;
+    this.meanAveragePrecision = meanAveragePrecision;
   }
 
   @Override
@@ -75,6 +78,11 @@ final class IRStatisticsImpl implements IRStatistics, EvaluationResult, Serializ
   public double getNormalizedDiscountedCumulativeGain() {
     return nDCG;
   }
+  
+  @Override
+  public double getMeanAveragePrecision() {
+    return meanAveragePrecision;
+  }
 
   /**
    * @throws UnsupportedOperationException
@@ -86,7 +94,7 @@ final class IRStatisticsImpl implements IRStatistics, EvaluationResult, Serializ
 
   @Override
   public String toString() {
-    return "Precision: " + precision + "; Recall: " + recall + "; nDCG: " + nDCG;
+    return "Precision: " + precision + "; Recall: " + recall + "; nDCG: " + nDCG + "; MAP: " + meanAveragePrecision;
   }
 
 }

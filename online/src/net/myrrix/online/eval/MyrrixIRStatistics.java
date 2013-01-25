@@ -16,18 +16,18 @@
 
 package net.myrrix.online.eval;
 
+import org.apache.mahout.cf.taste.eval.IRStatistics;
+
 /**
- * Implementations of this interface encapsulate the result of an evaluation process. The details may vary
- * across processes, but all are guaranteed to provide at least one score, where bigger is better.
- *
+ * Extends {@link IRStatistics} with more metrics.
+ * 
  * @author Sean Owen
  */
-public interface EvaluationResult {
+public interface MyrrixIRStatistics extends IRStatistics {
 
   /**
-   * @return some value, whose nature depends on the implementation, which quantifies the evaluation. Bigger
-   *  is better.
+   * @return mean average precision (http://en.wikipedia.org/wiki/Information_retrieval#Mean_average_precision)
    */
-  double getScore();
+  double getMeanAveragePrecision();  
 
 }

@@ -55,6 +55,7 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
     RunningAverage precision = new FullRunningAverage();
     RunningAverage recall = new FullRunningAverage();
     RunningAverage ndcg = new FullRunningAverage();
+    RunningAverage meanAveragePrecision = new FullRunningAverage();
 
     int count = 0;
     for (Long userID : testData.keySet()) {
@@ -83,31 +84,41 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
       int intersectionSize = 0;
       double score = 0.0;
       double maxScore = 0.0;
+      RunningAverage precisionAtI = new FullRunningAverage();
+      double changeInRecall = 1.0 / numValues;
+      double averagePrecision = 0.0;
+
       for (int i = 0; i < numRecs; i++) {
         RecommendedItem rec = recs.get(i);
         double value = LN2 / Math.log(2.0 + i); // 1 / log_2(1 + (i+1))
         if (valueIDs.contains(rec.getItemID())) {
           intersectionSize++;
           score += value;
+          precisionAtI.addDatum(1.0);
         }
         maxScore += value;
+        averagePrecision += precisionAtI.getCount() == 0 ? 0.0 : precisionAtI.getAverage() * changeInRecall;
       }
 
       precision.addDatum(numRecs == 0 ? 0.0 : (double) intersectionSize / numRecs);
       recall.addDatum((double) intersectionSize / numValues);
       ndcg.addDatum(maxScore == 0.0 ? 0.0 : score / maxScore);
-      double f1 = 2.0 * precision.getAverage() * recall.getAverage() /
-          (precision.getAverage() + recall.getAverage());
+      meanAveragePrecision.addDatum(averagePrecision);
 
       if (++count % 1000 == 0) {
-        log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", precision, recall, ndcg, f1);
+        log.info(new IRStatisticsImpl(precision.getAverage(), 
+                                      recall.getAverage(), 
+                                      ndcg.getAverage(),
+                                      meanAveragePrecision.getAverage()).toString());
       }
     }
-    double f1 = 2.0 * precision.getAverage() * recall.getAverage() /
-        (precision.getAverage() + recall.getAverage());
-    log.info("Precision: {}; Recall: {}; nDCG: {}; F1: {}", precision, recall, ndcg, f1);
 
-    return new IRStatisticsImpl(precision.getAverage(), recall.getAverage(), ndcg.getAverage());
+    EvaluationResult result = new IRStatisticsImpl(precision.getAverage(), 
+                                                   recall.getAverage(), 
+                                                   ndcg.getAverage(),
+                                                   meanAveragePrecision.getAverage());
+    log.info(result.toString());
+    return result;
   }
 
 }

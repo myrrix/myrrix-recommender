@@ -23,8 +23,10 @@ import com.google.common.io.Files;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 import net.myrrix.common.io.IOUtils;
+import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.common.random.RandomManager;
 
 public abstract class MyrrixTest extends Assert {
@@ -60,6 +62,11 @@ public abstract class MyrrixTest extends Assert {
     Assert.assertArrayEquals(expecteds, actuals, DOUBLE_EPSILON);
   }
 
+  @BeforeClass
+  public static void setUpClass() {
+    MemoryHandler.setSensibleLogFormat();    
+  }
+  
   @Before
   public void setUp() throws Exception {
     testTempDir = null;
