@@ -39,9 +39,12 @@ final class IRStatisticsImpl implements MyrrixIRStatistics, EvaluationResult, Se
     this.meanAveragePrecision = meanAveragePrecision;
   }
 
+  /**
+   * @return {@link #getMeanAveragePrecision()}
+   */
   @Override
   public double getScore() {
-    return getPrecision();
+    return getMeanAveragePrecision();
   }
 
   @Override
