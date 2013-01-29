@@ -62,6 +62,14 @@ public abstract class MyrrixTest extends Assert {
     Assert.assertArrayEquals(expecteds, actuals, DOUBLE_EPSILON);
   }
 
+  public static void assertArrayEquals(float[] expecteds, double[] actuals) {
+    float[] floatActuals = new float[actuals.length];
+    for (int i = 0; i < actuals.length; i++) {
+      floatActuals[i] = (float) actuals[i];
+    }
+    assertArrayEquals(expecteds, floatActuals);
+  }
+
   @BeforeClass
   public static void setUpClass() {
     MemoryHandler.setSensibleLogFormat();    

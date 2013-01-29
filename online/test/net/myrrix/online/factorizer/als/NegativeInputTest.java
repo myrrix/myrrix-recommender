@@ -56,7 +56,7 @@ public final class NegativeInputTest extends MyrrixTest {
     previousY.put(2L, new float[] {0.3f, 0.1f});
     previousY.put(3L, new float[] {0.2f, 0.2f});
 
-    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 50);
+    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 40);
     als.setPreviousY(previousY);
     als.call();
 
@@ -69,13 +69,13 @@ public final class NegativeInputTest extends MyrrixTest {
     log.info("{}", productString);
 
     assertArrayEquals(
-        new double[] {0.8386784642934799, 0.8434833586215973, 0.9364817142486572, 0.6930283457040787},
+        new float[] {0.8386785f, 0.8434833f, 0.9364817f, 0.69302833f},
         product.getRow(0));
     assertArrayEquals(
-        new double[] {0.5570174157619476, 0.564003199338913, 0.8351103067398071, 0.8945785909891129},
+        new float[] {0.55701745f, 0.5640032f, 0.8351103f, 0.8945786f},
         product.getRow(1));
     assertArrayEquals(
-        new double[] {0.3388940095901489, 0.34570541977882385, 0.6519490517675877, 0.8374074418097734},
+        new float[] {0.338894f, 0.34570542f, 0.65194905f, 0.83740747f},
         product.getRow(2));
   }
 

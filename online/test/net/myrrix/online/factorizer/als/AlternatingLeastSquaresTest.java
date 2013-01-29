@@ -61,7 +61,7 @@ public final class AlternatingLeastSquaresTest extends MyrrixTest {
     previousY.put(3L, new float[] {0.2f, 0.2f});
     previousY.put(4L, new float[] {0.5f, 0.4f});
 
-    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 50);
+    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 40);
     als.setPreviousY(previousY);
     als.call();
 
@@ -74,19 +74,19 @@ public final class AlternatingLeastSquaresTest extends MyrrixTest {
     log.info("{}", productString);
 
     assertArrayEquals(
-        new double[] {0.3756360113620758, 0.9395057559013367, 0.9583560638129711, 0.9447542577981949, 0.3573467433452606},
+        new float[] {0.375636f, 0.93950576f, 0.9583561f, 0.94475424f, 0.35734674f},
         product.getRow(0));
     assertArrayEquals(
-        new double[] {0.3705553114414215, 0.9655348211526871, 0.9790759533643723, 0.9705947190523148, 0.35111936926841736},
+        new float[] {0.3705553f, 0.9655348f, 0.97907597f, 0.9705947f, 0.35111937f},
         product.getRow(1));
     assertArrayEquals(
-        new double[] {0.9125804901123047, 0.1808266043663025, 0.5008378103375435, 0.1999589502811432, 0.9437789022922516},
+        new float[] {0.9125805f, 0.1808266f, 0.5008378f, 0.19995895f, 0.9437789f},
         product.getRow(2));
     assertArrayEquals(
-        new double[] {0.9606167078018188, 0.5692524313926697, 0.8566695228219032, 0.5882413387298584, 0.9798217415809631},
+        new float[] {0.9606167f, 0.56925243f, 0.85666955f, 0.58824134f, 0.97982174f},
         product.getRow(3));
     assertArrayEquals(
-        new double[] {0.3496551513671875, 0.9453220069408417, 0.9536311440169811, 0.9499924778938293, 0.33008313179016113},
+        new float[] {0.34965515f, 0.94532204f, 0.95363116f, 0.9499925f, 0.33008313f},
         product.getRow(4));
 
   }
