@@ -56,7 +56,7 @@ public final class NegativeInputTest extends MyrrixTest {
     previousY.put(2L, new float[] {0.3f, 0.1f});
     previousY.put(3L, new float[] {0.2f, 0.2f});
 
-    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.00001);
+    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 50);
     als.setPreviousY(previousY);
     als.call();
 

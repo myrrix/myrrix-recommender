@@ -61,7 +61,7 @@ public final class AlternatingLeastSquaresTest extends MyrrixTest {
     previousY.put(3L, new float[] {0.2f, 0.2f});
     previousY.put(4L, new float[] {0.5f, 0.4f});
 
-    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001);
+    MatrixFactorizer als = new AlternatingLeastSquares(byRow, byCol, 2, 0.0001, 50);
     als.setPreviousY(previousY);
     als.call();
 

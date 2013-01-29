@@ -161,6 +161,7 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *   <li>{@code model.als.iterations.convergenceThreshold}: Controls when model building iterations stop. 
  *    When the average change in the scores estimated for user-item pairs falls below this threshold, 
  *    iteration stops.</li>
+ *   <li>{@code model.iterations.max}: Caps the number of iterations</li>
  *   <li>{@code model.als.lambda}: Controls the lambda overfitting parameter in the ALS algorithm.
  *    Typical values are near 0.1. Do not change this, in general. Defaults to
  *    {@code AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>

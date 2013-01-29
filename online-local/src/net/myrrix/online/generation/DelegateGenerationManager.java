@@ -375,13 +375,17 @@ public final class DelegateGenerationManager implements GenerationManager {
                "use model.als.iterations.convergenceThreshold");
     }
 
-    String iterationsConvergenceString = System.getProperty("model.als.iterations.convergenceThreshold");
-    MatrixFactorizer als;
-    if (iterationsConvergenceString == null) {
-      als = new AlternatingLeastSquares(rbyRow, rbyColumn, features);
-    } else {
-      als = new AlternatingLeastSquares(rbyRow, rbyColumn, features, Double.parseDouble(iterationsConvergenceString));
-    }
+    String iterationsConvergenceString = 
+        System.getProperty("model.als.iterations.convergenceThreshold",
+                           Double.toString(AlternatingLeastSquares.DEFAULT_CONVERGENCE_THRESHOLD));
+    String maxIterationsString = 
+        System.getProperty("model.iterations.max", 
+                           Integer.toString(AlternatingLeastSquares.DEFAULT_MAX_ITERATIONS));    
+    MatrixFactorizer als = new AlternatingLeastSquares(rbyRow, 
+                                                       rbyColumn, 
+                                                       features, 
+                                                       Double.parseDouble(iterationsConvergenceString),
+                                                       Integer.parseInt(maxIterationsString));
 
     if (currentGeneration != null) {
       FastByIDMap<float[]> previousY = currentGeneration.getY();

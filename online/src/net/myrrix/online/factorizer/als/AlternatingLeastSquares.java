@@ -70,6 +70,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   /** Default lambda factor; this is multiplied by alpha. */
   public static final double DEFAULT_LAMBDA = 0.1;
   public static final double DEFAULT_CONVERGENCE_THRESHOLD = 0.001;
+  public static final int DEFAULT_MAX_ITERATIONS = 30;
 
   private static final double LN_E_MINUS_1 = Math.log(FastMath.E - 1.0);
 
@@ -80,6 +81,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
   private final int features;
   private final double estimateErrorConvergenceThreshold;
+  private final int maxIterations;
   private FastByIDMap<float[]> X;
   private FastByIDMap<float[]> Y;
   private FastByIDMap<float[]> previousY;
@@ -92,7 +94,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
    */
   public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
                                  FastByIDMap<FastByIDFloatMap> RbyColumn) {
-    this(RbyRow, RbyColumn, DEFAULT_FEATURES, DEFAULT_CONVERGENCE_THRESHOLD);
+    this(RbyRow, RbyColumn, DEFAULT_FEATURES, DEFAULT_CONVERGENCE_THRESHOLD, DEFAULT_MAX_ITERATIONS);
   }
 
   /**
@@ -103,7 +105,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
                                  FastByIDMap<FastByIDFloatMap> RbyColumn,
                                  int features) {
-    this(RbyRow, RbyColumn, features, DEFAULT_CONVERGENCE_THRESHOLD);
+    this(RbyRow, RbyColumn, features, DEFAULT_CONVERGENCE_THRESHOLD, DEFAULT_MAX_ITERATIONS);
   }
 
   /**
@@ -112,11 +114,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
    * @param features number of features, must be positive
    * @param estimateErrorConvergenceThreshold when the average absolute difference in estimated user-item
    *   scores falls below this threshold between iterations, iterations will stop
+   * @param maxIterations caps the number of iterations run. If non-positive, there is no cap.
    */
   public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
                                  FastByIDMap<FastByIDFloatMap> RbyColumn,
                                  int features,
-                                 double estimateErrorConvergenceThreshold) {
+                                 double estimateErrorConvergenceThreshold,
+                                 int maxIterations) {
     Preconditions.checkNotNull(RbyRow);
     Preconditions.checkNotNull(RbyColumn);
     Preconditions.checkArgument(features > 0, "features must be positive: %s", features);
@@ -126,6 +130,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     this.RbyColumn = RbyColumn;
     this.features = features;
     this.estimateErrorConvergenceThreshold = estimateErrorConvergenceThreshold;
+    this.maxIterations = maxIterations;
   }
 
   /**
@@ -229,6 +234,10 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       
         iterationNumber++;
         log.info("Finished iteration {}", iterationNumber);
+        if (maxIterations > 0 && iterationNumber >= maxIterations) {
+          log.info("Reached iteration limit");
+          break;
+        }
         log.info("Avg absolute difference in estimate vs prior iteration: {}", averageAbsoluteEstimateDiff);
         double convergenceValue = averageAbsoluteEstimateDiff.getAverage();
         if (!LangUtils.isFinite(convergenceValue)) {
