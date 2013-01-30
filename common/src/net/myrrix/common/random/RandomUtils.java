@@ -35,14 +35,17 @@ package net.myrrix.common.random;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.collection.SamplingLongPrimitiveIterator;
+import net.myrrix.common.math.SimpleVectorMath;
 
 /**
  * Helpful methods related to randomness and related functions. Some parts derived from Mahout.
@@ -76,6 +79,12 @@ public final class RandomUtils {
    */
   public static float[] randomUnitVector(int dimensions, RandomGenerator random) {
     float[] vector = new float[dimensions];
+    doRandomUnitVector(vector, random);
+    return vector;
+  }
+  
+  private static void doRandomUnitVector(float[] vector, RandomGenerator random) {
+    int dimensions = vector.length;
     double total = 0.0;
     for (int i = 0; i < dimensions; i++) {
       double d = random.nextGaussian();
@@ -85,6 +94,43 @@ public final class RandomUtils {
     float normalization = (float) FastMath.sqrt(total);
     for (int i = 0; i < dimensions; i++) {
       vector[i] /= normalization;
+    }
+  }
+
+  /**
+   * @param dimensions dimensionality of resulting vector
+   * @param farFrom vectors that the chosen vector should be "far from" -- not in the same direction as
+   * @param random random number generator to use
+   * @return a vector of length 1 over the given number of dimensions, whose direction is chosen uniformly
+   *   at random (that is: a point chosen uniformly at random on the unit hypersphere), but preferring
+   *   those not in the same direction as a set of existing vectors
+   */
+  public static float[] randomUnitVectorFarFrom(int dimensions,
+                                                List<float[]> farFrom,
+                                                RandomGenerator random) {
+    int size = farFrom.size();
+    int numSamples = Math.min(100, size);
+    float[] vector = new float[dimensions];
+    boolean accepted = false;
+    while (!accepted) {
+      doRandomUnitVector(vector, random);
+      double smallestDistSquared = Double.POSITIVE_INFINITY;
+      for (int sample = 0; sample < numSamples; sample++) {
+        float[] other = farFrom.get(size == numSamples ? sample : random.nextInt(size));
+        // dot is the cosine here since both are unit vectors
+        double distSquared = 2.0 - 2.0 * SimpleVectorMath.dot(vector, other);
+        if (LangUtils.isFinite(distSquared) && distSquared < smallestDistSquared) {
+          smallestDistSquared = distSquared;
+        }
+      }
+      if (LangUtils.isFinite(smallestDistSquared)) {
+        // Choose with probability proportional to squared distance, a la kmeans++ centroid selection
+        double acceptProbability = smallestDistSquared / 4.0; // dist squared is in [0,4]
+        accepted = random.nextDouble() < acceptProbability;
+      } else {
+        // kind of a default
+        accepted = true;
+      }
     }
     return vector;
   }

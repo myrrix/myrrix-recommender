@@ -31,6 +31,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
@@ -258,12 +259,20 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private FastByIDMap<float[]> constructInitialY(FastByIDMap<float[]> previousY) {
     FastByIDMap<float[]> randomY = previousY == null ? new FastByIDMap<float[]>(RbyColumn.size(), 1.25f) : previousY;
     RandomGenerator random = RandomManager.getRandom();
-    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
-      long id = entry.getKey();
+    List<float[]> recentVectors = Lists.newArrayList();
+    for (FastByIDMap.MapEntry<float[]> entry : randomY.entrySet()) {
+      recentVectors.add(entry.getValue());
+    }
+    LongPrimitiveIterator it = RbyColumn.keySetIterator();
+    while (it.hasNext()) {
+      long id = it.nextLong();
       if (!randomY.containsKey(id)) {
-        randomY.put(id, RandomUtils.randomUnitVector(features, random));
+        float[] vector = RandomUtils.randomUnitVectorFarFrom(features, recentVectors, random);
+        randomY.put(id, vector);
+        recentVectors.add(vector);
       }
     }
+    log.info("Constructed initial random Y");
     return randomY;
   }
 
