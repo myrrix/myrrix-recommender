@@ -66,6 +66,8 @@ public final class MyrrixClientConfiguration {
    * @param host Serving Layer host to communicate with. Defaults to {@link #DEFAULT_PORT}.
    */
   public void setHost(String host) {
+    Preconditions.checkArgument(host == null || (!host.startsWith("http://") && !host.startsWith("https://")),
+                                "host should not include a URI scheme: %s", host);
     this.host = host;
   }
 
