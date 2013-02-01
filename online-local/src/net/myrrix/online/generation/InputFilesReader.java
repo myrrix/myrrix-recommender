@@ -83,6 +83,7 @@ final class InputFilesReader {
     for (File inputFile : inputFiles) {
       log.info("Reading {}", inputFile);
       for (CharSequence line : new FileLineIterable(inputFile)) {
+        lines++;
         Iterator<String> it = COMMA.split(line).iterator();
 
         long userID;
@@ -104,7 +105,7 @@ final class InputFilesReader {
           }
           continue;
         } catch (IllegalArgumentException iae) { // includes NumberFormatException
-          if (lines == 0) {
+          if (lines == 1) {
             log.info("Ignoring header line");
           } else {
             log.warn("Ignoring unparseable line: '{}'", line);
@@ -141,7 +142,7 @@ final class InputFilesReader {
           }
         }
 
-        if (++lines % 1000000 == 0) {
+        if (lines % 1000000 == 0) {
           log.info("Finished {} lines", lines);
         }
       }
