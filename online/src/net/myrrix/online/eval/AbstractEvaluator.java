@@ -41,6 +41,7 @@ import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
+import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
@@ -50,6 +51,7 @@ import net.myrrix.common.ByValueAscComparator;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 
 /**
@@ -65,16 +67,27 @@ public abstract class AbstractEvaluator {
   private static final Splitter COMMA_TAB_SPLIT = Splitter.on(CharMatcher.anyOf(",\t")).omitEmptyStrings();
 
   /**
+   * Calls {@link #evaluate(MyrrixRecommender, RescorerProvider, Multimap)} without a rescorer.
+   */
+  public final EvaluationResult evaluate(MyrrixRecommender recommender,
+                                         Multimap<Long,RecommendedItem> testData) throws TasteException {
+    return evaluate(recommender, null, testData);
+  }
+  
+  /**
    * Evaluate a given {@link MyrrixRecommender}, already trained with some training data, using the given
    * test data.
    *
    * @param recommender instance to evaluate, which already has training data appropriate for the supplied test
    *  data
+   * @param provider optional {@link RescorerProvider} that should be used in evaluation / training data split.
+   *  It may or may not be used depending on the test.
    * @param testData test data to use in the evaluation. It is a {@link Multimap} keyed by user ID, pointing
    *  to many {@link RecommendedItem}s, each of which represents a test datum, which would be considered a
    *  good recommendation.
    */
   public abstract EvaluationResult evaluate(MyrrixRecommender recommender,
+                                            RescorerProvider provider,
                                             Multimap<Long,RecommendedItem> testData) throws TasteException;
 
   /**
@@ -92,7 +105,7 @@ public abstract class AbstractEvaluator {
    *  sets. This is useful for quickly evaluating using a subset of a large data set.
    */
   public final EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException {
-    return evaluate(originalDataDir, 0.9, 1.0);
+    return evaluate(originalDataDir, 0.9, 1.0, null);
   }
 
   /**
@@ -103,10 +116,13 @@ public abstract class AbstractEvaluator {
    * @param trainingPercentage percentage of data to train on; the remainder is test data
    * @param evaluationPercentage percentage of all data to consider, before even splitting into test and training
    *  sets. This is useful for quickly evaluating using a subset of a large data set.
+   * @param provider optional {@link RescorerProvider} that should be used in evaluation / training data split.
+   *  It may or may not be used depending on the test.
    */
   public final EvaluationResult evaluate(File originalDataDir,
                                          double trainingPercentage,
-                                         double evaluationPercentage) throws TasteException, IOException {
+                                         double evaluationPercentage,
+                                         RescorerProvider provider) throws TasteException, IOException {
 
     Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0,
                                 "Training % must be in (0,1): %s", trainingPercentage);
@@ -123,7 +139,7 @@ public abstract class AbstractEvaluator {
     ServerRecommender recommender = null;
     try {
       Multimap<Long,RecommendedItem> testData =
-          split(originalDataDir, trainingFile, trainingPercentage, evaluationPercentage);
+          split(originalDataDir, trainingFile, trainingPercentage, evaluationPercentage, provider);
 
       recommender = new ServerRecommender(trainingDataDir);
       recommender.await();
@@ -138,9 +154,10 @@ public abstract class AbstractEvaluator {
   private Multimap<Long,RecommendedItem> split(File dataDir,
                                                File trainingFile,
                                                double trainPercentage,
-                                               double evaluationPercentage) throws IOException {
+                                               double evaluationPercentage,
+                                               RescorerProvider provider) throws IOException {
 
-    Multimap<Long,RecommendedItem> data = readDataFile(dataDir, evaluationPercentage);
+    Multimap<Long,RecommendedItem> data = readDataFile(dataDir, evaluationPercentage, provider);
     log.info("Read data for {} users from input; splitting...", data.size());
 
     Multimap<Long,RecommendedItem> testData = ArrayListMultimap.create();
@@ -183,7 +200,8 @@ public abstract class AbstractEvaluator {
   }
 
   private static Multimap<Long,RecommendedItem> readDataFile(File dataDir,
-                                                             double evaluationPercentage) throws IOException {
+                                                             double evaluationPercentage,
+                                                             RescorerProvider provider) throws IOException {
     // evaluationPercentage filters per user and item, not per datum, since time scales with users and
     // items. We select sqrt(evaluationPercentage) of users and items to overall select about evaluationPercentage
     // of all data.
@@ -205,11 +223,21 @@ public abstract class AbstractEvaluator {
             if (parts.hasNext()) {
               String token = parts.next().trim();
               if (!token.isEmpty()) {
-                data.put(userID, new GenericRecommendedItem(itemID, LangUtils.parseFloat(token)));
+                float value = LangUtils.parseFloat(token);
+                if (provider != null) {
+                  IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
+                  value = (float) rescorer.rescore(itemID, value);
+                }
+                data.put(userID, new GenericRecommendedItem(itemID, value));
               }
               // Ignore remove lines
             } else {
-              data.put(userID, new GenericRecommendedItem(itemID, 1.0f));
+              float value = 1.0f;
+              if (provider != null) {
+                IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);                
+                value = (float) rescorer.rescore(itemID, value);
+              }
+              data.put(userID, new GenericRecommendedItem(itemID, value));
             }
           }
         }

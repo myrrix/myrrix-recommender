@@ -33,6 +33,7 @@ import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
+import net.myrrix.online.RescorerProvider;
 
 /**
  * This implementation calculates Area under curve (AUC), which may be understood as the probability
@@ -51,6 +52,7 @@ public final class AUCEvaluator extends AbstractEvaluator {
 
   @Override
   public EvaluationResult evaluate(MyrrixRecommender recommender,
+                                   RescorerProvider provider, // ignored
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
     FastByIDMap<FastIDSet> converted = new FastByIDMap<FastIDSet>(testData.size(), 1.25f);
     for (long userID : testData.keySet()) {

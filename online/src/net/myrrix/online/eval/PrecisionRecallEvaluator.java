@@ -25,11 +25,13 @@ import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
+import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.online.RescorerProvider;
 
 /**
  * A simple evaluation framework for a recommender, which calculates precision, recall and other
@@ -50,6 +52,7 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
 
   @Override
   public EvaluationResult evaluate(MyrrixRecommender recommender,
+                                   RescorerProvider provider,
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
 
     RunningAverage precision = new FullRunningAverage();
@@ -66,9 +69,11 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
         continue;
       }
 
+      IDRescorer rescorer = provider == null ? null : provider.getRecommendRescorer(new long[] {userID}, recommender);
+      
       List<RecommendedItem> recs;
       try {
-        recs = recommender.recommend(userID, numValues);
+        recs = recommender.recommend(userID, numValues, rescorer);
       } catch (NoSuchUserException nsue) {
         // Probably OK, just removed all data for this user from training
         log.warn("User only in test data: {}", userID);

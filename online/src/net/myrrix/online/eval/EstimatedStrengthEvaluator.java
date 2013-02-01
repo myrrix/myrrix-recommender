@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.online.RescorerProvider;
 
 /**
  * An alternate evaluation  which computes the average "error" in estimated strength score (see
@@ -51,6 +52,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
 
   @Override
   public EvaluationResult evaluate(MyrrixRecommender recommender,
+                                   RescorerProvider provider, // ignored
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
     WeightedRunningAverage score = new WeightedRunningAverage();
     int count = 0;
