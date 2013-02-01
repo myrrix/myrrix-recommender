@@ -21,6 +21,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.PatternFilenameFilter;
@@ -78,18 +79,40 @@ final class InputFilesReader {
     Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
 
     int lines = 0;
+    int badLines = 0;
     for (File inputFile : inputFiles) {
       log.info("Reading {}", inputFile);
       for (CharSequence line : new FileLineIterable(inputFile)) {
         Iterator<String> it = COMMA.split(line).iterator();
-        long userID = Long.parseLong(it.next());
-        long itemID = Long.parseLong(it.next());
+
+        long userID;
+        long itemID;
         float value;
-        if (it.hasNext()) {
-          String valueToken = it.next().trim();
-          value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
-        } else {
-          value = 1.0f;
+        try {
+          userID = Long.parseLong(it.next());
+          itemID = Long.parseLong(it.next());
+          if (it.hasNext()) {
+            String valueToken = it.next().trim();
+            value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
+          } else {
+            value = 1.0f;
+          }
+        } catch (NoSuchElementException nsee) {
+          log.warn("Ignoring line with too few columns: '{}'", line);
+          if (++badLines > 100) { // Crude check
+            throw new IOException("Too many bad lines; aborting");
+          }
+          continue;
+        } catch (IllegalArgumentException iae) { // includes NumberFormatException
+          if (lines == 0) {
+            log.info("Ignoring header line");
+          } else {
+            log.warn("Ignoring unparseable line: '{}'", line);
+            if (++badLines > 100) { // Crude check
+              throw new IOException("Too many bad lines; aborting");
+            }
+          }
+          continue;
         }
 
         if (Float.isNaN(value)) {
