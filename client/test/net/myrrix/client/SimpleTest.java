@@ -35,7 +35,7 @@ public final class SimpleTest extends AbstractClientTest {
 
   @Override
   protected String getTestDataPath() {
-    return "testdata/grouplens100K-45";
+    return "testdata/grouplens100K";
   }
 
   @Test
@@ -43,9 +43,9 @@ public final class SimpleTest extends AbstractClientTest {
     ClientRecommender client = getClient();
     FastIDSet allUserIDs = client.getAllUserIDs();
     FastIDSet allItemIDs = client.getAllItemIDs();
-    assertEquals(942, allUserIDs.size());
+    assertEquals(943, allUserIDs.size());
     assertTrue(allUserIDs.contains(1L));
-    assertEquals(1447, allItemIDs.size());
+    assertEquals(1682, allItemIDs.size());
     assertTrue(allItemIDs.contains(421L));
   }
 
@@ -58,7 +58,7 @@ public final class SimpleTest extends AbstractClientTest {
 
     List<RecommendedItem> recs = client.recommend(0L, 3);
     log.info("{}", recs);
-    assertEquals(1016L, recs.get(0).getItemID());
+    assertEquals(222L, recs.get(0).getItemID());
   }
 
   @Test
@@ -72,9 +72,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(382L, recs.get(0).getItemID());
-    assertEquals(116L, recs.get(1).getItemID());
-    assertEquals(179L, recs.get(2).getItemID());
+    assertEquals(515L, recs.get(0).getItemID());
+    assertEquals(582L, recs.get(1).getItemID());
+    assertEquals(382L, recs.get(2).getItemID());
 
     try {
       client.recommend(0L, 3);
@@ -90,9 +90,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(382L, recs.get(0).getItemID());
-    assertEquals(248L, recs.get(1).getItemID());
-    assertEquals(137L, recs.get(2).getItemID());
+    assertEquals(70L, recs.get(0).getItemID());
+    assertEquals(515L, recs.get(1).getItemID());
+    assertEquals(179L, recs.get(2).getItemID());
   }
 
   @Test
@@ -109,7 +109,7 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", recs);
 
     assertEquals(302L, recs.get(0).getItemID());
-    assertEquals(258L, recs.get(1).getItemID());
+    assertEquals(288L, recs.get(1).getItemID());
     assertEquals(313L, recs.get(2).getItemID());
   }
 
@@ -135,9 +135,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(249L, recs.get(0).getItemID());
-    assertEquals(1016L, recs.get(1).getItemID());
-    assertEquals(410L, recs.get(2).getItemID());
+    assertEquals(476L, recs.get(0).getItemID());
+    assertEquals(24L, recs.get(1).getItemID());
+    assertEquals(924L, recs.get(2).getItemID());
   }
 
   @Test(expected = NoSuchItemException.class)
@@ -162,11 +162,11 @@ public final class SimpleTest extends AbstractClientTest {
     log.info("{}", popular);
 
     assertEquals(50L, popular.get(0).getItemID());
-    assertEquals(100L, popular.get(1).getItemID());
-    assertEquals(181L, popular.get(2).getItemID());
-    assertEquals(501.0f, popular.get(0).getValue());
-    assertEquals(406.0f, popular.get(1).getValue());
-    assertEquals(379.0f, popular.get(2).getValue());
+    assertEquals(258L, popular.get(1).getItemID());
+    assertEquals(100L, popular.get(2).getItemID());
+    assertEquals(583.0f, popular.get(0).getValue());
+    assertEquals(509.0f, popular.get(1).getValue());
+    assertEquals(508.0f, popular.get(2).getValue());
   }
 
   @Test
@@ -181,9 +181,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", similar);
 
-    assertEquals(380L, similar.get(0).getItemID());
-    assertEquals(229L, similar.get(1).getItemID());
-    assertEquals(227L, similar.get(2).getItemID());
+    assertEquals(229L, similar.get(0).getItemID());
+    assertEquals(380L, similar.get(1).getItemID()); 
+    assertEquals(227L, similar.get(2).getItemID());    
   }
 
   @Test(expected = NoSuchItemException.class)
@@ -207,9 +207,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", Arrays.toString(estimates));
 
-    assertEquals(0.7215349f, estimates[0]);
-    assertEquals(0.87126666f, estimates[1]);
-    assertEquals(0.88252425f, estimates[2]);
+    assertEquals(0.83758616f, estimates[0]);
+    assertEquals(0.92209476f, estimates[1]);
+    assertEquals(0.9137872f, estimates[2]);
 
     // Non-existent
     assertEquals(0.0f, client.estimatePreference(0L, 90L));
@@ -229,7 +229,7 @@ public final class SimpleTest extends AbstractClientTest {
 
     assertEquals(269L, because.get(0).getItemID());
     assertEquals(268L, because.get(1).getItemID());
-    assertEquals(242, because.get(2).getItemID());
+    assertEquals(272L, because.get(2).getItemID());
 
     try {
       client.recommendedBecause(0L, 222L, 3);
@@ -256,9 +256,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(45L, recs.get(0).getItemID());
-    assertEquals(529L, recs.get(1).getItemID());
-    assertEquals(510L, recs.get(2).getItemID());
+    assertEquals(1347L, recs.get(0).getItemID());
+    assertEquals(1622L, recs.get(1).getItemID());
+    assertEquals(166L, recs.get(2).getItemID());
 
     try {
       client.recommendToAnonymous(new long[]{0L}, 3);
@@ -280,9 +280,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(45L, recs.get(0).getItemID());
-    assertEquals(529L, recs.get(1).getItemID());
-    assertEquals(510L, recs.get(2).getItemID());
+    assertEquals(1347L, recs.get(0).getItemID());
+    assertEquals(1622L, recs.get(1).getItemID());
+    assertEquals(166L, recs.get(2).getItemID());
 
     try {
       client.recommendToAnonymous(new long[]{0L}, 3);
@@ -304,9 +304,9 @@ public final class SimpleTest extends AbstractClientTest {
 
     log.info("{}", recs);
 
-    assertEquals(183L, recs.get(0).getItemID());
-    assertEquals(56L, recs.get(1).getItemID());
-    assertEquals(657L, recs.get(2).getItemID());
+    assertEquals(641L, recs.get(0).getItemID());
+    assertEquals(484L, recs.get(1).getItemID());
+    assertEquals(48L, recs.get(2).getItemID());
 
     try {
       client.recommendToAnonymous(new long[]{0L}, 3);
@@ -322,15 +322,15 @@ public final class SimpleTest extends AbstractClientTest {
 
     client.setPreference(0L, 1L);
     List<RecommendedItem> recs = client.recommend(0L, 1);
-    assertEquals(50L, recs.get(0).getItemID());
+    assertEquals(15L, recs.get(0).getItemID());
 
     client.setPreference(0L, 2L, 3.0f);
     recs = client.recommend(0L, 1);
-    assertEquals(1016L, recs.get(0).getItemID());
+    assertEquals(222L, recs.get(0).getItemID());
 
     client.setPreference(0L, 2L, -3.0f);
     recs = client.recommend(0L, 1);
-    assertEquals(1016L, recs.get(0).getItemID());
+    assertEquals(222L, recs.get(0).getItemID());
 
     client.setPreference(0L, 1L, -1.0f);
     // Don't really know/care what will be recommend at this point; the feature vec is nearly 0
@@ -343,15 +343,15 @@ public final class SimpleTest extends AbstractClientTest {
 
     client.setPreference(0L, 1L);
     List<RecommendedItem> recs = client.recommend(0L, 1);
-    assertEquals(50L, recs.get(0).getItemID());
+    assertEquals(15L, recs.get(0).getItemID());
 
     client.setPreference(0L, 2L, 1.0f);
     recs = client.recommend(0L, 1);
-    assertEquals(1016L, recs.get(0).getItemID());
+    assertEquals(222L, recs.get(0).getItemID());
 
     client.removePreference(0L, 2L);
     recs = client.recommend(0L, 1);
-    assertEquals(1016L, recs.get(0).getItemID());
+    assertEquals(222L, recs.get(0).getItemID());
 
     client.removePreference(0L, 1L);
     try {

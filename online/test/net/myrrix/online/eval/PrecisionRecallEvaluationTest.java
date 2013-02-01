@@ -18,7 +18,6 @@ package net.myrrix.online.eval;
 
 import java.io.File;
 
-import org.apache.mahout.cf.taste.eval.IRStatistics;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +36,13 @@ public final class PrecisionRecallEvaluationTest extends MyrrixTest {
   @Test
   public void testEval() throws Exception {
     PrecisionRecallEvaluator evaluator = new PrecisionRecallEvaluator();
-    IRStatistics stats = (IRStatistics) evaluator.evaluate(new File("testdata/grouplens10M"));
+    MyrrixIRStatistics stats = (MyrrixIRStatistics) evaluator.evaluate(new File("testdata/grouplens10M"));
     log.info(stats.toString());
-    assertTrue(stats.getPrecision() > 0.175);
-    assertTrue(stats.getRecall() > 0.175);
-    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.185);
-    assertTrue(stats.getF1Measure() > 0.175);
+    assertTrue(stats.getPrecision() > 0.177);
+    assertTrue(stats.getRecall() > 0.177);
+    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.19);
+    assertTrue(stats.getF1Measure() > 0.177);
+    assertTrue(stats.getMeanAveragePrecision() > 0.5);
   }
 
 }

@@ -63,11 +63,15 @@ public abstract class MyrrixTest extends Assert {
   }
 
   public static void assertArrayEquals(float[] expecteds, double[] actuals) {
-    float[] floatActuals = new float[actuals.length];
-    for (int i = 0; i < actuals.length; i++) {
-      floatActuals[i] = (float) actuals[i];
+    assertArrayEquals(expecteds, doubleToFloatArray(actuals));
+  }
+  
+  protected static float[] doubleToFloatArray(double[] d) {
+    float[] f = new float[d.length];
+    for (int i = 0; i < d.length; i++) {
+      f[i] = (float) d[i];
     }
-    assertArrayEquals(expecteds, floatActuals);
+    return f;
   }
 
   @BeforeClass

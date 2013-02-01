@@ -30,9 +30,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
+import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -222,14 +221,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       while (true) {
         iterateXFromY(executor);
         iterateYFromX(executor);
-
-        RunningAverage averageAbsoluteEstimateDiff = new FullRunningAverage();        
+        WeightedRunningAverage averageAbsoluteEstimateDiff = new WeightedRunningAverage();
         for (int i = 0; i < testUserIDs.length; i++) {
           for (int j = 0; j < testItemIDs.length; j++) {
             double newValue = SimpleVectorMath.dot(X.get(testUserIDs[i]), Y.get(testItemIDs[j]));            
             double oldValue = estimates[i][j];
             estimates[i][j] = newValue;
-            averageAbsoluteEstimateDiff.addDatum(FastMath.abs(newValue - oldValue));
+            averageAbsoluteEstimateDiff.addDatum(FastMath.abs(newValue - oldValue), FastMath.max(0.0, newValue));
           }
         }
       

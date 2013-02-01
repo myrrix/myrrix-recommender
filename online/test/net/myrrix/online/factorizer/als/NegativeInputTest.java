@@ -64,18 +64,18 @@ public final class NegativeInputTest extends MyrrixTest {
 
     StringBuilder productString = new StringBuilder(100);
     for (int row = 0; row < product.getRowDimension(); row++) {
-      productString.append('\n').append(Arrays.toString(product.getRow(row)));
+      productString.append('\n').append(Arrays.toString(doubleToFloatArray(product.getRow(row))));
     }
     log.info("{}", productString);
 
     assertArrayEquals(
-        new float[] {0.8386785f, 0.8434833f, 0.9364817f, 0.69302833f},
+        new float[] {0.83867264f, 0.8434771f, 0.9364942f, 0.693262f},
         product.getRow(0));
     assertArrayEquals(
-        new float[] {0.55701745f, 0.5640032f, 0.8351103f, 0.8945786f},
+        new float[] {0.5571204f, 0.56409824f, 0.8351048f, 0.8945784f},
         product.getRow(1));
     assertArrayEquals(
-        new float[] {0.338894f, 0.34570542f, 0.65194905f, 0.83740747f},
+        new float[] {0.33909106f, 0.34589326f, 0.6520305f, 0.8374041f},
         product.getRow(2));
   }
 

@@ -69,24 +69,24 @@ public final class AlternatingLeastSquaresTest extends MyrrixTest {
 
     StringBuilder productString = new StringBuilder(100);
     for (int row = 0; row < product.getRowDimension(); row++) {
-      productString.append('\n').append(Arrays.toString(product.getRow(row)));
+      productString.append('\n').append(Arrays.toString(doubleToFloatArray(product.getRow(row))));
     }
     log.info("{}", productString);
 
     assertArrayEquals(
-        new float[] {0.375636f, 0.93950576f, 0.9583561f, 0.94475424f, 0.35734674f},
+        new float[] {0.37615702f, 0.9395947f, 0.95842475f, 0.9447453f, 0.3578715f},
         product.getRow(0));
     assertArrayEquals(
-        new float[] {0.3705553f, 0.9655348f, 0.97907597f, 0.9705947f, 0.35111937f},
+        new float[] {0.37096402f, 0.965766f, 0.9792176f, 0.9707236f, 0.35152173f},
         product.getRow(1));
     assertArrayEquals(
-        new float[] {0.9125805f, 0.1808266f, 0.5008378f, 0.19995895f, 0.9437789f},
+        new float[] {0.91260827f, 0.18102002f, 0.5011245f, 0.20005447f, 0.94379795f},
         product.getRow(2));
     assertArrayEquals(
-        new float[] {0.9606167f, 0.56925243f, 0.85666955f, 0.58824134f, 0.97982174f},
+        new float[] {0.9606254f, 0.5691479f, 0.8565864f, 0.58800423f, 0.9798256f},
         product.getRow(3));
     assertArrayEquals(
-        new float[] {0.34965515f, 0.94532204f, 0.95363116f, 0.9499925f, 0.33008313f},
+        new float[] {0.35010007f, 0.9454391f, 0.95368934f, 0.9500119f, 0.33052757f},
         product.getRow(4));
 
   }
