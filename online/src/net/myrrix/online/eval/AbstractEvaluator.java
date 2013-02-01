@@ -226,7 +226,9 @@ public abstract class AbstractEvaluator {
                 float value = LangUtils.parseFloat(token);
                 if (provider != null) {
                   IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
-                  value = (float) rescorer.rescore(itemID, value);
+                  if (rescorer != null) {
+                    value = (float) rescorer.rescore(itemID, value);
+                  }
                 }
                 data.put(userID, new GenericRecommendedItem(itemID, value));
               }
@@ -234,8 +236,10 @@ public abstract class AbstractEvaluator {
             } else {
               float value = 1.0f;
               if (provider != null) {
-                IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);                
-                value = (float) rescorer.rescore(itemID, value);
+                IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
+                if (rescorer != null) {
+                  value = (float) rescorer.rescore(itemID, value);
+                }
               }
               data.put(userID, new GenericRecommendedItem(itemID, value));
             }
