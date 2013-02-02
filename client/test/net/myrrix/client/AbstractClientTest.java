@@ -83,7 +83,7 @@ public abstract class AbstractClientTest extends MyrrixTest {
       runRefresh = true;
     } else {
       log.info("Found saved model file {} (size {})", savedModelFile, savedModelFile.length());
-      Files.copy(savedModelFile, new File(tempDir, "model.bin"));
+      Files.copy(savedModelFile, new File(tempDir, "model.bin.gz"));
       runRefresh = false;
     }
 
@@ -136,9 +136,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
     client = null;
     synchronized (AbstractClientTest.class) {
       if (savedModelFile == null) {
-        File modelBinFile = new File(getTestTempDir(), "model.bin");
+        File modelBinFile = new File(getTestTempDir(), "model.bin.gz");
         if (modelBinFile.exists()) {
-          savedModelFile = File.createTempFile("model-", ".bin");
+          savedModelFile = File.createTempFile("model-", ".bin.gz");
           savedModelFile.deleteOnExit();
           Files.copy(modelBinFile, savedModelFile);
         }

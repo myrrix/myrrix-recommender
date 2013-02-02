@@ -38,7 +38,7 @@ import net.myrrix.common.collection.FastIDSet;
  * matrix which can be thought of as the user-feature matrix, and the "feature-item" matrix is just the
  * identity matrix. Or vice versa if there are few users.</p>
  * 
- * <p>This utility program will read input and output the result as a {@code model.bin} file suitable
+ * <p>This utility program will read input and output the result as a {@code model.bin.gz} file suitable
  * for use with the Serving Layer, without dimensionality reduction. Of course, this should only be
  * done if the dimensionality of one or both is in fact low!</p>
  * 
@@ -91,7 +91,7 @@ public final class UnreducedModel {
     }
     
     Generation generation = new Generation(knownItemIDs, X, Y);
-    GenerationSerializer.writeGeneration(generation, new File(inputDir, "model.bin"));
+    GenerationSerializer.writeGeneration(generation, new File(inputDir, "model.bin.gz"));
   }
   
   private static FastByIDMap<float[]> buildIdentity(FastByIDMap<FastByIDFloatMap> input, long[] idsInOrder) {

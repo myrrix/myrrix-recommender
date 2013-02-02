@@ -140,7 +140,7 @@ import net.myrrix.web.servlets.UserClusterServlet;
  * </ul>
  *
  * <p>When run in local mode, the Serving Layer instance will compute a model locally and save it as the file
- * {@code model.bin} in the {@code --localInputDir} directory. It will be updated when the model is rebuilt.
+ * {@code model.bin.gz} in the {@code --localInputDir} directory. It will be updated when the model is rebuilt.
  * If the file is present at startup, it will be read to restore the server state, rather than re-reading
  * CSV input in the directory and recomputing the model. Thus the file can be saved and restored as a
  * way of preserving and recalling the server's state of learning.</p>

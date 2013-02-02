@@ -17,7 +17,6 @@
 package net.myrrix.online.generation;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -25,6 +24,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -33,6 +33,7 @@ import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.io.IOUtils;
 
 /**
  * A {@link Serializable} wrapper around a {@link Generation} that lets it easily write
@@ -45,6 +46,9 @@ public final class GenerationSerializer implements Serializable {
 
   private Generation generation;
 
+  /**
+   * Exists only for the serialization mechanism.
+   */
   public GenerationSerializer() {
     this(null);
   }
@@ -62,7 +66,7 @@ public final class GenerationSerializer implements Serializable {
    * @return {@link Generation} it serializes
    */
   public static Generation readGeneration(File f) throws IOException {
-    ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
+    ObjectInputStream in = new ObjectInputStream(IOUtils.openMaybeDecompressing(f));
     try {
       GenerationSerializer serializer = (GenerationSerializer) in.readObject();
       return serializer.getGeneration();
@@ -78,7 +82,8 @@ public final class GenerationSerializer implements Serializable {
    * @param f file to serialize a {@code GenerationSerializer} to
    */
   public static void writeGeneration(Generation generation, File f) throws IOException {
-    ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(f));
+    Preconditions.checkArgument(f.getName().endsWith(".gz"), "File should end in .gz: %s", f);
+    ObjectOutputStream out = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(f)));
     try {
       out.writeObject(new GenerationSerializer(generation));
     } finally {

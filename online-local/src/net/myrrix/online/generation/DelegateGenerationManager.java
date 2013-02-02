@@ -108,8 +108,8 @@ public final class DelegateGenerationManager implements GenerationManager {
       throw new FileNotFoundException(inputDir.toString());
     }
 
-    modelFile = new File(inputDir, "model.bin");
-    appendFile = new File(inputDir, "append.bin");
+    modelFile = new File(inputDir, "model.bin.gz");
+    appendFile = new File(inputDir, "append.bin.gz");
 
     recentlyActiveUsers = new FastIDSet();
     recentlyActiveItems = new FastIDSet();
@@ -288,7 +288,7 @@ public final class DelegateGenerationManager implements GenerationManager {
    */
   private static void saveModel(Generation generation, File modelFile) throws IOException {
 
-    File newModelFile = File.createTempFile(DelegateGenerationManager.class.getSimpleName(), ".bin");
+    File newModelFile = File.createTempFile(DelegateGenerationManager.class.getSimpleName(), ".bin.gz");
     log.info("Writing model to {}", newModelFile);
 
     try {
@@ -301,7 +301,9 @@ public final class DelegateGenerationManager implements GenerationManager {
     }
 
     log.info("Done, moving into place at {}", modelFile);
-    modelFile.delete();
+    if (modelFile.exists() && !modelFile.delete()) {
+      log.warn("Could not delete old {}", modelFile);
+    }
     Files.move(newModelFile, modelFile);
   }
 

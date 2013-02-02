@@ -31,7 +31,7 @@ import net.myrrix.common.collection.FastIDSet;
 /**
  * <p>Simply prints the contents of a generation model file.</p>
  *
- * <p>{@code java -cp ... net.myrrix.online.generation.PrintGeneration [model.bin file]}</p>
+ * <p>{@code java -cp ... net.myrrix.online.generation.PrintGeneration [model.bin.gz file]}</p>
  *
  * @author Sean Owen
  */

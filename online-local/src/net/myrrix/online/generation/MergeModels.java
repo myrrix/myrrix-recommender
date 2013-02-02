@@ -33,7 +33,7 @@ import net.myrrix.common.math.MatrixUtils;
  *
  * <p>The resulting model file can be plugged directly into another instance's working directory.</p>
  *
- * <p>Usage: MergeModels [model.bin file 1] [model.bin file 2] [merged model.bin]</p>
+ * <p>Usage: MergeModels [model.bin.gz file 1] [model.bin.gz file 2] [merged model.bin.gz]</p>
  *
  * <p>This is a simple utility class and an experiment which may be removed.</p>
  *
