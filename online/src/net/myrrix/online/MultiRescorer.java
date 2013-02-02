@@ -27,6 +27,8 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
  * the rescorings in the given order.
  *
  * @author Sean Owen
+ * @see MultiLongPairRescorer
+ * @see MultiRescorerProvider
  */
 public final class MultiRescorer implements IDRescorer {
 

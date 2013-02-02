@@ -184,7 +184,8 @@ public final class RunnerConfiguration {
   /**
    * @return the name of an implementation of {@link net.myrrix.online.RescorerProvider}, if one should be
    *  used to modify the results of the recommendations and similarity computations, or {@code null} if
-   *  none is to be used. The class must be made available on the server's classpath.
+   *  none is to be used. The class must be made available on the server's classpath. This may also be specified 
+   *  as a comma-separated list of class names, in which case all will be applied, in the given order.
    */
   public String getRescorerProviderClassName() {
     return rescorerProviderClassName;

@@ -38,6 +38,7 @@ import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.PartitionsUtils;
 import net.myrrix.common.log.MemoryHandler;
+import net.myrrix.online.AbstractRescorerProvider;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 import net.myrrix.online.io.ResourceRetriever;
@@ -181,15 +182,22 @@ public final class InitListener implements ServletContextListener {
 
   private static RescorerProvider loadRescorerProvider(ServletContext context, String bucket)
       throws IOException, ClassNotFoundException {
-    String rescorerProviderClassName = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
-    if (rescorerProviderClassName == null) {
+    String rescorerProviderClassNames = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
+    if (rescorerProviderClassNames == null) {
       return null;
     }
 
-    log.info("Using RescorerProvider class {}", rescorerProviderClassName);
-    if (ClassUtils.classExists(rescorerProviderClassName)) {
-      log.info("Found class in local classpath");
-      return ClassUtils.loadInstanceOf(rescorerProviderClassName, RescorerProvider.class);
+    log.info("Using RescorerProvider class(es) {}", rescorerProviderClassNames);
+    boolean allClassesFound = true;
+    for (String rescorerProviderClassName : rescorerProviderClassNames.split(",")) {
+      if (!ClassUtils.classExists(rescorerProviderClassName)) {
+        allClassesFound = false;
+        break;
+      }
+    }
+    if (allClassesFound) {
+      log.info("Found class(es) in local classpath");
+      return AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, null);
     }
 
     log.info("Class doesn't exist in local classpath");
@@ -199,14 +207,14 @@ public final class InitListener implements ServletContextListener {
     File tempResourceFile = resourceRetriever.getRescorerJar();
     if (tempResourceFile == null) {
       log.info("No external rescorer JAR is available in this implementation");
-      throw new ClassNotFoundException(rescorerProviderClassName);
+      throw new ClassNotFoundException(rescorerProviderClassNames);
     }
 
-    log.info("Loading {} from {}, copied from remote JAR at key {}",
-             rescorerProviderClassName, tempResourceFile, tempResourceFile);
-    RescorerProvider rescorerProvider = ClassUtils.loadFromRemote(rescorerProviderClassName,
-                                                                  RescorerProvider.class,
-                                                                  tempResourceFile.toURI().toURL());
+    log.info("Loading class(es) {} from {}, copied from remote JAR at key {}",
+             rescorerProviderClassNames, tempResourceFile, tempResourceFile);
+    RescorerProvider rescorerProvider = 
+        AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, tempResourceFile.toURI().toURL());
+
     if (!tempResourceFile.delete()) {
       log.info("Could not delete {}", tempResourceFile);
     }

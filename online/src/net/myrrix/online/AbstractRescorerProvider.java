@@ -16,10 +16,16 @@
 
 package net.myrrix.online;
 
+import java.net.URL;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
+import net.myrrix.common.ClassUtils;
 import net.myrrix.common.MyrrixRecommender;
 
 /**
@@ -28,6 +34,8 @@ import net.myrrix.common.MyrrixRecommender;
  * @author Sean Owen
  */
 public abstract class AbstractRescorerProvider implements RescorerProvider {
+
+  private static final Pattern COMMA = Pattern.compile(",");
 
   /**
    * @return {@code null}
@@ -86,6 +94,28 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
   @Deprecated
   public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
     return getMostSimilarItemsRescorer(null, args);
+  }
+  
+  public static RescorerProvider loadRescorerProviders(String classNamesString, URL url) {
+    if (classNamesString == null || classNamesString.isEmpty()) {
+      return null;
+    }
+    String[] classNames = COMMA.split(classNamesString);
+    if (classNames.length == 1) {
+      return loadOneRescorerProvider(classNames[0], url);
+    } 
+    List<RescorerProvider> providers = Lists.newArrayListWithCapacity(classNames.length);
+    for (String className : classNames) {
+      providers.add(loadOneRescorerProvider(className, url));
+    }
+    return new MultiRescorerProvider(providers);
+  }
+  
+  private static RescorerProvider loadOneRescorerProvider(String className, URL url) {
+    if (url == null) {
+      return ClassUtils.loadInstanceOf(className, RescorerProvider.class);
+    }
+    return ClassUtils.loadFromRemote(className, RescorerProvider.class, url);
   }
 
 }

@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
 import com.lexicalscope.jewel.cli.ArgumentValidationException;
 import com.lexicalscope.jewel.cli.CliFactory;
 
-import net.myrrix.common.ClassUtils;
+import net.myrrix.online.AbstractRescorerProvider;
 import net.myrrix.online.RescorerProvider;
 
 /**
@@ -70,12 +70,12 @@ public final class AllConfig {
       return null;
     }
 
-    String rescorerProviderClass = allArgs.getRescorerProviderClass();
+    String rescorerProviderClassNames = allArgs.getRescorerProviderClass();
     RescorerProvider rescorerProvider;
-    if (rescorerProviderClass == null) {
+    if (rescorerProviderClassNames == null) {
       rescorerProvider = null;
     } else {
-      rescorerProvider = ClassUtils.loadInstanceOf(rescorerProviderClass, RescorerProvider.class);
+      rescorerProvider = AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, null);
     }
 
     return new AllConfig(allArgs.getLocalInputDir(), rescorerProvider, allArgs.getHowMany());

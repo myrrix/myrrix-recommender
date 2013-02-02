@@ -116,7 +116,9 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *   <li>{@code --rescorerProviderClass}: Optional. Name of an implementation of
  *     {@code RescorerProvider} to use to rescore recommendations and similarities, if any. The class
  *     must be added to the server classpath. Or, in distributed mode, if not found in the classpath, it
- *     will be loaded from a JAR file found on the distributed file system at {@code sys/rescorer.jar}.</li>
+ *     will be loaded from a JAR file found on the distributed file system at {@code sys/rescorer.jar}.
+ *     This may also be specified as a comma-separated list of class names, in which case all will be 
+ *     applied, in the given order.</li>
  *   <li>{@code --allPartitions}: Optional, but must be set with {@code --partition}.
  *     Describes all partitions, when partitioning across Serving Layers
  *     by user. Each partition may have multiple replicas. When running in distibuted mode on Amazon EC2,
@@ -247,7 +249,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     if (instanceIDSet != bucketSet) {
       throw new ArgumentValidationException("Must set both --instanceID and --bucket together");
     }
-    if (instanceIDSet && bucketSet) {
+    if (instanceIDSet) {
       config.setInstanceID(runnerArgs.getInstanceID());
       config.setBucket(runnerArgs.getBucket());
     }
@@ -265,7 +267,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
       throw new ArgumentValidationException("Must set --partition and --allPartitions together");
     }
 
-    if (hasPartition && hasAllPartitions) {
+    if (hasPartition) {
       config.setAllPartitionsSpecification(runnerArgs.getAllPartitions());
       config.setPartition(runnerArgs.getPartition());
     }

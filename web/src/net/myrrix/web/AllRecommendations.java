@@ -48,7 +48,7 @@ import net.myrrix.online.ServerRecommender;
  * <p>Example usage:</p>
  *
  * <p>{@code java -Xmx2g -cp myrrix-serving-x.y.jar net.myrrix.web.AllRecommendations
- *   --localInputDir=[work dir] --howMany=[# recs] --rescorerProviderClass=[your class]}</p>
+ *   --localInputDir=[work dir] --howMany=[# recs] --rescorerProviderClass=[your class(es)]}</p>
  *
  * @author Sean Owen
  * @see AllItemSimilarities
