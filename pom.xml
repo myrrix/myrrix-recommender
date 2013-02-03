@@ -58,6 +58,7 @@
     <sourceDirectory>${project.basedir}/src/</sourceDirectory>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>1.2</version>
       </plugin>
@@ -71,6 +72,7 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
       </plugin>
@@ -128,28 +130,38 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-install-plugin</artifactId>
         <version>2.4</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-resources-plugin</artifactId>
         <version>2.6</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-deploy-plugin</artifactId>
         <version>2.7</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-site-plugin</artifactId>
         <version>3.2</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>2.6</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>        
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.6</version>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>        
+        <artifactId>maven-jar-plugin</artifactId>
         <version>2.4</version>
         <executions>
           <execution>
@@ -160,7 +172,40 @@
         </executions>
       </plugin>
     </plugins>
-  </build>
+  </build>  
+  
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>2.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>2.7.1</version>
+        <configuration>
+          <targetJdk>1.6</targetJdk>
+          <rulesets>
+            <ruleset>/rulesets/basic.xml</ruleset>
+            <ruleset>/rulesets/braces.xml</ruleset>
+            <!--<ruleset>/rulesets/codesize.xml</ruleset>-->
+            <!--<ruleset>/rulesets/controversial.xml</ruleset>-->
+            <!--<ruleset>/rulesets/coupling.xml</ruleset>-->
+            <!--<ruleset>/rulesets/design.xml</ruleset>-->
+            <ruleset>/rulesets/imports.xml</ruleset>
+            <!--<ruleset>/rulesets/javabeans.xml</ruleset>-->
+            <ruleset>/rulesets/junit.xml</ruleset>    
+            <!--<ruleset>/rulesets/optimizations.xml</ruleset>-->                             
+            <ruleset>/rulesets/strictexception.xml</ruleset>
+            <ruleset>/rulesets/strings.xml</ruleset>
+            <ruleset>/rulesets/unusedcode.xml</ruleset>
+          </rulesets>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
 
   <distributionManagement>
     <repository>
