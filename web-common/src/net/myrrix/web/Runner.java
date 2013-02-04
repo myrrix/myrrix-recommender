@@ -103,6 +103,9 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *   as the root user to access port 80.</li>
  *   <li>{@code --securePort}: Port on which to listen for HTTPS requests. Defaults to 443. Likewise note that
  *   using port 443 requires running as root.</li>
+ *   <li>{@code --contextPath}: URI base for endpoint URIs; defauls to none / the root context. Not recommended,
+ *    but if set too "foo", will cause the recommend method endpoint, for example, to be accessed at 
+ *    {@code /foo/recommend} instead of {@code /recommend}</li>
  *   <li>{@code --readOnly}: If set, disables methods and endpoints that add, remove or change data</li>
  *   <li>{@code --keystoreFile}: File containing the SSL key to use for HTTPS. Setting this flag
  *   enables HTTPS connections, and so requires that option {@code --keystorePassword} be set. In distributed
@@ -241,6 +244,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     config.setPort(runnerArgs.getPort());
     config.setSecurePort(runnerArgs.getSecurePort());
+    config.setContextPath(runnerArgs.getContextPath());
     config.setReadOnly(runnerArgs.isReadOnly());
     config.setLocalInputDir(runnerArgs.getLocalInputDir());
 
@@ -451,7 +455,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
       throw new IOException("Could not create " + contextPath);
     }
 
-    Context context = tomcat.addContext("", contextPath.getAbsolutePath());
+    String contextPathURIBase = config.getContextPath();
+    Context context = 
+        tomcat.addContext(contextPathURIBase == null ? "" : contextPathURIBase, contextPath.getAbsolutePath());
     context.addApplicationListener(InitListener.class.getName());
     context.setWebappVersion("3.0");
     context.addWelcomeFile("index.jspx");

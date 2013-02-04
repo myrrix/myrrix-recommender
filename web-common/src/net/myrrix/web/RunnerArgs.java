@@ -42,6 +42,9 @@ public interface RunnerArgs {
   @Option(defaultValue = "443", description = "HTTPS port number")
   int getSecurePort();
 
+  @Option(defaultToNull = true, description = "Non-root context path to deploy endpoints under")
+  String getContextPath();
+
   @Option(description = "Disables all API methods that add or change data")
   boolean isReadOnly();
 

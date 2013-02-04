@@ -35,6 +35,7 @@ public final class RunnerConfiguration {
   private String instanceID;
   private int port;
   private int securePort;
+  private String contextPath;
   private boolean readOnly;
   private File keystoreFile;
   private String keystorePassword;
@@ -98,6 +99,20 @@ public final class RunnerConfiguration {
   public void setSecurePort(int securePort) {
     Preconditions.checkArgument(securePort >= 0, "securePort must be nonnegative: %s", securePort);
     this.securePort = securePort;
+  }
+
+  /**
+   * @return the context path under which to deploy endpoints, or {@code null} for default/root
+   */
+  public String getContextPath() {
+    return contextPath;
+  }
+
+  public void setContextPath(String contextPath) {
+    if (contextPath != null && !contextPath.startsWith("/")) {
+      contextPath = '/' + contextPath;
+    }
+    this.contextPath = contextPath;
   }
 
   /**
