@@ -30,10 +30,12 @@
 
   <target name="clean" depends="clean.module.common, clean.module.online, clean.module.web, clean.module.client,clean.module.online-local">
     <delete dir="out"/>
-    <delete dir=".">
-      <include name="*.jar"/>
-      <include name="*.war"/>
-      <include name="*.zip"/>
+    <delete>
+      <fileset dir=".">
+        <include name="*.jar"/>
+        <include name="*.war"/>
+        <include name="*.zip"/>
+      </fileset>
     </delete>
   </target>
 
