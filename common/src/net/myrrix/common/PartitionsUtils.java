@@ -81,7 +81,7 @@ public final class PartitionsUtils {
       for (String replicaString : COMMA.split(partitionString)) {
         String[] hostPort = COLON.split(replicaString);
         String host = hostPort[0];
-        Integer port = Integer.valueOf(hostPort[1]);
+        int port = hostPort.length > 1 ? Integer.parseInt(hostPort[1]) : 80;
         Preconditions.checkArgument(port > 0, "port must be positive: %s", port);
         Pair<String,Integer> replica = new Pair<String,Integer>(host, port);
         partition.add(replica);
@@ -157,7 +157,11 @@ public final class PartitionsUtils {
     } else {
       int partitionNumber = 0;
       for (List<Pair<String,Integer>> partition : allPartitions) {
-        log.info("Partition {}: {}", partitionNumber, partition);
+        StringBuilder description = new StringBuilder();
+        for (Pair<String,Integer> hostPort : partition) {
+          description.append(hostPort.getFirst()).append(':').append(hostPort.getSecond()).append(' ');
+        }
+        log.info("Partition {}: {}", partitionNumber, description);
         partitionNumber++;
       }
     }
