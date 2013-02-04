@@ -29,7 +29,7 @@ public final class MultiRescorerProviderTest extends MyrrixTest {
   
   @Test
   public void testMultiRecommendRescorer() {
-    MultiRescorerProvider multi = 
+    RescorerProvider multi = 
         new MultiRescorerProvider(new SimpleModRescorerProvider(2), new SimpleModRescorerProvider(3));
     
     IDRescorer provider = multi.getRecommendRescorer(new long[]{5}, (MyrrixRecommender) null);
@@ -51,7 +51,7 @@ public final class MultiRescorerProviderTest extends MyrrixTest {
   
   @Test
   public void testMultiRecommendToAnonymousRescorer() {
-    MultiRescorerProvider multi = 
+    RescorerProvider multi = 
         new MultiRescorerProvider(new SimpleModRescorerProvider(2), new SimpleModRescorerProvider(3));
     
     IDRescorer provider = multi.getRecommendToAnonymousRescorer(new long[]{5}, (MyrrixRecommender) null);
@@ -73,7 +73,7 @@ public final class MultiRescorerProviderTest extends MyrrixTest {
   
   @Test
   public void testMultiMostPopularItemsRescorer() {
-    MultiRescorerProvider multi = 
+    RescorerProvider multi = 
         new MultiRescorerProvider(new SimpleModRescorerProvider(2), new SimpleModRescorerProvider(3));
     IDRescorer provider = multi.getMostPopularItemsRescorer(null);
     assertNotNull(provider);
@@ -85,7 +85,7 @@ public final class MultiRescorerProviderTest extends MyrrixTest {
   
   @Test
   public void testMultiMostSimilarItemsRescorer() {
-    MultiRescorerProvider multi = 
+    RescorerProvider multi = 
         new MultiRescorerProvider(new SimpleModRescorerProvider(2), new SimpleModRescorerProvider(3));
     Rescorer<LongPair> provider = multi.getMostSimilarItemsRescorer((MyrrixRecommender) null);
     assertNotNull(provider);
@@ -98,7 +98,7 @@ public final class MultiRescorerProviderTest extends MyrrixTest {
   @Test
   public void testLoad() {
     String name = FilterHalfRescorerProvider.class.getName();
-    assertNotNull(AbstractRescorerProvider.loadRescorerProviders(name + "," + name, null));
+    assertNotNull(AbstractRescorerProvider.loadRescorerProviders(name + ',' + name, null));
   }
   
 }

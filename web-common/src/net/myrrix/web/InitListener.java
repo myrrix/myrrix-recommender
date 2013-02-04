@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
+import java.util.regex.Pattern;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -66,6 +67,8 @@ public final class InitListener implements ServletContextListener {
   public static final String ALL_PARTITIONS_SPEC_KEY = KEY_PREFIX + ".ALL_PARTITIONS_SPEC";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
   public static final String LICENSE_FILE_KEY = KEY_PREFIX + ".LICENSE_FILE";
+
+  private static final Pattern COMMA = Pattern.compile(",");
 
   private File tempDirToDelete;
 
@@ -189,7 +192,7 @@ public final class InitListener implements ServletContextListener {
 
     log.info("Using RescorerProvider class(es) {}", rescorerProviderClassNames);
     boolean allClassesFound = true;
-    for (String rescorerProviderClassName : rescorerProviderClassNames.split(",")) {
+    for (String rescorerProviderClassName : COMMA.split(rescorerProviderClassNames)) {
       if (!ClassUtils.classExists(rescorerProviderClassName)) {
         allClassesFound = false;
         break;
