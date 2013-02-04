@@ -30,9 +30,9 @@
   <description>Web application source code from Serving Layer (common files)</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web-common</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web-common</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web-common</developerConnection>
   </scm>
 
   <dependencies>
@@ -98,13 +98,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-      	<artifactId>maven-release-plugin</artifactId>
-      	<configuration>
-      		<pomFileName>pom-common.xml</pomFileName>
-      		<arguments>-f pom-common.xml</arguments>
-      	</configuration>
       </plugin>
     </plugins>
   </build>

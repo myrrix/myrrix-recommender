@@ -25,7 +25,7 @@
   <import file="common/module_common.xml"/>
   <import file="online/module_online.xml"/>
   <import file="online-local/module_online-local.xml"/>
-  <import file="web/module_web.xml"/>
+  <import file="web-common/module_web.xml"/>
   <import file="client/module_client.xml"/>
 
   <target name="clean" depends="clean.module.common, clean.module.online, clean.module.web, clean.module.client,clean.module.online-local">
@@ -82,15 +82,15 @@
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
       <zipfileset src="common/lib/commons-math3-3.1.1.jar"/>
-      <zipfileset src="web/lib/tomcat-embed-logging-juli.jar"/>
-      <zipfileset src="web/lib/tomcat-embed-jasper.jar"/>
-      <zipfileset src="web/lib/tomcat-embed-core.jar"/>
+      <zipfileset src="web-common/lib/tomcat-embed-logging-juli.jar"/>
+      <zipfileset src="web-common/lib/tomcat-embed-jasper.jar"/>
+      <zipfileset src="web-common/lib/tomcat-embed-core.jar"/>
     </jar>
   </target>
 
   <target name="artifact.web-local.war"
           depends="compile.module.web, compile.module.online, compile.module.common, compile.module.online-local">
-    <war destfile="myrrix-serving-${version}.war" webxml="web/docs/WEB-INF/web.xml">
+    <war destfile="myrrix-serving-${version}.war" webxml="web-common/docs/WEB-INF/web.xml">
       <classes dir="${web.output.dir}">
         <exclude name="**jspx.class"/>
       </classes>
@@ -105,7 +105,7 @@
         <include name="slf4j-api-1.7.2.jar"/>
         <include name="commons-math3-3.1.1.jar"/>
       </lib>
-      <fileset dir="web/docs">
+      <fileset dir="web-common/docs">
         <exclude name="WEB-INF/**"/>
       </fileset>
     </war>

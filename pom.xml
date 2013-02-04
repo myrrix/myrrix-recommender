@@ -25,6 +25,7 @@
   <groupId>net.myrrix</groupId>
   <artifactId>myrrix</artifactId>
   <packaging>pom</packaging>
+  <name>Myrrix (Parent)</name>
   <version>0.10-SNAPSHOT</version>
   <description>Contains configuration common to all modules</description>
 
@@ -53,6 +54,16 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  
+  <modules>
+    <module>common</module>
+    <module>client</module>
+    <module>online</module>
+    <module>online-local</module>
+    <module>web-common</module>    
+    <module>web</module>
+    <module>web-war</module>    
+  </modules>
 
   <build>
     <sourceDirectory>${project.basedir}/src/</sourceDirectory>
@@ -190,16 +201,14 @@
           <rulesets>
             <ruleset>/rulesets/basic.xml</ruleset>
             <ruleset>/rulesets/braces.xml</ruleset>
-            <!--<ruleset>/rulesets/codesize.xml</ruleset>-->
-            <!--<ruleset>/rulesets/controversial.xml</ruleset>-->
-            <!--<ruleset>/rulesets/coupling.xml</ruleset>-->
-            <!--<ruleset>/rulesets/design.xml</ruleset>-->
+            <ruleset>/rulesets/coupling.xml</ruleset>
+            <ruleset>/rulesets/finalizers.xml</ruleset> 
             <ruleset>/rulesets/imports.xml</ruleset>
-            <!--<ruleset>/rulesets/javabeans.xml</ruleset>-->
             <ruleset>/rulesets/junit.xml</ruleset>    
-            <!--<ruleset>/rulesets/optimizations.xml</ruleset>-->                             
             <ruleset>/rulesets/strictexception.xml</ruleset>
             <ruleset>/rulesets/strings.xml</ruleset>
+            <ruleset>/rulesets/sunsecure.xml</ruleset>
+            <ruleset>/rulesets/typeresolution.xml</ruleset>
             <ruleset>/rulesets/unusedcode.xml</ruleset>
           </rulesets>
         </configuration>

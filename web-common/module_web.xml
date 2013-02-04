@@ -28,7 +28,7 @@
 
   <target name="compile.module.web.production" depends="compile.module.online">
 
-    <delete dir="${module.web.basedir}/gen" includes="**"/>
+    <delete dir="${module.web.basedir}/gen"/>
     <jasper validateXml="false"
             failonerror="true"
             listerrors="true"
@@ -54,8 +54,8 @@
         <pathelement location="common/lib/mahout-core-0.7.jar"/>
         <pathelement location="common/lib/slf4j-api-1.7.2.jar"/>
         <pathelement location="common/lib/commons-math3-3.1.1.jar"/>
-        <pathelement location="web/lib/tomcat-embed-core.jar"/>
-        <pathelement location="web/lib/tomcat-embed-jasper.jar"/>
+        <pathelement location="web-common/lib/tomcat-embed-core.jar"/>
+        <pathelement location="web-common/lib/tomcat-embed-jasper.jar"/>
       </classpath>
       <src path="${module.web.basedir}/src"/>
       <src path="${module.web.basedir}/gen"/>

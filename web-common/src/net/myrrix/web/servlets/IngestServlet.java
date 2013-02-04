@@ -37,7 +37,7 @@ import net.myrrix.common.MyrrixRecommender;
 
 /**
  * <p>Responds to a POST request to {@code /ingest} and in turn calls
- * {@link MyrrixRecommender#ingest(java.io.Reader)}}. The content of the request body is
+ * {@link MyrrixRecommender#ingest(Reader)}}. The content of the request body is
  * fed to this method. Note that the content may be gzipped; if so, header "Content-Encoding"
  * must have value "gzip".</p>
  *
