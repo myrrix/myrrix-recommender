@@ -63,7 +63,7 @@ public final class ReconstructionEvaluator {
 
   private static final Splitter COMMA_TAB_SPLIT = Splitter.on(CharMatcher.anyOf(",\t")).omitEmptyStrings();
 
-  public EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException {
+  public EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException, InterruptedException {
 
     Preconditions.checkArgument(originalDataDir.exists() && originalDataDir.isDirectory(),
                                 "%s is not a directory", originalDataDir);

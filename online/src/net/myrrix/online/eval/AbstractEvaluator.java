@@ -104,7 +104,8 @@ public abstract class AbstractEvaluator {
    * @param originalDataDir directory containing recommender input data, as (possibly compressed) CSV files
    *  sets. This is useful for quickly evaluating using a subset of a large data set.
    */
-  public final EvaluationResult evaluate(File originalDataDir) throws TasteException, IOException {
+  public final EvaluationResult evaluate(File originalDataDir) 
+      throws TasteException, IOException, InterruptedException {
     return evaluate(originalDataDir, 0.9, 1.0, null);
   }
 
@@ -122,7 +123,8 @@ public abstract class AbstractEvaluator {
   public final EvaluationResult evaluate(File originalDataDir,
                                          double trainingPercentage,
                                          double evaluationPercentage,
-                                         RescorerProvider provider) throws TasteException, IOException {
+                                         RescorerProvider provider) 
+      throws TasteException, IOException, InterruptedException {
 
     Preconditions.checkArgument(trainingPercentage > 0.0 && trainingPercentage < 1.0,
                                 "Training % must be in (0,1): %s", trainingPercentage);

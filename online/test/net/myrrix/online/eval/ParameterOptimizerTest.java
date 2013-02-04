@@ -45,7 +45,7 @@ public final class ParameterOptimizerTest extends MyrrixTest {
     propertyRanges.put("model.features", new ParameterRange(10, 40, true));
     Callable<Number> evaluator = new Callable<Number>() {
       @Override
-      public Number call() throws IOException, TasteException {
+      public Number call() throws IOException, TasteException, InterruptedException {
         PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
         MyrrixIRStatistics stats = (MyrrixIRStatistics) prEvaluator.evaluate(new File("testdata/grouplens100K"));
         return stats.getMeanAveragePrecision();

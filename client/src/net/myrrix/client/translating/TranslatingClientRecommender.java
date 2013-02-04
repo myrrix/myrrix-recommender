@@ -27,6 +27,7 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Charsets;
@@ -350,8 +351,13 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
-  public void await() throws TasteException {
+  public void await() throws TasteException, InterruptedException {
     delegate.await();
+  }
+  
+  @Override
+  public boolean await(long time, TimeUnit unit) throws TasteException, InterruptedException {
+    return delegate.await(time, unit);
   }
 
   @Override

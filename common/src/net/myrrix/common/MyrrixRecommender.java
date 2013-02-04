@@ -36,6 +36,7 @@ package net.myrrix.common;
 import java.io.File;
 import java.io.Reader;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.model.DataModel;
@@ -370,9 +371,21 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   boolean isReady() throws TasteException;
 
   /**
-   * Blocks until {@link #isReady()} returns {@code true}.
+   * Blocks indefinitely until {@link #isReady()} returns {@code true}.
+   * 
+   * @throws TasteException if an error occurs while checking {@link #isReady()}
+   * @throws InterruptedException if the thread is interrupted while waiting
    */
-  void await() throws TasteException;
+  void await() throws TasteException, InterruptedException;
+  
+  /**
+   * Blocks until {@link #isReady()} returns {@code true}, or the given timeout is reached.
+   * 
+   * @throws TasteException if an error occurs while checking {@link #isReady()}
+   * @throws InterruptedException if the thread is interrupted while waiting
+   * @return {@code true} if {@link #isReady()} is {@code true}, or {@code false} if it timed out
+   */
+  boolean await(long time, TimeUnit unit) throws TasteException, InterruptedException;
 
   /**
    * @return all user IDs currently in the model

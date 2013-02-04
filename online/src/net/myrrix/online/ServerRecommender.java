@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
@@ -1135,14 +1136,26 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   }
 
   @Override
-  public void await() {
+  public void await() throws InterruptedException {
     while (!isReady()) {
-      try {
-        Thread.sleep(1000L);
-      } catch (InterruptedException e) {
-        // continue
-      }
+      Thread.sleep(1000L);
     }
+  }
+  
+  @Override
+  public boolean await(long time, TimeUnit unit) throws InterruptedException {
+    Preconditions.checkArgument(time >= 0L);
+    Preconditions.checkNotNull(unit);
+    long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
+    long waitIntervalMS = FastMath.min(1000L, waitForMS);
+    long waitUntil = System.currentTimeMillis() + waitForMS;
+    while (!isReady()) {
+      if (System.currentTimeMillis() > waitUntil) {
+        return false;
+      }
+      Thread.sleep(waitIntervalMS);
+    }
+    return true;
   }
 
   @Override

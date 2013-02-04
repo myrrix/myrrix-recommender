@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -58,6 +59,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
+import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -1093,14 +1095,26 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   @Override
-  public void await() throws TasteException {
+  public void await() throws TasteException, InterruptedException {
     while (!isReady()) {
-      try {
-        Thread.sleep(1000L);
-      } catch (InterruptedException e) {
-        // continue
-      }
+      Thread.sleep(1000L);
     }
+  }
+  
+  @Override
+  public boolean await(long time, TimeUnit unit) throws TasteException, InterruptedException {
+    Preconditions.checkArgument(time >= 0L);
+    Preconditions.checkNotNull(unit);
+    long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
+    long waitIntervalMS = FastMath.min(1000L, waitForMS);
+    long start = System.currentTimeMillis();
+    while (!isReady()) {
+      if (System.currentTimeMillis() > start + waitForMS) {
+        return false;
+      }
+      Thread.sleep(waitIntervalMS);
+    }
+    return true;
   }
 
   @Override
