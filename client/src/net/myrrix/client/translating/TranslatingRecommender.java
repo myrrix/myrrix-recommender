@@ -179,7 +179,7 @@ public interface TranslatingRecommender {
   boolean isReady() throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#refresh(Collection)
+   * @see net.myrrix.common.MyrrixRecommender#refresh()
    */
   void refresh();
 

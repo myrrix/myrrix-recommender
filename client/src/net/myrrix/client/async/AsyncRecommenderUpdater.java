@@ -19,13 +19,11 @@ package net.myrrix.client.async;
 import java.io.Closeable;
 import java.io.File;
 import java.io.Reader;
-import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.mahout.cf.taste.common.Refreshable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -138,14 +136,14 @@ public final class AsyncRecommenderUpdater implements Closeable {
   }
 
   /**
-   * @see MyrrixRecommender#refresh(Collection)
+   * @see MyrrixRecommender#refresh()
    */
-  public void refresh(final Collection<Refreshable> refreshables) {
+  public void refresh() {
     executor.submit(new Runnable() {
       @Override
       public void run() {
         try {
-          delegate.refresh(refreshables);
+          delegate.refresh();
         } catch (Exception e) {
           log.warn("Unexpected error in async update", e);
         }

@@ -19,8 +19,6 @@ package net.myrrix.online.generation;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.mahout.cf.taste.common.Refreshable;
-
 /**
  * An implementation of {@link GenerationManager} is responsible for interacting with successive generations of the
  * underlying recommender model. It sends updates to the component responsible for computing the model,
@@ -30,7 +28,7 @@ import org.apache.mahout.cf.taste.common.Refreshable;
  *
  * @author Sean Owen
  */
-public interface GenerationManager extends Closeable, Refreshable {
+public interface GenerationManager extends Closeable {
 
   /**
    * @return an instance of the latest {@link Generation} that has been made available by the
@@ -75,5 +73,11 @@ public interface GenerationManager extends Closeable, Refreshable {
    * @return bucket used by the recommender system
    */
   String getBucket();
+
+  /**
+   * Triggers a refresh of the object's internal state, which particularly includes rebuilding or reloading
+   * a matrix model.
+   */
+  void refresh();
   
 }

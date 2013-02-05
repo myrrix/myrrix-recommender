@@ -23,7 +23,7 @@ import net.myrrix.common.MyrrixRecommender;
 
 /**
  * <p>Responds to a POST request to {@code /refresh},
- * and in turn calls {@link MyrrixRecommender#refresh(java.util.Collection)}.
+ * and in turn calls {@link MyrrixRecommender#refresh()}.
  *
  * @author Sean Owen
  */
@@ -32,7 +32,7 @@ public final class RefreshServlet extends AbstractMyrrixServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) {
     MyrrixRecommender recommender = getRecommender();
-    recommender.refresh(null);
+    recommender.refresh();
   }
 
 }

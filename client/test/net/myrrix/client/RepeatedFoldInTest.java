@@ -36,7 +36,7 @@ public final class RepeatedFoldInTest extends AbstractClientTest {
     assertTrue(LangUtils.isFinite(client.estimatePreference(0, 0)));
     assertTrue(LangUtils.isFinite(client.estimatePreference(0, 1)));
     assertEquals(5, client.recommend(1, 5).size());
-    client.refresh(null);
+    client.refresh();
     assertTrue(LangUtils.isFinite(client.estimatePreference(0, 0)));
     assertTrue(LangUtils.isFinite(client.estimatePreference(0, 1)));
     assertEquals(5, client.recommend(1, 5).size());

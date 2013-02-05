@@ -163,9 +163,18 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     return generationManager;
   }
 
+  @Deprecated
   @Override
   public void refresh(Collection<Refreshable> alreadyRefreshed) {
-    generationManager.refresh(alreadyRefreshed);
+    if (alreadyRefreshed != null) {
+      log.warn("Ignoring argument {}", alreadyRefreshed);
+    }
+    refresh();
+  }
+  
+  @Override
+  public void refresh() {
+    generationManager.refresh();
   }
 
   @Override

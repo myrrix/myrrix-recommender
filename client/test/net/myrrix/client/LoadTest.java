@@ -132,7 +132,7 @@ public final class LoadTest extends AbstractClientTest {
               client.ingest(reader);
               ingest.addDatum(System.currentTimeMillis() - stepStart);
             } else if (r < 0.15) {
-              client.refresh(null);
+              client.refresh();
               refresh.addDatum(System.currentTimeMillis() - stepStart);
             } else if (r < 0.20) {
               client.estimatePreference(userID, itemID);

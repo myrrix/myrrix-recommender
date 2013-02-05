@@ -117,7 +117,7 @@ public abstract class AbstractClientTest extends MyrrixTest {
     client = new ClientRecommender(clientConfig);
 
     if (runRefresh) {
-      client.refresh(null);
+      client.refresh();
     }
 
     if (callAwait()) {

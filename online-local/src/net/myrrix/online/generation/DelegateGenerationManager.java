@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -38,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +116,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     refreshExecutor = Executors.newSingleThreadExecutor(
         new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LocalGenerationManager-%d").build());
     refreshSemaphore = new Semaphore(1);
-    refresh(null);
+    refresh();
   }
 
   /**
@@ -174,7 +172,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   private void maybeRefresh(boolean bulk) {
     if (--countdownToRebuild <= 0 && !bulk) {
       countdownToRebuild = WRITES_BETWEEN_REBUILD;
-      refresh(null);
+      refresh();
     }
   }
 
@@ -206,7 +204,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   }
 
   @Override
-  public void refresh(Collection<Refreshable> alreadyRefreshed) {
+  public void refresh() {
     if (refreshSemaphore.tryAcquire()) {
       refreshExecutor.submit(new Callable<Void>() {
         @Override

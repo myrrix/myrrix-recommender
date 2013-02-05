@@ -57,7 +57,7 @@ public final class ModelBuildTest extends AbstractClientTest {
       client.ingest(new StringReader(line));
       if ((++count % 3) == 0) {
         log.info("Ingested {} users", count);
-        client.refresh(null);
+        client.refresh();
         Thread.sleep(1000L);
         if (count >= FEATURES) {
           assertTrue(client.isReady());

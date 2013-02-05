@@ -35,9 +35,11 @@ package net.myrrix.common;
 
 import java.io.File;
 import java.io.Reader;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.model.DataModel;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
@@ -210,6 +212,22 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
                                          int howMany,
                                          Rescorer<LongPair> rescorer,
                                          boolean excludeItemIfNotSimilarToAll) throws TasteException;
+
+  /**
+   * @deprecated call {@link #refresh()}
+   */
+  @Deprecated
+  @Override
+  void refresh(Collection<Refreshable> refreshables);
+  
+  
+  // End inherited from ItemBasedRecommender
+
+  /**
+   * Like {@link #refresh(Collection)} from Mahout, but the need for the argument does not exist in
+   * Myrrix. Triggers a rebuild of the object's internal state, particularly, the matrix model.
+   */
+  void refresh();
 
   /**
    * <p>Lists the items that were most influential in recommending a given item to a given user. Exactly how this

@@ -339,7 +339,7 @@ public final class CLI {
     if (programArgs.length != 1) {
       throw new ArgumentValidationException("no arguments");
     }
-    recommender.refresh(null);
+    recommender.refresh();
   }
 
   private static void doRecommendedBecause(CLIArgs cliArgs,

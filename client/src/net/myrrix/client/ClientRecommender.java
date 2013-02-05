@@ -845,17 +845,21 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
   }
 
-  /**
-   * Requests that the Serving Layer recompute its models. This is a request, and may or may not result
-   * in an update.
-   *
-   * @param alreadyRefreshed should be null
-   */
+  @Deprecated
   @Override
   public void refresh(Collection<Refreshable> alreadyRefreshed) {
     if (alreadyRefreshed != null) {
       log.warn("Ignoring argument {}", alreadyRefreshed);
     }
+    refresh();
+  }
+
+  /**
+   * Requests that the Serving Layer recompute its models. This is a request, and may or may not result
+   * in an update.
+   */
+  @Override
+  public void refresh() {
     int numPartitions = partitions.size();
     for (int i = 0; i < numPartitions; i++) {
       refreshPartition(i);
