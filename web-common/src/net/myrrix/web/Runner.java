@@ -444,6 +444,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     // Avoid running out of ephemeral ports under heavy load?
     connector.setAttribute("socket.soReuseAddress", true);
+    
+    connector.setMaxPostSize(0);
+    connector.setAttribute("disableUploadTimeout", false);
 
     return connector;
   }
