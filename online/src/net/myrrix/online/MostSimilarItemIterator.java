@@ -83,8 +83,12 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
     int length = itemFeatures.length;
     for (int i = 0; i < length; i++) {
       long toItemID = toItemIDs[i];
-      if (rescorer1 != null && rescorer1.isFiltered(new LongPair(itemID, toItemID))) {
-        return null;
+      LongPair cachedPair = null;
+      if (rescorer1 != null) {
+        cachedPair = new LongPair(itemID, toItemID);
+        if (rescorer1.isFiltered(cachedPair)) {
+          return null;
+        }
       }
       double similarity = SimpleVectorMath.dot(candidateFeatures, itemFeatures[i]) / 
           (candidateFeaturesNorm * itemFeatureNorms[i]);
@@ -92,7 +96,7 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
         return null;
       }
       if (rescorer1 != null) {
-        similarity = rescorer1.rescore(new LongPair(itemID, toItemID), similarity);
+        similarity = rescorer1.rescore(cachedPair, similarity);
         if (!LangUtils.isFinite(similarity)) {
           return null;
         }
