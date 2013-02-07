@@ -14,6 +14,9 @@ PORT=8080
 # Set to listen for HTTPS connections on the given port. This or PORT must be set.
 #SECURE_PORT=8443
 
+# Non-default context path under which to deploy endpoint URIs
+#CONTEXT_PATH=/foo/bar
+
 #READ_ONLY=true
 
 # Set the keystore file to enable SSL / HTTPS, and supply the password if needed.
@@ -75,6 +78,10 @@ if [ -n "${PORT}" ]; then
 fi
 if [ -n "${SECURE_PORT}" ]; then
   ALL_ARGS="${ALL_ARGS} --securePort=${SECURE_PORT}"
+fi
+
+if [ -n "${CONTEXT_PATH}" ]; then
+  ALL_ARGS="${ALL_ARGS} --contextPath=${CONTEXT_PATH}"
 fi
 
 if [ -n "${READ_ONLY}" ]; then
