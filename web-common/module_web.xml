@@ -28,7 +28,11 @@
 
   <target name="compile.module.web.production" depends="compile.module.online">
 
-    <delete dir="${module.web.basedir}/gen"/>
+    <delete>
+      <fileset dir="${module.web.basedir}/gen">
+        <include name="**/*.java"/>
+      </fileset>
+    </delete>
     <jasper validateXml="false"
             failonerror="true"
             listerrors="true"
