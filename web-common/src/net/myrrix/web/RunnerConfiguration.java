@@ -43,6 +43,7 @@ public final class RunnerConfiguration {
   private String userName;
   private String password;
   private boolean consoleOnlyPassword;
+  private Integer hostRequestLimit;
   private String rescorerProviderClassName;
   private Integer partition;
   private String allPartitionsSpecification;
@@ -194,6 +195,19 @@ public final class RunnerConfiguration {
 
   public void setConsoleOnlyPassword(boolean consoleOnlyPassword) {
     this.consoleOnlyPassword = consoleOnlyPassword;
+  }
+
+  /**
+   * @return max number of requests per minute from a host before it is temporarily blocked 
+   *  or {@code null} for no limit. This provides only a basic attempt to deny requests and is not 
+   *  guaranteed to block any DoS attack.
+   */
+  public Integer getHostRequestLimit() {
+    return hostRequestLimit;
+  }
+
+  public void setHostRequestLimit(Integer hostRequestLimit) {
+    this.hostRequestLimit = hostRequestLimit;
   }
 
   /**

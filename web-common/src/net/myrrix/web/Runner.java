@@ -21,8 +21,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import javax.servlet.Filter;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
@@ -47,6 +49,8 @@ import org.apache.catalina.core.JasperListener;
 import org.apache.catalina.core.JreMemoryLeakPreventionListener;
 import org.apache.catalina.core.ThreadLocalLeakPreventionListener;
 import org.apache.catalina.deploy.ErrorPage;
+import org.apache.catalina.deploy.FilterDef;
+import org.apache.catalina.deploy.FilterMap;
 import org.apache.catalina.deploy.LoginConfig;
 import org.apache.catalina.deploy.SecurityCollection;
 import org.apache.catalina.deploy.SecurityConstraint;
@@ -116,6 +120,8 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *   HTTP DIGEST authentication. Requires password to be set.</li>
  *   <li>{@code --password}: Password for HTTP DIGEST authentication. Requires userName to be set.</li>
  *   <li>{@code --consoleOnlyPassword}: Only apply username and password to admin / console pages.</li>
+ *   <li>{@code --hostRequestLimit}: max number of requests per minute from a host before it is temporarily blocked 
+ *    This provides only a basic attempt to deny requests and is not guaranteed to block any DoS attack.</li>
  *   <li>{@code --rescorerProviderClass}: Optional. Name of an implementation of
  *     {@code RescorerProvider} to use to rescore recommendations and similarities, if any. The class
  *     must be added to the server classpath. Or, in distributed mode, if not found in the classpath, it
@@ -263,6 +269,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
     config.setConsoleOnlyPassword(runnerArgs.isConsoleOnlyPassword());
     config.setKeystoreFile(runnerArgs.getKeystoreFile());
     config.setKeystorePassword(runnerArgs.getKeystorePassword());
+    
+    config.setHostRequestLimit(runnerArgs.getHostRequestLimit());
+    
     config.setRescorerProviderClassName(runnerArgs.getRescorerProviderClass());
 
     boolean hasPartition = runnerArgs.getPartition() != null;
@@ -294,6 +303,12 @@ public final class Runner implements Callable<Boolean>, Closeable {
     configureServer(tomcat.getServer());
     configureHost(tomcat.getHost());
     Context context = makeContext(tomcat, noSuchBaseDir, connector.getPort());
+    
+    if (config.getHostRequestLimit() != null) {
+      addFilter(context, new DoSFilter(), "/*", 
+                Collections.singletonMap(DoSFilter.MAX_ACCESS_PER_HOST_PER_MIN_KEY, 
+                                         config.getHostRequestLimit().toString()));
+    }
 
     addServlet(context, new RecommendServlet(), "/recommend/*");
     addServlet(context, new RecommendToManyServlet(), "/recommendToMany/*");
@@ -519,6 +534,22 @@ public final class Runner implements Callable<Boolean>, Closeable {
     context.setCookies(false);
 
     return context;
+  }
+  
+  private static void addFilter(Context context, Filter filter, String path, Map<String,String> args) {
+    String name = filter.getClass().getSimpleName();
+    FilterDef dosFilterDef = new FilterDef();
+    dosFilterDef.setFilter(filter);
+    dosFilterDef.setFilterName(name);
+    for (Map.Entry<String,String> entry : args.entrySet()) {
+      dosFilterDef.addInitParameter(entry.getKey(), entry.getValue());
+    }
+    context.addFilterDef(dosFilterDef); 
+    
+    FilterMap dosFilterMap = new FilterMap();
+    dosFilterMap.setFilterName(name);
+    dosFilterMap.addURLPattern(path);
+    context.addFilterMap(dosFilterMap);
   }
 
   private static Wrapper addServlet(Context context, Servlet servlet, String path) {

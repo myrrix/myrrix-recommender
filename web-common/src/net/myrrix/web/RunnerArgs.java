@@ -62,6 +62,10 @@ public interface RunnerArgs {
 
   @Option(defaultToNull = true, description = "Password for keystoreFile")
   String getKeystorePassword();
+  
+  @Option(defaultToNull = true, 
+          description = "Max number of requests per minute from a host before it is temporarily blocked")
+  Integer getHostRequestLimit();
 
   @Option(defaultToNull = true, description = "RescorerProvider implementation class")
   String getRescorerProviderClass();
