@@ -29,7 +29,7 @@
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<!DOCTYPE html>]]></jsp:text>
 <html>
-<jsp:text><![CDATA[<!-- Copyright 2012 Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>
+<jsp:text><![CDATA[<!-- Copyright Myrrix. See myrrix.com/legal for license. -->]]></jsp:text>
 <head>
 <title>Myrrix Serving Layer</title>
 
