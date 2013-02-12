@@ -277,6 +277,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   private File copyAndTranslateToTempFile(Reader reader) throws IOException {
     File tempFile = File.createTempFile("myrrix-", ".csv.gz");
     tempFile.deleteOnExit();
+    log.debug("Translating ingest input to {}", tempFile);
     BufferedReader buffered =
         reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
@@ -304,6 +305,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     } finally {
       Closeables.close(buffered, true);
     }
+    log.debug("Done translating ingest input to {}", tempFile);    
     return tempFile;
   }
 

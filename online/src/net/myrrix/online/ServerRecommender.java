@@ -200,6 +200,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
 
       int count = 0;
+      int badLines = 0;
       String line;
       while ((line = buffered.readLine()) != null) {
 
@@ -210,23 +211,33 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           continue;
         }
 
-        Iterator<String> tokens = DELIMITER.split(line).iterator();
-        long userID = Long.parseLong(tokens.next());
-        long itemID = Long.parseLong(tokens.next());
-        if (tokens.hasNext()) {
-          String token = tokens.next().trim();
-          if (token.isEmpty()) {
-            removePreference(userID, itemID, true);
-          } else {
-            setPreference(userID, itemID, LangUtils.parseFloat(token), true);
-          }
+        try {
+          
+          Iterator<String> tokens = DELIMITER.split(line).iterator();
+          long userID = Long.parseLong(tokens.next());
+          long itemID = Long.parseLong(tokens.next());
+          
           if (tokens.hasNext()) {
-            // Allow a 4th timestamp column like Mahout, but don't parse it
-            tokens.next();
-            Preconditions.checkState(!tokens.hasNext(), "Line has too many columns");
+            String token = tokens.next().trim();
+            if (token.isEmpty()) {
+              removePreference(userID, itemID, true);
+            } else {
+              setPreference(userID, itemID, LangUtils.parseFloat(token), true);
+            }
+            if (tokens.hasNext()) {
+              // Allow a 4th timestamp column like Mahout, but don't parse it
+              tokens.next();
+              Preconditions.checkState(!tokens.hasNext(), "Line has too many columns");
+            }
+          } else {
+            setPreference(userID, itemID, 1.0f, true);
           }
-        } else {
-          setPreference(userID, itemID, 1.0f, true);
+          
+        } catch (IllegalArgumentException iae) { // includes NumberFormatException
+          log.warn("Ignoring unparseable line: '{}'", line);
+          if (++badLines > 100) { // Crude check
+            throw new IllegalArgumentException("Too many bad lines; aborting");
+          }
         }
 
       }
