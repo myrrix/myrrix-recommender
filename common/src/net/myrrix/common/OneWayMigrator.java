@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package net.myrrix.client.translating;
+package net.myrrix.common;
 
 import org.apache.mahout.cf.taste.impl.model.AbstractIDMigrator;
 
 /**
  * Used when translation is needed only one-way, never back. The mappings do not need to be remembered.
- * 
- * @deprecated moved to {@link net.myrrix.common.OneWayMigrator}
  */
-@Deprecated
 public final class OneWayMigrator extends AbstractIDMigrator {
 
   @Override
