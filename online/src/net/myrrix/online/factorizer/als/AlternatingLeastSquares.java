@@ -262,12 +262,16 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       recentVectors.add(entry.getValue());
     }
     LongPrimitiveIterator it = RbyColumn.keySetIterator();
+    long count = 0;
     while (it.hasNext()) {
       long id = it.nextLong();
       if (!randomY.containsKey(id)) {
         float[] vector = RandomUtils.randomUnitVectorFarFrom(features, recentVectors, random);
         randomY.put(id, vector);
         recentVectors.add(vector);
+      }
+      if (++count % 100000 == 0) {
+        log.info("Computed {} initial Y rows", count);
       }
     }
     log.info("Constructed initial random Y");
