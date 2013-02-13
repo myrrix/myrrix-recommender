@@ -107,7 +107,7 @@ if [ -n "${RESCORER}" ]; then
 fi
 ADDITIONAL_CLASSPATH="";
 if [ -n "${RESCORER_JAR}" ]; then
-  ADDITIONAL_CLASSPATH="-cp ${RESCORER_JAR}"
+  ADDITIONAL_CLASSPATH=":${RESCORER_JAR}"
 fi
 
 if [ -n "${INSTANCE_ID}" ]; then
@@ -146,4 +146,4 @@ fi
 SERVING_JAR=`ls myrrix-serving-*.jar`
 
 java ${ALL_SYS_PROPS} -Xmx${HEAP_SIZE} -XX:NewRatio=12 -XX:+UseParallelGC -XX:+UseParallelOldGC\
- ${ADDITIONAL_CLASSPATH} -jar ${SERVING_JAR} ${ALL_ARGS} $@
+ -cp ${SERVING_JAR}${ADDITIONAL_CLASSPATH} net.myrrix.web.Runner ${ALL_ARGS} $@
