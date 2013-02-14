@@ -27,6 +27,7 @@ import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.random.RandomManager;
@@ -100,7 +101,7 @@ public final class SelfOrganizingMaps {
       double expectedNodeSize = (double) vectors.size() / (maxMapSize * maxMapSize);
       samplingRate = expectedNodeSize > 1.0 ? 1.0 / expectedNodeSize : 1.0;
     }
-    log.info("Sampling rate: {}", samplingRate);
+    log.debug("Sampling rate: {}", samplingRate);
 
     int mapSize = FastMath.min(maxMapSize, (int) FastMath.sqrt(vectors.size() * samplingRate));
     Node[][] map = buildInitialMap(vectors, mapSize);
@@ -128,13 +129,15 @@ public final class SelfOrganizingMaps {
     int t = 0;
     for (FastByIDMap.MapEntry<float[]> entry : vectors.entrySet()) {
       float[] V = entry.getValue();
-      int[] bmuCoordinates = findBestMatchingUnit(V, map);
       double decayFactor = FastMath.exp(-t / sigma);
       t++;
       if (decayFactor < minDecay) {
         break;
       }
-      updateNeighborhood(map, V, bmuCoordinates[0], bmuCoordinates[1], decayFactor);
+      int[] bmuCoordinates = findBestMatchingUnit(V, map);
+      if (bmuCoordinates != null) {      
+        updateNeighborhood(map, V, bmuCoordinates[0], bmuCoordinates[1], decayFactor);
+      }
     }
   }
 
@@ -147,12 +150,14 @@ public final class SelfOrganizingMaps {
       }
       float[] V = entry.getValue();
       int[] bmuCoordinates = findBestMatchingUnit(V, map);
-      Node node = map[bmuCoordinates[0]][bmuCoordinates[1]];
-      float[] center = node.getCenter();
-      double currentScore =
-          SimpleVectorMath.dot(V, center) / (SimpleVectorMath.norm(center) * SimpleVectorMath.norm(V));
-      Pair<Double,Long> newAssignedID = Pair.of(currentScore, entry.getKey());
-      node.addAssignedID(newAssignedID);
+      if (bmuCoordinates != null) {
+        Node node = map[bmuCoordinates[0]][bmuCoordinates[1]];
+        float[] center = node.getCenter();
+        double currentScore =
+            SimpleVectorMath.dot(V, center) / (SimpleVectorMath.norm(center) * SimpleVectorMath.norm(V));
+        Pair<Double,Long> newAssignedID = Pair.of(currentScore, entry.getKey());
+        node.addAssignedID(newAssignedID);
+      }
     }
   }
 
@@ -209,14 +214,14 @@ public final class SelfOrganizingMaps {
       for (int j = 0; j < mapSize; j++) {
         float[] center = mapRow[j].getCenter();
         double currentScore = SimpleVectorMath.dot(vector, center) / (SimpleVectorMath.norm(center) * vectorNorm);
-        if (currentScore > bestScore) {
+        if (LangUtils.isFinite(currentScore) && currentScore > bestScore) {
           bestScore = currentScore;
           bestI = i;
           bestJ = j;
         }
       }
     }
-    return new int[] {bestI, bestJ};
+    return bestI == -1 || bestJ == -1 ? null : new int[] {bestI, bestJ};
   }
 
   /**
