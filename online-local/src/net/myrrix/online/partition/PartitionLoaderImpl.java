@@ -18,7 +18,7 @@ package net.myrrix.online.partition;
 
 import java.util.List;
 
-import org.apache.mahout.common.Pair;
+import com.google.common.net.HostAndPort;
 
 /**
  * Does nothing; not applicable in local mode.
@@ -31,7 +31,7 @@ public final class PartitionLoaderImpl implements PartitionLoader {
    * @throws UnsupportedOperationException
    */
   @Override
-  public List<List<Pair<String, Integer>>> loadPartitions(int defaultPort, String bucket, String instanceID) {
+  public List<List<HostAndPort>> loadPartitions(int defaultPort, String bucket, String instanceID) {
     throw new UnsupportedOperationException();
   }
 
