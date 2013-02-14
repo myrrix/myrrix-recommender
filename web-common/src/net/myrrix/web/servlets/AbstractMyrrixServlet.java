@@ -35,9 +35,10 @@ import javax.servlet.http.HttpServletResponse;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
+import com.google.common.net.HostAndPort;
+import com.google.common.net.HttpHeaders;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.Pair;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -85,7 +86,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private MyrrixRecommender recommender;
   private RescorerProvider rescorerProvider;
   private ServletStats timing;
-  private ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions;
+  private ReloadingReference<List<List<HostAndPort>>> allPartitions;
   private int thisPartition;
   private ConcurrentMap<String,ResponseContentType> responseTypeCache;
 
@@ -98,8 +99,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     rescorerProvider = (RescorerProvider) context.getAttribute(RESCORER_PROVIDER_KEY);
 
     @SuppressWarnings("unchecked")
-    ReloadingReference<List<List<Pair<String,Integer>>>> theAllPartitions =
-        (ReloadingReference<List<List<Pair<String,Integer>>>>) context.getAttribute(ALL_PARTITIONS_REF_KEY);
+    ReloadingReference<List<List<HostAndPort>>> theAllPartitions =
+        (ReloadingReference<List<List<HostAndPort>>>) context.getAttribute(ALL_PARTITIONS_REF_KEY);
     allPartitions = theAllPartitions;
 
     thisPartition = (Integer) context.getAttribute(PARTITION_KEY);
@@ -128,7 +129,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
       throws ServletException, IOException {
 
     if (allPartitions != null) {
-      List<List<Pair<String,Integer>>> thePartitions = allPartitions.get(1, TimeUnit.SECONDS);
+      List<List<HostAndPort>> thePartitions = allPartitions.get(1, TimeUnit.SECONDS);
       Long unnormalizedPartitionToServe = getUnnormalizedPartitionToServe(request);
       if (unnormalizedPartitionToServe != null) {
         int partitionToServe = LangUtils.mod(unnormalizedPartitionToServe, thePartitions.size());
@@ -164,17 +165,17 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
   private static String buildRedirectToPartitionURL(HttpServletRequest request,
                                                     int toPartition,
                                                     long unnormalizedPartitionToServe,
-                                                    List<List<Pair<String, Integer>>> thePartitions) {
+                                                    List<List<HostAndPort>> thePartitions) {
 
-    List<Pair<String,Integer>> replicas = thePartitions.get(toPartition);
+    List<HostAndPort> replicas = thePartitions.get(toPartition);
     // Also determine (first) replica by hashing to preserve a predictable order of access
     // through the replicas for a given ID
     int chosenReplica = LangUtils.mod(RandomUtils.md5HashToLong(unnormalizedPartitionToServe), replicas.size());
-    Pair<String,Integer> hostPort = replicas.get(chosenReplica);
+    HostAndPort hostPort = replicas.get(chosenReplica);
 
     StringBuilder redirectURL = new StringBuilder();
     redirectURL.append(request.isSecure() ? "https" : "http").append("://");
-    redirectURL.append(hostPort.getFirst()).append(':').append(hostPort.getSecond());
+    redirectURL.append(hostPort.getHostText()).append(':').append(hostPort.getPort());
     redirectURL.append(request.getRequestURI());
     String query = request.getQueryString();
     if (query != null) {
@@ -276,7 +277,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
    */
   final ResponseContentType determineResponseType(HttpServletRequest request) {
 
-    String acceptHeader = request.getHeader("Accept");
+    String acceptHeader = request.getHeader(HttpHeaders.ACCEPT);
     if (acceptHeader == null) {
       return ResponseContentType.JSON;
     }

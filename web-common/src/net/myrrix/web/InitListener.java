@@ -29,7 +29,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import com.google.common.io.Files;
-import org.apache.mahout.common.Pair;
+import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,17 +142,17 @@ public final class InitListener implements ServletContextListener {
     final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
     final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
 
-    ReloadingReference<List<List<Pair<String,Integer>>>> allPartitionsReference = null;
+    ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = null;
     if (allPartitionsSpecString != null) {
       allPartitionsReference =
-          new ReloadingReference<List<List<Pair<String,Integer>>>>(new Callable<List<List<Pair<String,Integer>>>>() {
+          new ReloadingReference<List<List<HostAndPort>>>(new Callable<List<List<HostAndPort>>>() {
             @Override
-            public List<List<Pair<String, Integer>>> call() {
+            public List<List<HostAndPort>> call() {
               if (RunnerConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsSpecString)) {
                 int port = Integer.parseInt(portString);
                 PartitionLoader loader =
                     ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", PartitionLoader.class);
-                List<List<Pair<String, Integer>>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
+                List<List<HostAndPort>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
                 log.info("Latest partitions: {}", newPartitions);
                 return newPartitions;
               }

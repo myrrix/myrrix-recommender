@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
 import com.google.common.base.Charsets;
+import com.google.common.net.HttpHeaders;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.MyrrixRecommender;
@@ -75,7 +76,7 @@ public final class IngestServlet extends AbstractMyrrixServlet {
 
     } else {
 
-      String contentEncoding = request.getHeader("Content-Encoding");
+      String contentEncoding = request.getHeader(HttpHeaders.CONTENT_ENCODING);
       if (contentEncoding == null) {
         reader = request.getReader();
       } else if ("gzip".equals(contentEncoding)) {
@@ -103,7 +104,7 @@ public final class IngestServlet extends AbstractMyrrixServlet {
       return;
     }
 
-    String referer = request.getHeader("Referer");
+    String referer = request.getHeader(HttpHeaders.REFERER);
     if (fromBrowserUpload && referer != null) {
       response.sendRedirect(referer);
     }

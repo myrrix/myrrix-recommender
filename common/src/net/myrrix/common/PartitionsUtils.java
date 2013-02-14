@@ -35,7 +35,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
-import org.apache.mahout.common.Pair;
+import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -71,20 +71,19 @@ public final class PartitionsUtils {
    * @return {@link List} of partitions, where each partition is a {@link List} of replicas, where each
    *  replica is a host-port pair, as {@link String} and {@link Integer}
    */
-  public static List<List<Pair<String,Integer>>> parseAllPartitions(CharSequence value) {
+  public static List<List<HostAndPort>> parseAllPartitions(CharSequence value) {
     if (value == null) {
       return null;
     }
-    List<List<Pair<String,Integer>>> allPartitions = Lists.newArrayList();
+    List<List<HostAndPort>> allPartitions = Lists.newArrayList();
     for (String partitionString : SEMICOLON.split(value)) {
-      List<Pair<String,Integer>> partition = Lists.newArrayList();
+      List<HostAndPort> partition = Lists.newArrayList();
       for (String replicaString : COMMA.split(partitionString)) {
         String[] hostPort = COLON.split(replicaString);
         String host = hostPort[0];
         int port = hostPort.length > 1 ? Integer.parseInt(hostPort[1]) : 80;
         Preconditions.checkArgument(port > 0, "port must be positive: %s", port);
-        Pair<String,Integer> replica = new Pair<String,Integer>(host, port);
-        partition.add(replica);
+        partition.add(HostAndPort.fromParts(host, port));
       }
       Preconditions.checkArgument(!partition.isEmpty(), "At least one partition must be specified");
       allPartitions.add(partition);
@@ -99,7 +98,7 @@ public final class PartitionsUtils {
    * @return a simple structure representing one partition, one replica: the local host
       * and configured instance port
    */
-  public static List<List<Pair<String,Integer>>> getDefaultLocalPartition(int port) {
+  public static List<List<HostAndPort>> getDefaultLocalPartition(int port) {
     InetAddress localhost;
     try {
       localhost = InetAddress.getLocalHost();
@@ -107,10 +106,10 @@ public final class PartitionsUtils {
       throw new IllegalStateException(e);
     }
     String host = localhost.getHostName();
-    return Collections.singletonList(Collections.singletonList(Pair.of(host, port)));
+    return Collections.singletonList(Collections.singletonList(HostAndPort.fromParts(host, port)));
   }
 
-  public static List<List<Pair<String,Integer>>> parsePartitionsFromStatus(URL url) throws IOException {
+  public static List<List<HostAndPort>> parsePartitionsFromStatus(URL url) throws IOException {
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder;
@@ -133,33 +132,33 @@ public final class PartitionsUtils {
     Element docElement = doc.getDocumentElement();
     docElement.normalize();
 
-    List<List<Pair<String,Integer>>> result = Lists.newArrayList();
+    List<List<HostAndPort>> result = Lists.newArrayList();
 
     NodeList partitionElements = docElement.getElementsByTagName("partition");
     for (int i = 0; i < partitionElements.getLength(); i++) {
-      List<Pair<String,Integer>> partitionResult = Lists.newArrayList();
+      List<HostAndPort> partitionResult = Lists.newArrayList();
       result.add(partitionResult);
       Element partitionElement = (Element) partitionElements.item(i);
       NodeList replicaElements = partitionElement.getElementsByTagName("replica");
       for (int j = 0; j < replicaElements.getLength(); j++) {
         Node replicaElement = replicaElements.item(j);
         String[] hostPort = COLON.split(replicaElement.getTextContent());
-        partitionResult.add(Pair.of(hostPort[0], Integer.parseInt(hostPort[1])));
+        partitionResult.add(HostAndPort.fromParts(hostPort[0], Integer.parseInt(hostPort[1])));
       }
     }
 
     return result;
   }
 
-  private static void log(Collection<List<Pair<String, Integer>>> allPartitions) {
+  private static void log(Collection<List<HostAndPort>> allPartitions) {
     if (allPartitions.isEmpty()) {
       log.info("No partitions parsed");
     } else {
       int partitionNumber = 0;
-      for (List<Pair<String,Integer>> partition : allPartitions) {
+      for (List<HostAndPort> partition : allPartitions) {
         StringBuilder description = new StringBuilder();
-        for (Pair<String,Integer> hostPort : partition) {
-          description.append(hostPort.getFirst()).append(':').append(hostPort.getSecond()).append(' ');
+        for (HostAndPort hostPort : partition) {
+          description.append(hostPort).append(' ');
         }
         log.info("Partition {}: {}", partitionNumber, description);
         partitionNumber++;

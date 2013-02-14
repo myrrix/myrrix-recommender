@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.common.Pair;
+import com.google.common.net.HostAndPort;
 
 import net.myrrix.common.PartitionsUtils;
 
@@ -48,7 +48,7 @@ public final class MyrrixClientConfiguration {
   private String userName;
   private String password;
   private String allPartitionsSpecification;
-  private List<List<Pair<String,Integer>>> partitions;
+  private List<List<HostAndPort>> partitions;
 
   public MyrrixClientConfiguration() {
     host = DEFAULT_HOST;
@@ -188,7 +188,7 @@ public final class MyrrixClientConfiguration {
     }
   }
 
-  private List<List<Pair<String,Integer>>> parseAutoPartitionSpecification() throws IOException {
+  private List<List<HostAndPort>> parseAutoPartitionSpecification() throws IOException {
     String scheme = isSecure() ? "https" : "http";
     String path = contextPath == null ? "/status.jspx" : '/' + contextPath + "/status.jspx";
     URL statusURL;
@@ -205,9 +205,9 @@ public final class MyrrixClientConfiguration {
    *  or a description of a 1-partition, 1-replica system containing the host:port specified by {@link #getHost()}
    *  and {@link #getPort()} if not
    */
-  public List<List<Pair<String,Integer>>> getPartitions() {
+  public List<List<HostAndPort>> getPartitions() {
     return partitions == null ?
-        Collections.singletonList(Collections.singletonList(Pair.of(host, port))) :
+        Collections.singletonList(Collections.singletonList(HostAndPort.fromParts(host, port))) :
         partitions;
   }
 

@@ -59,6 +59,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
+import com.google.common.net.HostAndPort;
+import com.google.common.net.HttpHeaders;
+import com.google.common.net.MediaType;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
@@ -112,15 +115,16 @@ public final class ClientRecommender implements MyrrixRecommender {
   private static final Map<String,String> INGEST_REQUEST_PROPS;
   static {
     INGEST_REQUEST_PROPS = Maps.newHashMapWithExpectedSize(2);
-    INGEST_REQUEST_PROPS.put("Content-Type", "text/plain; charset=UTF-8");
-    INGEST_REQUEST_PROPS.put("Content-Encoding", "gzip");
+    INGEST_REQUEST_PROPS.put(HttpHeaders.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
+    INGEST_REQUEST_PROPS.put(HttpHeaders.CONTENT_ENCODING, "gzip");
   }
+  private static final String DESIRED_RESPONSE_CONTENT_TYPE = MediaType.CSV_UTF_8.withoutParameters().toString();
 
   private final MyrrixClientConfiguration config;
   private final boolean needAuthentication;
   private final boolean closeConnection;
   private final boolean ignoreHTTPSHost;
-  private final List<List<Pair<String,Integer>>> partitions;
+  private final List<List<HostAndPort>> partitions;
 
   /**
    * Instantiates a new recommender client with the given configuration
@@ -236,12 +240,12 @@ public final class ClientRecommender implements MyrrixRecommender {
       path = '/' + contextPath + path;
     }
     String protocol = config.isSecure() ? "https" : "http";
-    List<Pair<String,Integer>> replicas = choosePartitionAndReplicas(unnormalizedID);
+    List<HostAndPort> replicas = choosePartitionAndReplicas(unnormalizedID);
     IOException savedException = null;
-    for (Pair<String,Integer> replica : replicas) {
+    for (HostAndPort replica : replicas) {
       URL url;
       try {
-        url = new URL(protocol, replica.getFirst(), replica.getSecond(), path);
+        url = new URL(protocol, replica.getHostText(), replica.getPort(), path);
       } catch (MalformedURLException mue) {
         // can't happen
         throw new IllegalStateException(mue);
@@ -254,9 +258,9 @@ public final class ClientRecommender implements MyrrixRecommender {
       connection.setDoOutput(doOutput);
       connection.setUseCaches(false);
       connection.setAllowUserInteraction(false);
-      connection.setRequestProperty("Accept", "text/csv");
+      connection.setRequestProperty(HttpHeaders.ACCEPT, DESIRED_RESPONSE_CONTENT_TYPE);
       if (closeConnection) {
-        connection.setRequestProperty("Connection", "close");
+        connection.setRequestProperty(HttpHeaders.CONNECTION, "close");
       }
       if (chunkedStreaming) {
         if (needAuthentication) {
@@ -284,15 +288,15 @@ public final class ClientRecommender implements MyrrixRecommender {
     throw savedException;
   }
 
-  private List<Pair<String,Integer>> choosePartitionAndReplicas(long unnormalizedID) {
-    List<Pair<String,Integer>> replicas = partitions.get(LangUtils.mod(unnormalizedID, partitions.size()));
+  private List<HostAndPort> choosePartitionAndReplicas(long unnormalizedID) {
+    List<HostAndPort> replicas = partitions.get(LangUtils.mod(unnormalizedID, partitions.size()));
     int numReplicas = replicas.size();
     if (numReplicas <= 1) {
       return replicas;
     }
     // Fix first replica; cycle through remainder in order since the remainder doesn't matter
     int currentReplica = LangUtils.mod(RandomUtils.md5HashToLong(unnormalizedID), numReplicas);
-    List<Pair<String,Integer>> rotatedReplicas = Lists.newArrayListWithCapacity(numReplicas);
+    List<HostAndPort> rotatedReplicas = Lists.newArrayListWithCapacity(numReplicas);
     for (int i = 0; i < numReplicas; i++) {
       rotatedReplicas.add(replicas.get(currentReplica));
       if (++currentReplica == numReplicas) {
@@ -327,8 +331,8 @@ public final class ClientRecommender implements MyrrixRecommender {
     if (sendValue) {
       requestProperties = Maps.newHashMapWithExpectedSize(2);
       bytes = Float.toString(value).getBytes(Charsets.UTF_8);
-      requestProperties.put("Content-Type", "text/plain; charset=UTF-8");
-      requestProperties.put("Content-Length", Integer.toString(bytes.length));
+      requestProperties.put(HttpHeaders.CONTENT_TYPE, MediaType.PLAIN_TEXT_UTF_8.toString());
+      requestProperties.put(HttpHeaders.CONTENT_LENGTH, Integer.toString(bytes.length));
     } else {
       requestProperties = null;
       bytes = null;

@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.FastMath;
@@ -55,7 +56,6 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
-import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +123,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                            String instanceID,
                            File localInputDir,
                            int partition,
-                           ReloadingReference<List<List<Pair<String,Integer>>>> allPartitions,
+                           ReloadingReference<List<List<HostAndPort>>> allPartitions,
                            File licenseFile) {
     Preconditions.checkNotNull(localInputDir, "No local dir");
 

@@ -18,7 +18,7 @@ package net.myrrix.online.partition;
 
 import java.util.List;
 
-import org.apache.mahout.common.Pair;
+import com.google.common.net.HostAndPort;
 
 /**
  * Implementations of this interface are able to automatically load information about partitions,
@@ -29,6 +29,6 @@ import org.apache.mahout.common.Pair;
  */
 public interface PartitionLoader {
 
-  List<List<Pair<String,Integer>>> loadPartitions(int defaultPort, String bucket, String instanceID);
+  List<List<HostAndPort>> loadPartitions(int defaultPort, String bucket, String instanceID);
 
 }

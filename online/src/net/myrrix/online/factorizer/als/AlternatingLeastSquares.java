@@ -274,7 +274,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         log.info("Computed {} initial Y rows", count);
       }
     }
-    log.info("Constructed initial random Y");
+    log.info("Constructed initial Y");
     return randomY;
   }
 
