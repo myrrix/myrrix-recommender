@@ -128,6 +128,11 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *     will be loaded from a JAR file found on the distributed file system at {@code sys/rescorer.jar}.
  *     This may also be specified as a comma-separated list of class names, in which case all will be 
  *     applied, in the given order.</li>
+ *   <li>{@code --clientThreadClass}: Optional. Name of an implementation of {@link net.myrrix.online.ClientThread} 
+ *     which is intended to be run in the Serving Layer in its own thread as an in-process "client" of 
+ *     external services. This may be used to poll/pull updates from some external service and push 
+ *     directly into the recommender, or perform any other service that a caller needs. The thread will 
+ *     be started with the web container and closed with the web container.</li>
  *   <li>{@code --allPartitions}: Optional, but must be set with {@code --partition}.
  *     Describes all partitions, when partitioning across Serving Layers
  *     by user. Each partition may have multiple replicas. When running in distibuted mode on Amazon EC2,
