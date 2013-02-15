@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Myrrix Upgrade Notes Notes</title>
+<style type="text/css">
+body {background-color:#202020}
+body,p,h1,h2,h3 {font-family:Gill Sans,Helvetica,sans-serif;font-weight:300;color:white}
+h1,h2,h3,a {color:#CCFF66}
+h1,h2,h3 {text-transform:uppercase}
+hr {margin:20px 0 10px 0}
+</style>
+</head>
+<body>
+
+<h1>version 0.10</h1>
+
+<h2>All</h2>
+
+<ul>
+  <li>The <code>mdoel.iterations</code> parameter no longer has effect; iteration count is no longer explicitly
+    specified, but instead determined dynamically by a convergence criterion: the average absolute difference
+    in estimates for user-item pairs between iterations. The <code>model.als.iteration.convergenceThreshold</code>
+    parameter, which defaults to 0.001, will generally cause significantly more iterations to be run. Increase
+    (to 0.01 for example) for fewer iterations. The number of iterations can be capped by setting 
+    <code>model.iterations.max</code> to the (positive) max number of iterations to run.</li>
+</ul>
+
+</body>
+</html>
