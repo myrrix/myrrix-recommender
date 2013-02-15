@@ -45,6 +45,7 @@ public final class RunnerConfiguration {
   private boolean consoleOnlyPassword;
   private Integer hostRequestLimit;
   private String rescorerProviderClassName;
+  private String clientThreadClassName;  
   private Integer partition;
   private String allPartitionsSpecification;
   private File licenseFile;
@@ -222,6 +223,21 @@ public final class RunnerConfiguration {
 
   public void setRescorerProviderClassName(String rescorerProviderClassName) {
     this.rescorerProviderClassName = rescorerProviderClassName;
+  }
+
+  /**
+   * @return the name of an implementation of {@link net.myrrix.online.ClientThread} which is intended
+   *  to be run in the Serving Layer in its own thread as an in-process "client" of external services. This may
+   *  be used to poll/pull updates from some external service and push directly into the recommender, or perform
+   *  any other service that a caller needs. The thread will be started with the web container and closed
+   *  with the web container.
+   */
+  public String getClientThreadClassName() {
+    return clientThreadClassName;
+  }
+
+  public void setClientThreadClassName(String clientThreadClassName) {
+    this.clientThreadClassName = clientThreadClassName;
   }
 
   /**

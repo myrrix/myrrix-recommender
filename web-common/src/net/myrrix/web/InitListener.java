@@ -40,6 +40,7 @@ import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.PartitionsUtils;
 import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.online.AbstractRescorerProvider;
+import net.myrrix.online.ClientThread;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 import net.myrrix.online.io.ResourceRetriever;
@@ -64,6 +65,7 @@ public final class InitListener implements ServletContextListener {
   public static final String BUCKET_KEY = KEY_PREFIX + ".BUCKET";
   public static final String INSTANCE_ID_KEY = KEY_PREFIX + ".INSTANCE_ID";
   public static final String RESCORER_PROVIDER_CLASS_KEY = KEY_PREFIX + ".RESCORER_PROVIDER_CLASS";
+  public static final String CLIENT_THREAD_CLASS_KEY = KEY_PREFIX + ".CLIENT_THREAD_CLASS";  
   public static final String ALL_PARTITIONS_SPEC_KEY = KEY_PREFIX + ".ALL_PARTITIONS_SPEC";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
   public static final String LICENSE_FILE_KEY = KEY_PREFIX + ".LICENSE_FILE";
@@ -71,12 +73,38 @@ public final class InitListener implements ServletContextListener {
   private static final Pattern COMMA = Pattern.compile(",");
 
   private File tempDirToDelete;
+  private ClientThread clientThread;
 
   @Override
   public void contextInitialized(ServletContextEvent event) {
     log.info("Initializing Myrrix in servlet context...");
     ServletContext context = event.getServletContext();
 
+    configureLogging(context);
+    
+    File localInputDir = configureLocalInputDir(context);
+    int partition = configurePartition(context);
+    
+    String bucket = getAttributeOrParam(context, BUCKET_KEY);
+    
+    configureRescorerProvider(context, bucket);
+    
+    String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
+    
+    ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = 
+        configureAllPartitionsReference(context, bucket, instanceID);
+    
+    File licenseFile = (File) context.getAttribute(LICENSE_FILE_KEY);
+    MyrrixRecommender recommender =
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference, licenseFile);
+    context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
+    
+    configureClientThread(context, bucket, recommender);
+
+    log.info("Myrrix is initialized");
+  }
+
+  private static void configureLogging(ServletContext context) {
     MemoryHandler.setSensibleLogFormat();
     Handler logHandler = null;
     for (Handler handler : java.util.logging.Logger.getLogger("").getHandlers()) {
@@ -91,7 +119,9 @@ public final class InitListener implements ServletContextListener {
       java.util.logging.Logger.getLogger("").addHandler(logHandler);
     }
     context.setAttribute(LOG_HANDLER, logHandler);
-
+  }
+  
+  private File configureLocalInputDir(ServletContext context) {
     String localInputDirName = getAttributeOrParam(context, LOCAL_INPUT_DIR_KEY);
     File localInputDir;
     if (localInputDirName == null) {
@@ -109,7 +139,10 @@ public final class InitListener implements ServletContextListener {
       tempDirToDelete = null;
     }
     context.setAttribute(AbstractMyrrixServlet.LOCAL_INPUT_DIR_KEY, localInputDir.getAbsolutePath());
-
+    return localInputDir;
+  }
+  
+  private static int configurePartition(ServletContext context) {
     int partition;
     String partitionString = getAttributeOrParam(context, PARTITION_KEY);
     if (partitionString == null) {
@@ -120,9 +153,10 @@ public final class InitListener implements ServletContextListener {
       log.info("Running as partition #{}", partition);
     }
     context.setAttribute(AbstractMyrrixServlet.PARTITION_KEY, partition);
-
-    final String bucket = getAttributeOrParam(context, BUCKET_KEY);
-
+    return partition;
+  }
+  
+  private static void configureRescorerProvider(ServletContext context, String bucket) {
     RescorerProvider rescorerProvider;
     try {
       rescorerProvider = loadRescorerProvider(context, bucket);
@@ -134,12 +168,15 @@ public final class InitListener implements ServletContextListener {
     if (rescorerProvider != null) {
       context.setAttribute(AbstractMyrrixServlet.RESCORER_PROVIDER_KEY, rescorerProvider);
     }
-
+  }
+  
+  private static ReloadingReference<List<List<HostAndPort>>> configureAllPartitionsReference(ServletContext context, 
+                                                                                             final String bucket, 
+                                                                                             final String instanceID) {
     boolean readOnly = Boolean.parseBoolean(getAttributeOrParam(context, READ_ONLY_KEY));
     context.setAttribute(AbstractMyrrixServlet.READ_ONLY_KEY, readOnly);
 
     final String portString = getAttributeOrParam(context, PORT_KEY);
-    final String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
     final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
 
     ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = null;
@@ -151,7 +188,8 @@ public final class InitListener implements ServletContextListener {
               if (RunnerConfiguration.AUTO_PARTITION_SPEC.equals(allPartitionsSpecString)) {
                 int port = Integer.parseInt(portString);
                 PartitionLoader loader =
-                    ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", PartitionLoader.class);
+                    ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", 
+                                              PartitionLoader.class);
                 List<List<HostAndPort>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
                 log.info("Latest partitions: {}", newPartitions);
                 return newPartitions;
@@ -164,14 +202,23 @@ public final class InitListener implements ServletContextListener {
       allPartitionsReference.get();
       context.setAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY, allPartitionsReference);
     }
-
-    File licenseFile = (File) context.getAttribute(LICENSE_FILE_KEY);
-
-    MyrrixRecommender recommender =
-        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference, licenseFile);
-    context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
-
-    log.info("Myrrix is initialized");
+    return allPartitionsReference;
+  }
+  
+  private void configureClientThread(ServletContext context, String bucket, MyrrixRecommender recommender) {
+    ClientThread theThread;
+    try {
+      theThread = loadClientThreadClass(context, bucket);
+    } catch (IOException ioe) {
+      throw new IllegalStateException(ioe);
+    } catch (ClassNotFoundException cnfe) {
+      throw new IllegalStateException(cnfe);
+    }
+    if (theThread != null) {
+      theThread.setRecommender(recommender);        
+      clientThread = theThread;
+      new Thread(theThread, "MyrrixClientThread").start();
+    }
   }
 
   private static String getAttributeOrParam(ServletContext context, String key) {
@@ -216,17 +263,64 @@ public final class InitListener implements ServletContextListener {
     log.info("Loading class(es) {} from {}, copied from remote JAR at key {}",
              rescorerProviderClassNames, tempResourceFile, tempResourceFile);
     RescorerProvider rescorerProvider = 
-        AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, tempResourceFile.toURI().toURL());
+        AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, 
+                                                       tempResourceFile.toURI().toURL());
 
     if (!tempResourceFile.delete()) {
       log.info("Could not delete {}", tempResourceFile);
     }
     return rescorerProvider;
   }
+  
+  private static ClientThread loadClientThreadClass(ServletContext context, String bucket) 
+      throws IOException, ClassNotFoundException {
+    String clientThreadClassName = getAttributeOrParam(context, CLIENT_THREAD_CLASS_KEY);
+    if (clientThreadClassName == null) {
+      return null;
+    }
+    
+    log.info("Using Runnable/Closeable client thread class {}", clientThreadClassName);
+    if (ClassUtils.classExists(clientThreadClassName)) {
+      log.info("Found class on local classpath");
+      return ClassUtils.loadInstanceOf(clientThreadClassName, ClientThread.class);
+    }
+    
+    log.info("Class doesn't exist in local classpath");
+    
+    ResourceRetriever resourceRetriever =
+        ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
+    resourceRetriever.init(bucket);
+    File tempResourceFile = resourceRetriever.getClientThreadJar();
+    if (tempResourceFile == null) {
+      log.info("No external client thread JAR is available in this implementation");
+      throw new ClassNotFoundException(clientThreadClassName);
+    }
+    
+    log.info("Loading class {} from {}, copied from remote JAR at key {}",
+             clientThreadClassName, tempResourceFile, tempResourceFile);
+    
+    ClientThread clientThreadRunnable = 
+        ClassUtils.loadFromRemote(clientThreadClassName, ClientThread.class, tempResourceFile.toURI().toURL());
+
+    if (!tempResourceFile.delete()) {
+      log.info("Could not delete {}", tempResourceFile);
+    }
+    return clientThreadRunnable;
+  }
 
   @Override
   public void contextDestroyed(ServletContextEvent event) {
     log.info("Uninitializing Myrrix in servlet context...");
+    
+    ClientThread theClientThread = clientThread;
+    if (theClientThread != null) {
+      try {
+        theClientThread.close();
+      } catch (IOException e) {
+        log.warn("Error while closing client thread", e);
+      }
+    }
+    
     ServletContext context = event.getServletContext();
     Closeable recommender = (Closeable) context.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
     if (recommender != null) {

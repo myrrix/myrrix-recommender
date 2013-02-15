@@ -273,6 +273,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     config.setHostRequestLimit(runnerArgs.getHostRequestLimit());
     
     config.setRescorerProviderClassName(runnerArgs.getRescorerProviderClass());
+    config.setClientThreadClassName(runnerArgs.getClientThreadClass());
 
     boolean hasPartition = runnerArgs.getPartition() != null;
     boolean hasAllPartitions = runnerArgs.getAllPartitions() != null;
@@ -485,6 +486,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     servletContext.setAttribute(InitListener.INSTANCE_ID_KEY, config.getInstanceID());
     servletContext.setAttribute(InitListener.BUCKET_KEY, config.getBucket());
     servletContext.setAttribute(InitListener.RESCORER_PROVIDER_CLASS_KEY, config.getRescorerProviderClassName());
+    servletContext.setAttribute(InitListener.CLIENT_THREAD_CLASS_KEY, config.getClientThreadClassName());    
     servletContext.setAttribute(InitListener.LOCAL_INPUT_DIR_KEY, config.getLocalInputDir());
     servletContext.setAttribute(InitListener.PORT_KEY, port);
     servletContext.setAttribute(InitListener.READ_ONLY_KEY, config.isReadOnly());

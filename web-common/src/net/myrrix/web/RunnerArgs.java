@@ -70,6 +70,9 @@ public interface RunnerArgs {
   @Option(defaultToNull = true, description = "RescorerProvider implementation class")
   String getRescorerProviderClass();
 
+  @Option(defaultToNull = true, description = "Runnable/Closeable client thread implementation class")
+  String getClientThreadClass();
+  
   @Option(defaultToNull = true,
           description = "All partitions, as comma-separated host:port (e.g. foo1:8080,foo2:80,bar1:8081), " +
                         "or \"auto\" (distributed mode only)")

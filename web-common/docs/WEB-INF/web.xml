@@ -27,6 +27,12 @@
    -->
   <!--
   <context-param>
+    <param-name>net.myrrix.web.InitListener.CLIENT_THREAD_CLASS</param-name>
+    <param-value>CHANGEME</param-value>
+  </context-param>
+   -->
+  <!--
+  <context-param>
     <param-name>net.myrrix.web.InitListener.LOCAL_INPUT_DIR</param-name>
     <param-value>CHANGEME</param-value>
   </context-param>

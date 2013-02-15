@@ -38,6 +38,15 @@ public final class DelegateResourceRetriever implements ResourceRetriever {
     // Not available / necessary in this version
     return null;
   }
+  
+  /**
+   * @return null
+   */
+  @Override
+  public File getClientThreadJar() {
+    // Not available / necessary in this version    
+    return null;
+  }
 
   /**
    * @return null

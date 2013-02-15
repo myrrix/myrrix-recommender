@@ -32,6 +32,11 @@ PORT=8080
 #RESCORER=org.example.foo.RescorerProvider
 #RESCORER_JAR=/path/to/jar
 
+# Set to the name of a ClientThread that should run in the server, if applicable, and the 
+# location of a JAR with the class
+#CLIENT_THREAD=org.example.foo.ClientRunnableCloseable
+#CLIENT_THREAD_JAR=/path/to/jar
+
 # Set any other args here
 #OTHER_ARGS=
 
@@ -105,10 +110,18 @@ fi
 if [ -n "${RESCORER}" ]; then
   ALL_ARGS="${ALL_ARGS} --rescorerProviderClass=${RESCORER}"
 fi
+if [ -n "${CLIENT_THREAD}" ]; then
+  ALL_ARGS="${ALL_ARGS} --clientThreadClass=${CLIENT_THREAD}"
+fi
+
 ADDITIONAL_CLASSPATH="";
 if [ -n "${RESCORER_JAR}" ]; then
-  ADDITIONAL_CLASSPATH=":${RESCORER_JAR}"
+  ADDITIONAL_CLASSPATH="${ADDITIONAL_CLASSPATH}:${RESCORER_JAR}"
 fi
+if [ -n "${CLIENT_THREAD_JAR}" ]; then
+  ADDITIONAL_CLASSPATH="${ADDITIONAL_CLASSPATH}:${CLIENT_THREAD_JAR}"
+fi
+
 
 if [ -n "${INSTANCE_ID}" ]; then
   ALL_ARGS="${ALL_ARGS} --instanceID=${INSTANCE_ID}"
