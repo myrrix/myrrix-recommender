@@ -223,13 +223,17 @@ public final class DelegateGenerationManager implements GenerationManager {
               if (currentGeneration == null && modelFile.exists()) {
                 newGeneration = readModel(modelFile);
               }
+              boolean computedModel = false;
               if (newGeneration == null) {
                 newGeneration = computeModel(inputDir, currentGeneration);
+                computedModel = true;
               }
               if (newGeneration == null) {
                 log.info("No data yet");
               } else {
-                saveModel(newGeneration, modelFile);
+                if (computedModel) {
+                  saveModel(newGeneration, modelFile);
+                }
                 log.info("New generation has {} users, {} items",
                          newGeneration.getNumUsers(), newGeneration.getNumItems());
                 currentGeneration = newGeneration;
