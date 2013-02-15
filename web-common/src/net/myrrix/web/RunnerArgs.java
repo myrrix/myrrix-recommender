@@ -70,7 +70,7 @@ public interface RunnerArgs {
   @Option(defaultToNull = true, description = "RescorerProvider implementation class")
   String getRescorerProviderClass();
 
-  @Option(defaultToNull = true, description = "Runnable/Closeable client thread implementation class")
+  @Option(defaultToNull = true, description = "ClientThread implementation class")
   String getClientThreadClass();
   
   @Option(defaultToNull = true,
