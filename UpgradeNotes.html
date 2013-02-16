@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>Myrrix Upgrade Notes Notes</title>
+<title>Myrrix Upgrade Notes</title>
 <style type="text/css">
 body {background-color:#202020}
 body,p,h1,h2,h3 {font-family:Gill Sans,Helvetica,sans-serif;font-weight:300;color:white}
@@ -12,9 +12,11 @@ hr {margin:20px 0 10px 0}
 </head>
 <body>
 
-<h1>version 0.10</h1>
+<h1>Myrrix Upgrade Notes</h1>
 
-<h2>All</h2>
+<h2>Version 0.10</h2>
+
+<h3>All</h3>
 
 <ul>
   <li>The <code>model.iterations</code> parameter no longer has effect; iteration count is no longer explicitly
@@ -23,6 +25,19 @@ hr {margin:20px 0 10px 0}
     parameter, which defaults to 0.001, will generally cause significantly more iterations to be run. Increase
     (to 0.01 for example) for fewer iterations. The number of iterations can be capped by setting 
     <code>model.iterations.max</code> to the (positive) max number of iterations to run.</li>
+</ul>
+
+<h3>Computation Layer</h3>
+
+<ul>
+  <li>An issue has been resolved that could cause two Computation Layer computations sharing the same bucket 
+    to interfere. As part of this, support files that were previously bucket-specific, and were previously 
+    placed in <code>sys/</code> under a bucket, like <code>keystore.ks</code>, <code>clientthread.jar</code> 
+    and <code>rescorer.jar</code>, are now instance-specific. They should now be placed in 
+    <em>instance</em><code>/sys/</code>. Stop the Computation Layer instance(s), and for each bucket, copy its
+    <code>sys/</code> directory into each <em>instance/</em> subdirectory. Restart the Comptutation Layer(s).
+    Note that the file <code>sys/myrrix.jar</code>, will be regenerated. No migration is needed if none
+    of the files listed above are used.</li>
 </ul>
 
 </body>

@@ -436,7 +436,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
         ResourceRetriever resourceRetriever =
             ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
         resourceRetriever.init(config.getBucket());
-        keystoreFile = resourceRetriever.getKeystoreFile();
+        keystoreFile = resourceRetriever.getKeystoreFile(config.getInstanceID());
         if (keystoreFile == null) {
           throw new FileNotFoundException();
         }

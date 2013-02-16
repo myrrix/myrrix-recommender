@@ -34,7 +34,7 @@ public final class DelegateResourceRetriever implements ResourceRetriever {
    * @return null
    */
   @Override
-  public File getRescorerJar() {
+  public File getRescorerJar(String instanceID) {
     // Not available / necessary in this version
     return null;
   }
@@ -43,7 +43,7 @@ public final class DelegateResourceRetriever implements ResourceRetriever {
    * @return null
    */
   @Override
-  public File getClientThreadJar() {
+  public File getClientThreadJar(String instanceID) {
     // Not available / necessary in this version    
     return null;
   }
@@ -52,7 +52,7 @@ public final class DelegateResourceRetriever implements ResourceRetriever {
    * @return null
    */
   @Override
-  public File getKeystoreFile() {
+  public File getKeystoreFile(String instanceID) {
     // Not available / necessary in this version
     return null;
   }

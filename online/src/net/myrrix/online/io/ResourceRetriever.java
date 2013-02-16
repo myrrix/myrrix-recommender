@@ -37,16 +37,16 @@ public interface ResourceRetriever {
   /**
    * @return a local file containing a copy of the remote {@code rescorer.jar}
    */
-  File getRescorerJar() throws IOException;
+  File getRescorerJar(String instanceID) throws IOException;
   
   /**
    * @return a local file containing a copy of the remote {@code clientthread.jar}
    */
-  File getClientThreadJar() throws IOException;
+  File getClientThreadJar(String instanceID) throws IOException;
 
   /**
    * @return a local file containing a copy of the remote {@code keystore.ks}
    */
-  File getKeystoreFile() throws IOException;
+  File getKeystoreFile(String instanceID) throws IOException;
 
 }

@@ -37,6 +37,13 @@ hr {margin:20px 0 10px 0}
    iterations (and better accuracy) than previous default.</li>
 </ul>
 
+<h2>Fixes</h2>
+
+<ul>
+  <li>Resolved an issue that could cause two Computation Layer computations sharing the same bucket to interfere.
+  Support files like <code>keystore.ks</code> and <code>rescorer.jar</code>, which are normally placed in
+  <code>sys/</code>, should now be placed in <em>instance</em><code>/sys/</code>.</li>
+</ul>
 
 <h1>Version 0.9</h1>
 

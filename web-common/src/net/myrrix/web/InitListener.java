@@ -86,10 +86,9 @@ public final class InitListener implements ServletContextListener {
     int partition = configurePartition(context);
     
     String bucket = getAttributeOrParam(context, BUCKET_KEY);
-    
-    configureRescorerProvider(context, bucket);
-    
     String instanceID = getAttributeOrParam(context, INSTANCE_ID_KEY);
+    
+    configureRescorerProvider(context, bucket, instanceID);
     
     ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = 
         configureAllPartitionsReference(context, bucket, instanceID);
@@ -99,7 +98,7 @@ public final class InitListener implements ServletContextListener {
         new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference, licenseFile);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
     
-    configureClientThread(context, bucket, recommender);
+    configureClientThread(context, bucket, instanceID, recommender);
 
     log.info("Myrrix is initialized");
   }
@@ -156,10 +155,10 @@ public final class InitListener implements ServletContextListener {
     return partition;
   }
   
-  private static void configureRescorerProvider(ServletContext context, String bucket) {
+  private static void configureRescorerProvider(ServletContext context, String bucket, String instanceID) {
     RescorerProvider rescorerProvider;
     try {
-      rescorerProvider = loadRescorerProvider(context, bucket);
+      rescorerProvider = loadRescorerProvider(context, bucket, instanceID);
     } catch (IOException ioe) {
       throw new IllegalStateException(ioe);
     } catch (ClassNotFoundException cnfe) {
@@ -205,10 +204,13 @@ public final class InitListener implements ServletContextListener {
     return allPartitionsReference;
   }
   
-  private void configureClientThread(ServletContext context, String bucket, MyrrixRecommender recommender) {
+  private void configureClientThread(ServletContext context, 
+                                     String bucket,
+                                     String instanceID,
+                                     MyrrixRecommender recommender) {
     ClientThread theThread;
     try {
-      theThread = loadClientThreadClass(context, bucket);
+      theThread = loadClientThreadClass(context, bucket, instanceID);
     } catch (IOException ioe) {
       throw new IllegalStateException(ioe);
     } catch (ClassNotFoundException cnfe) {
@@ -230,7 +232,7 @@ public final class InitListener implements ServletContextListener {
     return valueString;
   }
 
-  private static RescorerProvider loadRescorerProvider(ServletContext context, String bucket)
+  private static RescorerProvider loadRescorerProvider(ServletContext context, String bucket, String instanceID)
       throws IOException, ClassNotFoundException {
     String rescorerProviderClassNames = getAttributeOrParam(context, RESCORER_PROVIDER_CLASS_KEY);
     if (rescorerProviderClassNames == null) {
@@ -254,7 +256,7 @@ public final class InitListener implements ServletContextListener {
     ResourceRetriever resourceRetriever =
         ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
     resourceRetriever.init(bucket);
-    File tempResourceFile = resourceRetriever.getRescorerJar();
+    File tempResourceFile = resourceRetriever.getRescorerJar(instanceID);
     if (tempResourceFile == null) {
       log.info("No external rescorer JAR is available in this implementation");
       throw new ClassNotFoundException(rescorerProviderClassNames);
@@ -272,7 +274,7 @@ public final class InitListener implements ServletContextListener {
     return rescorerProvider;
   }
   
-  private static ClientThread loadClientThreadClass(ServletContext context, String bucket) 
+  private static ClientThread loadClientThreadClass(ServletContext context, String bucket, String instanceID) 
       throws IOException, ClassNotFoundException {
     String clientThreadClassName = getAttributeOrParam(context, CLIENT_THREAD_CLASS_KEY);
     if (clientThreadClassName == null) {
@@ -290,7 +292,7 @@ public final class InitListener implements ServletContextListener {
     ResourceRetriever resourceRetriever =
         ClassUtils.loadInstanceOf("net.myrrix.online.io.DelegateResourceRetriever", ResourceRetriever.class);
     resourceRetriever.init(bucket);
-    File tempResourceFile = resourceRetriever.getClientThreadJar();
+    File tempResourceFile = resourceRetriever.getClientThreadJar(instanceID);
     if (tempResourceFile == null) {
       log.info("No external client thread JAR is available in this implementation");
       throw new ClassNotFoundException(clientThreadClassName);
