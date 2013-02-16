@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package net.myrrix.client;
+package net.myrrix.common;
 
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.junit.Test;
-
-import net.myrrix.client.translating.OneWayMigrator;
-import net.myrrix.common.MyrrixTest;
 
 public final class OneWayMigratorTest extends MyrrixTest {
 

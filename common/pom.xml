@@ -22,7 +22,6 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>net.myrrix</groupId>
   <artifactId>myrrix-common</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Common</name>

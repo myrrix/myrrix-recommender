@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.client.ClientRecommender;
+import net.myrrix.common.OneWayMigrator;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.random.MemoryIDMigrator;

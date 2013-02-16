@@ -30,11 +30,11 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.client.translating.OneWayMigrator;
 import net.myrrix.client.translating.TranslatedRecommendedItem;
 import net.myrrix.client.translating.TranslatingClientRecommender;
 import net.myrrix.client.translating.TranslatingRecommender;
 import net.myrrix.common.LangUtils;
+import net.myrrix.common.OneWayMigrator;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.log.MemoryHandler;
 import net.myrrix.common.random.MemoryIDMigrator;
