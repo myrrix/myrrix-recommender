@@ -117,6 +117,11 @@ import net.myrrix.common.random.MemoryIDMigrator;
  *   <li>{@code getItemCluster n}</li>
  * </ul>
  *
+ * <p>Note: since some arguments like IDs can be negative, and begin with "-", they are mistakenly interpreted
+ * as flags by the command line parser. Double-quote such values. Note further than in command-line shells like
+ * {@code bash}, the double-quote is parsed by the shell, and so must be escaped. To specify the value
+ * {@code -100} for example, write {@code \"-100\"}.</p>
+ *
  * <p>Methods that return {@code void} in {@link net.myrrix.common.MyrrixRecommender} produce no output. Methods
  * like {@link net.myrrix.common.MyrrixRecommender#estimatePreference(long, long)} that return a single value
  * have this written to a single line of output. Methods like
@@ -143,7 +148,7 @@ import net.myrrix.common.random.MemoryIDMigrator;
  * <p>... and output might be:</p>
  *
  * <p>{@code
- * Apple,0.559
+ * Apple, 0.559
  * Orange,0.4034
  * Banana,0.03339
  * }</p>

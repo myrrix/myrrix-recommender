@@ -152,7 +152,7 @@ public final class PartitionsUtils {
 
   private static void log(Collection<List<HostAndPort>> allPartitions) {
     if (allPartitions.isEmpty()) {
-      log.info("No partitions parsed");
+      log.debug("No partitions parsed");
     } else {
       int partitionNumber = 0;
       for (List<HostAndPort> partition : allPartitions) {
@@ -160,7 +160,7 @@ public final class PartitionsUtils {
         for (HostAndPort hostPort : partition) {
           description.append(hostPort).append(' ');
         }
-        log.info("Partition {}: {}", partitionNumber, description);
+        log.debug("Partition {}: {}", partitionNumber, description);
         partitionNumber++;
       }
     }
