@@ -21,7 +21,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -30,9 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
-import java.util.zip.GZIPOutputStream;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -46,6 +43,7 @@ import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.io.IOUtils;
 import net.myrrix.online.factorizer.MatrixFactorizer;
 import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
 
@@ -205,6 +203,18 @@ public final class DelegateGenerationManager implements GenerationManager {
 
   @Override
   public void refresh() {
+    
+    Writer theAppender = appender;
+    if (theAppender != null) {
+      try {
+        synchronized (this) {
+          theAppender.flush();
+        }
+      } catch (IOException e) {
+        log.warn("Exception while flushing", e);
+      }
+    }
+    
     if (refreshSemaphore.tryAcquire()) {
       refreshExecutor.submit(new Callable<Void>() {
         @Override
@@ -214,8 +224,7 @@ public final class DelegateGenerationManager implements GenerationManager {
             synchronized (DelegateGenerationManager.this) {
               closeAppender();
               // A small buffer is needed here, but GZIPOutputStream already provides a substantial native buffer
-              appender = new OutputStreamWriter(
-                  new GZIPOutputStream(new FileOutputStream(appendFile, false)), Charsets.UTF_8);
+              appender = IOUtils.buildGZIPWriter(new FileOutputStream(appendFile, false));
             }
 
             try {

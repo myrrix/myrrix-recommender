@@ -22,18 +22,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipInputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
+
+import net.myrrix.common.ClassUtils;
 
 /**
  * Simple utility methods related to I/O.
@@ -134,6 +140,33 @@ public final class IOUtils {
     } finally {
       Closeables.close(in, true);
     }
+  }
+
+  /**
+   * @param delegate {@link OutputStream} to wrap
+   * @return a {@link GZIPOutputStream} wrapping the given {@link OutputStream}. It attempts to use the new 
+   *  Java 7 version that actually responds to {@link OutputStream#flush()} as expected. If not available,
+   *  uses the previous version ({@link GZIPOutputStream#GZIPOutputStream(OutputStream)})
+   */
+  public static GZIPOutputStream buildGZIPOutputStream(OutputStream delegate) throws IOException {
+    // In Java 7, GZIPOutputStream's flush() behavior can be made more as expected. Use it if possible
+    // but fall back if not to the usual version
+    try {
+      return ClassUtils.loadInstanceOf(GZIPOutputStream.class, 
+                                       new Class<?>[] {OutputStream.class, boolean.class},
+                                       new Object[] {delegate, true});
+    } catch (IllegalStateException ise) {
+      return new GZIPOutputStream(delegate);
+    } 
+  }
+  
+  /**
+   * @param delegate {@link OutputStream} to wrap
+   * @return the result of {@link #buildGZIPOutputStream(OutputStream)} as a {@link Writer} that encodes
+   *  using UTF-8 encoding
+   */
+  public static Writer buildGZIPWriter(OutputStream delegate) throws IOException {
+    return new OutputStreamWriter(buildGZIPOutputStream(delegate), Charsets.UTF_8);
   }
 
 }

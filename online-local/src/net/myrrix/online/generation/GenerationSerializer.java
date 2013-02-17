@@ -24,7 +24,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -83,7 +82,7 @@ public final class GenerationSerializer implements Serializable {
    */
   public static void writeGeneration(Generation generation, File f) throws IOException {
     Preconditions.checkArgument(f.getName().endsWith(".gz"), "File should end in .gz: %s", f);
-    ObjectOutputStream out = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(f)));
+    ObjectOutputStream out = new ObjectOutputStream(IOUtils.buildGZIPOutputStream(new FileOutputStream(f)));
     try {
       out.writeObject(new GenerationSerializer(generation));
     } finally {

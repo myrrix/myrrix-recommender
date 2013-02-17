@@ -19,17 +19,14 @@ package net.myrrix.online.eval;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPOutputStream;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -163,8 +160,7 @@ public abstract class AbstractEvaluator {
     log.info("Read data for {} users from input; splitting...", data.size());
 
     Multimap<Long,RecommendedItem> testData = ArrayListMultimap.create();
-    Writer trainingOut =
-        new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(trainingFile)), Charsets.UTF_8);
+    Writer trainingOut = IOUtils.buildGZIPWriter(new FileOutputStream(trainingFile));
     try {
 
       Iterator<Map.Entry<Long,Collection<RecommendedItem>>> it = data.asMap().entrySet().iterator();

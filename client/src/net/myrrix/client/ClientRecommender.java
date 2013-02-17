@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
@@ -45,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPOutputStream;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -824,7 +822,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           if (writerAndConnection == null) {
             HttpURLConnection connection =
                 makeConnection("/ingest", "POST", partition, true, true, INGEST_REQUEST_PROPS);
-            Writer writer = new OutputStreamWriter(new GZIPOutputStream(connection.getOutputStream()), Charsets.UTF_8);
+            Writer writer = IOUtils.buildGZIPWriter(connection.getOutputStream());
             writerAndConnection = Pair.of(writer, connection);
             writersAndConnections.put(partition, writerAndConnection);
           }
