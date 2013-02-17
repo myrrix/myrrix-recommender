@@ -15,10 +15,10 @@
  limitations under the License.
  -->
 <jsp:directive.page import="java.util.List"/>
-<jsp:directive.page import="org.apache.mahout.common.Pair"/>
 <jsp:directive.page import="net.myrrix.common.stats.JVMEnvironment"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
+<jsp:directive.page import="com.google.common.net.HostAndPort"/>
 <jsp:directive.page contentType="application/xml"/>
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8"?>]]></jsp:text>
@@ -43,8 +43,8 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
   </recommender>
   <jsp:scriptlet>
     // Just looks awful doesn't it?
-    ReloadingReference&lt;List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;&gt; ref =
-      (ReloadingReference&lt;List&lt;List&lt;Pair&lt;String,Integer&gt;&gt;&gt;&gt;)
+    ReloadingReference&lt;List&lt;List&lt;HostAndPort&gt;&gt;&gt; ref =
+      (ReloadingReference&lt;List&lt;List&lt;HostAndPort&gt;&gt;&gt;)
           application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY);
     if (ref != null) {
   </jsp:scriptlet>
@@ -52,17 +52,17 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
     <jsp:scriptlet>
       pageContext.setAttribute("thisPartition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
       int partitionNumber = 0;
-      for (List&lt;Pair&lt;String,Integer&gt;&gt; partition : ref.get()) {
+      for (List&lt;HostAndPort&gt; partition : ref.get()) {
         pageContext.setAttribute("partitionNumber", partitionNumber);
     </jsp:scriptlet>
     <partitionNumber>${thisPartition}</partitionNumber>
     <partition>
       <number>${partitionNumber}</number>
       <jsp:scriptlet>
-        for (Pair&lt;String,Integer&gt; replica : partition) {
+        for (HostAndPort replica : partition) {
           pageContext.setAttribute("replica", replica);
       </jsp:scriptlet>
-      <replica>${replica.first}:${replica.second}</replica>
+      <replica>${replica.hostText}:${replica.port}</replica>
       <jsp:scriptlet>
         }
       </jsp:scriptlet>
