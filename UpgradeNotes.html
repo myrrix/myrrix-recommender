@@ -21,7 +21,7 @@ hr {margin:20px 0 10px 0}
 <ul>
   <li>The <code>model.iterations</code> parameter no longer has effect; iteration count is no longer explicitly
     specified, but instead determined dynamically by a convergence criterion: the average absolute difference
-    in estimates for user-item pairs between iterations. The <code>model.als.iteration.convergenceThreshold</code>
+    in estimates for user-item pairs between iterations. The <code>model.als.iterations.convergenceThreshold</code>
     parameter, which defaults to 0.001, will generally cause significantly more iterations to be run. Increase
     (to 0.01 for example) for fewer iterations. The number of iterations can be capped by setting 
     <code>model.iterations.max</code> to the (positive) max number of iterations to run.</li>
