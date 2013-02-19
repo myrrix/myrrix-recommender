@@ -20,9 +20,7 @@
   <property name="web.output.dir" value="${module.web.basedir}/../out/production/web"/>
   <property name="web.testoutput.dir" value="${module.web.basedir}/../out/test/web"/>
 
-  <!-- TODO once https://issues.apache.org/bugzilla/show_bug.cgi?id=54440 is fixed -->
-  <!--<import file="${tomcat.home}/bin/catalina-tasks.xml"/>-->
-  <import file="/Users/srowen/Applications/apache-tomcat-7.0.34/bin/catalina-tasks.xml"/>
+  <import file="${tomcat.home}/bin/catalina-tasks.xml"/>
 
   <target name="compile.module.web" depends="compile.module.web.production"/>
 
