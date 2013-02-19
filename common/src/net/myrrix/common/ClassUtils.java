@@ -74,17 +74,36 @@ public final class ClassUtils {
     // In Java 7, should call close() on URLClassLoader
   }
 
+  /**
+   * Loads a named implementation class, a subclass of a given supertype.
+   *
+   * @param implClassName implementation class name
+   * @param superClass superclass or interface that the implementation extends
+   * @return {@link Class} named by {@code implClassName}
+   */
+  public static <T> Class<? extends T> loadClass(String implClassName, Class<T> superClass) {
+    return doLoadClass(implClassName, superClass, ClassUtils.class.getClassLoader());
+  }
+
+  private static <T> Class<? extends T> doLoadClass(String implClassName,
+                                                    Class<T> superClass,
+                                                    ClassLoader classLoader) {
+    try {
+      return Class.forName(implClassName, true, classLoader).asSubclass(superClass);
+    } catch (ClassNotFoundException cnfe) {
+      throw new IllegalStateException("No valid " + superClass + " binding exists", cnfe);
+    }
+  }
+
   private static <T> T doLoadInstanceOf(String implClassName,
                                         Class<T> superClass,
                                         Class<?>[] constructorTypes,
                                         Object[] constructorArgs,
                                         ClassLoader classLoader) {
     try {
-      Class<? extends T> configClass = Class.forName(implClassName, true, classLoader).asSubclass(superClass);
+      Class<? extends T> configClass = doLoadClass(implClassName, superClass, classLoader);
       Constructor<? extends T> constructor = configClass.getConstructor(constructorTypes);
       return constructor.newInstance(constructorArgs);
-    } catch (ClassNotFoundException cnfe) {
-      throw new IllegalStateException("No valid " + superClass + " binding exists", cnfe);
     } catch (NoSuchMethodException nsme) {
       throw new IllegalStateException("No valid " + superClass + " binding exists", nsme);
     } catch (InvocationTargetException ite) {
