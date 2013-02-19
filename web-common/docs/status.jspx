@@ -19,11 +19,11 @@
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
 <jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
 <jsp:directive.page import="com.google.common.net.HostAndPort"/>
+<jsp:directive.page import="java.util.concurrent.TimeUnit"/>
 <jsp:directive.page contentType="application/xml"/>
 <jsp:directive.page session="false"/>
 <jsp:text><![CDATA[<?xml version="1.0" encoding="UTF-8"?>]]></jsp:text>
 <jsp:scriptlet>
-System.gc(); // Helps make the heap reported more reliable:
 pageContext.setAttribute("jvmEnv", new JVMEnvironment());
 pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY));
 </jsp:scriptlet>
@@ -52,7 +52,7 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
     <jsp:scriptlet>
       pageContext.setAttribute("thisPartition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
       int partitionNumber = 0;
-      for (List&lt;HostAndPort&gt; partition : ref.get()) {
+      for (List&lt;HostAndPort&gt; partition : ref.get(1, TimeUnit.SECONDS)) {
         pageContext.setAttribute("partitionNumber", partitionNumber);
     </jsp:scriptlet>
     <partitionNumber>${thisPartition}</partitionNumber>
