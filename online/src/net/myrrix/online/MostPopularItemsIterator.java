@@ -52,11 +52,12 @@ final class MostPopularItemsIterator implements Iterator<RecommendedItem> {
     FastByIDFloatMap.MapEntry entry = countsIterator.next();
     long id = entry.getKey();
     float value = entry.getValue();
-    if (rescorer != null) {
-      if (rescorer.isFiltered(id)) {
+    IDRescorer theRescorer = rescorer;
+    if (theRescorer != null) {
+      if (theRescorer.isFiltered(id)) {
         return null;
       }
-      value = (float) rescorer.rescore(id, value);
+      value = (float) theRescorer.rescore(id, value);
       if (!LangUtils.isFinite(value)) {
         return null;
       }

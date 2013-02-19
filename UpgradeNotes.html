@@ -14,6 +14,16 @@ hr {margin:20px 0 10px 0}
 
 <h1>Myrrix Upgrade Notes</h1>
 
+<h2>Version 1.0</h2>
+
+<h3>Serving Layer</h3>
+
+<ul>
+  <li>The behavior of <code>IDRescorer</code> has slightly changed for <code>recommendToMany</code>. The function
+  is applied once per item, not for every user and for every item. That is, it is applied after the average over
+  user scores has been taken, not before.</li>
+</ul>
+
 <h2>Version 0.10</h2>
 
 <h3>All</h3>
