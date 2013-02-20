@@ -133,17 +133,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     this.maxIterations = maxIterations;
   }
 
-  /**
-   * @deprecated use {@link #AlternatingLeastSquares(FastByIDMap, FastByIDMap, int)}
-   */
-  @Deprecated
-  public AlternatingLeastSquares(FastByIDMap<FastByIDFloatMap> RbyRow,
-                                 FastByIDMap<FastByIDFloatMap> RbyColumn,
-                                 int features,
-                                 int iterations) {
-    this(RbyRow, RbyColumn, features);
-  }
-
   @Override
   public FastByIDMap<float[]> getX() {
     return X;
