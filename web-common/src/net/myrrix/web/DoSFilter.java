@@ -25,8 +25,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -50,13 +50,13 @@ public final class DoSFilter implements Filter {
   public static final String MAX_ACCESS_PER_HOST_PER_MIN_KEY = "maxAccessPerHostPerMin";
   private static final int DEFAULT_MAX_ACCESS_PER_HOST_PER_MIN = 1000;
 
-  private final Map<String,AtomicInteger> numRecentAccesses;
+  private final ConcurrentMap<String,AtomicInteger> numRecentAccesses;
   private final Set<String> bannedIPAddresses;
   private int maxAccessPerHostPerMin;
   private ScheduledExecutorService executor;
 
   public DoSFilter() {
-    numRecentAccesses = Collections.synchronizedMap(Maps.<String,AtomicInteger>newHashMap());
+    numRecentAccesses = Maps.newConcurrentMap();
     bannedIPAddresses = Collections.synchronizedSet(Sets.<String>newHashSet());
   }
 
@@ -101,14 +101,7 @@ public final class DoSFilter implements Filter {
     if (bannedIPAddresses.contains(remoteIPAddressString)) {
       return true;
     }
-    AtomicInteger count;
-    synchronized (numRecentAccesses) {
-      count = numRecentAccesses.get(remoteIPAddressString);
-      if (count == null) {
-        count = new AtomicInteger(0);
-        numRecentAccesses.put(remoteIPAddressString, count);
-      }
-    }
+    AtomicInteger count = numRecentAccesses.putIfAbsent(remoteIPAddressString, new AtomicInteger(0));
     if (count.incrementAndGet() > maxAccessPerHostPerMin) {
       bannedIPAddresses.add(remoteIPAddressString);
       return true;
