@@ -54,6 +54,9 @@ import net.myrrix.online.generation.Generation;
  *
  * <p>The output is the average difference between the reconstruction of a value for an existing user-item
  * pair. Negative differences (where > 1 was predicted) are counted as 0.</p>
+ * 
+ * <p>This class can be run as a Java program; the single argument is a directory containing test data.
+ * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
  */
@@ -130,6 +133,12 @@ public final class ReconstructionEvaluator {
       Files.copy(dataFile, new File(tempDir, dataFile.getName()));
     }
     return data;
+  }
+
+  public static void main(String[] args) throws Exception {
+    ReconstructionEvaluator eval = new ReconstructionEvaluator();
+    EvaluationResult result = eval.evaluate(new File(args[0]));
+    log.info(result.toString());
   }
 
 }

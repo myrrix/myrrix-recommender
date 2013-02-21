@@ -16,6 +16,7 @@
 
 package net.myrrix.online.eval;
 
+import java.io.File;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -33,11 +34,14 @@ import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * An alternate evaluation  which computes the average "error" in estimated strength score (see
+ * <p>An alternate evaluation  which computes the average "error" in estimated strength score (see
  * {@link org.apache.mahout.cf.taste.recommender.Recommender#estimatePreference(long, long)}) for each test
  * datum. It simply reports the average -- a weighted average, weighted by the test datum's value -- of the
  * difference between 1.0 and the estimate. An estimate of 1.0 would be good, producing an error of 0.0.
- * We allow the difference to be negative.
+ * We allow the difference to be negative.</p>
+ * 
+ * <p>This class can be run as a Java program; the single argument is a directory containing test data.
+ * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
  */
@@ -74,6 +78,12 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
     }
     log.info("Score: {}", score);
     return new EvaluationResultImpl(score.getAverage());
+  }
+  
+  public static void main(String[] args) throws Exception {
+    EstimatedStrengthEvaluator eval = new EstimatedStrengthEvaluator();
+    EvaluationResult result = eval.evaluate(new File(args[0]));
+    log.info(result.toString());
   }
 
 }

@@ -16,6 +16,7 @@
 
 package net.myrrix.online.eval;
 
+import java.io.File;
 import java.util.Collection;
 
 import com.google.common.collect.Multimap;
@@ -36,8 +37,11 @@ import net.myrrix.common.random.RandomUtils;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * This implementation calculates Area under curve (AUC), which may be understood as the probability
- * that a random "good" recommendation is ranked higher than a random "bad" recommendation.
+ * <p>This implementation calculates Area under curve (AUC), which may be understood as the probability
+ * that a random "good" recommendation is ranked higher than a random "bad" recommendation.</p>
+ * 
+ * <p>This class can be run as a Java program; the single argument is a directory containing test data.
+ * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
  */
@@ -121,6 +125,12 @@ public final class AUCEvaluator extends AbstractEvaluator {
     double score = (double) underCurve / total;
     log.info("AUC: {}", score);
     return new EvaluationResultImpl(score);
+  }
+
+  public static void main(String[] args) throws Exception {
+    AUCEvaluator eval = new AUCEvaluator();
+    EvaluationResult result = eval.evaluate(new File(args[0]));
+    log.info(result.toString());
   }
 
 }

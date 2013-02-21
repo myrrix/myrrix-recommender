@@ -16,6 +16,7 @@
 
 package net.myrrix.online.eval;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,8 +35,11 @@ import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.online.RescorerProvider;
 
 /**
- * A simple evaluation framework for a recommender, which calculates precision, recall and other
- * basic statistics.
+ * <p>A simple evaluation framework for a recommender, which calculates precision, recall, F1,
+ * mean average precision, and other basic statistics.</p>
+ * 
+ * <p>This class can be run as a Java program; the single argument is a directory containing test data.
+  * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
  */
@@ -124,6 +128,12 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
                                                    meanAveragePrecision.getAverage());
     log.info(result.toString());
     return result;
+  }
+  
+  public static void main(String[] args) throws Exception {
+    PrecisionRecallEvaluator eval = new PrecisionRecallEvaluator();
+    EvaluationResult result = eval.evaluate(new File(args[0]));
+    log.info(result.toString());
   }
 
 }
