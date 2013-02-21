@@ -17,6 +17,7 @@
 package net.myrrix.client;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -174,7 +175,7 @@ public final class CLI {
 
     List<String> programArgsList = cliArgs.getCommands();
     if (programArgsList == null || programArgsList.isEmpty()) {
-      printHelp("No command specified");
+      printHelp("Specify a command: " + Arrays.toString(CLICommand.values()));
       return;
     }
     String[] commandArgs = programArgsList.toArray(new String[programArgsList.size()]);
