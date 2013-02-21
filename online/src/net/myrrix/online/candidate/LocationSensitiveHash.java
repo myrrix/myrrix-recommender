@@ -17,7 +17,6 @@
 package net.myrrix.online.candidate;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
@@ -67,8 +66,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
   private static final Logger log = LoggerFactory.getLogger(LocationSensitiveHash.class);
 
-  private static final double LSH_SAMPLE_RATIO =
-      Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
+  static final double LSH_SAMPLE_RATIO = Double.parseDouble(System.getProperty("model.lsh.sampleRatio", "1.0"));
   private static final int NUM_HASHES = Integer.parseInt(System.getProperty("model.lsh.numHashes", "20"));
   static {
     Preconditions.checkArgument(LSH_SAMPLE_RATIO > 0.0 && LSH_SAMPLE_RATIO <= 1.0,
@@ -88,79 +86,68 @@ public final class LocationSensitiveHash implements CandidateFilter {
    * @param Y item vectors to hash
    */
   public LocationSensitiveHash(FastByIDMap<float[]> Y) {
+    Preconditions.checkNotNull(Y);
+    Preconditions.checkArgument(!Y.isEmpty());
+    Preconditions.checkState(LSH_SAMPLE_RATIO < 1.0);
 
     this.Y = Y;
 
-    if (LSH_SAMPLE_RATIO >= 1.0 || Y == null || Y.isEmpty()) {
+    log.info("Using LSH sampling to sample about {}% of items", LSH_SAMPLE_RATIO * 100.0);
 
-      randomVectors = null;
-      meanVector = null;
-      buckets = null;
-      newItems = null;
-      maxBitsDiffering = NUM_HASHES;
-
-    } else {
-
-      log.info("Using LSH sampling to sample about {}% of items", LSH_SAMPLE_RATIO * 100.0);
-
-      // This follows from the binomial distribution:
-      double cumulativeProbability = 0.0;
-      double denominator = FastMath.pow(2.0, NUM_HASHES);
-      int bitsDiffering = -1;
-      while (bitsDiffering < NUM_HASHES && cumulativeProbability < LSH_SAMPLE_RATIO) {
-        bitsDiffering++;
-        cumulativeProbability +=
-            ArithmeticUtils.binomialCoefficientDouble(NUM_HASHES, bitsDiffering) / denominator;
-      }
-
-      maxBitsDiffering = bitsDiffering - 1;
-      log.info("Max bits differing: {}", maxBitsDiffering);
-
-      int features = Y.entrySet().iterator().next().getValue().length;
-
-      RandomGenerator random = RandomManager.getRandom();
-      randomVectors = new boolean[NUM_HASHES][features];
-      for (boolean[] randomVector : randomVectors) {
-        for (int j = 0; j < features; j++) {
-          randomVector[j] = random.nextBoolean();
-        }
-      }
-
-      meanVector = findMean(Y, features);
-
-      buckets = new FastByIDMap<long[]>(1000, 1.25f);
-      int count = 0;
-      int maxBucketSize = 0;
-      for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
-        long signature = toBitSignature(entry.getValue());
-        long[] ids = buckets.get(signature);
-        if (ids == null) {
-          buckets.put(signature, new long[] {entry.getKey()});
-        } else {
-          int length = ids.length;
-          // Large majority of arrays will be length 1; all are short.
-          // This is a reasonable way to store 'sets' of longs
-          long[] newIDs = new long[length + 1];
-          for (int i = 0; i < length; i++) {
-            newIDs[i] = ids[i];
-          }
-          newIDs[length] = entry.getKey();
-          maxBucketSize = FastMath.max(maxBucketSize, newIDs.length);
-          buckets.put(signature, newIDs);
-        }
-        if (++count % 1000000 == 0) {
-          log.info("Bucketed {} items", count);
-        }
-      }
-      log.info("Max bucket size {}", maxBucketSize);
-
-      log.info("Put {} items into {} buckets", Y.size(), buckets.size());
-
-      // A separate bucket for new items, which will always be considered
-      newItems = new FastIDSet();
-
+    // This follows from the binomial distribution:
+    double cumulativeProbability = 0.0;
+    double denominator = FastMath.pow(2.0, NUM_HASHES);
+    int bitsDiffering = -1;
+    while (bitsDiffering < NUM_HASHES && cumulativeProbability < LSH_SAMPLE_RATIO) {
+      bitsDiffering++;
+      cumulativeProbability +=
+          ArithmeticUtils.binomialCoefficientDouble(NUM_HASHES, bitsDiffering) / denominator;
     }
 
+    maxBitsDiffering = bitsDiffering - 1;
+    log.info("Max bits differing: {}", maxBitsDiffering);
+
+    int features = Y.entrySet().iterator().next().getValue().length;
+
+    RandomGenerator random = RandomManager.getRandom();
+    randomVectors = new boolean[NUM_HASHES][features];
+    for (boolean[] randomVector : randomVectors) {
+      for (int j = 0; j < features; j++) {
+        randomVector[j] = random.nextBoolean();
+      }
+    }
+
+    meanVector = findMean(Y, features);
+
+    buckets = new FastByIDMap<long[]>(1000, 1.25f);
+    int count = 0;
+    int maxBucketSize = 0;
+    for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {
+      long signature = toBitSignature(entry.getValue());
+      long[] ids = buckets.get(signature);
+      if (ids == null) {
+        buckets.put(signature, new long[] {entry.getKey()});
+      } else {
+        int length = ids.length;
+        // Large majority of arrays will be length 1; all are short.
+        // This is a reasonable way to store 'sets' of longs
+        long[] newIDs = new long[length + 1];
+        for (int i = 0; i < length; i++) {
+          newIDs[i] = ids[i];
+        }
+        newIDs[length] = entry.getKey();
+        maxBucketSize = FastMath.max(maxBucketSize, newIDs.length);
+        buckets.put(signature, newIDs);
+      }
+      if (++count % 1000000 == 0) {
+        log.info("Bucketed {} items", count);
+      }
+    }
+
+    log.info("Max bucket size {}", maxBucketSize);
+    log.info("Put {} items into {} buckets", Y.size(), buckets.size());
+    // A separate bucket for new items, which will always be considered
+    newItems = new FastIDSet();
   }
 
   private static double[] findMean(FastByIDMap<float[]> Y, int features) {
@@ -203,9 +190,6 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
   @Override
   public Collection<Iterator<FastByIDMap.MapEntry<float[]>>> getCandidateIterator(float[][] userVectors) {
-    if (buckets == null) {
-      return Collections.singleton(Y.entrySet().iterator());
-    }
     long[] bitSignatures = new long[userVectors.length];
     for (int i = 0; i < userVectors.length; i++) {
       bitSignatures[i] = toBitSignature(userVectors[i]);

@@ -52,6 +52,7 @@ import net.myrrix.common.MyrrixRecommender;
  *
  * @author Sean Owen
  * @see MultiRescorer
+ * @see net.myrrix.online.candidate.CandidateFilter
  */
 public interface RescorerProvider {
 

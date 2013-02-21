@@ -28,7 +28,7 @@ import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.online.candidate.CandidateFilter;
-import net.myrrix.online.candidate.LocationSensitiveHash;
+import net.myrrix.online.candidate.CandidateFilterFactory;
 
 /**
  * Encapsulates one generation of the underlying recommender's model. The data in this object is quite
@@ -77,60 +77,28 @@ public final class Generation {
                     FastByIDMap<float[]> Y,
                     List<IDCluster> userClusters,
                     List<IDCluster> itemClusters) {
-    this(knownItemIDs,
-         null, // Not used yet
-         X,
-         null,
-         Y,
-         null,
-         userClusters,
-         itemClusters,
-         null,
-         new ReentrantReadWriteLock(),
-         new ReentrantReadWriteLock(),
-         new ReentrantReadWriteLock(),
-         null, // not used yet
-         new ReentrantReadWriteLock(),
-         new ReentrantReadWriteLock());
-    recomputeState();
-  }
-
-  private Generation(FastByIDMap<FastIDSet> knownItemIDs,
-                     FastByIDMap<FastIDSet> knownUserIDs,
-                     FastByIDMap<float[]> X,
-                     RealMatrix XTXinv,
-                     FastByIDMap<float[]> Y,
-                     RealMatrix YTYinv,
-                     List<IDCluster> userClusters,
-                     List<IDCluster> itemClusters,
-                     CandidateFilter candidateFilter,
-                     ReadWriteLock xLock,
-                     ReadWriteLock yLock,
-                     ReadWriteLock knownItemLock,
-                     ReadWriteLock knownUserLock,
-                     ReadWriteLock userClustersLock,
-                     ReadWriteLock itemClustersLock) {
     this.knownItemIDs = knownItemIDs;
-    this.knownUserIDs = knownUserIDs;
+    this.knownUserIDs = null; // Not used yet
     this.X = X;
-    this.XTXinv = XTXinv;
+    this.XTXinv = null;
     this.Y = Y;
-    this.YTYinv = YTYinv;
+    this.YTYinv = null;
     this.userClusters = userClusters;
     this.itemClusters = itemClusters;
-    this.candidateFilter = candidateFilter;
-    this.xLock = xLock;
-    this.yLock = yLock;
-    this.knownItemLock = knownItemLock;
-    this.knownUserLock = knownUserLock;
-    this.userClustersLock = userClustersLock;
-    this.itemClustersLock = itemClustersLock;
+    this.candidateFilter = null;
+    this.xLock = new ReentrantReadWriteLock();
+    this.yLock = new ReentrantReadWriteLock();
+    this.knownItemLock = new ReentrantReadWriteLock();
+    this.knownUserLock = null; // Not used yet
+    this.userClustersLock = new ReentrantReadWriteLock();
+    this.itemClustersLock = new ReentrantReadWriteLock();
+    recomputeState();
   }
 
   void recomputeState() {
     XTXinv = recomputeInverse(X, xLock.readLock());
     YTYinv = recomputeInverse(Y, yLock.readLock());
-    candidateFilter = new LocationSensitiveHash(Y);
+    candidateFilter = CandidateFilterFactory.buildCandidateFilter(Y);
   }
 
   private static RealMatrix recomputeInverse(FastByIDMap<float[]> M, Lock readLock) {
