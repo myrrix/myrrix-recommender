@@ -17,7 +17,7 @@
 package net.myrrix.web.servlets;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -74,9 +74,10 @@ public final class EstimateServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     try {
       float[] estimates = recommender.estimatePreferences(userID, itemIDs);
-      PrintWriter out = response.getWriter();
+      Writer out = response.getWriter();
       for (float estimate : estimates) {
-        out.println(Float.toString(estimate));
+        out.write(Float.toString(estimate));
+        out.write('\n');
       }
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());

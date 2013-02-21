@@ -24,7 +24,6 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
@@ -57,7 +56,7 @@ public final class DoSFilter implements Filter {
 
   public DoSFilter() {
     numRecentAccesses = Maps.newConcurrentMap();
-    bannedIPAddresses = Collections.synchronizedSet(Sets.<String>newHashSet());
+    bannedIPAddresses = Sets.newSetFromMap(Maps.<String,Boolean>newConcurrentMap());
   }
 
   @Override

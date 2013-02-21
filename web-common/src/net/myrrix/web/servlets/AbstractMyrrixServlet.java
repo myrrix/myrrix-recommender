@@ -17,7 +17,7 @@
 package net.myrrix.web.servlets;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -237,9 +237,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
    */
   protected final void output(HttpServletRequest request,
                               ServletResponse response,
-                              Iterable<RecommendedItem> items) throws IOException {
-
-    PrintWriter writer = response.getWriter();
+                              Iterable<RecommendedItem> items) throws IOException {  
+    Writer writer = response.getWriter();
     switch (determineResponseType(request)) {
       case JSON:
         writer.write('[');
@@ -332,9 +331,8 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
    * Outputs IDs in CSV or JSON format. When outputting CSV, one ID is written per line. When outputting
    * JSON, the output is an array of IDs.
    */
-  final void outputIDs(HttpServletRequest request,ServletResponse response, FastIDSet ids) throws IOException {
-
-    PrintWriter writer = response.getWriter();
+  final void outputIDs(HttpServletRequest request, ServletResponse response, FastIDSet ids) throws IOException {
+    Writer writer = response.getWriter();
     LongPrimitiveIterator it = ids.iterator();
     switch (determineResponseType(request)) {
       case JSON:

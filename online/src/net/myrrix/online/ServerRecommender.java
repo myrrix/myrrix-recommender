@@ -20,7 +20,6 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +36,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -181,7 +179,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
+      reader = IOUtils.openReaderMaybeDecompressing(file);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);

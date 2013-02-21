@@ -18,7 +18,6 @@ package net.myrrix.online.generation;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.io.Writer;
@@ -224,7 +223,7 @@ public final class DelegateGenerationManager implements GenerationManager {
             synchronized (DelegateGenerationManager.this) {
               closeAppender();
               // A small buffer is needed here, but GZIPOutputStream already provides a substantial native buffer
-              appender = IOUtils.buildGZIPWriter(new FileOutputStream(appendFile, false));
+              appender = IOUtils.buildGZIPWriter(appendFile);
             }
 
             try {

@@ -784,7 +784,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
+      reader = IOUtils.openReaderMaybeDecompressing(file);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);
@@ -826,7 +826,9 @@ public final class ClientRecommender implements MyrrixRecommender {
             writerAndConnection = Pair.of(writer, connection);
             writersAndConnections.put(partition, writerAndConnection);
           }
-          writerAndConnection.getFirst().write(line + '\n');
+          Writer writer = writerAndConnection.getFirst();
+          writer.write(line);
+          writer.write('\n');
         }
         for (Pair<Writer,HttpURLConnection> writerAndConnection : writersAndConnections.values()) {
           // Want to know of output stream close failed -- maybe failed to write

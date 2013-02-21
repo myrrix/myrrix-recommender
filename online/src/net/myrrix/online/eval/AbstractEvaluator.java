@@ -17,7 +17,6 @@
 package net.myrrix.online.eval;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collection;
@@ -160,7 +159,7 @@ public abstract class AbstractEvaluator {
     log.info("Read data for {} users from input; splitting...", data.size());
 
     Multimap<Long,RecommendedItem> testData = ArrayListMultimap.create();
-    Writer trainingOut = IOUtils.buildGZIPWriter(new FileOutputStream(trainingFile));
+    Writer trainingOut = IOUtils.buildGZIPWriter(trainingFile);
     try {
 
       Iterator<Map.Entry<Long,Collection<RecommendedItem>>> it = data.asMap().entrySet().iterator();
@@ -179,7 +178,12 @@ public abstract class AbstractEvaluator {
 
         int numTraining = FastMath.max(1, (int) (trainPercentage * userPrefs.size()));
         for (RecommendedItem rec : userPrefs.subList(0, numTraining)) {
-          trainingOut.write(Long.toString(userID) + DELIMITER + rec.getItemID() + DELIMITER + rec.getValue() + '\n');
+          trainingOut.write(Long.toString(userID));
+          trainingOut.write(DELIMITER);
+          trainingOut.write(Long.toString(rec.getItemID()));
+          trainingOut.write(DELIMITER);
+          trainingOut.write(Float.toString(rec.getValue()));
+          trainingOut.write('\n');
         }
 
         for (RecommendedItem rec : userPrefs.subList(numTraining, userPrefs.size())) {

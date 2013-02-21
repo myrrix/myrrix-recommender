@@ -17,7 +17,7 @@
 package net.myrrix.web.servlets;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -75,9 +75,10 @@ public final class SimilarityToItemServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     try {
       float[] similarities = recommender.similarityToItem(toItemID, itemIDs);
-      PrintWriter out = response.getWriter();
+      Writer out = response.getWriter();
       for (float similarity : similarities) {
-        out.println(Float.toString(similarity));
+        out.write(Float.toString(similarity));
+        out.write('\n');        
       }
     } catch (NoSuchItemException nsie) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND, nsie.toString());

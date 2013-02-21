@@ -104,6 +104,16 @@ public final class IOUtils {
     }
     return in;
   }
+  
+  /**
+   * @param file file, possibly compressed, to open
+   * @return {@link Reader} on uncompressed contents
+   * @throws IOException if the stream can't be opened or is invalid or can't be read
+   * @see #openMaybeDecompressing(File) 
+   */
+  public static Reader openReaderMaybeDecompressing(File file) throws IOException {
+    return new InputStreamReader(openMaybeDecompressing(file), Charsets.UTF_8);
+  }
 
   /**
    * @param in   stream to read and copy
@@ -167,6 +177,13 @@ public final class IOUtils {
    */
   public static Writer buildGZIPWriter(OutputStream delegate) throws IOException {
     return new OutputStreamWriter(buildGZIPOutputStream(delegate), Charsets.UTF_8);
+  }
+
+  /**
+   * @see #buildGZIPWriter(OutputStream)
+   */
+  public static Writer buildGZIPWriter(File file) throws IOException {
+    return buildGZIPWriter(new FileOutputStream(file, false));
   }
 
 }

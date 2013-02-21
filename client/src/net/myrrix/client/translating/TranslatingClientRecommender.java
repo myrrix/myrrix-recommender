@@ -18,9 +18,7 @@ package net.myrrix.client.translating;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.Collection;
@@ -28,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -280,7 +277,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     BufferedReader buffered =
         reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
     try {
-      Writer out = IOUtils.buildGZIPWriter(new FileOutputStream(tempFile));
+      Writer out = IOUtils.buildGZIPWriter(tempFile);
       try {
         String line;
         while ((line = buffered.readLine()) != null) {
@@ -296,7 +293,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
           } else {
             translatedLine = COMMA_JOIN.join(longUserID, longItemID);
           }
-          out.write(translatedLine + '\n');
+          out.write(translatedLine);
+          out.write('\n');
         }
       } finally {
         out.close(); // Want to know if output stream close failed -- maybe failed to write
@@ -312,7 +310,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   public void ingest(File file) throws TasteException {
     Reader reader = null;
     try {
-      reader = new InputStreamReader(IOUtils.openMaybeDecompressing(file), Charsets.UTF_8);
+      reader = IOUtils.openReaderMaybeDecompressing(file);
       ingest(reader);
     } catch (IOException ioe) {
       throw new TasteException(ioe);
