@@ -210,7 +210,7 @@ public final class MatrixUtils {
    * @param matrix an {@link Array2DRowRealMatrix}
    * @return its "data" field -- not a copy
    */
-  private static double[][] accessMatrixDataDirectly(RealMatrix matrix) {
+  public static double[][] accessMatrixDataDirectly(RealMatrix matrix) {
     try {
       return (double[][]) MATRIX_DATA_FIELD.get(matrix);
     } catch (IllegalAccessException iae) {

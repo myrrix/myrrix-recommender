@@ -371,6 +371,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         FastByIDFloatMap ru = work.getSecond();
 
         RealMatrix Wu = YTY.copy();
+        double[][] WuData = MatrixUtils.accessMatrixDataDirectly(Wu);
         double[] YTCupu = new double[features];
 
         for (FastByIDFloatMap.MapEntry entry : ru.entrySet()) {
@@ -398,7 +399,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
             float vectorAtRow = vector[row];
             double rowValue = vectorAtRow * (cu - 1.0);
             for (int col = 0; col < features; col++) {
-              Wu.addToEntry(row, col, rowValue * vector[col]);
+              WuData[row][col] += rowValue * vector[col];
+              //Wu.addToEntry(row, col, rowValue * vector[col]);
             }
             YTCupu[row] += vectorAtRow * cu;
           }
@@ -407,7 +409,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
         double lambdaTimesCount = lambda * ru.size();
         for (int x = 0; x < features; x++) {
-          Wu.addToEntry(x, x, lambdaTimesCount);
+          WuData[x][x] += lambdaTimesCount;          
+          //Wu.addToEntry(x, x, lambdaTimesCount);
         }
         Wu = MatrixUtils.invert(Wu);
 
