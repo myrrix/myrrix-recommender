@@ -26,7 +26,6 @@ import java.util.concurrent.Future;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
@@ -371,7 +370,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         // This is Ru:
         FastByIDFloatMap ru = work.getSecond();
 
-        RealMatrix Wu = new Array2DRowRealMatrix(features, features);
+        RealMatrix Wu = YTY.copy();
         double[] YTCupu = new double[features];
 
         for (FastByIDFloatMap.MapEntry entry : ru.entrySet()) {
@@ -394,24 +393,18 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
             continue;
           }
 
-          // Wu
-
+          // Wu and YTCupu
           for (int row = 0; row < features; row++) {
-            double rowValue = vector[row] * (cu - 1.0);
+            float vectorAtRow = vector[row];
+            double rowValue = vectorAtRow * (cu - 1.0);
             for (int col = 0; col < features; col++) {
               Wu.addToEntry(row, col, rowValue * vector[col]);
             }
-          }
-
-          // YTCupu
-
-          for (int i = 0; i < features; i++) {
-            YTCupu[i] += vector[i] * cu;
+            YTCupu[row] += vectorAtRow * cu;
           }
 
         }
 
-        Wu = Wu.add(YTY);
         double lambdaTimesCount = lambda * ru.size();
         for (int x = 0; x < features; x++) {
           Wu.addToEntry(x, x, lambdaTimesCount);
