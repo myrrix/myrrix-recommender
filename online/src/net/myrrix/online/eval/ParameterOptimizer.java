@@ -114,6 +114,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
         String property = propertyNames[prop];
         Number parameterValue = getParameterValueToTry(parameterValuesToTry, test, prop);
         String propertyString = parameterValue.toString();
+        log.info("Setting {}={}", property, propertyString);
         System.setProperty(property, propertyString);
         testResultLine.append('[').append(property).append('=').append(propertyString).append("] ");        
       }
@@ -126,8 +127,10 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
       }
       testResultLine.append("= ").append(testValue);
       testResultLines.add(testResultLine.toString());
+      log.info(testResultLine.toString());
       
       if (minimize ? testValue < bestValue : testValue > bestValue) {
+        log.info("New best value {}", testValue);
         bestValue = testValue;
         for (int prop = 0; prop < numProperties; prop++) {
           String property = propertyNames[prop];

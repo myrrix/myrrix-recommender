@@ -16,39 +16,20 @@
 
 package net.myrrix.client;
 
-import java.io.File;
-import java.io.StringReader;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import com.google.common.io.PatternFilenameFilter;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
-import org.apache.mahout.common.iterator.FileLineIterable;
+import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.ExecutorUtils;
-import net.myrrix.common.collection.FastIDSet;
-import net.myrrix.common.random.RandomManager;
+import net.myrrix.common.LoadRunner;
 
 public final class LoadTest extends AbstractClientTest {
-
-  private static final Logger log = LoggerFactory.getLogger(LoadTest.class);
-
-  private static final int ITERATIONS = 20000;
+  
+  @BeforeClass
+  public static void setUpMaxIterations() {
+    // No real need for accuracy for a simple load test
+    if (System.getProperty("model.iterations.max") == null) {
+      System.setProperty("model.iterations.max", "2");
+    }
+  }
 
   @Override
   protected String getTestDataPath() {
@@ -62,128 +43,12 @@ public final class LoadTest extends AbstractClientTest {
 
   @Test
   public void testLoad() throws Exception {
-
-    log.info("Reading IDs...");
-
-    FastIDSet userIDsSet = new FastIDSet();
-    FastIDSet itemIDsSet = new FastIDSet();
-    Splitter comma = Splitter.on(',');
-    for (File f : getTestTempDir().listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"))) {
-      for (CharSequence line : new FileLineIterable(f)) {
-        Iterator<String> it = comma.split(line).iterator();
-        userIDsSet.add(Long.parseLong(it.next()));
-        itemIDsSet.add(Long.parseLong(it.next()));
-      }
-    }
-    long[] uniqueUserIDs = userIDsSet.toArray();
-    long[] uniqueItemIDs = itemIDsSet.toArray();
-
-    RandomGenerator random = RandomManager.getRandom();
-    final ClientRecommender client = getClient();
-
-    Collection<Future<?>> futures = Lists.newArrayList();
-
-    final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
-    final RunningAverage setPreference = new FullRunningAverageAndStdDev();
-    final RunningAverage removePreference = new FullRunningAverageAndStdDev();
-    final RunningAverage ingest = new FullRunningAverageAndStdDev();
-    final RunningAverage refresh = new FullRunningAverageAndStdDev();
-    final RunningAverage estimatePreference = new FullRunningAverageAndStdDev();
-    final RunningAverage mostSimilarItems = new FullRunningAverageAndStdDev();
-    final RunningAverage recommendToMany = new FullRunningAverageAndStdDev();
-    final RunningAverage recommend = new FullRunningAverageAndStdDev();
-
-    final AtomicInteger count = new AtomicInteger();
-
-    log.info("Starting load test...");
-
+    ClientRecommender client = getClient();
+    LoadRunner runner = new LoadRunner(client, getTestTempDir(), 20000);
     long start = System.currentTimeMillis();
-
-    ExecutorService executor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LoadTest-%d").build());
-
-    try {
-
-      for (int i = 0; i < ITERATIONS; i++) {
-        final double r = random.nextDouble();
-        final long userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
-        final long itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
-        final float value = (float) random.nextInt(10);
-        futures.add(executor.submit(new Callable<Void>() {
-          @Override
-          public Void call() throws TasteException {
-
-            long stepStart = System.currentTimeMillis();
-            if (r < 0.05) {
-              client.recommendedBecause(userID, itemID, 10);
-              recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.07) {
-              client.setPreference(userID, itemID);
-              setPreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.1) {
-              client.setPreference(userID, itemID, value);
-              setPreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.11) {
-              client.removePreference(userID, itemID);
-              removePreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.13) {
-              StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
-              client.ingest(reader);
-              ingest.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.15) {
-              client.refresh();
-              refresh.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.20) {
-              client.estimatePreference(userID, itemID);
-              estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.25) {
-              client.mostSimilarItems(new long[] {itemID}, 10);
-              mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.30) {
-              client.recommendToMany(new long[] { userID, userID }, 10, true, (String[]) null);
-              recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
-            } else {
-              client.recommend(userID, 10);
-              recommend.addDatum(System.currentTimeMillis() - stepStart);
-            }
-
-            int stepsFinished = count.incrementAndGet();
-            if (stepsFinished % 1000 == 0) {
-              log.info("Finished {} load steps", stepsFinished);
-            }
-
-            return null;
-          }
-        }));
-      }
-
-      for (Future<?> future : futures) {
-        try {
-          future.get();
-        } catch (ExecutionException ee) {
-          log.warn("Error in execution", ee.getCause());
-        }
-      }
-
-    } finally {
-      ExecutorUtils.shutdownNowAndAwait(executor);
-    }
-
+    runner.runLoad();
     long end = System.currentTimeMillis();
-    log.info("Finished {} steps in {}ms", ITERATIONS, end - start);
-
-    log.info("recommendedBecause: {}", recommendedBecause);
-    log.info("setPreference: {}", setPreference);
-    log.info("removePreference: {}", removePreference);
-    log.info("ingest: {}", ingest);
-    log.info("refresh: {}", refresh);
-    log.info("estimatePreference: {}", estimatePreference);
-    log.info("mostSimilarItems: {}", mostSimilarItems);
-    log.info("recommendToMany: {}", recommendToMany);
-    log.info("recommend: {}", recommend);
-
-    assertTrue(end - start < 15 * ITERATIONS);
+    assertTrue(end - start < 30 * runner.getSteps());
   }
 
 }

@@ -55,36 +55,18 @@ import net.myrrix.online.ServerRecommender;
  *
  * @author Sean Owen
  */
-public abstract class AbstractEvaluator {
+public abstract class AbstractEvaluator implements Evaluator {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractEvaluator.class);
 
   private static final char DELIMITER = ',';
   private static final Splitter COMMA_TAB_SPLIT = Splitter.on(CharMatcher.anyOf(",\t")).omitEmptyStrings();
 
-  /**
-   * Calls {@link #evaluate(MyrrixRecommender, RescorerProvider, Multimap)} without a rescorer.
-   */
+  @Override
   public final EvaluationResult evaluate(MyrrixRecommender recommender,
                                          Multimap<Long,RecommendedItem> testData) throws TasteException {
     return evaluate(recommender, null, testData);
   }
-  
-  /**
-   * Evaluate a given {@link MyrrixRecommender}, already trained with some training data, using the given
-   * test data.
-   *
-   * @param recommender instance to evaluate, which already has training data appropriate for the supplied test
-   *  data
-   * @param provider optional {@link RescorerProvider} that should be used in evaluation / training data split.
-   *  It may or may not be used depending on the test.
-   * @param testData test data to use in the evaluation. It is a {@link Multimap} keyed by user ID, pointing
-   *  to many {@link RecommendedItem}s, each of which represents a test datum, which would be considered a
-   *  good recommendation.
-   */
-  public abstract EvaluationResult evaluate(MyrrixRecommender recommender,
-                                            RescorerProvider provider,
-                                            Multimap<Long,RecommendedItem> testData) throws TasteException;
 
   /**
    * @return true iff the implementation should split out test data by taking highest-value items for each user
@@ -105,17 +87,7 @@ public abstract class AbstractEvaluator {
     return evaluate(originalDataDir, 0.9, 1.0, null);
   }
 
-  /**
-   * Convenience method which sets up a {@link MyrrixRecommender}, splits data in a given location into test/training
-   * data, trains the recommender, then invokes {@link #evaluate(MyrrixRecommender, Multimap)}.
-   *
-   * @param originalDataDir directory containing recommender input data, as (possibly compressed) CSV files
-   * @param trainingPercentage percentage of data to train on; the remainder is test data
-   * @param evaluationPercentage percentage of all data to consider, before even splitting into test and training
-   *  sets. This is useful for quickly evaluating using a subset of a large data set.
-   * @param provider optional {@link RescorerProvider} that should be used in evaluation / training data split.
-   *  It may or may not be used depending on the test.
-   */
+  @Override
   public final EvaluationResult evaluate(File originalDataDir,
                                          double trainingPercentage,
                                          double evaluationPercentage,
