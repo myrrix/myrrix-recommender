@@ -18,8 +18,17 @@ package net.myrrix.online.eval;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
@@ -70,59 +79,93 @@ public final class AUCEvaluator extends AbstractEvaluator {
     return evaluate(recommender, converted);
   }
 
-  public EvaluationResult evaluate(MyrrixRecommender recommender,
-                                   FastByIDMap<FastIDSet> testData) throws TasteException {
+  public EvaluationResult evaluate(final MyrrixRecommender recommender,
+                                   final FastByIDMap<FastIDSet> testData) throws TasteException {
 
+    final AtomicInteger underCurve = new AtomicInteger(0);
+    final AtomicInteger total = new AtomicInteger(0);
+    
+    final long[] allItemIDs = recommender.getAllItemIDs().toArray();
+
+    int numCores = Runtime.getRuntime().availableProcessors();
+    ExecutorService executor = 
+        Executors.newFixedThreadPool(numCores, new ThreadFactoryBuilder().setNameFormat("AUCEval-%s").build());
+    List<Future<?>> futures = Lists.newArrayListWithCapacity(numCores);
+
+    final LongPrimitiveIterator iterator = testData.keySetIterator();
+    
+    for (int i = 0; i < numCores; i++) {
+      futures.add(executor.submit(new Callable<Object>() {
+        private final RandomGenerator random = RandomManager.getRandom();        
+        @Override
+        public Object call() throws Exception {
+          while (true) {
+            long userID;
+            synchronized (iterator) {
+              if (!iterator.hasNext()) {
+                return null;
+              }
+              userID = iterator.next();
+            }
+            
+            FastIDSet testItemIDs = testData.get(userID);
+            int numTest = testItemIDs.size();
+            if (numTest == 0) {
+              continue;
+            }
+      
+            for (int i = 0; i < numTest; i++) {
+      
+              long randomTestItemID = RandomUtils.randomFrom(testItemIDs, random);
+              long randomTrainingItemID;
+              do {
+                randomTrainingItemID = allItemIDs[random.nextInt(allItemIDs.length)];
+              } while (testItemIDs.contains(randomTrainingItemID));
+      
+              float relevantEstimate;
+              try {
+                relevantEstimate = recommender.estimatePreference(userID, randomTestItemID);
+              } catch (NoSuchItemException nsie) {
+                // OK; it's possible item only showed up in test split
+                continue;
+              } catch (NoSuchUserException nsie) {
+                // OK; it's possible user only showed up in test split
+                continue;
+              }
+      
+              float nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);
+      
+              if (relevantEstimate > nonRelevantEstimate) {
+                underCurve.incrementAndGet();
+              }
+              total.incrementAndGet();
+            }
+          }
+        }
+      }));
+    }
+    
+    executor.shutdown();
+    
     int count = 0;
-    int underCurve = 0;
-    int total = 0;
-
-    long[] allItemIDs = recommender.getAllItemIDs().toArray();
-    RandomGenerator random = RandomManager.getRandom();
-
-    LongPrimitiveIterator it = testData.keySetIterator();
-    while (it.hasNext()) {
-      long userID = it.nextLong();
-
-      FastIDSet testItemIDs = testData.get(userID);
-      int numTest = testItemIDs.size();
-      if (numTest == 0) {
-        continue;
-      }
-
-      for (int i = 0; i < numTest; i++) {
-
-        long randomTestItemID = RandomUtils.randomFrom(testItemIDs, random);
-        long randomTrainingItemID;
-        do {
-          randomTrainingItemID = allItemIDs[random.nextInt(allItemIDs.length)];
-        } while (testItemIDs.contains(randomTrainingItemID));
-
-        float relevantEstimate;
-        try {
-          relevantEstimate = recommender.estimatePreference(userID, randomTestItemID);
-        } catch (NoSuchItemException nsie) {
-          // OK; it's possible item only showed up in test split
-          continue;
-        } catch (NoSuchUserException nsie) {
-          // OK; it's possible user only showed up in test split
-          continue;
+    for (Future<?> future : futures) {
+      try {
+        future.get();
+      } catch (InterruptedException e) {
+        throw new TasteException(e);
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof TasteException) {
+          throw (TasteException) cause;
         }
-
-        float nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);
-
-        if (relevantEstimate > nonRelevantEstimate) {
-          underCurve++;
-        }
-        total++;
+        throw new TasteException(cause);
       }
-
-      if (++count % 100000 == 0) {
-        log.info("AUC: {}", (double) underCurve / total);
+      if (++count % 1000 == 0) {
+        log.info("AUC: {}", (double) underCurve.get() / total.get());
       }
     }
 
-    double score = (double) underCurve / total;
+    double score = (double) underCurve.get() / total.get();
     log.info("AUC: {}", score);
     return new EvaluationResultImpl(score);
   }
