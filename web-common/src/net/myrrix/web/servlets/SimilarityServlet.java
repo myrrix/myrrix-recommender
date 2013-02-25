@@ -67,7 +67,7 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     }
 
     if (itemIDSet.isEmpty()) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No items");
       return;
     }
 

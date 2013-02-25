@@ -64,7 +64,7 @@ public final class SimilarityToItemServlet extends AbstractMyrrixServlet {
       return;
     }
     if (itemIDsList.isEmpty()) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No items");
       return;
     }
     long[] itemIDs = new long[itemIDsList.size()];

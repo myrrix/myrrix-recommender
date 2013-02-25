@@ -71,7 +71,7 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     }
 
     if (itemValuePairs.isEmpty()) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No items");
       return;
     }
 
