@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.myrrix.common;
+package net.myrrix.common.parallel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +40,6 @@ public final class ExecutorUtils {
   public static void shutdownNowAndAwait(ExecutorService executor) {
     if (!executor.isTerminated()) {
       if (!executor.isShutdown()) {
-        log.info("Shutting down executor {}", executor);
         executor.shutdownNow();
       }
       try {

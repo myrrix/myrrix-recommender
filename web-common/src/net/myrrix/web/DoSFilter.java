@@ -35,7 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import net.myrrix.common.ExecutorUtils;
+import net.myrrix.common.parallel.ExecutorUtils;
 
 /**
  * A {@link Filter} that rejects requests from hosts that are sending too many requests. This is measured

@@ -37,7 +37,7 @@ import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.ExecutorUtils;
+import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;

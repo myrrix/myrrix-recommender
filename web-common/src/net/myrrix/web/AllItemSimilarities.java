@@ -16,23 +16,19 @@
 
 package net.myrrix.web;
 
-import java.io.PrintStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
 
 import net.myrrix.common.NotReadyException;
+import net.myrrix.common.parallel.Paralleler;
+import net.myrrix.common.parallel.Processor;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 
@@ -76,43 +72,28 @@ public final class AllItemSimilarities implements Callable<Object> {
     final ServerRecommender recommender = new ServerRecommender(config.getLocalInputDir());
     recommender.await();
 
-    ExecutorService executorService =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors(),
-                                     new ThreadFactoryBuilder().setNameFormat("AllItemSimilarities-%d").build());
-    List<Future<?>> futures = Lists.newArrayList();
-
     final RescorerProvider rescorerProvider = config.getRescorerProvider();
     final int howMany = config.getHowMany();
-    final PrintStream out = System.out;
 
-    LongPrimitiveIterator it = recommender.getAllItemIDs().iterator();
-    while (it.hasNext()) {
-      final long itemID = it.nextLong();
-      futures.add(executorService.submit(new Callable<Void>() {
-        @Override
-        public Void call() throws Exception {
-          Rescorer<LongPair> rescorer =
-              rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
-          List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
-          StringBuilder line = new StringBuilder(30);
-          synchronized (out) {
-            out.println(Long.toString(itemID));
-            for (RecommendedItem sim : similar) {
-              line.setLength(0);
-              line.append(Long.toString(sim.getItemID())).append(',').append(Float.toString(sim.getValue()));
-              out.println(line);
-            }
+    Processor<Long> processor = new Processor<Long>() {
+      @Override
+      public void process(Long itemID, long count) throws TasteException {
+        Rescorer<LongPair> rescorer =
+            rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
+        List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
+        StringBuilder line = new StringBuilder(30);
+        synchronized (System.out) {
+          System.out.println(Long.toString(itemID));
+          for (RecommendedItem sim : similar) {
+            line.setLength(0);
+            line.append(Long.toString(sim.getItemID())).append(',').append(Float.toString(sim.getValue()));
+            System.out.println(line);
           }
-          return null;
         }
-      }));
-    }
+      }
+    };
 
-    executorService.shutdown();
-    for (Future<?> future : futures) {
-      future.get();
-    }
-
+    new Paralleler<Long>(recommender.getAllItemIDs().iterator(), processor, "AllItemSimilarities").runInParallel();
     return null;
   }
 

@@ -18,22 +18,14 @@ package net.myrrix.online.eval;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.MyrrixRecommender;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.parallel.Paralleler;
+import net.myrrix.common.parallel.Processor;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
 import net.myrrix.online.RescorerProvider;
@@ -86,83 +80,55 @@ public final class AUCEvaluator extends AbstractEvaluator {
     final AtomicInteger total = new AtomicInteger(0);
     
     final long[] allItemIDs = recommender.getAllItemIDs().toArray();
-
-    int numCores = Runtime.getRuntime().availableProcessors();
-    ExecutorService executor = 
-        Executors.newFixedThreadPool(numCores, new ThreadFactoryBuilder().setNameFormat("AUCEval-%s").build());
-    List<Future<?>> futures = Lists.newArrayListWithCapacity(numCores);
-
-    final LongPrimitiveIterator iterator = testData.keySetIterator();
     
-    for (int i = 0; i < numCores; i++) {
-      futures.add(executor.submit(new Callable<Object>() {
-        private final RandomGenerator random = RandomManager.getRandom();        
-        @Override
-        public Object call() throws Exception {
-          while (true) {
-            long userID;
-            synchronized (iterator) {
-              if (!iterator.hasNext()) {
-                return null;
-              }
-              userID = iterator.next();
-            }
-            
-            FastIDSet testItemIDs = testData.get(userID);
-            int numTest = testItemIDs.size();
-            if (numTest == 0) {
-              continue;
-            }
-      
-            for (int i = 0; i < numTest; i++) {
-      
-              long randomTestItemID = RandomUtils.randomFrom(testItemIDs, random);
-              long randomTrainingItemID;
-              do {
-                randomTrainingItemID = allItemIDs[random.nextInt(allItemIDs.length)];
-              } while (testItemIDs.contains(randomTrainingItemID));
-      
-              float relevantEstimate;
-              try {
-                relevantEstimate = recommender.estimatePreference(userID, randomTestItemID);
-              } catch (NoSuchItemException nsie) {
-                // OK; it's possible item only showed up in test split
-                continue;
-              } catch (NoSuchUserException nsie) {
-                // OK; it's possible user only showed up in test split
-                continue;
-              }
-      
-              float nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);
-      
-              if (relevantEstimate > nonRelevantEstimate) {
-                underCurve.incrementAndGet();
-              }
-              total.incrementAndGet();
-            }
+    Processor<Long> processor = new Processor<Long>() {
+      private final RandomGenerator random = RandomManager.getRandom();      
+      @Override
+      public void process(Long userID, long count) throws TasteException {
+        FastIDSet testItemIDs = testData.get(userID);
+        int numTest = testItemIDs.size();  
+        for (int i = 0; i < numTest; i++) {
+  
+          long randomTestItemID;
+          long randomTrainingItemID;
+          synchronized (random) {
+            randomTestItemID = RandomUtils.randomFrom(testItemIDs, random);
+            do {
+              randomTrainingItemID = allItemIDs[random.nextInt(allItemIDs.length)];
+            } while (testItemIDs.contains(randomTrainingItemID));
+          }
+  
+          float relevantEstimate;
+          try {
+            relevantEstimate = recommender.estimatePreference(userID, randomTestItemID);
+          } catch (NoSuchItemException nsie) {
+            // OK; it's possible item only showed up in test split
+            continue;
+          } catch (NoSuchUserException nsie) {
+            // OK; it's possible user only showed up in test split
+            continue;
+          }
+
+          float nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);
+
+          if (relevantEstimate > nonRelevantEstimate) {
+            underCurve.incrementAndGet();
+          }
+          total.incrementAndGet();
+          
+          if (count % 100000 == 0) {
+            log.info("AUC: {}", (double) underCurve.get() / total.get());
           }
         }
-      }));
-    }
-    
-    executor.shutdown();
-    
-    int count = 0;
-    for (Future<?> future : futures) {
-      try {
-        future.get();
-      } catch (InterruptedException e) {
-        throw new TasteException(e);
-      } catch (ExecutionException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof TasteException) {
-          throw (TasteException) cause;
-        }
-        throw new TasteException(cause);
       }
-      if (++count % 1000 == 0) {
-        log.info("AUC: {}", (double) underCurve.get() / total.get());
-      }
+    };
+    
+    try {
+      new Paralleler<Long>(testData.keySetIterator(), processor, "AUCEval").runInParallel();
+    } catch (InterruptedException ie) {
+      throw new TasteException(ie);
+    } catch (ExecutionException e) {
+      throw new TasteException(e.getCause());
     }
 
     double score = (double) underCurve.get() / total.get();

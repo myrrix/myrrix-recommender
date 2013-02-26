@@ -35,7 +35,7 @@ import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.ExecutorUtils;
+import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
@@ -291,7 +291,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 100000) {
+      if (count >= 10000) {
         total += count;
         JVMEnvironment env = new JVMEnvironment();
         log.info("{} X rows computed ({}MB heap)", total, env.getUsedMemoryMB());

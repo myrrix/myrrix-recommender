@@ -19,28 +19,25 @@ package net.myrrix.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import com.google.common.io.PatternFilenameFilter;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.collection.CountingIterator;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.parallel.Paralleler;
+import net.myrrix.common.parallel.Processor;
 import net.myrrix.common.random.RandomManager;
 
 /**
@@ -127,82 +124,70 @@ public final class LoadRunner implements Callable<Void> {
     final RunningAverage recommendToMany = new FullRunningAverageAndStdDev();
     final RunningAverage recommend = new FullRunningAverageAndStdDev();
 
-    int numRunners = Runtime.getRuntime().availableProcessors();
-    Collection<Future<?>> futures = Lists.newArrayListWithCapacity(numRunners);
-    final AtomicInteger count = new AtomicInteger();    
-    ExecutorService executor =
-        Executors.newFixedThreadPool(numRunners,
-                                     new ThreadFactoryBuilder().setDaemon(true).setNameFormat("LoadTest-%d").build());
+    Processor<Integer> processor = new Processor<Integer>() {
+      private final RandomGenerator random = RandomManager.getRandom();      
+      @Override
+      public void process(Integer step, long count) throws TasteException {
+        double r;
+        long userID;
+        long itemID;
+        long itemID2;
+        float value;
+        synchronized (random) {
+          r = random.nextDouble();            
+          userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
+          itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
+          itemID2 = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
+          value = random.nextInt(10);
+        }
+        long stepStart = System.currentTimeMillis();
+        if (r < 0.05) {
+          client.recommendedBecause(userID, itemID, 10);
+          recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.07) {
+          client.setPreference(userID, itemID);
+          setPreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.1) {
+          client.setPreference(userID, itemID, value);
+          setPreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.11) {
+          client.removePreference(userID, itemID);
+          removePreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.12) {
+          StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
+          client.ingest(reader);
+          ingest.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.13) {
+          client.refresh();
+          refresh.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.14) {
+          client.similarityToItem(itemID, itemID2);
+          similarityToItem.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.15) {
+          client.mostPopularItems(10);
+          mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.20) {
+          client.estimatePreference(userID, itemID);
+          estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.25) {
+          client.mostSimilarItems(new long[] {itemID}, 10);
+          mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.30) {
+          client.recommendToMany(new long[] { userID, userID }, 10, true, null);
+          recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
+        } else {
+          client.recommend(userID, 10);
+          recommend.addDatum(System.currentTimeMillis() - stepStart);
+        }
+        if (count % 1000 == 0) {
+          log.info("Finished {} load steps", count);
+        }
+      }
+    };
 
     log.info("Starting load test...");
     long start = System.currentTimeMillis();
-    
-    for (int i = 0; i < numRunners; i++) {
-      futures.add(executor.submit(new Callable<Void>() {
-        private final RandomGenerator random = RandomManager.getRandom();        
-        @Override
-        public Void call() throws Exception {
-          int step;
-          while ((step = count.getAndIncrement()) < steps) {
-            double r = random.nextDouble();            
-            long userID = uniqueUserIDs[random.nextInt(uniqueUserIDs.length)];
-            long itemID = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
-            long itemID2 = uniqueItemIDs[random.nextInt(uniqueItemIDs.length)];
-            float value = random.nextInt(10);
-            long stepStart = System.currentTimeMillis();
-            if (r < 0.05) {
-              client.recommendedBecause(userID, itemID, 10);
-              recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.07) {
-              client.setPreference(userID, itemID);
-              setPreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.1) {
-              client.setPreference(userID, itemID, value);
-              setPreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.11) {
-              client.removePreference(userID, itemID);
-              removePreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.12) {
-              StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
-              client.ingest(reader);
-              ingest.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.13) {
-              client.refresh();
-              refresh.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.14) {
-              client.similarityToItem(itemID, itemID2);
-              similarityToItem.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.15) {
-              client.mostPopularItems(10);
-              mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.20) {
-              client.estimatePreference(userID, itemID);
-              estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.25) {
-              client.mostSimilarItems(new long[] {itemID}, 10);
-              mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
-            } else if (r < 0.30) {
-              client.recommendToMany(new long[] { userID, userID }, 10, true, null);
-              recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
-            } else {
-              client.recommend(userID, 10);
-              recommend.addDatum(System.currentTimeMillis() - stepStart);
-            }
-            if (step % 1000 == 0) {
-              log.info("Finished {} load steps", step);
-            }
-          }
-          return null;
-        }
-      }));
-    }
-    
-    executor.shutdown();
-    
-    for (Future<?> future : futures) {
-      future.get();
-    }
-    
+    new Paralleler<Integer>(new CountingIterator(steps), processor, "Load").runInParallel();
     long end = System.currentTimeMillis();
 
     log.info("Finished {} steps in {}ms", steps, end - start);
