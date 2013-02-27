@@ -1148,7 +1148,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       getCurrentGeneration();
       return true;
-    } catch (NotReadyException nre) {
+    } catch (NotReadyException ignored) {
       return false;
     }
   }

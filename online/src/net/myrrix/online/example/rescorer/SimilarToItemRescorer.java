@@ -56,7 +56,7 @@ final class SimilarToItemRescorer implements IDRescorer {
     double similarity;
     try {
       similarity = recommender.similarityToItem(toItemID, itemID)[0];
-    } catch (TasteException e) {
+    } catch (TasteException ignored) {
       return Double.NaN;
     }
     return value * (1.0 - RESCORE_RATE + RESCORE_RATE * similarity);

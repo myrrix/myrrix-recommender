@@ -86,7 +86,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     float prefValue;
     try {
       prefValue = readValue(request);
-    } catch (IllegalArgumentException iae) {
+    } catch (IllegalArgumentException ignored) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Bad value");
       return;
     }
@@ -167,9 +167,9 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     long userID;
     try {
       userID = Long.parseLong(pathComponents.next());
-    } catch (NoSuchElementException nsee) {
+    } catch (NoSuchElementException ignored) {
       return null;
-    } catch (NumberFormatException nfe) {
+    } catch (NumberFormatException ignored) {
       return null;
     }
     return userID;

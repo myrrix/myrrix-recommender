@@ -20,7 +20,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;

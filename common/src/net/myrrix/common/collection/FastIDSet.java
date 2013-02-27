@@ -291,7 +291,7 @@ public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> 
     try {
       clone = (FastIDSet) super.clone();
     } catch (CloneNotSupportedException cnse) {
-      throw new AssertionError();
+      throw new AssertionError(cnse);
     }
     clone.keys = keys.clone();
     return clone;

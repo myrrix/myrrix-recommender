@@ -45,7 +45,7 @@ public final class ExecutorUtils {
       try {
         log.info("Waiting briefly for termination of {}", executor);
         executor.awaitTermination(5L, TimeUnit.SECONDS);
-      } catch (InterruptedException ie) {
+      } catch (InterruptedException ignored) {
         log.warn("Interrupted while shutting down executor");
       }
     }

@@ -119,7 +119,7 @@ public final class ClassUtils {
     try {
       Class.forName(implClassName);
       return true;
-    } catch (ClassNotFoundException cnfe) {
+    } catch (ClassNotFoundException ignored) {
       return false;
     }
   }

@@ -300,7 +300,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
         }
         try {
           preference = LangUtils.parseDouble(valueString);
-        } catch (IllegalArgumentException iae) {
+        } catch (IllegalArgumentException ignored) {
           preference = 1.0;
         }
         type = accept.substring(semiColon);

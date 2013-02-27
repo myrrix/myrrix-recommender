@@ -104,9 +104,9 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
     long firstUserID;
     try {
       firstUserID = Long.parseLong(pathComponents.next());
-    } catch (NoSuchElementException nsee) {
+    } catch (NoSuchElementException ignored) {
       return null;
-    } catch (NumberFormatException nfe) {
+    } catch (NumberFormatException ignored) {
       return null;
     }
     return firstUserID;

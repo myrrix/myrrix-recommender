@@ -882,7 +882,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         connection.disconnect();
       }
     } catch (IOException ioe) {
-      log.warn("Unable to refresh; continuing");
+      log.warn("Unable to refresh ({}); continuing", ioe.toString());
     }
   }
 

@@ -78,7 +78,7 @@ public final class JVMEnvironment {
     if (hostName == null || UNKNOWN_HOST.equals(hostName)) {
       try {
         hostName = InetAddress.getLocalHost().getHostName();
-      } catch (UnknownHostException uhe) {
+      } catch (UnknownHostException ignored) {
         hostName = UNKNOWN_HOST;
       }
     }
