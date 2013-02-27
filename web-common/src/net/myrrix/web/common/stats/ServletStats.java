@@ -25,29 +25,29 @@ import net.myrrix.common.stats.RunningStatisticsPerTime;
 
 public final class ServletStats implements Serializable {
 
-  private final RunningStatistics allTime;
-  private final RunningStatisticsPerTime lastHour;
+  private final RunningStatistics allTimeNanosec;
+  private final RunningStatisticsPerTime lastHourNanosec;
   private final AtomicInteger numClientErrors;
   private final AtomicInteger numServerErrors;
 
   public ServletStats() {
-    allTime = new RunningStatistics();
-    lastHour = new RunningStatisticsPerTime(TimeUnit.HOURS);
+    allTimeNanosec = new RunningStatistics();
+    lastHourNanosec = new RunningStatisticsPerTime(TimeUnit.HOURS);
     numClientErrors = new AtomicInteger();
     numServerErrors = new AtomicInteger();
   }
 
-  public void addTiming(long value) {
-    allTime.addDatum(value);
-    lastHour.addDatum(value);
+  public void addTimingNanosec(long timingNanosec) {
+    allTimeNanosec.addDatum(timingNanosec);
+    lastHourNanosec.addDatum(timingNanosec);
   }
 
-  public RunningStatistics getAllTime() {
-    return allTime;
+  public RunningStatistics getAllTimeNanosec() {
+    return allTimeNanosec;
   }
 
-  public RunningStatisticsPerTime getLastHour() {
-    return lastHour;
+  public RunningStatisticsPerTime getLastHourNanosec() {
+    return lastHourNanosec;
   }
 
   public int getNumClientErrors() {

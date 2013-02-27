@@ -223,16 +223,16 @@ pageContext.setAttribute("numPartitions", numPartitions);
     <tr>
       <td style="font-family:Courier,monospace;text-align:left">${entry.key}</td>
       <jsp:scriptlet>
-        RunningStatistics allTime = entry.getValue().getAllTime();
-        pageContext.setAttribute("averageMicroSec", (long) allTime.getAverage() / 1000L);
-        pageContext.setAttribute("maxMicroSec", (long) allTime.getMax() / 1000L);
-        RunningStatisticsPerTime lastHour = entry.getValue().getLastHour();
-        pageContext.setAttribute("averageLastHourMicroSec", (long) lastHour.getAverage() / 1000L);
-        pageContext.setAttribute("maxLastHourMicroSec", (long) lastHour.getMax() / 1000L);
+        RunningStatistics allTimeNanosec = entry.getValue().getAllTimeNanosec();
+        pageContext.setAttribute("averageMicroSec", (long) (allTimeNanosec.getAverage() / 1000.0));
+        pageContext.setAttribute("maxMicroSec", (long) (allTimeNanosec.getMax() / 1000.0));
+        RunningStatisticsPerTime lastHourNanosec = entry.getValue().getLastHourNanosec();
+        pageContext.setAttribute("averageLastHourMicroSec", (long) (lastHourNanosec.getAverage() / 1000.0));
+        pageContext.setAttribute("maxLastHourMicroSec", (long) (lastHourNanosec.getMax() / 1000.0));
         pageContext.setAttribute("clientErrors", entry.getValue().getNumClientErrors());
         pageContext.setAttribute("serverErrors", entry.getValue().getNumServerErrors());
       </jsp:scriptlet>
-      <td>${entry.value.allTime.count}<br/>${entry.value.lastHour.count}</td>
+      <td>${entry.value.allTimeNanosec.count}<br/>${entry.value.lastHourNanosec.count}</td>
       <td>${averageMicroSec}<br/>${averageLastHourMicroSec}</td>
       <td>${maxMicroSec}<br/>${maxLastHourMicroSec}</td>
       <td>${clientErrors}</td>

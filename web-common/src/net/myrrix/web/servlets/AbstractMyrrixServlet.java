@@ -150,7 +150,7 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
     long start = System.nanoTime();
     super.service(request, response);
-    timing.addTiming(System.nanoTime() - start);
+    timing.addTimingNanosec(System.nanoTime() - start);
 
     int status = response.getStatus();
     if (status >= 400) {
