@@ -22,6 +22,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * Encapsulates a reference to something that is created the first time it is needed. Instead
@@ -37,7 +38,8 @@ public final class ReloadingReference<V> {
   private V value;
   private final Callable<V> retriever;
   private long lastRetrieval;
-  private final long durationMS;
+  private final long originalDurationMS;
+  private long currentDurationMS;
   private final Lock lock;
 
   public ReloadingReference(Callable<V> retriever) {
@@ -54,12 +56,13 @@ public final class ReloadingReference<V> {
     Preconditions.checkNotNull(retriever);
     this.retriever = retriever;
     if (duration == NO_RELOAD) {
-      durationMS = NO_RELOAD;
+      originalDurationMS = NO_RELOAD;
     } else {
       Preconditions.checkArgument(duration > 0, "Duration must be positive: %s", duration);
       Preconditions.checkNotNull(timeUnit);
-      durationMS = TimeUnit.MILLISECONDS.convert(duration, timeUnit);
+      originalDurationMS = TimeUnit.MILLISECONDS.convert(duration, timeUnit);
     }
+    currentDurationMS = originalDurationMS;
     lock = new ReentrantLock();
   }
 
@@ -101,17 +104,19 @@ public final class ReloadingReference<V> {
   }
 
   private void doGet() {
-    boolean reloading = durationMS > 0L;
+    boolean reloading = originalDurationMS > 0L;
     long now = reloading ? System.currentTimeMillis() : 0L;
-    if (value == null || (durationMS > 0L && now > lastRetrieval + durationMS)) {
+    if (value == null || (reloading && now > lastRetrieval + currentDurationMS)) {
       try {
         value = retriever.call();
-      } catch (RuntimeException re) {
-        throw re;
       } catch (Exception e) {
+        // Kind of arbitrary exponential backoff -- 2x after each error up to 16x
+        currentDurationMS = FastMath.min(currentDurationMS * 2, originalDurationMS * 16);
         throw new IllegalStateException(e);
       }
-      lastRetrieval = now;
+      lastRetrieval = now;      
+      // Reset backoff
+      currentDurationMS = originalDurationMS;      
     }
   }
 
