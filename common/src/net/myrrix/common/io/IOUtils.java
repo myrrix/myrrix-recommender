@@ -165,9 +165,16 @@ public final class IOUtils {
       return ClassUtils.loadInstanceOf(GZIPOutputStream.class, 
                                        new Class<?>[] {OutputStream.class, boolean.class},
                                        new Object[] {delegate, true});
-    } catch (IllegalStateException ise) {
+    } catch (IllegalStateException ignored) {
       return new GZIPOutputStream(delegate);
     } 
+  }
+
+  /**
+   * @see #buildGZIPOutputStream(OutputStream) 
+   */
+  public static GZIPOutputStream buildGZIPOutputStream(File file) throws IOException {
+    return buildGZIPOutputStream(new FileOutputStream(file));
   }
   
   /**

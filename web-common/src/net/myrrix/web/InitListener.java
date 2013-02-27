@@ -190,7 +190,7 @@ public final class InitListener implements ServletContextListener {
                     ClassUtils.loadInstanceOf("net.myrrix.online.partition.PartitionLoaderImpl", 
                                               PartitionLoader.class);
                 List<List<HostAndPort>> newPartitions = loader.loadPartitions(port, bucket, instanceID);
-                log.info("Latest partitions: {}", newPartitions);
+                log.debug("Latest partitions: {}", newPartitions);
                 return newPartitions;
               }
               return PartitionsUtils.parseAllPartitions(allPartitionsSpecString);
