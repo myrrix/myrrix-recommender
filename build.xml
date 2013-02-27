@@ -47,7 +47,7 @@
       </manifest>
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
-      <zipfileset src="common/lib/guava-14.0-rc3.jar"/>
+      <zipfileset src="common/lib/guava-14.0.jar"/>
       <zipfileset src="common/lib/jewelcli-0.8.3.jar">
         <exclude name="uk/co/flamingpenguin/**"/>
       </zipfileset>
@@ -72,7 +72,7 @@
       <zipfileset dir="${online.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset dir="${online-local.output.dir}"/>
-      <zipfileset src="common/lib/guava-14.0-rc3.jar"/>
+      <zipfileset src="common/lib/guava-14.0.jar"/>
       <zipfileset src="common/lib/jewelcli-0.8.3.jar">
         <exclude name="uk/co/flamingpenguin/**"/>
       </zipfileset>
@@ -100,7 +100,7 @@
       <classes dir="${online.output.dir}"/>
       <classes dir="${online-local.output.dir}"/>
       <lib dir="common/lib">
-        <include name="guava-14.0-rc3.jar"/>
+        <include name="guava-14.0.jar"/>
         <include name="jewelcli-0.8.3.jar"/>
         <include name="mahout-core-0.7.jar"/>
         <include name="slf4j-jdk14-1.7.2.jar"/>
