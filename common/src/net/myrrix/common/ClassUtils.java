@@ -17,6 +17,7 @@
 package net.myrrix.common;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -115,6 +116,10 @@ public final class ClassUtils {
     }
   }
 
+  /**
+   * @param implClassName class name to text
+   * @return {@code true} if the class exists in the JVM and can be loaded
+   */
   public static boolean classExists(String implClassName) {
     try {
       Class.forName(implClassName);
@@ -122,6 +127,22 @@ public final class ClassUtils {
     } catch (ClassNotFoundException ignored) {
       return false;
     }
+  }
+
+  /**
+   * @param clazz the class containing the field to load
+   * @param fieldName the field name
+   * @return the named {@link Field}, made accessible, from the given {@link Class}
+   */
+  public static Field loadField(Class<?> clazz, String fieldName) {
+    Field field;
+    try {
+      field = clazz.getDeclaredField(fieldName);
+    } catch (NoSuchFieldException nsfe) {
+      throw new IllegalStateException("Can't access " + clazz.getSimpleName() + '.' + fieldName, nsfe);
+    }
+    field.setAccessible(true);
+    return field;
   }
 
 }
