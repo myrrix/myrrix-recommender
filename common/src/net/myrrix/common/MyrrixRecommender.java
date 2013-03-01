@@ -161,7 +161,9 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param itemID ID of item for which to find most similar other items
    * @param howMany desired number of most similar items to find
    * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
-   *  most similar items
+   *  most similar items. The {@link LongPair} that will be passed to the {@link Rescorer} contains
+   *  the candidate item that might be returned in the result as its first element, and the 
+   *  {@code itemID} argument here as its second element.
    * @return items most similar to the given item, ordered from most similar to least
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if the item is not known
    */
@@ -182,7 +184,9 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param itemIDs IDs of item for which to find most similar other items
    * @param howMany desired number of most similar items to find
    * @param rescorer {@link Rescorer} which can adjust item-item similarity estimates used to determine
-   *  most similar items
+   *  most similar items. The {@link LongPair} that will be passed to the {@link Rescorer} contains
+   *  the candidate item that might be returned in the result as its first element, and one of the 
+   *  {@code itemID} arguments here as its second element.
    * @return items most similar to the given items, ordered from most similar to least
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs} 
    *  exist in the model. Otherwise, unknown items are ignored.

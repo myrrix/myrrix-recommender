@@ -110,9 +110,10 @@ public interface RescorerProvider {
    *  information from the request that may be necessary to its logic, like current location. What it means
    *  is up to the implementation.
    * @return {@link Rescorer} to use with {@link ServerRecommender#mostSimilarItems(long[], int, Rescorer)}
-   *  or {@code null} if none should be used. The resulting {@code Rescorer&lt;LongPair&gt;} will be passed
-   *  each candidate item ID pair (IDs of the two similar items) to {@link Rescorer#isFiltered(Object)},
-   *  and each non-filtered candidate item ID pair with its original score to
+   *  or {@code null} if none should be used. The {@link Rescorer} will be passed, to its
+   *  {@link Rescorer#isFiltered(Object)} method, a {@link LongPair} containing the candidate item ID
+   *  as its first element, and the item ID passed in the user query as its second element.
+   *  Each non-filtered {@link LongPair} is passed with its original score to
    *  {@link Rescorer#rescore(Object, double)}
    */
   Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args);
