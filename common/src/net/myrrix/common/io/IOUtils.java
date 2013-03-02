@@ -16,6 +16,7 @@
 
 package net.myrrix.common.io;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -25,8 +26,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.zip.DeflaterInputStream;
@@ -49,6 +52,20 @@ import net.myrrix.common.ClassUtils;
 public final class IOUtils {
 
   private IOUtils() {
+  }
+
+  /**
+   * @param raw string to URL-encode
+   * @return the URL encoding of the argument, using the UTF-8 encoding if necessary to interpret
+   *  characters as bytes
+   */
+  public static String urlEncode(String raw) {
+    try {
+      return URLEncoder.encode(raw, "UTF-8");
+    } catch (UnsupportedEncodingException uee) {
+      // Can't happen for UTF-8
+      throw new AssertionError(uee);
+    }
   }
 
   /**
@@ -191,6 +208,22 @@ public final class IOUtils {
    */
   public static Writer buildGZIPWriter(File file) throws IOException {
     return buildGZIPWriter(new FileOutputStream(file, false));
+  }
+
+  /**
+   * Wraps its argument in {@link BufferedReader} if not already one.
+   */
+  public static BufferedReader buffer(Reader maybeBuffered) {
+    return maybeBuffered instanceof BufferedReader 
+        ? (BufferedReader) maybeBuffered 
+        : new BufferedReader(maybeBuffered);
+  }
+
+  /**
+   * @return a {@link BufferedReader} on the stream, using UTF-8 encoding
+   */
+  public static BufferedReader bufferStream(InputStream in) {
+    return new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
   }
 
 }

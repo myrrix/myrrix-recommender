@@ -49,9 +49,8 @@ public final class CommonsMathMatrixInverter implements MatrixInverter {
     try {
       inverse = solver.getInverse();
     } catch (SingularMatrixException sme) {
-      log.warn("{} x {} matrix is near-singular (threshold {}); add more data or decrease the value " +
-               "of model.features ({})",
-               M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD, sme.toString());
+      log.warn("{} x {} matrix is near-singular (threshold {}); add more data or decrease the value of model.features",
+               M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD);
       double[] rDiag;
       try {
         rDiag = (double[]) RDIAG_FIELD.get(decomposition);
@@ -62,7 +61,7 @@ public final class CommonsMathMatrixInverter implements MatrixInverter {
       log.info("QR decomposition diagonal: {}", Arrays.toString(rDiag));
       for (int i = 0; i < rDiag.length; i++) {
         if (FastMath.abs(rDiag[i]) <= SINGULARITY_THRESHOLD) {
-          log.info("Suggested value of -Dmodel.features is less than {}", i);
+          log.warn("Suggested value of -Dmodel.features is less than {}", i);
           break;
         }
       }

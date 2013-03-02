@@ -23,15 +23,20 @@ import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 
+/**
+ * Tests {@link MatrixUtils}.
+ * 
+ * @author Sean Owen
+ */
 public final class MatrixUtilsTest extends MyrrixTest {
 
   @Test
   public void testAddTo() {
     FastByIDMap<FastByIDFloatMap> byRow = new FastByIDMap<FastByIDFloatMap>();
-    FastByIDMap<FastByIDFloatMap> byCol = new FastByIDMap<FastByIDFloatMap>();
     assertNull(byRow.get(0L));
     assertNull(byRow.get(1L));
     assertNull(byRow.get(4L));
+    FastByIDMap<FastByIDFloatMap> byCol = new FastByIDMap<FastByIDFloatMap>();
     MatrixUtils.addTo(0L, 0L, -1.0f, byRow, byCol);
     MatrixUtils.addTo(4L, 1L, 2.0f, byRow, byCol);
     assertEquals(-1.0f, byRow.get(0L).get(0L));
