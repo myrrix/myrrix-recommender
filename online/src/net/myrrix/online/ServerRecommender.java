@@ -853,9 +853,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Preconditions.checkState(LangUtils.isFinite(estimate));
     double signedFoldInWeight;
     if (value > 0.0f && estimate < 1.0) {
-      signedFoldInWeight = (1.0 - 1.0 / (1.0 + value)) * (1.0 - estimate);
+      double multiplier = 1.0 - FastMath.max(0.0, estimate);
+      signedFoldInWeight = (1.0 - 1.0 / (1.0 + value)) * multiplier;
     } else if (value < 0.0f && estimate > 0.0) {
-      signedFoldInWeight = (1.0 - 1.0 / (1.0 - value)) * -estimate;
+      double multiplier = -FastMath.min(1.0, estimate);
+      signedFoldInWeight = (1.0 - 1.0 / (1.0 - value)) * multiplier;
     } else {
       signedFoldInWeight = 0.0;
     }
