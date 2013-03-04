@@ -35,4 +35,9 @@ interface MatrixInverter {
    */
   RealMatrix invert(RealMatrix M);
   
+  /**
+   * @return true if M appears to be invertible ({@link #invert(RealMatrix)} would succeed)
+   */
+  boolean isInvertible(RealMatrix M);
+  
 }

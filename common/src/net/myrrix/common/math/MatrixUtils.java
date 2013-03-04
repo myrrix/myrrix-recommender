@@ -176,6 +176,10 @@ public final class MatrixUtils {
     return invert(MTM);
   }
 
+  public static boolean isInvertible(RealMatrix M) {
+    return MATRIX_INVERTER.isInvertible(M);    
+  }
+
   public static RealMatrix invert(RealMatrix M) {
     return MATRIX_INVERTER.invert(M);
   }

@@ -25,9 +25,20 @@ import org.apache.commons.math3.linear.RealMatrix;
  */
 public final class GPUMatrixInverter implements MatrixInverter {
 
+  /**
+   * @throws UnsupportedOperationException
+   */
   @Override
   public RealMatrix invert(RealMatrix M) {
     throw new UnsupportedOperationException();
   }
+
+  /**
+   * @throws UnsupportedOperationException
+   */
+  @Override
+  public boolean isInvertible(RealMatrix M) {
+    throw new UnsupportedOperationException();
+  }  
 
 }

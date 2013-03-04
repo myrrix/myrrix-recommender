@@ -70,4 +70,16 @@ public final class CommonsMathMatrixInverter implements MatrixInverter {
     return new Array2DRowRealMatrix(inverse.getData());
   }
 
+  @Override
+  public boolean isInvertible(RealMatrix M) {
+    QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
+    DecompositionSolver solver = decomposition.getSolver();
+    try {
+      solver.getInverse();
+      return true;
+    } catch (SingularMatrixException ignored) {
+      return false;
+    }
+  }  
+
 }
