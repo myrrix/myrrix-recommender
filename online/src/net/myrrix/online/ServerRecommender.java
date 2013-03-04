@@ -730,8 +730,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
 
         if (itemFoldIn != null) {
-          if (SimpleVectorMath.norm(itemFoldIn) > FastMath.sqrt(itemFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
-            log.warn("Item fold in vector is large; bug?");
+          if (SimpleVectorMath.norm(itemFoldIn) > BIG_FOLDIN_THRESHOLD) {
+            log.warn("Item fold in vector is large; reduce -Dmodel.features?");
           }
           for (int i = 0; i < itemFeatures.length; i++) {
             double delta = signedFoldInWeight * itemFoldIn[i];
@@ -740,8 +740,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           }
         }
         if (userFoldIn != null) {
-          if (SimpleVectorMath.norm(userFoldIn) > FastMath.sqrt(userFeatures.length / 2.0) * BIG_FOLDIN_THRESHOLD) {
-            log.warn("User fold in vector is large; bug?");
+          if (SimpleVectorMath.norm(userFoldIn) > BIG_FOLDIN_THRESHOLD) {
+            log.warn("User fold in vector is large; reduce -Dmodel.features?");
           }
           for (int i = 0; i < userFeatures.length; i++) {
             double delta = signedFoldInWeight * userFoldIn[i];
