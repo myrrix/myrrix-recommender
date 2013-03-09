@@ -99,6 +99,8 @@ import net.myrrix.common.random.MemoryIDMigrator;
  * <ul>
  *   <li>{@code setPreference userID itemID [value]}</li>
  *   <li>{@code removePreference userID itemID}</li>
+ *   <li>{@code setUserTag userID tag [value]}</li>
+ *   <li>{@code setItemTag tag itemID [value]}</li>
  *   <li>{@code ingest csvFile [csvFile2 ...]}</li>
  *   <li>{@code estimatePreference userID itemID0 [itemID1 itemID2 ...]}</li>
  *   <li>{@code recommend userID}</li>
@@ -219,6 +221,12 @@ public final class CLI {
           break;
         case REMOVEPREFERENCE:
           doRemovePreference(commandArgs, recommender, translatingRecommender);
+          break;
+        case SETUSERTAG:
+          doSetUserTag(commandArgs, recommender, translatingRecommender);          
+          break;
+        case SETITEMTAG:
+          doSetItemTag(commandArgs, recommender, translatingRecommender);          
           break;
         case INGEST:
           doIngest(commandArgs, recommender, translatingRecommender);
@@ -606,6 +614,58 @@ public final class CLI {
       } else {
         float value = LangUtils.parseFloat(unquote(programArgs[3]));
         translatingRecommender.setPreference(userID, itemID, value);
+      }
+    }
+  }
+  
+  private static void doSetUserTag(String[] programArgs,
+                                   ClientRecommender recommender,
+                                   TranslatingRecommender translatingRecommender) throws TasteException {
+    if (programArgs.length != 3 && programArgs.length != 4) {
+      throw new ArgumentValidationException("args are userID tag [value]");
+    }
+    String userTag = unquote(programArgs[2]);    
+    if (translatingRecommender == null) {
+      long userID = Long.parseLong(unquote(programArgs[1]));
+      if (programArgs.length == 3) {
+        recommender.setUserTag(userID, userTag);
+      } else {
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
+        recommender.setUserTag(userID, userTag, value);
+      }
+    } else {
+      String userID = unquote(programArgs[1]);
+      if (programArgs.length == 3) {
+        translatingRecommender.setUserTag(userID, userTag);
+      } else {
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
+        translatingRecommender.setUserTag(userID, userTag, value);
+      }
+    }
+  }
+  
+  private static void doSetItemTag(String[] programArgs,
+                                   ClientRecommender recommender,
+                                   TranslatingRecommender translatingRecommender) throws TasteException {
+    if (programArgs.length != 3 && programArgs.length != 4) {
+      throw new ArgumentValidationException("args are tag itemID [value]");
+    }
+    String itemTag = unquote(programArgs[1]);    
+    if (translatingRecommender == null) {
+      long itemID = Long.parseLong(unquote(programArgs[2]));
+      if (programArgs.length == 3) {
+        recommender.setItemTag(itemTag, itemID);
+      } else {
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
+        recommender.setItemTag(itemTag, itemID, value);
+      }
+    } else {
+      String itemID = unquote(programArgs[2]);
+      if (programArgs.length == 3) {
+        translatingRecommender.setItemTag(itemTag, itemID);
+      } else {
+        float value = LangUtils.parseFloat(unquote(programArgs[3]));
+        translatingRecommender.setItemTag(itemTag, itemID, value);
       }
     }
   }

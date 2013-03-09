@@ -139,6 +139,37 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   void removePreference(long userID, long itemID) throws TasteException;
 
   /**
+   * @see #setUserTag(long, String, float)
+   */
+  void setUserTag(long userID, String tag) throws TasteException;
+  
+  /**
+   * "Tags" a user; records an association between a user and an arbitrary concept. For example, a
+   * user might be tagged "male", or could be tagged with a music genre like "jazz". This is much like
+   * what happens when a user interacts with an item with {@link #setPreference(long, long, float)}, but
+   * tags are of course not recommendable like items. It provides a way to add non-item information into the
+   * model, to be learned from, in a generic way. Tags may be any non-empty string.
+   *   
+   * @param userID the user to tag
+   * @param tag the user tag
+   * @param value the strength of the tag
+   * @see #setItemTag(String, long, float) 
+   */
+  void setUserTag(long userID, String tag, float value) throws TasteException;
+
+  /**
+   * @see #setItemTag(String, long, float) 
+   */
+  void setItemTag(String tag, long itemID) throws TasteException;
+  
+  /**
+   * Like {@link #setUserTag(long, String, float)}, but for items.
+   * 
+   * @see #setUserTag(long, String, float) 
+   */
+  void setItemTag(String tag, long itemID, float value) throws TasteException;
+
+  /**
    * @deprecated do not call; only present to satisfy Mahout API
    * @throws UnsupportedOperationException in general
    */

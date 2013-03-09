@@ -24,6 +24,7 @@ import java.io.Writer;
 import java.util.Arrays;
 
 import com.google.common.base.Charsets;
+import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
@@ -67,6 +68,14 @@ public final class PrintGeneration {
     printFeatureMatrix(generation.getY(), out);
     out.append('\n');
 
+    out.append("itemTagIDs:\n");
+    printTagIDs(generation.getItemTagIDs(), out);
+    out.append('\n');
+
+    out.append("userTagIDs:\n");
+    printTagIDs(generation.getUserTagIDs(), out);
+    out.append('\n');
+    
     //out.append("Known User IDs:\n");
     //printKnownItems(generation.getKnownUserIDs(), out);
     //out.append('\n');
@@ -109,6 +118,13 @@ public final class PrintGeneration {
         }
         out.append(line).append('\n');
       }
+    }
+  }
+  
+  private static void printTagIDs(FastIDSet ids, Appendable out) throws IOException {
+    LongPrimitiveIterator it = ids.iterator();
+    while (it.hasNext()) {
+      out.append(Long.toString(it.nextLong())).append('\n');
     }
   }
 

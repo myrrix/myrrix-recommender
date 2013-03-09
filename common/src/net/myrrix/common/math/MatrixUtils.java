@@ -65,7 +65,7 @@ public final class MatrixUtils {
                            FastByIDMap<FastByIDFloatMap> RbyRow,
                            FastByIDMap<FastByIDFloatMap> RbyColumn) {
     addToByRow(row, column, value, RbyRow);
-    addToByColumn(row, column, value, RbyColumn);
+    addToByRow(column, row, value, RbyColumn);
   }
 
   /**
@@ -76,10 +76,10 @@ public final class MatrixUtils {
    * @param value increment value
    * @param RbyRow matrix R to update, keyed by row
    */
-  public static void addToByRow(long row,
-                                long column,
-                                float value,
-                                FastByIDMap<FastByIDFloatMap> RbyRow) {
+  private static void addToByRow(long row,
+                                 long column,
+                                 float value,
+                                 FastByIDMap<FastByIDFloatMap> RbyRow) {
 
     FastByIDFloatMap theRow = RbyRow.get(row);
     if (theRow == null) {
@@ -87,22 +87,6 @@ public final class MatrixUtils {
       RbyRow.put(row, theRow);
     }
     theRow.increment(column, value);
-  }
-
-  /**
-   * Efficiently increments an entry in a column-major sparse matrix.
-   *
-   * @param row row to increment
-   * @param column column to increment
-   * @param value increment value
-   * @param RbyColumn matrix R to update, keyed by column
-   */
-  public static void addToByColumn(long row,
-                                   long column,
-                                   float value,
-                                   FastByIDMap<FastByIDFloatMap> RbyColumn) {
-    // Really just the transpose:
-    addToByRow(column, row, value, RbyColumn);
   }
 
   /**
@@ -118,7 +102,7 @@ public final class MatrixUtils {
                             FastByIDMap<FastByIDFloatMap> RbyRow,
                             FastByIDMap<FastByIDFloatMap> RbyColumn) {
     removeByRow(row, column, RbyRow);
-    removeByColumn(row, column, RbyColumn);
+    removeByRow(column, row, RbyColumn);
   }
   
   /**
@@ -128,7 +112,7 @@ public final class MatrixUtils {
    * @param column column to remove
    * @param RbyRow matrix R to update, keyed by row
    */
-  public static void removeByRow(long row, long column, FastByIDMap<FastByIDFloatMap> RbyRow) {
+  private static void removeByRow(long row, long column, FastByIDMap<FastByIDFloatMap> RbyRow) {
     FastByIDFloatMap theRow = RbyRow.get(row);
     if (theRow != null) {
       theRow.remove(column);
@@ -136,18 +120,6 @@ public final class MatrixUtils {
         RbyRow.remove(row);
       }
     }
-  }
-  
-  /**
-   * Efficiently removes an entry from a column-major sparse matrix.
-   *
-   * @param row row to remove
-   * @param column column to remove
-   * @param RbyColumn matrix R to update, keyed by column
-   */
-  public static void removeByColumn(long row, long column, FastByIDMap<FastByIDFloatMap> RbyColumn) {
-    // Really just the transpose:
-    removeByRow(column, row, RbyColumn);
   }
 
   /**

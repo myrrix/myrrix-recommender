@@ -28,7 +28,7 @@ public final class RepeatedFoldInTest extends AbstractClientTest {
   }
 
   @Test
-  public void testWaitForBuild() throws Exception {
+  public void testFoldIn() throws Exception {
     ClientRecommender client = getClient();
     for (int i = 0; i < 10000; i++) {
       client.setPreference(i % 5, i % 3, 100.0f);

@@ -80,9 +80,9 @@ public final class AllRecommendations implements Callable<Object> {
         IDRescorer rescorer =
             rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID}, recommender);
         List<RecommendedItem> recs = recommender.recommend(userID, howMany, rescorer);
-        StringBuilder line = new StringBuilder(30);
         synchronized (System.out) {
           System.out.println(Long.toString(userID));
+          StringBuilder line = new StringBuilder(30);
           for (RecommendedItem rec : recs) {
             line.setLength(0);
             line.append(Long.toString(rec.getItemID())).append(',').append(Float.toString(rec.getValue()));

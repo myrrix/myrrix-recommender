@@ -79,6 +79,8 @@ import net.myrrix.web.servlets.RecommendToManyServlet;
 import net.myrrix.web.servlets.RefreshServlet;
 import net.myrrix.web.servlets.SimilarityServlet;
 import net.myrrix.web.servlets.SimilarityToItemServlet;
+import net.myrrix.web.servlets.TagItemServlet;
+import net.myrrix.web.servlets.TagUserServlet;
 import net.myrrix.web.servlets.UserClusterServlet;
 
 /**
@@ -331,6 +333,8 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     if (!config.isReadOnly()) {
       addServlet(context, new PreferenceServlet(), "/pref/*");
+      addServlet(context, new TagUserServlet(), "/tag/user/*");
+      addServlet(context, new TagItemServlet(), "/tag/item/*");
       Wrapper ingestWrapper = addServlet(context, new IngestServlet(), "/ingest/*");
       ingestWrapper.setMultipartConfigElement(new MultipartConfigElement("/tmp"));
       addServlet(context, new RefreshServlet(), "/refresh/*");
@@ -503,13 +507,13 @@ public final class Runner implements Callable<Boolean>, Closeable {
 
     if (needHTTPS || needAuthentication) {
 
-      SecurityConstraint securityConstraint = new SecurityConstraint();
       SecurityCollection securityCollection = new SecurityCollection("Protected Resources");
       if (config.isConsoleOnlyPassword()) {
         securityCollection.addPattern("/index.jspx");
       } else {
         securityCollection.addPattern("/*");
       }
+      SecurityConstraint securityConstraint = new SecurityConstraint();
       securityConstraint.addCollection(securityCollection);
 
       if (needHTTPS) {

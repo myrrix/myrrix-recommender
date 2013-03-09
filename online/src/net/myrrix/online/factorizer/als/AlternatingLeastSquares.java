@@ -18,6 +18,7 @@ package net.myrrix.online.factorizer.als;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -273,18 +274,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     RealMatrix YTY = MatrixUtils.transposeTimesSelf(Y);
     Collection<Future<?>> futures = Lists.newArrayList();
-
-    List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyRow.entrySet()) {
-      workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
-      if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
-        workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-      }
-    }
-    if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, Y, YTY, X, workUnit)));
-    }
+    addWorkers(RbyRow, Y, YTY, X, executor, futures);
 
     int count = 0;
     int total = 0;
@@ -294,7 +284,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       if (count >= 10000) {
         total += count;
         JVMEnvironment env = new JVMEnvironment();
-        log.info("{} X rows computed ({}MB heap)", total, env.getUsedMemoryMB());
+        log.info("{} X/tag rows computed ({}MB heap)", total, env.getUsedMemoryMB());
         if (env.getPercentUsedMemory() > 95) {
           log.warn("Memory is low. Increase heap size with -Xmx, decrease new generation size with larger " +
                    "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
@@ -311,18 +301,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     RealMatrix XTX = MatrixUtils.transposeTimesSelf(X);
     Collection<Future<?>> futures = Lists.newArrayList();
-
-    List<Pair<Long,FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-    for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : RbyColumn.entrySet()) {
-      workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
-      if (workUnit.size() == WORK_UNIT_SIZE) {
-        futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
-        workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
-      }
-    }
-    if (!workUnit.isEmpty()) {
-      futures.add(executor.submit(new Worker(features, X, XTX, Y, workUnit)));
-    }
+    addWorkers(RbyColumn, X, XTX, Y, executor, futures);
 
     int count = 0;
     int total = 0;
@@ -331,13 +310,39 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       count += WORK_UNIT_SIZE;
       if (count >= 10000) {
         total += count;
-        log.info("{} Y rows computed ({}MB heap)", total, new JVMEnvironment().getUsedMemoryMB());
+        JVMEnvironment env = new JVMEnvironment();
+        log.info("{} Y/tag rows computed ({}MB heap)", total, env.getUsedMemoryMB());
+        if (env.getPercentUsedMemory() > 95) {
+          log.warn("Memory is low. Increase heap size with -Xmx, decrease new generation size with larger " +
+                   "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
+        }
         count = 0;
       }
     }
   }
 
-  private static final class Worker implements Runnable {
+  private void addWorkers(FastByIDMap<FastByIDFloatMap> R,
+                          FastByIDMap<float[]> M,
+                          RealMatrix MTM, 
+                          FastByIDMap<float[]> MTags,
+                          ExecutorService executor,                          
+                          Collection<Future<?>> futures) {
+    if (R != null) {
+      List<Pair<Long, FastByIDFloatMap>> workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
+      for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : R.entrySet()) {
+        workUnit.add(new Pair<Long,FastByIDFloatMap>(entry.getKey(), entry.getValue()));
+        if (workUnit.size() == WORK_UNIT_SIZE) {
+          futures.add(executor.submit(new Worker(features, M, MTM, MTags, workUnit)));
+          workUnit = Lists.newArrayListWithCapacity(WORK_UNIT_SIZE);
+        }
+      }
+      if (!workUnit.isEmpty()) {
+        futures.add(executor.submit(new Worker(features, M, MTM, MTags, workUnit)));
+      }
+    }
+  }
+
+  private static final class Worker implements Callable<Void> {
 
     private final int features;
     private final FastByIDMap<float[]> Y;
@@ -358,7 +363,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     }
 
     @Override
-    public void run() {
+    public Void call() {
       double alpha = getAlpha();
       double lambda = getLambda() * alpha;
       int features = this.features;
@@ -431,6 +436,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
         // Process is identical for computing Y from X. Swap X in for Y, Y for X, i for u, etc.
       }
+      return null;
     }
 
     private static double getAlpha() {

@@ -26,11 +26,13 @@ import java.util.NoSuchElementException;
 import com.google.common.base.Splitter;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
+import net.myrrix.common.OneWayMigrator;
 import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
@@ -38,13 +40,15 @@ import net.myrrix.common.io.InvertedFilenameFilter;
 import net.myrrix.common.math.MatrixUtils;
 
 /**
+ * Reads input files into the "R" matrix representation.
+ * 
  * @author Sean Owen
  */
 final class InputFilesReader {
   
   private static final Logger log = LoggerFactory.getLogger(InputFilesReader.class);
   
-  private static final Splitter COMMA = Splitter.on(',');
+  private static final Splitter COMMA = Splitter.on(',').trimResults();
   
   /**
    * Values with absolute value less than this in the input are considered 0.
@@ -60,6 +64,8 @@ final class InputFilesReader {
   static void readInputFiles(FastByIDMap<FastIDSet> knownItemIDs,
                              FastByIDMap<FastByIDFloatMap> rbyRow,
                              FastByIDMap<FastByIDFloatMap> rbyColumn,
+                             FastIDSet itemTagIDs,
+                             FastIDSet userTagIDs,
                              File inputDir) throws IOException {
 
     FilenameFilter csvFilter = new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?");
@@ -78,44 +84,84 @@ final class InputFilesReader {
     }
     Arrays.sort(inputFiles, ByLastModifiedComparator.INSTANCE);
 
+    IDMigrator hash = new OneWayMigrator();
+
     int lines = 0;
     int badLines = 0;
     for (File inputFile : inputFiles) {
       log.info("Reading {}", inputFile);
-      for (CharSequence line : new FileLineIterable(inputFile)) {
+      for (String line : new FileLineIterable(inputFile)) {
+        
+        if (badLines > 100) { // Crude check
+          throw new IOException("Too many bad lines; aborting");
+        }
+        
         lines++;
+        
+        if (line.isEmpty() || line.charAt(0) == '#') {
+          continue;
+        }
+        
         Iterator<String> it = COMMA.split(line).iterator();
 
         long userID;
+        boolean userIsTag;
         long itemID;
+        boolean itemIsTag;
         float value;
         try {
-          userID = Long.parseLong(it.next());
-          itemID = Long.parseLong(it.next());
+          
+          String userIDString = it.next();
+          userIsTag = userIDString.startsWith("\"");
+          if (userIsTag) {
+            userID = hash.toLongID(userIDString.substring(1, userIDString.length() - 1));
+          } else {
+            userID = Long.parseLong(userIDString);
+          }
+          
+          String itemIDString = it.next();
+          itemIsTag = itemIDString.startsWith("\"");
+          if (itemIsTag) {
+            itemID = hash.toLongID(itemIDString.substring(1, itemIDString.length() - 1));
+          } else {
+            itemID = Long.parseLong(itemIDString);            
+          }
+          
           if (it.hasNext()) {
-            String valueToken = it.next().trim();
+            String valueToken = it.next();
             value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
           } else {
             value = 1.0f;
           }
-        } catch (NoSuchElementException nsee) {
+
+        } catch (NoSuchElementException ignored) {
           log.warn("Ignoring line with too few columns: '{}'", line);
-          if (++badLines > 100) { // Crude check
-            throw new IOException("Too many bad lines; aborting");
-          }
+          badLines++;
           continue;
         } catch (IllegalArgumentException iae) { // includes NumberFormatException
           if (lines == 1) {
-            log.info("Ignoring header line");
+            log.info("Ignoring header line: '{}'", line);
           } else {
             log.warn("Ignoring unparseable line: '{}'", line);
-            if (++badLines > 100) { // Crude check
-              throw new IOException("Too many bad lines; aborting");
-            }
+            badLines++;
           }
           continue;
         }
 
+        if (userIsTag && itemIsTag) {
+          log.warn("Two tags not allowed: '{}'", line);
+          badLines++;
+          continue;
+        }
+
+        if (userIsTag) {
+          itemTagIDs.add(userID);
+        }
+        
+        if (itemIsTag) {
+          userTagIDs.add(itemID);
+        }
+        
         if (Float.isNaN(value)) {
           // Remove, not set
           MatrixUtils.remove(userID, itemID, rbyRow, rbyColumn);
@@ -148,6 +194,7 @@ final class InputFilesReader {
       }
     }
     
+    log.info("Pruning near-zero entries");
     removeSmall(rbyRow);
     removeSmall(rbyColumn);    
   }

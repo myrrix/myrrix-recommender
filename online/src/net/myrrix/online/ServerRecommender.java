@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -50,6 +51,7 @@ import org.apache.mahout.cf.taste.common.Refreshable;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.model.DataModel;
+import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
@@ -58,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
+import net.myrrix.common.OneWayMigrator;
 import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
@@ -88,7 +91,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   
   private static final Logger log = LoggerFactory.getLogger(ServerRecommender.class);
 
-  private static final Splitter DELIMITER = Splitter.on(CharMatcher.anyOf(",\t"));
+  private static final Splitter DELIMITER = Splitter.on(CharMatcher.anyOf(",\t")).trimResults();
 
   // Maybe expose this publicly later
   private static final double FOLDIN_LEARN_RATE =
@@ -100,6 +103,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private final GenerationManager generationManager;
   private final int numCores;
   private final ReloadingReference<ExecutorService> executor;
+  private final IDMigrator tagHasher;
 
   /**
    * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference, File)} for simple local mode,
@@ -147,6 +151,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
             new ThreadFactoryBuilder().setDaemon(true).setNameFormat("ServerRecommender-%d").build());
       }
     });
+    tagHasher = new OneWayMigrator();
   }
 
   public String getBucket() {
@@ -194,50 +199,104 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   @Override
   public void ingest(Reader reader) throws TasteException {
-    BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
+    // See also InputFilesReader
+    BufferedReader buffered = IOUtils.buffer(reader);
     try {
 
-      int count = 0;
+      int lines = 0;
       int badLines = 0;
       String line;
       while ((line = buffered.readLine()) != null) {
-
-        if (++count % 1000000 == 0) {
-          log.info("Ingested {} lines", count);
+        
+        if (badLines > 100) { // Crude check
+          throw new IOException("Too many bad lines; aborting");
         }
+        
+        lines++;
+        
         if (line.isEmpty() || line.charAt(0) == '#') {
           continue;
         }
+        
+        Iterator<String> it = DELIMITER.split(line).iterator();
 
+        long userID = Long.MIN_VALUE;
+        String itemTag = null;        
+        long itemID = Long.MIN_VALUE;
+        String userTag = null;        
+        float value;
         try {
           
-          Iterator<String> tokens = DELIMITER.split(line).iterator();
-          long userID = Long.parseLong(tokens.next());
-          long itemID = Long.parseLong(tokens.next());
-          
-          if (tokens.hasNext()) {
-            String token = tokens.next().trim();
-            if (token.isEmpty()) {
-              removePreference(userID, itemID, true);
-            } else {
-              setPreference(userID, itemID, LangUtils.parseFloat(token), true);
-            }
-            if (tokens.hasNext()) {
-              // Allow a 4th timestamp column like Mahout, but don't parse it
-              tokens.next();
-              Preconditions.checkState(!tokens.hasNext(), "Line has too many columns");
-            }
+          String userIDString = it.next();
+          if (userIDString.startsWith("\"")) {
+            itemTag = userIDString.substring(1, userIDString.length() - 1);
           } else {
-            setPreference(userID, itemID, 1.0f, true);
+            userID = Long.parseLong(userIDString);
           }
           
-        } catch (IllegalArgumentException iae) { // includes NumberFormatException
-          log.warn("Ignoring unparseable line: '{}'", line);
-          if (++badLines > 100) { // Crude check
-            throw new IllegalArgumentException("Too many bad lines; aborting");
+          String itemIDString = it.next();
+          if (itemIDString.startsWith("\"")) {
+            userTag = itemIDString.substring(1, itemIDString.length() - 1);
+          } else {
+            itemID = Long.parseLong(itemIDString);            
           }
+          
+          if (it.hasNext()) {
+            String valueToken = it.next();
+            value = valueToken.isEmpty() ? Float.NaN : LangUtils.parseFloat(valueToken);
+          } else {
+            value = 1.0f;
+          }
+
+        } catch (NoSuchElementException ignored) {
+          log.warn("Ignoring line with too few columns: '{}'", line);
+          badLines++;
+          continue;
+        } catch (IllegalArgumentException iae) { // includes NumberFormatException
+          if (lines == 1) {
+            log.info("Ignoring header line: '{}'", line);
+          } else {
+            log.warn("Ignoring unparseable line: '{}'", line);
+            badLines++;
+          }
+          continue;
+        }
+        
+        boolean remove = Float.isNaN(value);
+        
+        if (itemTag != null) {
+                  
+          if (userTag != null) {
+            log.warn("Two tags not allowed: '{}'", line);
+            badLines++;
+            continue;
+          }
+
+          if (!remove) {
+            setItemTag(itemTag, itemID, value, true);
+          }
+          // else ignore? no support for remove tag yet
+
+        } else if (userTag != null) {
+
+          if (!remove) {
+            setUserTag(userID, userTag, value, true);
+          }
+          // else ignore? no support for remove tag yet
+
+        } else {
+          
+          if (remove) {
+            removePreference(userID, itemID, true);
+          } else {
+            setPreference(userID, itemID, value, true);
+          }
+          
         }
 
+        if (lines % 1000000 == 0) {
+          log.info("Finished {} lines", lines);
+        }
       }
       generationManager.bulkDone();
 
@@ -368,6 +427,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       return multithreadedTopN(userFeaturesArray,
                                usersKnownItemIDs,
+                               generation.getUserTagIDs(),
                                rescorer,
                                howMany,
                                generation.getCandidateFilter());
@@ -379,6 +439,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
   private List<RecommendedItem> multithreadedTopN(final float[][] userFeatures,
                                                   final FastIDSet userKnownItemIDs,
+                                                  final FastIDSet userTagIDs,
                                                   final IDRescorer rescorer,
                                                   final int howMany,
                                                   CandidateFilter candidateFilter) {
@@ -413,7 +474,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                 candidateIterator = candidateIteratorsIterator.next();
               }
               Iterator<RecommendedItem> partialIterator =
-                  new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, rescorer);
+                  new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, userTagIDs, rescorer);
               TopN.selectTopNIntoQueueMultithreaded(topN, queueLeastValue, partialIterator, howMany);
             }
             return null;
@@ -434,7 +495,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
       for (Iterator<FastByIDMap.MapEntry<float[]>> candidateIterator : candidateIterators) {
         Iterator<RecommendedItem> partialIterator =
-            new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, rescorer);
+            new RecommendIterator(userFeatures, candidateIterator, userKnownItemIDs, userTagIDs, rescorer);
         TopN.selectTopNIntoQueue(topN, partialIterator, howMany);
       }
 
@@ -523,6 +584,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     try {
       return multithreadedTopN(anonymousFeaturesAsArray,
                                userKnownItemIDs,
+                               generation.getUserTagIDs(),
                                rescorer,
                                howMany,
                                generation.getCandidateFilter());
@@ -547,21 +609,50 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throw new UnsupportedOperationException();
     }
 
-    FastByIDFloatMap itemCounts = new FastByIDFloatMap();
+    FastIDSet itemTagIDs = generation.getItemTagIDs(); 
+    FastByIDFloatMap itemCounts = new FastByIDFloatMap();    
     Lock knownItemReadLock = generation.getKnownItemLock().readLock();
     knownItemReadLock.lock();
     try {
-      for (FastIDSet itemIDs : generation.getKnownItemIDs().values()) {
-        synchronized (itemIDs) {
-          LongPrimitiveIterator it = itemIDs.iterator();
-          while (it.hasNext()) {
-            long itemID = it.nextLong();
-            itemCounts.increment(itemID, 1.0f);
+        // Don't count data from users that are really item tags
+        Lock xReadLock = generation.getXLock().readLock();
+        xReadLock.lock();
+        try {
+          
+          for (FastByIDMap.MapEntry<FastIDSet> entry : generation.getKnownItemIDs().entrySet()) {
+            long userID = entry.getKey();
+            if (!itemTagIDs.contains(userID)) {
+              FastIDSet itemIDs = entry.getValue();
+              synchronized (itemIDs) {
+                LongPrimitiveIterator it = itemIDs.iterator();
+                while (it.hasNext()) {
+                  long itemID = it.nextLong();
+                  itemCounts.increment(itemID, 1.0f);
+                }
+              }
+            }
           }
+          
+        } finally {
+          xReadLock.unlock();
+        }
+    } finally {
+      knownItemReadLock.unlock();
+    }
+    
+    // Filter out 'items' that were really user tags
+    FastIDSet userTagIDs = generation.getUserTagIDs();
+    Lock yReadLock = generation.getYLock().readLock();
+    yReadLock.lock();
+    try {
+      LongPrimitiveIterator it = itemCounts.keySetIterator();
+      while (it.hasNext()) {
+        if (userTagIDs.contains(it.nextLong())) {
+          it.remove();
         }
       }
     } finally {
-      knownItemReadLock.unlock();
+      yReadLock.unlock();
     }
 
     return TopN.selectTopN(new MostPopularItemsIterator(itemCounts.entrySet().iterator(), rescorer), howMany);
@@ -651,106 +742,23 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       return;
     }
 
-    FastByIDMap<float[]> X = generation.getX();
+    float[] userFeatures = getFeatures(userID, generation.getX(), generation.getXLock());
 
-    float[] userFeatures;
-    ReadWriteLock xLock = generation.getXLock();
-    Lock xReadLock = xLock.readLock();
-    xReadLock.lock();
-    try {
-      userFeatures = X.get(userID);
-      if (userFeatures == null) {
-        int numFeatures = countFeatures(X);
-        if (numFeatures > 0) {
-          userFeatures = new float[numFeatures];
-          Lock xWriteLock = xLock.writeLock();
-          xReadLock.unlock();
-          xWriteLock.lock();
-          try {
-            X.put(userID, userFeatures);
-          } finally {
-            xReadLock.lock();
-            xWriteLock.unlock();
-          }
-        }
-      }
-    } finally {
-      xReadLock.unlock();
-    }
-
-    FastByIDMap<float[]> Y = generation.getY();
-
-    boolean newItem = false;
-    float[] itemFeatures;
-    ReadWriteLock yLock = generation.getYLock();
-    Lock yReadLock = yLock.readLock();
+    boolean newItem;
+    Lock yReadLock = generation.getYLock().readLock();
     yReadLock.lock();
     try {
-      itemFeatures = Y.get(itemID);
-      if (itemFeatures == null) {
-        newItem = true;
-        int numFeatures = countFeatures(Y);
-        if (numFeatures > 0) {
-          itemFeatures = new float[numFeatures];
-          Lock yWriteLock = yLock.writeLock();
-          yReadLock.unlock();
-          yWriteLock.lock();
-          try {
-            Y.put(itemID, itemFeatures);
-          } finally {
-            yReadLock.lock();
-            yWriteLock.unlock();
-          }
-        }
-      }
+      newItem = generation.getY().get(itemID) == null;
     } finally {
       yReadLock.unlock();
     }
-
     if (newItem) {
       generation.getCandidateFilter().addItem(itemID);
     }
+    
+    float[] itemFeatures = getFeatures(itemID, generation.getY(), generation.getYLock());
 
-    if (userFeatures != null && itemFeatures != null) {
-
-      double signedFoldInWeight = foldInWeight(SimpleVectorMath.dot(userFeatures, itemFeatures), value);
-      if (signedFoldInWeight != 0.0) {
-        // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
-        // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
-        // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
-        // we scale to complete the multiplication of the fold-in and add it in.
-        RealMatrix xtxInverse = generation.getXTXInverse();
-        double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
-
-        // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
-        // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
-        // the same method above to carry out the multiply; the result is conceptually a row vector.
-        // The result is scaled and added in.
-        RealMatrix ytyInverse = generation.getYTYInverse();
-        double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
-
-        if (itemFoldIn != null) {
-          if (SimpleVectorMath.norm(itemFoldIn) > BIG_FOLDIN_THRESHOLD) {
-            log.warn("Item fold in vector is large; reduce -Dmodel.features?");
-          }
-          for (int i = 0; i < itemFeatures.length; i++) {
-            double delta = signedFoldInWeight * itemFoldIn[i];
-            Preconditions.checkState(LangUtils.isFinite(delta));
-            itemFeatures[i] += (float) delta;
-          }
-        }
-        if (userFoldIn != null) {
-          if (SimpleVectorMath.norm(userFoldIn) > BIG_FOLDIN_THRESHOLD) {
-            log.warn("User fold in vector is large; reduce -Dmodel.features?");
-          }
-          for (int i = 0; i < userFeatures.length; i++) {
-            double delta = signedFoldInWeight * userFoldIn[i];
-            Preconditions.checkState(LangUtils.isFinite(delta));
-            userFeatures[i] += (float) delta;
-          }
-        }
-      }
-    }
+    updateFeatures(userFeatures, itemFeatures, value, generation);
 
     FastByIDMap<FastIDSet> knownItemIDs = generation.getKnownItemIDs();
     if (knownItemIDs != null) {
@@ -783,6 +791,77 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     
     updateClusters(userID, userFeatures, generation.getUserClusters(), generation.getUserClustersLock().readLock());
     updateClusters(itemID, itemFeatures, generation.getItemClusters(), generation.getItemClustersLock().readLock());
+  }
+  
+  private static float[] getFeatures(long id, FastByIDMap<float[]> matrix, ReadWriteLock lock) {
+    float[] features;
+    Lock readLock = lock.readLock();
+    readLock.lock();
+    try {
+      features = matrix.get(id);
+      if (features == null) {
+        int numFeatures = countFeatures(matrix);
+        if (numFeatures > 0) {
+          features = new float[numFeatures];
+          Lock writeLock = lock.writeLock();
+          readLock.unlock();
+          writeLock.lock();
+          try {
+            matrix.put(id, features);
+          } finally {
+            readLock.lock();
+            writeLock.unlock();
+          }
+        }
+      }
+    } finally {
+      readLock.unlock();
+    }
+    return features;
+  }
+  
+  private static void updateFeatures(float[] userFeatures, float[] itemFeatures, float value, Generation generation) {
+    if (userFeatures == null || itemFeatures == null) {
+      return;
+    }
+    double signedFoldInWeight = foldInWeight(SimpleVectorMath.dot(userFeatures, itemFeatures), value);
+    if (signedFoldInWeight == 0.0) {
+      return;
+    }
+    // Here, we are using userFeatures, which is a row of X, as if it were a column of X'.
+    // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
+    // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
+    // we scale to complete the multiplication of the fold-in and add it in.
+    RealMatrix xtxInverse = generation.getXTXInverse();
+    double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
+
+    // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
+    // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
+    // the same method above to carry out the multiply; the result is conceptually a row vector.
+    // The result is scaled and added in.
+    RealMatrix ytyInverse = generation.getYTYInverse();
+    double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
+
+    if (itemFoldIn != null) {
+      if (SimpleVectorMath.norm(userFoldIn) > BIG_FOLDIN_THRESHOLD) {
+        log.warn("Item fold in vector is large; reduce -Dmodel.features?");
+      }
+      for (int i = 0; i < itemFeatures.length; i++) {
+        double delta = signedFoldInWeight * itemFoldIn[i];
+        Preconditions.checkState(LangUtils.isFinite(delta));
+        itemFeatures[i] += (float) delta;
+      }
+    }
+    if (userFoldIn != null) {
+      if (SimpleVectorMath.norm(userFoldIn) > BIG_FOLDIN_THRESHOLD) {
+        log.warn("User fold in vector is large; reduce -Dmodel.features?");
+      }
+      for (int i = 0; i < userFeatures.length; i++) {
+        double delta = signedFoldInWeight * userFoldIn[i];
+        Preconditions.checkState(LangUtils.isFinite(delta));
+        userFeatures[i] += (float) delta;
+      }
+    }
   }
   
   private static void updateClusters(long id, float[] featureVector, Collection<IDCluster> clusters, Lock readLock) {
@@ -942,6 +1021,98 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
 
   }
+  
+  @Override
+  public void setUserTag(long userID, String tag) {
+    setUserTag(userID, tag, 1.0f);    
+  }
+  
+  @Override
+  public void setUserTag(long userID, String tag, float value) {
+    setUserTag(userID, tag, value, false);
+  }
+
+  public void setUserTag(long userID, String tag, float value, boolean bulk) {
+    Preconditions.checkNotNull(tag);    
+    Preconditions.checkArgument(!tag.isEmpty());
+    // Record datum
+    try {
+      generationManager.appendUserTag(userID, tag, value, bulk);
+    } catch (IOException ioe) {
+      log.warn("Could not append datum; continuing", ioe);
+    }
+
+    Generation generation;
+    try {
+      generation = getCurrentGeneration();
+    } catch (NotReadyException nre) {
+      // Corner case -- no model ready so all we can do is record (above). Don't fail the request.
+      return;
+    }
+    
+    long tagID = tagHasher.toLongID(tag);    
+    
+    FastIDSet userTagIDs = generation.getUserTagIDs();
+    Lock userTagWriteLock = generation.getYLock().writeLock();
+    userTagWriteLock.lock();
+    try {
+      userTagIDs.add(tagID);
+    } finally {
+      userTagWriteLock.unlock();
+    }
+
+    float[] userFeatures = getFeatures(userID, generation.getX(), generation.getXLock());
+    float[] tagFeatures = getFeatures(tagID, generation.getY(), generation.getYLock());
+    updateFeatures(userFeatures, tagFeatures, value, generation);
+
+    updateClusters(userID, userFeatures, generation.getUserClusters(), generation.getUserClustersLock().readLock());
+  }
+
+  @Override
+  public void setItemTag(String tag, long itemID) {
+    setItemTag(tag, itemID, 1.0f);
+  }
+
+  @Override
+  public void setItemTag(String tag, long itemID, float value) {
+    setItemTag(tag, itemID, value, false);
+  }
+  
+  public void setItemTag(String tag, long itemID, float value, boolean bulk) {
+    Preconditions.checkNotNull(tag);    
+    Preconditions.checkArgument(!tag.isEmpty());
+    // Record datum
+    try {
+      generationManager.appendItemTag(tag, itemID, value, bulk);
+    } catch (IOException ioe) {
+      log.warn("Could not append datum; continuing", ioe);
+    }
+
+    Generation generation;
+    try {
+      generation = getCurrentGeneration();
+    } catch (NotReadyException nre) {
+      // Corner case -- no model ready so all we can do is record (above). Don't fail the request.
+      return;
+    }
+
+    long tagID = tagHasher.toLongID(tag);
+    
+    FastIDSet itemTagIDs = generation.getItemTagIDs();
+    Lock itemTagWriteLock = generation.getXLock().writeLock();
+    itemTagWriteLock.lock();
+    try {
+      itemTagIDs.add(tagID);
+    } finally {
+      itemTagWriteLock.unlock();
+    }
+    
+    float[] tagFeatures = getFeatures(tagID, generation.getX(), generation.getXLock());
+    float[] itemFeatures = getFeatures(itemID, generation.getY(), generation.getYLock());
+    updateFeatures(tagFeatures, itemFeatures, value, generation);
+
+    updateClusters(itemID, itemFeatures, generation.getItemClusters(), generation.getItemClustersLock().readLock());  
+  }
 
   /**
    * One-argument version of {@link #mostSimilarItems(long[], int)}.
@@ -974,6 +1145,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
 
       return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(),
+                                                         generation.getUserTagIDs(),
                                                          new long[] { itemID },
                                                          new float[][] { itemFeatures },
                                                          rescorer),
@@ -1031,7 +1203,11 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
       float[][] itemFeaturesArray = itemFeatures.toArray(new float[itemFeatures.size()][]);
 
-      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(), itemIDs, itemFeaturesArray, rescorer),
+      return TopN.selectTopN(new MostSimilarItemIterator(Y.entrySet().iterator(), 
+                                                         generation.getUserTagIDs(),
+                                                         itemIDs, 
+                                                         itemFeaturesArray, 
+                                                         rescorer),
                              howMany);
     } finally {
       yLock.unlock();
@@ -1139,7 +1315,10 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         }
       }
 
-      return TopN.selectTopN(new RecommendedBecauseIterator(toFeatures.entrySet().iterator(), features), howMany);
+      return TopN.selectTopN(new RecommendedBecauseIterator(toFeatures.entrySet().iterator(), 
+                                                            generation.getUserTagIDs(), 
+                                                            features), 
+                             howMany);
     } finally {
       yLock.unlock();
     }
@@ -1181,22 +1360,25 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public FastIDSet getAllUserIDs() throws NotReadyException {
     Generation generation = getCurrentGeneration();
-    return getIDsFromKeys(generation.getX(), generation.getXLock().readLock());
+    return getIDsFromKeys(generation.getX(), generation.getXLock().readLock(), generation.getItemTagIDs());
   }
 
   @Override
   public FastIDSet getAllItemIDs() throws NotReadyException {
     Generation generation = getCurrentGeneration();
-    return getIDsFromKeys(generation.getY(), generation.getYLock().readLock());
+    return getIDsFromKeys(generation.getY(), generation.getYLock().readLock(), generation.getUserTagIDs());
   }
 
-  private static FastIDSet getIDsFromKeys(FastByIDMap<float[]> map, Lock readLock) {
+  private static FastIDSet getIDsFromKeys(FastByIDMap<float[]> map, Lock readLock, FastIDSet tagIDs) {
     readLock.lock();
     try {
       FastIDSet ids = new FastIDSet(map.size(), 1.25f);
       LongPrimitiveIterator it = map.keySetIterator();
       while (it.hasNext()) {
-        ids.add(it.nextLong());
+        long id = it.nextLong();
+        if (!tagIDs.contains(id)) {
+          ids.add(id);
+        }
       }
       return ids;
     } finally {

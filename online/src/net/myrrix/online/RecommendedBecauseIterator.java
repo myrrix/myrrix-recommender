@@ -23,6 +23,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.SimpleVectorMath;
 
 /**
@@ -39,12 +40,16 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
   private final float[] features;
   private final double featuresNorm;
   private final Iterator<FastByIDMap.MapEntry<float[]>> toFeaturesIterator;
+  private final FastIDSet userTagIDs;
 
-  RecommendedBecauseIterator(Iterator<FastByIDMap.MapEntry<float[]>> toFeaturesIterator, float[] features) {
+  RecommendedBecauseIterator(Iterator<FastByIDMap.MapEntry<float[]>> toFeaturesIterator, 
+                             FastIDSet userTagIDs,
+                             float[] features) {
     delegate = new MutableRecommendedItem();
     this.features = features;
     this.featuresNorm = SimpleVectorMath.norm(features);
     this.toFeaturesIterator = toFeaturesIterator;
+    this.userTagIDs = userTagIDs;
   }
 
   @Override
@@ -56,6 +61,9 @@ final class RecommendedBecauseIterator implements Iterator<RecommendedItem> {
   public RecommendedItem next() {
     FastByIDMap.MapEntry<float[]> entry = toFeaturesIterator.next();
     long itemID = entry.getKey();
+    if (userTagIDs.contains(itemID)) {
+      return null;
+    }
     float[] candidateFeatures = entry.getValue();
     double candidateFeaturesNorm = SimpleVectorMath.norm(candidateFeatures);
     double estimate = SimpleVectorMath.dot(candidateFeatures, features) / (candidateFeaturesNorm * featuresNorm);

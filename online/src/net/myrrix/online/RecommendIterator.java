@@ -42,17 +42,20 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
   private final float[][] features;
   private final Iterator<FastByIDMap.MapEntry<float[]>> Yiterator;
   private final FastIDSet knownItemIDs;
+  private final FastIDSet userTagIDs;
   private final IDRescorer rescorer;
 
   RecommendIterator(float[][] features,
                     Iterator<FastByIDMap.MapEntry<float[]>> Yiterator,
                     FastIDSet knownItemIDs,
+                    FastIDSet userTagIDs,
                     IDRescorer rescorer) {
     Preconditions.checkArgument(features.length > 0, "features must not be empty");
     delegate = new MutableRecommendedItem();
     this.features = features;
     this.Yiterator = Yiterator;
     this.knownItemIDs = knownItemIDs;
+    this.userTagIDs = userTagIDs;
     this.rescorer = rescorer;
   }
 
@@ -65,6 +68,11 @@ final class RecommendIterator implements Iterator<RecommendedItem> {
   public RecommendedItem next() {
     FastByIDMap.MapEntry<float[]> entry = Yiterator.next();
     long itemID = entry.getKey();
+    
+    if (userTagIDs.contains(itemID)) {
+      return null;
+    }
+    
     FastIDSet theKnownItemIDs = knownItemIDs;
     if (theKnownItemIDs != null) {
       synchronized (theKnownItemIDs) {

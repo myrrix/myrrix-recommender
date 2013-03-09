@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 
 /**
@@ -127,7 +128,7 @@ public final class TopN {
     while (topN.size() > n) {
       topN.poll();
     }
-    List<RecommendedItem> result = new ArrayList<RecommendedItem>(topN);
+    List<RecommendedItem> result = Lists.<RecommendedItem>newArrayList(topN);
     Collections.sort(result, Collections.reverseOrder(ByValueAscComparator.INSTANCE));
     return result;
   }

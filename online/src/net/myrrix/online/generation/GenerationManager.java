@@ -42,11 +42,35 @@ public interface GenerationManager extends Closeable {
    *
    * @param userID user involved in new association
    * @param itemID item involved
-   * @param value strength of the user/item association; must be positive
+   * @param value strength of the user/item association
    * @param bulk if true, part of a bulk update and should expect many method calls in a row
    * @throws IOException if an error occurs while sending the update
    */
   void append(long userID, long itemID, float value, boolean bulk) throws IOException;
+  
+  /**
+   * Sends a new user / tag association to the component responsible for later recomputing
+   * the model based on this, and other, updates.
+   *
+   * @param userID user involved in new association
+   * @param tag the tag
+   * @param value strength of the user/item association
+   * @param bulk if true, part of a bulk update and should expect many method calls in a row
+   * @throws IOException if an error occurs while sending the update
+   */
+  void appendUserTag(long userID, String tag, float value, boolean bulk) throws IOException;
+
+  /**
+   * Sends a new tag / item association to the component responsible for later recomputing
+   * the model based on this, and other, updates.
+   * 
+   * @param tag the tag
+   * @param itemID item involved in new association
+   * @param value strength of the tag/item association
+   * @param bulk if true, part of a bulk update and should expect many method calls in a row
+   * @throws IOException if an error occurs while sending the update
+   */
+  void appendItemTag(String tag, long itemID, float value, boolean bulk) throws IOException;
 
   /**
    * Records that the user-item association should be removed. This is different from recording a

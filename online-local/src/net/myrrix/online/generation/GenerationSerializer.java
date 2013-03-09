@@ -17,7 +17,6 @@
 package net.myrrix.online.generation;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -82,7 +81,7 @@ public final class GenerationSerializer implements Serializable {
    */
   public static void writeGeneration(Generation generation, File f) throws IOException {
     Preconditions.checkArgument(f.getName().endsWith(".gz"), "File should end in .gz: %s", f);
-    ObjectOutputStream out = new ObjectOutputStream(IOUtils.buildGZIPOutputStream(new FileOutputStream(f)));
+    ObjectOutputStream out = new ObjectOutputStream(IOUtils.buildGZIPOutputStream(f));
     try {
       out.writeObject(new GenerationSerializer(generation));
     } finally {
@@ -95,6 +94,8 @@ public final class GenerationSerializer implements Serializable {
     writeKnownIDs(out, knownItemIDs);
     writeMatrix(generation.getX(), out);
     writeMatrix(generation.getY(), out);
+    writeIDSet(generation.getItemTagIDs(), out);
+    writeIDSet(generation.getUserTagIDs(), out);
     writeClusters(generation.getUserClusters(), out);
     writeClusters(generation.getItemClusters(), out);
   }
@@ -103,11 +104,15 @@ public final class GenerationSerializer implements Serializable {
     FastByIDMap<FastIDSet> newKnownItemIDs = readKnownIDs(in);
     FastByIDMap<float[]> newX = readMatrix(in);
     FastByIDMap<float[]> newY = readMatrix(in);
+    FastIDSet itemTagIDs = readIDSet(in);
+    FastIDSet userTagIDs = readIDSet(in);
     List<IDCluster> userClusters = readClusters(in);
     List<IDCluster> itemClusters = readClusters(in);
     generation = new Generation(newKnownItemIDs,
                                 newX,
                                 newY,
+                                itemTagIDs,
+                                userTagIDs,
                                 userClusters,
                                 itemClusters);
   }
@@ -171,25 +176,46 @@ public final class GenerationSerializer implements Serializable {
   /**
    * @see #readMatrix(ObjectInputStream)
    */
-  private static void writeMatrix(FastByIDMap<float[]> matrix,
-                                  ObjectOutputStream out) throws IOException {
-    out.writeInt(matrix.size());
-    for (FastByIDMap.MapEntry<float[]> entry : matrix.entrySet()) {
-      out.writeLong(entry.getKey());
-      float[] features = entry.getValue();
-      out.writeInt(features.length);
-      for (float f : features) {
-        Preconditions.checkState(LangUtils.isFinite(f));
-        out.writeFloat(f);
+  private static void writeMatrix(FastByIDMap<float[]> matrix, ObjectOutputStream out) throws IOException {
+    if (matrix == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(matrix.size());
+      for (FastByIDMap.MapEntry<float[]> entry : matrix.entrySet()) {
+        out.writeLong(entry.getKey());
+        float[] features = entry.getValue();
+        out.writeInt(features.length);
+        for (float f : features) {
+          Preconditions.checkState(LangUtils.isFinite(f));
+          out.writeFloat(f);
+        }
+      }
+    }
+  }
+  
+  private static FastIDSet readIDSet(ObjectInputStream in) throws IOException {
+    int count = in.readInt();
+    FastIDSet ids = new FastIDSet(count, 1.25f);
+    for (int i = 0; i < count; i++) {
+      ids.add(in.readLong());
+    }
+    return ids;
+  }
+  
+  private static void writeIDSet(FastIDSet ids, ObjectOutputStream out) throws IOException {
+    if (ids == null) {
+      out.writeInt(0);
+    } else {
+      out.writeInt(ids.size());
+      LongPrimitiveIterator it = ids.iterator();
+      while (it.hasNext()) {
+        out.writeLong(it.nextLong());
       }
     }
   }
 
   private static List<IDCluster> readClusters(ObjectInputStream in) throws IOException {
     int count = in.readInt();
-    if (count == 0) {
-      return null;
-    }
     List<IDCluster> clusters = Lists.newArrayListWithCapacity(count);
     for (int i = 0; i < count; i++) {
       int membersSize = in.readInt();

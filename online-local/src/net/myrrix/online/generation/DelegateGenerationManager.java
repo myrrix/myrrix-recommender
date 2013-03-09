@@ -33,10 +33,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
+import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.myrrix.common.OneWayMigrator;
 import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
@@ -71,6 +72,8 @@ public final class DelegateGenerationManager implements GenerationManager {
   private Generation currentGeneration;
   private final FastIDSet recentlyActiveUsers;
   private final FastIDSet recentlyActiveItems;
+  private final IDMigrator hasher;
+  private final GenerationLoader loader;  
   private int countdownToRebuild;
   private final ExecutorService refreshExecutor;
   private final Semaphore refreshSemaphore;
@@ -108,6 +111,9 @@ public final class DelegateGenerationManager implements GenerationManager {
 
     recentlyActiveUsers = new FastIDSet();
     recentlyActiveItems = new FastIDSet();
+    hasher = new OneWayMigrator();
+    
+    loader = new GenerationLoader(recentlyActiveUsers, recentlyActiveItems, this);
 
     countdownToRebuild = WRITES_BETWEEN_REBUILD;
     refreshExecutor = Executors.newSingleThreadExecutor(
@@ -138,35 +144,48 @@ public final class DelegateGenerationManager implements GenerationManager {
   public void append(long userID, long itemID, float value, boolean bulk) throws IOException {
     StringBuilder line = new StringBuilder(32);
     line.append(userID).append(',').append(itemID).append(',').append(value).append('\n');
-    if (appender != null) {
-      synchronized (this) {
-        appender.append(line);
-      }
-    }
-    maybeRefresh(bulk);
+    doAppend(line, userID, itemID, bulk);
+  }
+  
+  @Override
+  public void appendUserTag(long userID, String tag, float value, boolean bulk) throws IOException {
+    StringBuilder line = new StringBuilder(32);
+    line.append(userID).append(",\"").append(tag).append("\",").append(value).append('\n');
+    long itemID = hasher.toLongID(tag);
+    doAppend(line, userID, itemID, bulk);
+  }
+  
+  @Override
+  public void appendItemTag(String tag, long itemID, float value, boolean bulk) throws IOException {
+    StringBuilder line = new StringBuilder(32);
+    line.append('"').append(tag).append("\",").append(itemID).append(',').append(value).append('\n');
+    long userID = hasher.toLongID(tag);
+    doAppend(line, userID, itemID, bulk);
   }
 
   @Override
   public void remove(long userID, long itemID, boolean bulk) throws IOException {
-    StringBuilder line = new StringBuilder(24);
+    StringBuilder line = new StringBuilder(32);
     line.append(userID).append(',').append(itemID).append(",\n");
-    synchronized (this) {
+    doAppend(line, userID, itemID, bulk);
+  }
+  
+  private synchronized void doAppend(CharSequence line, long userID, long itemID, boolean bulk) throws IOException {
+    if (appender != null) {
       appender.append(line);
-      recentlyActiveUsers.add(userID);
-      recentlyActiveItems.add(itemID);
     }
+    recentlyActiveUsers.add(userID);
+    recentlyActiveItems.add(itemID);
     maybeRefresh(bulk);
   }
 
   @Override
-  public void bulkDone() throws IOException {
-    synchronized (this) {
-      appender.flush();
-    }
+  public synchronized void bulkDone() throws IOException {
+    appender.flush();
     maybeRefresh(false);
   }
 
-  private void maybeRefresh(boolean bulk) {
+  private synchronized void maybeRefresh(boolean bulk) {
     if (--countdownToRebuild <= 0 && !bulk) {
       countdownToRebuild = WRITES_BETWEEN_REBUILD;
       refresh();
@@ -201,71 +220,17 @@ public final class DelegateGenerationManager implements GenerationManager {
   }
 
   @Override
-  public void refresh() {
-    
-    Writer theAppender = appender;
-    if (theAppender != null) {
-      try {
-        synchronized (this) {
-          theAppender.flush();
-        }
-      } catch (IOException e) {
-        log.warn("Exception while flushing", e);
+  public synchronized void refresh() {
+    try {
+      if (appender != null) {
+        appender.flush();
       }
+    } catch (IOException e) {
+      log.warn("Exception while flushing", e);
     }
-    
+
     if (refreshSemaphore.tryAcquire()) {
-      refreshExecutor.submit(new Callable<Void>() {
-        @Override
-        public Void call() {
-          try {
-
-            synchronized (DelegateGenerationManager.this) {
-              closeAppender();
-              // A small buffer is needed here, but GZIPOutputStream already provides a substantial native buffer
-              appender = IOUtils.buildGZIPWriter(appendFile);
-            }
-
-            try {
-              Generation newGeneration = null;
-              if (currentGeneration == null && modelFile.exists()) {
-                newGeneration = readModel(modelFile);
-              }
-              boolean computedModel = false;
-              if (newGeneration == null) {
-                newGeneration = computeModel(inputDir, currentGeneration);
-                computedModel = true;
-              }
-              if (newGeneration == null) {
-                log.info("No data yet");
-              } else {
-                if (computedModel) {
-                  saveModel(newGeneration, modelFile);
-                }
-                log.info("New generation has {} users, {} items",
-                         newGeneration.getNumUsers(), newGeneration.getNumItems());
-                currentGeneration = newGeneration;
-              }
-            } catch (OutOfMemoryError oome) {
-              log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
-                       "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
-              currentGeneration = null;
-              throw oome;
-            } catch (SingularMatrixException sme) {
-              log.warn("Unable to compute a valid generation yet; waiting for more data");
-              currentGeneration = null;
-            }
-
-          } catch (Throwable t) {
-            log.warn("Unexpected exception while refreshing", t);
-
-          } finally {
-            refreshSemaphore.release();
-          }
-          return null;
-        }
-
-      });
+      refreshExecutor.submit(new RefreshCallable());
     } else {
       log.info("Refresh already in progress");
     }
@@ -281,7 +246,7 @@ public final class DelegateGenerationManager implements GenerationManager {
    *
    * @see #saveModel(Generation, File)
    */
-  private static Generation readModel(File modelFile) throws IOException {
+  private Generation readModel() throws IOException {
     log.info("Reading model from {}", modelFile);
     try {
       return GenerationSerializer.readGeneration(modelFile);
@@ -294,7 +259,7 @@ public final class DelegateGenerationManager implements GenerationManager {
   /**
    * Saves a model (as a {@link Generation} to a given file.
    *
-   * @see #readModel(File)
+   * @see #readModel()
    */
   private static void saveModel(Generation generation, File modelFile) throws IOException {
 
@@ -315,62 +280,6 @@ public final class DelegateGenerationManager implements GenerationManager {
       log.warn("Could not delete old {}", modelFile);
     }
     Files.move(newModelFile, modelFile);
-  }
-
-  private Generation computeModel(File inputDir, Generation currentGeneration) throws IOException {
-
-    log.info("Computing model from input in {}", inputDir);
-
-    FastByIDMap<FastIDSet> knownItemIDs;
-    if (Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))) {
-      knownItemIDs = null;
-    } else {
-      knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
-    }
-    FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-    FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-
-    InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputDir);
-
-    if (RbyRow.isEmpty() || RbyColumn.isEmpty()) {
-      // No data yet
-      return null;
-    }
-
-    MatrixFactorizer als = runFactorization(currentGeneration, RbyRow, RbyColumn);
-    FastByIDMap<float[]> X = als.getX();
-    FastByIDMap<float[]> Y = als.getY();
-
-    if (currentGeneration != null) {
-      FastIDSet recentlyActiveUsers;
-      synchronized (this) {
-        recentlyActiveUsers = this.recentlyActiveUsers.clone();
-        this.recentlyActiveUsers.clear();
-      }
-      restoreRecentlyActive(recentlyActiveUsers,
-                            currentGeneration.getX(),
-                            currentGeneration.getXLock().readLock(),
-                            X);
-
-      FastIDSet recentlyActiveItems;
-      synchronized (this) {
-        recentlyActiveItems = this.recentlyActiveItems.clone();
-        this.recentlyActiveItems.clear();
-      }
-      restoreRecentlyActive(recentlyActiveItems,
-                            currentGeneration.getY(),
-                            currentGeneration.getYLock().readLock(),
-                            Y);
-
-      if (currentGeneration.getKnownItemIDs() != null) {
-        restoreRecentlyActive(recentlyActiveUsers,
-                              currentGeneration.getKnownItemIDs(),
-                              currentGeneration.getKnownItemLock().readLock(),
-                              knownItemIDs);
-      }
-    }
-
-    return new Generation(knownItemIDs, X, Y);
   }
 
   private static MatrixFactorizer runFactorization(Generation currentGeneration,
@@ -422,35 +331,93 @@ public final class DelegateGenerationManager implements GenerationManager {
       log.info("Factorization complete");
     } catch (ExecutionException ee) {
       throw new IOException(ee.getCause());
-    } catch (InterruptedException ie) {
+    } catch (InterruptedException ignored) {
       log.warn("ALS computation was interrupted");
     }
 
     return als;
   }
 
-  private static <V> void restoreRecentlyActive(FastIDSet recentlyActive,
-                                                FastByIDMap<V> currentMatrix,
-                                                Lock currentLock,
-                                                FastByIDMap<V> newMatrix) {
-    LongPrimitiveIterator it = recentlyActive.iterator();
-    while (it.hasNext()) {
-      long id = it.nextLong();
-      if (!newMatrix.containsKey(id)) {
-        currentLock.lock();
-        V currentValue;
+
+  private class RefreshCallable implements Callable<Void> {
+    @Override
+    public Void call() {
+      try {
+
+        synchronized (DelegateGenerationManager.this) {
+          closeAppender();
+          // A small buffer is needed here, but GZIPOutputStream already provides a substantial native buffer
+          appender = IOUtils.buildGZIPWriter(appendFile);
+        }
+
         try {
-          currentValue = currentMatrix.get(id);
-        } finally {
-          currentLock.unlock();
+          if (currentGeneration == null && modelFile.exists()) {
+            currentGeneration = readModel();
+          }
+          
+          Generation theCurrentGeneration = currentGeneration;
+          if (theCurrentGeneration == null) {
+            FastByIDMap<FastIDSet> newKnownItemsIDs =
+                Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))
+                    ? null
+                    : new FastByIDMap<FastIDSet>(10000, 1.25f);
+            theCurrentGeneration = new Generation(newKnownItemsIDs,
+                                                  new FastByIDMap<float[]>(10000, 1.25f),
+                                                  new FastByIDMap<float[]>(10000, 1.25f),
+                                                  new FastIDSet(1000, 1.25f),
+                                                  new FastIDSet(1000, 1.25f));
+          }
+          
+            
+          log.info("Computing model from input in {}", inputDir);
+
+          FastByIDMap<FastIDSet> knownItemIDs;
+          if (Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))) {
+            knownItemIDs = null;
+          } else {
+            knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
+          }
+          FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
+          FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
+          FastIDSet itemTagIDs = new FastIDSet(1000, 1.25f);
+          FastIDSet userTagIDs = new FastIDSet(1000, 1.25f);
+          InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, itemTagIDs, userTagIDs, inputDir);
+      
+          if (!RbyRow.isEmpty() && !RbyColumn.isEmpty()) {
+            // Compute latest generation:
+            MatrixFactorizer als = runFactorization(theCurrentGeneration, RbyRow, RbyColumn);
+            // Save it:
+            Generation latestGeneration = new Generation(knownItemIDs, als.getX(), als.getY(), itemTagIDs, userTagIDs);
+            saveModel(latestGeneration, modelFile);
+            // Merge into potentially live current generation:
+            loader.loadModel(theCurrentGeneration, als.getX(), als.getY(), knownItemIDs, itemTagIDs, userTagIDs);
+          }
+      
+          int numItems = theCurrentGeneration.getNumItems();
+          int numUsers = theCurrentGeneration.getNumUsers();
+          if (numUsers == 0 || numItems == 0) {
+            log.warn("Model has no users, or no items ({}, {}); ignoring", numUsers, numItems);
+          } else {
+            currentGeneration = theCurrentGeneration;
+          }
+          
+        } catch (OutOfMemoryError oome) {
+          log.warn("Increase heap size with -Xmx, decrease new generation size with larger " +
+                   "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
+          currentGeneration = null;
+          throw oome;
+        } catch (SingularMatrixException ignored) {
+          log.warn("Unable to compute a valid generation yet; waiting for more data");
+          currentGeneration = null;
         }
-        if (currentValue != null) {
-          newMatrix.put(id, currentValue);
-        }
+
+      } catch (Throwable t) {
+        log.warn("Unexpected exception while refreshing", t);
+      } finally {
+        refreshSemaphore.release();
       }
+      return null;
     }
+
   }
-
-
-
 }

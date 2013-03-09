@@ -67,7 +67,9 @@ public final class UnreducedModel {
     FastByIDMap<FastIDSet> knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
     FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-    InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, inputDir);
+    FastIDSet itemTagIDs = new FastIDSet(1000, 1.25f);
+    FastIDSet userTagIDs = new FastIDSet(1000, 1.25f);
+    InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, itemTagIDs, userTagIDs, inputDir);
 
     int numUsers = RbyRow.size();
     int numItems = RbyColumn.size();
@@ -81,21 +83,21 @@ public final class UnreducedModel {
     if (numUsers < numItems) {
       log.info("{} users < {} items; input will be written as the feature-item matrix", numUsers, numItems);
       long[] idsInOrder = idsInOrder(RbyRow);
-      X = buildIdentity(RbyRow, idsInOrder);
+      X = buildIdentity(idsInOrder);
       Y = buildBinarizedMatrix(RbyColumn, idsInOrder);
     } else {
       log.info("{} users >= {} items; input will be written as the user-feature matrix", numUsers, numItems);
-      long[] idsInOrder = idsInOrder(RbyColumn);      
+      long[] idsInOrder = idsInOrder(RbyColumn);
       X = buildBinarizedMatrix(RbyRow, idsInOrder);
-      Y = buildIdentity(RbyColumn, idsInOrder);
+      Y = buildIdentity(idsInOrder);
     }
     
-    Generation generation = new Generation(knownItemIDs, X, Y);
+    Generation generation = new Generation(knownItemIDs, X, Y, itemTagIDs, userTagIDs);
     GenerationSerializer.writeGeneration(generation, new File(inputDir, "model.bin.gz"));
   }
   
-  private static FastByIDMap<float[]> buildIdentity(FastByIDMap<FastByIDFloatMap> input, long[] idsInOrder) {
-    int n = input.size();    
+  private static FastByIDMap<float[]> buildIdentity(long[] idsInOrder) {
+    int n = idsInOrder.length;
     FastByIDMap<float[]> identity = new FastByIDMap<float[]>(n);
     for (int i = 0; i < n; i++) {
       float[] rowOrCol = new float[n];
@@ -111,7 +113,7 @@ public final class UnreducedModel {
     for (FastByIDMap.MapEntry<FastByIDFloatMap> entry : input.entrySet()) {
       float[] rowOrCol = new float[n];
       FastByIDFloatMap inputValues = entry.getValue();
-      for (int i = 0; i < idsInOrder.length; i++) {
+      for (int i = 0; i < n; i++) {
         if (inputValues.containsKey(idsInOrder[i])) {
           rowOrCol[i] = 1.0f;
         }

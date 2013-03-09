@@ -21,6 +21,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -41,6 +42,8 @@ import net.myrrix.online.candidate.CandidateFilterFactory;
  *   <li>YTRightInverse, the right inverse of Y transpose</li>
  *   <li>numFeatures, the column dimension of X and Y</li>
  *   <li>knownItemIDs, the item IDs already associated to each user</li>
+ *   <li>itemTagIDs, IDs of "users" that are really item tags</li> 
+ *   <li>userTagIDs, IDs of "items" that are really user tags</li> 
  *   <li>clusters of item IDs (in distributed mode), with centroids</li>
  *   <li>clusters of user IDs (in distributed mode), with centroids</li>
  * </ul>
@@ -58,6 +61,8 @@ public final class Generation {
   private RealMatrix XTXinv;
   private final FastByIDMap<float[]> Y;
   private RealMatrix YTYinv;
+  private final FastIDSet itemTagIDs;
+  private final FastIDSet userTagIDs;
   private final List<IDCluster> userClusters;
   private final List<IDCluster> itemClusters;
   private CandidateFilter candidateFilter;
@@ -67,22 +72,45 @@ public final class Generation {
   private final ReadWriteLock knownUserLock;
   private final ReadWriteLock userClustersLock;
   private final ReadWriteLock itemClustersLock;
+  
+  @Deprecated
+  public Generation(FastByIDMap<FastIDSet> knownItemIDs, 
+                    FastByIDMap<float[]> X, 
+                    FastByIDMap<float[]> Y) {
+    this(knownItemIDs, X, Y, new FastIDSet(1000, 1.25f), new FastIDSet(1000, 1.25f));
+  }
 
-  public Generation(FastByIDMap<FastIDSet> knownItemIDs, FastByIDMap<float[]> X, FastByIDMap<float[]> Y) {
-    this(knownItemIDs, X, Y, Lists.<IDCluster>newArrayList(), Lists.<IDCluster>newArrayList());
+  public Generation(FastByIDMap<FastIDSet> knownItemIDs, 
+                    FastByIDMap<float[]> X, 
+                    FastByIDMap<float[]> Y,
+                    FastIDSet itemTagIDs,
+                    FastIDSet userTagIDs) {
+    this(knownItemIDs, X, Y, itemTagIDs, userTagIDs, Lists.<IDCluster>newArrayList(), Lists.<IDCluster>newArrayList());
   }
 
   public Generation(FastByIDMap<FastIDSet> knownItemIDs,
                     FastByIDMap<float[]> X,
                     FastByIDMap<float[]> Y,
+                    FastIDSet itemTagIDs,
+                    FastIDSet userTagIDs,
                     List<IDCluster> userClusters,
                     List<IDCluster> itemClusters) {
+    // knownItemIDs may be null, specially
+    Preconditions.checkNotNull(X);
+    Preconditions.checkNotNull(Y);
+    Preconditions.checkNotNull(itemTagIDs);
+    Preconditions.checkNotNull(userTagIDs);
+    Preconditions.checkNotNull(userClusters);
+    Preconditions.checkNotNull(itemClusters);
+    
     this.knownItemIDs = knownItemIDs;
     this.knownUserIDs = null; // Not used yet
     this.X = X;
     this.XTXinv = null;
     this.Y = Y;
     this.YTYinv = null;
+    this.itemTagIDs = itemTagIDs;
+    this.userTagIDs = userTagIDs;
     this.userClusters = userClusters;
     this.itemClusters = itemClusters;
     this.candidateFilter = null;
@@ -98,7 +126,7 @@ public final class Generation {
   void recomputeState() {
     XTXinv = recomputeInverse(X, xLock.readLock());
     YTYinv = recomputeInverse(Y, yLock.readLock());
-    candidateFilter = CandidateFilterFactory.buildCandidateFilter(Y);
+    candidateFilter = CandidateFilterFactory.buildCandidateFilter(Y, yLock.readLock());
   }
 
   private static RealMatrix recomputeInverse(FastByIDMap<float[]> M, Lock readLock) {
@@ -168,6 +196,20 @@ public final class Generation {
   }
 
   /**
+   * @return "user" IDs which are actually item tags
+   */
+  public FastIDSet getItemTagIDs() {
+    return itemTagIDs;
+  }
+
+  /**
+   * @return "item" IDs which are actually user tags
+   */
+  public FastIDSet getUserTagIDs() {
+    return userTagIDs;
+  }
+
+  /**
    * @return clusters of user IDs, or {@code null} if not in distributed mode
    */
   public List<IDCluster> getUserClusters() {
@@ -186,14 +228,14 @@ public final class Generation {
   }
 
   /**
-   * Acquire this read/write lock before using {@link #getX()}.
+   * Acquire this read/write lock before using {@link #getX()} or {@link #getItemTagIDs()}.
    */
   public ReadWriteLock getXLock() {
     return xLock;
   }
 
   /**
-   * Acquire this read/write lock before using {@link #getY()}.
+   * Acquire this read/write lock before using {@link #getY()} or {@link #getUserTagIDs()}.
    */
   public ReadWriteLock getYLock() {
     return yLock;

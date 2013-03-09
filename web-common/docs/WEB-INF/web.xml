@@ -59,6 +59,16 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>TagUserServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.TagUserServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
+    <servlet-name>TagItemServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.TagItemServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>IngestServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.IngestServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -145,6 +155,14 @@
   <servlet-mapping>
     <servlet-name>PreferenceServlet</servlet-name>
     <url-pattern>/pref/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>TagUserServlet</servlet-name>
+    <url-pattern>/tag/user/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>TagItemServlet</servlet-name>
+    <url-pattern>/tag/item/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>IngestServlet</servlet-name>

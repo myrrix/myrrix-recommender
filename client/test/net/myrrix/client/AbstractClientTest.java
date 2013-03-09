@@ -70,7 +70,6 @@ public abstract class AbstractClientTest extends MyrrixTest {
 
     log.info("Copying files to {}", tempDir);
 
-    boolean runRefresh;
     if (savedModelFile == null) {
       log.info("No saved model file, building model");
       File[] srcDataFiles = testDataDir.listFiles(new PatternFilenameFilter("[^.].*"));
@@ -80,11 +79,9 @@ public abstract class AbstractClientTest extends MyrrixTest {
           Files.copy(srcDataFile, destFile);
         }
       }
-      runRefresh = true;
     } else {
       log.info("Found saved model file {} (size {})", savedModelFile, savedModelFile.length());
       Files.copy(savedModelFile, new File(tempDir, "model.bin.gz"));
-      runRefresh = false;
     }
 
     log.info("Configuring recommender...");
@@ -116,13 +113,10 @@ public abstract class AbstractClientTest extends MyrrixTest {
     clientConfig.setPassword(runnerConfig.getPassword());
     client = new ClientRecommender(clientConfig);
 
-    if (runRefresh) {
-      client.refresh();
-    }
-
     if (callAwait()) {
       log.info("Waiting for client...");
       client.await();
+      log.info("Client ready");
     }
   }
 

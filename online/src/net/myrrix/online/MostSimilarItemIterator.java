@@ -26,6 +26,7 @@ import org.apache.mahout.common.LongPair;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MutableRecommendedItem;
 import net.myrrix.common.collection.FastByIDMap;
+import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.SimpleVectorMath;
 
 /**
@@ -42,10 +43,12 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
   private final float[][] itemFeatures;
   private final double[] itemFeatureNorms;
   private final Iterator<FastByIDMap.MapEntry<float[]>> Yiterator;
+  private final FastIDSet userTagIDs;
   private final long[] toItemIDs;
   private final Rescorer<LongPair> rescorer;
 
   MostSimilarItemIterator(Iterator<FastByIDMap.MapEntry<float[]>> Yiterator,
+                          FastIDSet userTagIDs,
                           long[] toItemIDs,
                           float[][] itemFeatures,
                           Rescorer<LongPair> rescorer) {
@@ -53,6 +56,7 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
     this.toItemIDs = toItemIDs;
     this.itemFeatures = itemFeatures;
     this.Yiterator = Yiterator;
+    this.userTagIDs = userTagIDs;
     this.rescorer = rescorer;
     itemFeatureNorms = new double[itemFeatures.length];
     for (int i = 0; i < itemFeatures.length; i++) {
@@ -69,6 +73,11 @@ final class MostSimilarItemIterator implements Iterator<RecommendedItem> {
   public RecommendedItem next() {
     FastByIDMap.MapEntry<float[]> entry = Yiterator.next();
     long itemID = entry.getKey();
+    
+    if (userTagIDs.contains(itemID)) {
+      return null;
+    }
+    
     for (long l : toItemIDs) {
       if (l == itemID) {
         return null;

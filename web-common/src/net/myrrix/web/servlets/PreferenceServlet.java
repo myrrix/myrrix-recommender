@@ -146,7 +146,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     }
   }
 
-  private static float readValue(ServletRequest request) throws IOException {
+  static float readValue(ServletRequest request) throws IOException {
     String line;
     BufferedReader reader = request.getReader();
     try {

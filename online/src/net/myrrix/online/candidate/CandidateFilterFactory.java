@@ -16,6 +16,8 @@
 
 package net.myrrix.online.candidate;
 
+import java.util.concurrent.locks.Lock;
+
 import com.google.common.base.Preconditions;
 
 import net.myrrix.common.ClassUtils;
@@ -41,19 +43,24 @@ public final class CandidateFilterFactory {
   /**
    * @return an implementation of {@link CandidateFilter} chosen per above. It will be non-null.
    */
-  public static CandidateFilter buildCandidateFilter(FastByIDMap<float[]> Y) {
+  public static CandidateFilter buildCandidateFilter(FastByIDMap<float[]> Y, Lock yReadLock) {
     Preconditions.checkNotNull(Y);
     if (!Y.isEmpty()) {
-      String candidateFilterCustomClassString = System.getProperty("model.candidateFilter.customClass");
-      if (candidateFilterCustomClassString != null) {
-        return ClassUtils.loadInstanceOf(candidateFilterCustomClassString,
-                                         CandidateFilter.class,
-                                         new Class<?>[]{FastByIDMap.class},
-                                         new Object[]{Y});
-      }
-      // LSH is a bit of a special case, handled here
-      if (LocationSensitiveHash.LSH_SAMPLE_RATIO < 1.0) {
-        return new LocationSensitiveHash(Y);
+      yReadLock.lock();
+      try {
+        String candidateFilterCustomClassString = System.getProperty("model.candidateFilter.customClass");
+        if (candidateFilterCustomClassString != null) {
+          return ClassUtils.loadInstanceOf(candidateFilterCustomClassString,
+                                           CandidateFilter.class,
+                                           new Class<?>[]{FastByIDMap.class},
+                                           new Object[]{Y});
+        }
+        // LSH is a bit of a special case, handled here
+        if (LocationSensitiveHash.LSH_SAMPLE_RATIO < 1.0) {
+          return new LocationSensitiveHash(Y);
+        }
+      } finally {
+        yReadLock.unlock();
       }
     }
     return new IdentityCandidateFilter(Y);    

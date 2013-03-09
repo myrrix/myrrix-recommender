@@ -163,6 +163,30 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   }
 
   @Override
+  public void setUserTag(String userID, String tag) throws TasteException {
+    long longUserID = translateUser(userID);
+    delegate.setUserTag(longUserID, tag);
+  }
+
+  @Override
+  public void setUserTag(String userID, String tag, float value) throws TasteException {
+    long longUserID = translateUser(userID);
+    delegate.setUserTag(longUserID, tag, value);
+  }
+
+  @Override
+  public void setItemTag(String tag, String itemID) throws TasteException {
+    long longItemID = translateItem(itemID);
+    delegate.setItemTag(tag, longItemID);
+  }
+
+  @Override
+  public void setItemTag(String tag, String itemID, float value) throws TasteException {
+    long longItemID = translateItem(itemID);
+    delegate.setItemTag(tag, longItemID, value);
+  }
+
+  @Override
   public List<TranslatedRecommendedItem> mostSimilarItems(String itemID, int howMany) throws TasteException {
     long longItemID = translateItem(itemID);
     List<RecommendedItem> originals = delegate.mostSimilarItems(longItemID, howMany);
@@ -205,7 +229,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     for (int i = 0; i < itemIDs.length; i++) {
       longItemIDs[i] = translateItem(itemIDs[i]);
     }
-    return delegate.similarityToItem(longToItemID, longItemIDs);
+    Long longContextUserID = contextUserID == null ? null : Long.valueOf(contextUserID);
+    return delegate.similarityToItem(longToItemID, longItemIDs, longContextUserID);
   }
 
   @Override
@@ -274,8 +299,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     File tempFile = File.createTempFile("myrrix-", ".csv.gz");
     tempFile.deleteOnExit();
     log.debug("Translating ingest input to {}", tempFile);
-    BufferedReader buffered =
-        reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
+    BufferedReader buffered = IOUtils.buffer(reader);
     try {
       Writer out = IOUtils.buildGZIPWriter(tempFile);
       try {

@@ -115,6 +115,7 @@ public final class LoadRunner implements Callable<Void> {
     final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
     final RunningAverage setPreference = new FullRunningAverageAndStdDev();
     final RunningAverage removePreference = new FullRunningAverageAndStdDev();
+    final RunningAverage setTag = new FullRunningAverageAndStdDev();
     final RunningAverage ingest = new FullRunningAverageAndStdDev();
     final RunningAverage refresh = new FullRunningAverageAndStdDev();
     final RunningAverage estimatePreference = new FullRunningAverageAndStdDev();
@@ -147,9 +148,15 @@ public final class LoadRunner implements Callable<Void> {
         } else if (r < 0.07) {
           client.setPreference(userID, itemID);
           setPreference.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.1) {
+        } else if (r < 0.08) {
           client.setPreference(userID, itemID, value);
           setPreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.09) {
+          client.setUserTag(userID, Long.toString(itemID));
+          setTag.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.10) {
+          client.setItemTag(Long.toString(userID), itemID);
+          setTag.addDatum(System.currentTimeMillis() - stepStart);
         } else if (r < 0.11) {
           client.removePreference(userID, itemID);
           removePreference.addDatum(System.currentTimeMillis() - stepStart);
@@ -170,7 +177,7 @@ public final class LoadRunner implements Callable<Void> {
           client.estimatePreference(userID, itemID);
           estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
         } else if (r < 0.25) {
-          client.mostSimilarItems(new long[] {itemID}, 10);
+          client.mostSimilarItems(new long[]{itemID}, 10);
           mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
         } else if (r < 0.30) {
           client.recommendToMany(new long[] { userID, userID }, 10, true, null);
@@ -195,6 +202,7 @@ public final class LoadRunner implements Callable<Void> {
     log.info("recommendedBecause: {}", recommendedBecause);
     log.info("setPreference: {}", setPreference);
     log.info("removePreference: {}", removePreference);
+    log.info("setTag: {}", setTag);
     log.info("ingest: {}", ingest);
     log.info("refresh: {}", refresh);
     log.info("estimatePreference: {}", estimatePreference);

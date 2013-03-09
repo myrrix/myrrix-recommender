@@ -81,9 +81,9 @@ public final class AllItemSimilarities implements Callable<Object> {
         Rescorer<LongPair> rescorer =
             rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
         List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
-        StringBuilder line = new StringBuilder(30);
         synchronized (System.out) {
           System.out.println(Long.toString(itemID));
+          StringBuilder line = new StringBuilder(30);
           for (RecommendedItem sim : similar) {
             line.setLength(0);
             line.append(Long.toString(sim.getItemID())).append(',').append(Float.toString(sim.getValue()));

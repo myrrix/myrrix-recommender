@@ -21,17 +21,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -314,15 +311,19 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public void setPreference(long userID, long itemID, float value) throws TasteException {
-    doSetOrRemove(userID, itemID, value, true);
+    doSetOrRemovePreference(userID, itemID, value, true);
   }
 
   @Override
   public void removePreference(long userID, long itemID) throws TasteException {
-    doSetOrRemove(userID, itemID, 1.0f, false); // 1.0 is a dummy value that gets ignored
+    doSetOrRemovePreference(userID, itemID, 1.0f, false); // 1.0 is a dummy value that gets ignored
   }
 
-  private void doSetOrRemove(long userID, long itemID, float value, boolean set) throws TasteException {
+  private void doSetOrRemovePreference(long userID, long itemID, float value, boolean set) throws TasteException {
+    doSetOrRemove("/pref/" + userID + '/' + itemID, userID, value, set);
+  }
+  
+  private void doSetOrRemove(String path, long unnormalizedID, float value, boolean set) throws TasteException {
     boolean sendValue = value != 1.0f;
     Map<String,String> requestProperties;
     byte[] bytes;
@@ -337,9 +338,9 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
 
     try {
-      HttpURLConnection connection = makeConnection("/pref/" + userID + '/' + itemID,
+      HttpURLConnection connection = makeConnection(path,
                                                     set ? "POST" : "DELETE",
-                                                    userID,
+                                                    unnormalizedID,
                                                     sendValue,
                                                     false,
                                                     requestProperties);
@@ -359,6 +360,43 @@ public final class ClientRecommender implements MyrrixRecommender {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     }
+  }
+
+  @Override
+  public void setUserTag(long userID, String tag) throws TasteException {
+    setUserTag(userID, tag, 1.0f);
+  }
+
+  @Override
+  public void setUserTag(long userID, String tag, float value) throws TasteException {
+    Preconditions.checkNotNull(tag);    
+    Preconditions.checkArgument(!tag.isEmpty());
+    doSetOrRemove("/tag/user/" + userID + '/' + IOUtils.urlEncode(tag), userID, value, true);
+  }
+
+  @Override
+  public void setItemTag(String tag, long itemID) throws TasteException {
+    setItemTag(tag, itemID, 1.0f);
+  }
+
+  @Override
+  public void setItemTag(String tag, long itemID, float value) throws TasteException {
+    setItemTag(tag, itemID, value, null);
+  }
+  
+  /**
+   * Like {@link #setItemTag(String, long, float)}, but allows caller to specify the user for
+   * which the request is being made. This information does not directly affect the computation,
+   * but affects <em>routing</em> of the request in a distributed context. This is always recommended
+   * when there is a user in whose context the request is being made, as it will ensure that the
+   * request can take into account all the latest information from the user, including a very new
+   * item like {@code itemID}.
+   */
+  public void setItemTag(String tag, long itemID, float value, Long contextUserID) throws TasteException {  
+    Preconditions.checkNotNull(tag);
+    Preconditions.checkArgument(!tag.isEmpty());
+    long idToPartitionOn = contextUserID == null ? itemID : contextUserID;    
+    doSetOrRemove("/tag/item/" + IOUtils.urlEncode(tag) + '/' + itemID, idToPartitionOn, value, true);
   }
 
   /**
@@ -395,7 +433,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
         try {
           float[] result = new float[itemIDs.length];
           for (int i = 0; i < itemIDs.length; i++) {
@@ -469,7 +507,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private static List<RecommendedItem> consumeItems(HttpURLConnection connection) throws IOException {
     List<RecommendedItem> result = Lists.newArrayList();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+    BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
     try {
       String line;
       while ((line = reader.readLine()) != null) {
@@ -711,7 +749,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
         try {
           float[] result = new float[itemIDs.length];
           for (int i = 0; i < itemIDs.length; i++) {
@@ -801,7 +839,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   public void ingest(Reader reader) throws TasteException {
     Map<Integer,Pair<Writer,HttpURLConnection>> writersAndConnections =
         Maps.newHashMapWithExpectedSize(partitions.size());
-    BufferedReader buffered = reader instanceof BufferedReader ? (BufferedReader) reader : new BufferedReader(reader);
+    BufferedReader buffered = IOUtils.buffer(reader);
     try {
       try {
         String line;
@@ -1176,7 +1214,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   private static void consumeIDs(HttpURLConnection connection, FastIDSet result) throws IOException {
-    BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+    BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
     try {
       String line;
       while ((line = reader.readLine()) != null) {
@@ -1211,7 +1249,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), Charsets.UTF_8));
+        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
         try {
           return Integer.parseInt(reader.readLine());
         } finally {
@@ -1270,12 +1308,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     if (rescorerParams != null) {
       for (String rescorerParam : rescorerParams) {
-        try {
-          urlPath.append("&rescorerParams=").append(URLEncoder.encode(rescorerParam, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-          // Can't happen
-          throw new IllegalStateException(e);
-        }
+        urlPath.append("&rescorerParams=").append(IOUtils.urlEncode(rescorerParam));
       }
     }
   }

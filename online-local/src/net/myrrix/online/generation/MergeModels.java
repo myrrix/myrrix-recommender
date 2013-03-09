@@ -72,7 +72,10 @@ public final class MergeModels {
       knownItems.put(it.nextLong(), emptySet);
     }
 
-    Generation merged = new Generation(knownItems, xMerged, y2);
+    FastIDSet x1ItemTagIDs = model1.getItemTagIDs();
+    FastIDSet y2UserTagIDs = model2.getUserTagIDs();
+
+    Generation merged = new Generation(knownItems, xMerged, y2, x1ItemTagIDs, y2UserTagIDs);
     GenerationSerializer.writeGeneration(merged, mergedModelFile);
   }
 
