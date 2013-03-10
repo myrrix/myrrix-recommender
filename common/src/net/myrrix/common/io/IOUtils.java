@@ -41,6 +41,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 
 import net.myrrix.common.ClassUtils;
 
@@ -118,6 +119,9 @@ public final class IOUtils {
     }
     if (name.endsWith(".deflate")) {
       return new DeflaterInputStream(in);
+    }
+    if (name.endsWith(".bz2") || name.endsWith(".bzip2")) {
+      return new BZip2CompressorInputStream(in);
     }
     return in;
   }

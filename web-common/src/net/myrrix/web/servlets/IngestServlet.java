@@ -32,6 +32,7 @@ import javax.servlet.http.Part;
 
 import com.google.common.base.Charsets;
 import com.google.common.net.HttpHeaders;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 import net.myrrix.common.MyrrixRecommender;
@@ -69,20 +70,30 @@ public final class IngestServlet extends AbstractMyrrixServlet {
       InputStream in = part.getInputStream();
       if ("application/zip".equals(partContentType)) {
         in = new ZipInputStream(in);
+      } else if ("application/gzip".equals(partContentType)) {
+        in = new GZIPInputStream(in);
       } else if ("application/x-gzip".equals(partContentType)) {
         in = new GZIPInputStream(in);
+      } else if ("application/bzip2".equals(partContentType)) {
+        in = new BZip2CompressorInputStream(in);
+      } else if ("application/x-bzip2".equals(partContentType)) {
+        in = new BZip2CompressorInputStream(in);
       }
       reader = new InputStreamReader(in, Charsets.UTF_8);
 
     } else {
 
+      String charEncodingName = request.getCharacterEncoding();
+      Charset charEncoding = charEncodingName == null ? Charsets.UTF_8 : Charset.forName(charEncodingName);
       String contentEncoding = request.getHeader(HttpHeaders.CONTENT_ENCODING);
       if (contentEncoding == null) {
         reader = request.getReader();
       } else if ("gzip".equals(contentEncoding)) {
-        String charEncodingName = request.getCharacterEncoding();
-        Charset charEncoding = charEncodingName == null ? Charsets.UTF_8 : Charset.forName(charEncodingName);
         reader = new InputStreamReader(new GZIPInputStream(request.getInputStream()), charEncoding);
+      } else if ("zip".equals(contentEncoding)) {
+        reader = new InputStreamReader(new ZipInputStream(request.getInputStream()), charEncoding);
+      } else if ("bzip2".equals(contentEncoding)) {
+        reader = new InputStreamReader(new BZip2CompressorInputStream(request.getInputStream()), charEncoding);
       } else {
         response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Unsupported Content-Encoding");
         return;
