@@ -16,6 +16,8 @@
 
 package net.myrrix.online.eval;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -24,13 +26,18 @@ import java.util.concurrent.ExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This is an experimental utility class which can find a nearly-optimal set of learning algorithm parameters,
+ * <p>This is an experimental utility class which can find a nearly-optimal set of learning algorithm parameters,
  * for a given set of parameters and range of values, and a given metric to optimize. It simply performs an  
- * exhaustive search.
+ * exhaustive search.</p>
+ * 
+ * <p>It can be run on the command line with:</p>
+ * 
+ * <p>{@code java net.myrrix.online.eval.ParameterOptimizer dataDirectory property=min:max [property2=min2:max2 ...]}</p>
  * 
  * @author Sean Owen
  */
@@ -155,6 +162,45 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     }
     whichValueToTry %= numSteps;
     return parameterValuesToTry[prop][whichValueToTry];
+  }
+
+  public static void main(String[] args) throws Exception {
+    if (args.length < 2) {
+      System.err.println("Usage: dataDirectory property=min:max [property2=min2:max2 ...]");
+    }
+    
+    final File dataDir = new File(args[0]);
+    
+    Map<String,ParameterRange> parameterRanges = Maps.newHashMapWithExpectedSize(args.length);
+    for (int i = 1; i < args.length; i++) {
+      String[] propValue = args[i].split("=");
+      String systemProperty = propValue[0];
+      String[] minMax = propValue[1].split(":");
+      ParameterRange range;
+      try {
+        int min = Integer.parseInt(minMax[0]);
+        int max = Integer.parseInt(minMax[1]);
+        range = new ParameterRange(min, max, true);
+      } catch (NumberFormatException ignored) {
+        double min = Double.parseDouble(minMax[0]);
+        double max = Double.parseDouble(minMax[1]);
+        range = new ParameterRange(min, max, false);
+      }
+      parameterRanges.put(systemProperty, range);
+    }
+    
+    Callable<Number> evaluator = new Callable<Number>() {
+      @Override
+      public Number call() throws IOException, TasteException, InterruptedException {
+        PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
+        MyrrixIRStatistics stats = (MyrrixIRStatistics) prEvaluator.evaluate(dataDir);
+        return stats.getMeanAveragePrecision();
+      }
+    };
+    
+    ParameterOptimizer optimizer = new ParameterOptimizer(parameterRanges, evaluator);
+    Map<String,Number> optimalValues = optimizer.findGoodParameterValues();
+    System.out.println(optimalValues);
   }
 
 }
