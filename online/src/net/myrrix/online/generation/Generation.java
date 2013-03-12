@@ -73,7 +73,6 @@ public final class Generation {
   private final ReadWriteLock userClustersLock;
   private final ReadWriteLock itemClustersLock;
   
-  @Deprecated
   public Generation(FastByIDMap<FastIDSet> knownItemIDs, 
                     FastByIDMap<float[]> X, 
                     FastByIDMap<float[]> Y) {
