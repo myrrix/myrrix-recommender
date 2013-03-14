@@ -59,7 +59,7 @@
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
       <zipfileset src="common/lib/commons-math3-3.1.1.jar"/>
-      <zipfileset src="common/lib/commons-compress-1.4.1.jar"/>      
+      <zipfileset src="common/lib/commons-compress-1.5.jar"/>      
     </jar>
   </target>
 
@@ -85,7 +85,7 @@
       <zipfileset src="common/lib/slf4j-jdk14-1.7.2.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.2.jar"/>
       <zipfileset src="common/lib/commons-math3-3.1.1.jar"/>
-      <zipfileset src="common/lib/commons-compress-1.4.1.jar"/>      
+      <zipfileset src="common/lib/commons-compress-1.5.jar"/>      
       <zipfileset src="web-common/lib/tomcat-embed-logging-juli.jar"/>
       <zipfileset src="web-common/lib/tomcat-embed-jasper.jar"/>
       <zipfileset src="web-common/lib/tomcat-embed-core.jar"/>
@@ -108,7 +108,7 @@
         <include name="slf4j-jdk14-1.7.2.jar"/>
         <include name="slf4j-api-1.7.2.jar"/>
         <include name="commons-math3-3.1.1.jar"/>
-        <include name="commons-compress-1.4.1.jar"/>        
+        <include name="commons-compress-1.5.jar"/>        
       </lib>
       <fileset dir="web-common/docs">
         <exclude name="WEB-INF/**"/>
