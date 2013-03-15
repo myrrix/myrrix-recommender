@@ -183,7 +183,7 @@ import net.myrrix.web.servlets.UserClusterServlet;
  *    Typical values are near 0.1. Do not change this, in general. Defaults to
  *    {@code AlternatingLeastSquares#DEFAULT_LAMBDA}.</li>
  *   <li>{@code model.als.alpha}: Controls the alpha scaling parameter in the ALS algorithm.
- *    Typical values are near 40. Do not change this, in general. Defaults to
+ *    Typical values are near 1 or above. Do not change this, in general. Defaults to
  *    {@code AlternatingLeastSquares#DEFAULT_ALPHA}.</li>
  * </ul>
  *

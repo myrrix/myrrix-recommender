@@ -14,7 +14,17 @@ hr {margin:20px 0 10px 0}
 
 <h1>Myrrix Upgrade Notes</h1>
 
-<h2>Version 1.0</h2>
+<h2>Version 0.11</h2>
+
+<h3>All</h3>
+
+<ul>
+  <li>The default value of <code>model.als.alpha</code> has changed from 40 to 1. This affects results if the model
+  build process (Computation Layer or stand-alone Serving Layer) does not specify a fixed value for this 
+  system property. The new default should result in an improvement in quality for many data sets.</li>
+  <li>Handling of user-item pairs with negative strength values has changed. This has no effect for data sets that 
+  contain no negative strength values. It should have a small and generally positive effect on other data sets.</li>
+</ul>
 
 <h3>Serving Layer</h3>
 

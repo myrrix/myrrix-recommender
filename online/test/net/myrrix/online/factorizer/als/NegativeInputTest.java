@@ -69,13 +69,13 @@ public final class NegativeInputTest extends MyrrixTest {
     log.info("{}", productString);
 
     assertArrayEquals(
-        new float[] {0.83867264f, 0.8434771f, 0.9364942f, 0.693262f},
+        new float[] {0.899032f, 0.900162f, 0.990150f, -0.026642f},
         product.getRow(0));
     assertArrayEquals(
-        new float[] {0.5571204f, 0.56409824f, 0.8351048f, 0.8945784f},
+        new float[] {0.181214f, 0.089988f, 0.787198f, 1.012226f},
         product.getRow(1));
     assertArrayEquals(
-        new float[] {0.33909106f, 0.34589326f, 0.6520305f, 0.8374041f},
+        new float[] {-0.104165f, -0.178240f, 0.360391f, 0.825856f},
         product.getRow(2));
   }
 

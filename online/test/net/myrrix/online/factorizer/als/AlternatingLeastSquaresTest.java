@@ -74,19 +74,19 @@ public final class AlternatingLeastSquaresTest extends MyrrixTest {
     log.info("{}", productString);
 
     assertArrayEquals(
-        new float[] {0.37615702f, 0.9395947f, 0.95842475f, 0.9447453f, 0.3578715f},
+        new float[] {-0.030258f, 0.852781f, 1.004839f, 1.024087f, -0.036206f},
         product.getRow(0));
     assertArrayEquals(
-        new float[] {0.37096402f, 0.965766f, 0.9792176f, 0.9707236f, 0.35152173f},
+        new float[] {0.077046f, 0.751232f, 0.949796f, 0.910322f, 0.073047f},
         product.getRow(1));
     assertArrayEquals(
-        new float[] {0.91260827f, 0.18102002f, 0.5011245f, 0.20005447f, 0.94379795f},
+        new float[] {0.916777f, -0.196005f, 0.335926f, -0.163591f, 0.929028f},
         product.getRow(2));
     assertArrayEquals(
-        new float[] {0.9606254f, 0.5691479f, 0.8565864f, 0.58800423f, 0.9798256f},
+        new float[] {0.987400f, 0.130943f, 0.772403f, 0.235522f, 0.998354f},
         product.getRow(3));
     assertArrayEquals(
-        new float[] {0.35010007f, 0.9454391f, 0.95368934f, 0.9500119f, 0.33052757f},
+        new float[] {-0.028683f, 0.850540f, 1.003130f, 1.021514f, -0.034598f},
         product.getRow(4));
 
   }

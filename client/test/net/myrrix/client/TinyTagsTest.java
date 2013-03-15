@@ -46,10 +46,10 @@ public final class TinyTagsTest extends AbstractClientTest {
     ClientRecommender client = getClient();
     List<RecommendedItem> recs = client.recommend(5, 2);
     log.info("{}", recs);
-    assertEquals(2, recs.get(0).getItemID());
-    assertEquals(3, recs.get(1).getItemID());
-    assertEquals(0.8745233f, recs.get(0).getValue(), BIG_EPSILON);
-    assertEquals(-0.0033516437f, recs.get(1).getValue(), BIG_EPSILON);
+    assertEquals(4, recs.get(0).getItemID());
+    assertEquals(2, recs.get(1).getItemID());
+    assertEquals(0.69684064f, recs.get(0).getValue(), BIG_EPSILON);
+    assertEquals(0.62091565f, recs.get(1).getValue(), BIG_EPSILON);
   }
   
   @Test
@@ -58,7 +58,7 @@ public final class TinyTagsTest extends AbstractClientTest {
     List<RecommendedItem> similar = client.mostSimilarItems(2, 1);
     log.info("{}", similar);
     assertEquals(4, similar.get(0).getItemID());
-    assertEquals(-0.527466f, similar.get(0).getValue());
+    assertEquals(0.37850744f, similar.get(0).getValue());
   }
   
   @Test
@@ -76,7 +76,7 @@ public final class TinyTagsTest extends AbstractClientTest {
     List<RecommendedItem> recs = client.recommendToAnonymous(new long[] {2,3}, 1);
     log.info("{}", recs);
     assertEquals(4, recs.get(0).getItemID());
-    assertEquals(-0.14083529f, recs.get(0).getValue(), BIG_EPSILON);
+    assertEquals(0.15367498f, recs.get(0).getValue(), BIG_EPSILON);
   }
   
   @Test
@@ -87,13 +87,13 @@ public final class TinyTagsTest extends AbstractClientTest {
     List<RecommendedItem> recs = client.recommend(5, 1);
     log.info("{}", recs);
     assertEquals(2, recs.get(0).getItemID());
-    assertEquals(0.9864124f, recs.get(0).getValue());
+    assertEquals(0.5184667f, recs.get(0).getValue());
     
     client.setItemTag("bing", 4);
     recs = client.recommend(5, 1);
     log.info("{}", recs);
     assertEquals(2, recs.get(0).getItemID());
-    assertEquals(0.9864124f, recs.get(0).getValue());
+    assertEquals(0.5184667f, recs.get(0).getValue());
   }
 
 }

@@ -25,20 +25,24 @@ import org.slf4j.LoggerFactory;
 import net.myrrix.common.MyrrixTest;
 
 /**
- * Simple proof of concept test using {@link ReconstructionEvaluator}.
+ * Simple proof of concept test using {@link PrecisionRecallEvaluator}.
  *
  * @author Sean Owen
  */
-public final class ReconstructionEvaluationTest extends MyrrixTest {
+public final class PrecisionRecallWithNegativeEvaluationTest extends MyrrixTest {
 
-  private static final Logger log = LoggerFactory.getLogger(ReconstructionEvaluationTest.class);
+  private static final Logger log = LoggerFactory.getLogger(PrecisionRecallWithNegativeEvaluationTest.class);
 
   @Test
   public void testEval() throws Exception {
-    ReconstructionEvaluator evaluator = new ReconstructionEvaluator();
-    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"));
+    PrecisionRecallEvaluator evaluator = new PrecisionRecallEvaluator();
+    MyrrixIRStatistics stats = (MyrrixIRStatistics) evaluator.evaluate(new File("testdata/negative-grouplens1M"));
     log.info(stats.toString());
-    assertTrue(stats.getScore() < 0.41);
+    assertTrue(stats.getPrecision() > 0.2);
+    assertTrue(stats.getRecall() > 0.2);
+    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.225);
+    assertTrue(stats.getF1Measure() > 0.2);
+    assertTrue(stats.getMeanAveragePrecision() > 0.54);
   }
 
 }
