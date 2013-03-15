@@ -18,6 +18,7 @@ package net.myrrix.online.eval;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -27,6 +28,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,7 +111,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
       numTests *= numSteps;
     }
     
-    List<String> testResultLines = Lists.newArrayListWithCapacity(numTests);
+    List<Pair<Double,String>> testResultLinesByValue = Lists.newArrayListWithCapacity(numTests);
     
     Map<String,Number> bestParameterValues = Maps.newHashMap();
     double bestValue = minimize ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
@@ -133,8 +135,8 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
         throw new ExecutionException(e);
       }
       testResultLine.append("= ").append(testValue);
-      testResultLines.add(testResultLine.toString());
-      log.info(testResultLine.toString());
+      testResultLinesByValue.add(Pair.of(testValue, testResultLine.toString()));
+      log.info("{}", testResultLine);
       
       if (minimize ? testValue < bestValue : testValue > bestValue) {
         log.info("New best value {}", testValue);
@@ -145,13 +147,15 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
           bestParameterValues.put(property, parameterValue);
         }
       }
+      
+      Collections.sort(testResultLinesByValue, Collections.reverseOrder());
+      for (Pair<Double,String> result : testResultLinesByValue) {
+        log.info("{}", result.getSecond());
+      }
+      log.info("Best parameter values so far are {}", bestParameterValues);      
     }
     
-    for (String testResultLine : testResultLines) {
-      log.info(testResultLine);
-    }
-    
-    log.info("Best parameter values are {}", bestParameterValues);
+    log.info("Final best parameter values are {}", bestParameterValues);
     return bestParameterValues;
   }
 
