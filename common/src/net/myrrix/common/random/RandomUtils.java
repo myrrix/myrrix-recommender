@@ -123,7 +123,9 @@ public final class RandomUtils {
           smallestDistSquared = distSquared;
         }
       }
-      if (LangUtils.isFinite(smallestDistSquared)) {
+      // Second condition covers 1-D case, where there are only 2 distinct unit vectors. If both have
+      // been generated, keep accepting either of them.
+      if (LangUtils.isFinite(smallestDistSquared) && !(dimensions == 1 && smallestDistSquared == 0.0)) {
         // Choose with probability proportional to squared distance, a la kmeans++ centroid selection
         double acceptProbability = smallestDistSquared / 4.0; // dist squared is in [0,4]
         accepted = random.nextDouble() < acceptProbability;
