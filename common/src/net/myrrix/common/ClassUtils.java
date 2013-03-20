@@ -19,6 +19,7 @@ package net.myrrix.common;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -29,6 +30,15 @@ public final class ClassUtils {
 
   private static final Class<?>[] NO_TYPES = new Class<?>[0];
   private static final Object[] NO_ARGS = new Object[0];
+  private static final Method CLONE_METHOD;
+  static {
+    try {
+      CLONE_METHOD = Object.class.getDeclaredMethod("clone");
+    } catch (NoSuchMethodException e) {
+      throw new AssertionError(e);
+    }
+    CLONE_METHOD.setAccessible(true);
+  }
 
   private ClassUtils() {
   }
@@ -143,6 +153,19 @@ public final class ClassUtils {
     }
     field.setAccessible(true);
     return field;
+  }
+
+  /**
+   * Clones "{@link Cloneable}" objects even though this actually requires reflection to expose.
+   */
+  public static <T extends Cloneable> T clone(T original) {
+    try {
+      return (T) CLONE_METHOD.invoke(original);
+    } catch (IllegalAccessException iae) {
+      throw new AssertionError(iae);
+    } catch (InvocationTargetException ite) {
+      throw new IllegalStateException(ite.getCause());
+    }
   }
 
 }
