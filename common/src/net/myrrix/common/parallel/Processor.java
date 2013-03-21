@@ -16,6 +16,8 @@
 
 package net.myrrix.common.parallel;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * A process that can operate on a given value. Used with {@link Paralleler}.
  * 
@@ -28,6 +30,6 @@ public interface Processor<T> {
    * @param t value to process
    * @param count a 1-based count of the values that have been processed so far
    */
-  void process(T t, long count) throws Exception;
+  void process(T t, long count) throws ExecutionException;
   
 }

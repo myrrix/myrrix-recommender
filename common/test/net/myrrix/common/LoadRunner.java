@@ -128,7 +128,7 @@ public final class LoadRunner implements Callable<Void> {
     Processor<Integer> processor = new Processor<Integer>() {
       private final RandomGenerator random = RandomManager.getRandom();      
       @Override
-      public void process(Integer step, long count) throws TasteException {
+      public void process(Integer step, long count) throws ExecutionException {
         double r;
         long userID;
         long itemID;
@@ -142,52 +142,56 @@ public final class LoadRunner implements Callable<Void> {
           value = random.nextInt(10);
         }
         long stepStart = System.currentTimeMillis();
-        if (r < 0.05) {
-          client.recommendedBecause(userID, itemID, 10);
-          recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.07) {
-          client.setPreference(userID, itemID);
-          setPreference.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.08) {
-          client.setPreference(userID, itemID, value);
-          setPreference.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.09) {
-          client.setUserTag(userID, Long.toString(itemID));
-          setTag.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.10) {
-          client.setItemTag(Long.toString(userID), itemID);
-          setTag.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.11) {
-          client.removePreference(userID, itemID);
-          removePreference.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.12) {
-          StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
-          client.ingest(reader);
-          ingest.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.13) {
-          client.refresh();
-          refresh.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.14) {
-          client.similarityToItem(itemID, itemID2);
-          similarityToItem.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.15) {
-          client.mostPopularItems(10);
-          mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.19) {
-          client.estimatePreference(userID, itemID);
-          estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.20) {
-          client.estimateForAnonymous(itemID, new long[] {itemID2});
-          estimatePreference.addDatum(System.currentTimeMillis() - stepStart);          
-        } else if (r < 0.25) {
-          client.mostSimilarItems(new long[]{itemID}, 10);
-          mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.30) {
-          client.recommendToMany(new long[] { userID, userID }, 10, true, null);
-          recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
-        } else {
-          client.recommend(userID, 10);
-          recommend.addDatum(System.currentTimeMillis() - stepStart);
+        try {
+          if (r < 0.05) {
+            client.recommendedBecause(userID, itemID, 10);
+            recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.07) {
+            client.setPreference(userID, itemID);
+            setPreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.08) {
+            client.setPreference(userID, itemID, value);
+            setPreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.09) {
+            client.setUserTag(userID, Long.toString(itemID));
+            setTag.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.10) {
+            client.setItemTag(Long.toString(userID), itemID);
+            setTag.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.11) {
+            client.removePreference(userID, itemID);
+            removePreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.12) {
+            StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
+            client.ingest(reader);
+            ingest.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.13) {
+            client.refresh();
+            refresh.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.14) {
+            client.similarityToItem(itemID, itemID2);
+            similarityToItem.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.15) {
+            client.mostPopularItems(10);
+            mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.19) {
+            client.estimatePreference(userID, itemID);
+            estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.20) {
+            client.estimateForAnonymous(itemID, new long[] {itemID2});
+            estimatePreference.addDatum(System.currentTimeMillis() - stepStart);          
+          } else if (r < 0.25) {
+            client.mostSimilarItems(new long[]{itemID}, 10);
+            mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
+          } else if (r < 0.30) {
+            client.recommendToMany(new long[] { userID, userID }, 10, true, null);
+            recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
+          } else {
+            client.recommend(userID, 10);
+            recommend.addDatum(System.currentTimeMillis() - stepStart);
+          }
+        } catch (TasteException te) {
+          throw new ExecutionException(te);
         }
         if (count % 1000 == 0) {
           log.info("Finished {} load steps", count);

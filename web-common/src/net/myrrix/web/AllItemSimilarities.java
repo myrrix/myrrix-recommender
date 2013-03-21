@@ -77,10 +77,15 @@ public final class AllItemSimilarities implements Callable<Object> {
 
     Processor<Long> processor = new Processor<Long>() {
       @Override
-      public void process(Long itemID, long count) throws TasteException {
+      public void process(Long itemID, long count) throws ExecutionException {
         Rescorer<LongPair> rescorer =
             rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
-        List<RecommendedItem> similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
+        List<RecommendedItem> similar;
+        try {
+          similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
+        } catch (TasteException te) {
+          throw new ExecutionException(te);
+        }
         synchronized (System.out) {
           System.out.println(Long.toString(itemID));
           StringBuilder line = new StringBuilder(30);

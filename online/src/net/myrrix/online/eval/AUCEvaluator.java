@@ -84,7 +84,7 @@ public final class AUCEvaluator extends AbstractEvaluator {
     Processor<Long> processor = new Processor<Long>() {
       private final RandomGenerator random = RandomManager.getRandom();      
       @Override
-      public void process(Long userID, long count) throws TasteException {
+      public void process(Long userID, long count) throws ExecutionException {
         FastIDSet testItemIDs = testData.get(userID);
         int numTest = testItemIDs.size();  
         for (int i = 0; i < numTest; i++) {
@@ -99,17 +99,20 @@ public final class AUCEvaluator extends AbstractEvaluator {
           }
   
           float relevantEstimate;
+          float nonRelevantEstimate;
           try {
             relevantEstimate = recommender.estimatePreference(userID, randomTestItemID);
+            nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);            
           } catch (NoSuchItemException nsie) {
             // OK; it's possible item only showed up in test split
             continue;
           } catch (NoSuchUserException nsie) {
             // OK; it's possible user only showed up in test split
             continue;
+          } catch (TasteException te) {
+            throw new ExecutionException(te);
           }
 
-          float nonRelevantEstimate = recommender.estimatePreference(userID, randomTrainingItemID);
 
           if (relevantEstimate > nonRelevantEstimate) {
             underCurve.incrementAndGet();

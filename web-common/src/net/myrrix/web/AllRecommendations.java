@@ -76,10 +76,15 @@ public final class AllRecommendations implements Callable<Object> {
     
     Processor<Long> processor = new Processor<Long>() {
       @Override
-      public void process(Long userID, long count) throws TasteException {
+      public void process(Long userID, long count) throws ExecutionException {
         IDRescorer rescorer =
             rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID}, recommender);
-        List<RecommendedItem> recs = recommender.recommend(userID, howMany, rescorer);
+        List<RecommendedItem> recs = null;
+        try {
+          recs = recommender.recommend(userID, howMany, rescorer);
+        } catch (TasteException te) {
+          throw new ExecutionException(te);
+        }
         synchronized (System.out) {
           System.out.println(Long.toString(userID));
           StringBuilder line = new StringBuilder(30);

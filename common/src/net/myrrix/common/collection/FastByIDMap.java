@@ -176,7 +176,7 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       return false;
     }
     for (V theValue : values) {
-      if (theValue != null && value.equals(theValue)) {
+      if (value.equals(theValue)) {
         return true;
       }
     }

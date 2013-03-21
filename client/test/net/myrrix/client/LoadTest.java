@@ -16,6 +16,9 @@
 
 package net.myrrix.client;
 
+import java.util.concurrent.TimeUnit;
+
+import com.google.common.base.Stopwatch;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -45,10 +48,9 @@ public final class LoadTest extends AbstractClientTest {
   public void testLoad() throws Exception {
     ClientRecommender client = getClient();
     LoadRunner runner = new LoadRunner(client, getTestTempDir(), 20000);
-    long start = System.currentTimeMillis();
+    Stopwatch stopwatch = new Stopwatch().start();
     runner.runLoad();
-    long end = System.currentTimeMillis();
-    assertTrue(end - start < 30 * runner.getSteps());
+    assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 30 * runner.getSteps());
   }
 
 }

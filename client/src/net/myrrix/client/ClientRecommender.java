@@ -51,6 +51,7 @@ import javax.net.ssl.TrustManagerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
@@ -465,7 +466,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       throws TasteException {  
     Preconditions.checkArgument(values == null || values.length == itemIDs.length,
                                 "Number of values doesn't match number of items");
-    StringBuilder urlPath = new StringBuilder();
+    StringBuilder urlPath = new StringBuilder(32);
     urlPath.append("/estimateForAnonymous/");
     urlPath.append(toItemID);
     for (int i = 0; i < itemIDs.length; i++) {
@@ -596,7 +597,7 @@ public final class ClientRecommender implements MyrrixRecommender {
                                                boolean considerKnownItems,
                                                String[] rescorerParams) throws TasteException {
 
-    StringBuilder urlPath = new StringBuilder();
+    StringBuilder urlPath = new StringBuilder(32);
     urlPath.append("/recommendToMany");
     for (long userID : userIDs) {
       urlPath.append('/').append(userID);
@@ -657,7 +658,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public List<RecommendedItem> mostPopularItems(int howMany) throws TasteException {
-    StringBuilder urlPath = new StringBuilder();
+    StringBuilder urlPath = new StringBuilder(32);
     urlPath.append("/mostPopularItems");
     appendCommonQueryParams(howMany, false, null, urlPath);
     try {
@@ -781,7 +782,7 @@ public final class ClientRecommender implements MyrrixRecommender {
    * from the user, including very new items that may be in {@code itemIDs}.
    */
   public float[] similarityToItem(long toItemID, long[] itemIDs, Long contextUserID) throws TasteException {
-    StringBuilder urlPath = new StringBuilder();
+    StringBuilder urlPath = new StringBuilder(32);
     urlPath.append("/similarityToItem/");
     urlPath.append(toItemID);
     for (long itemID : itemIDs) {
@@ -1209,9 +1210,9 @@ public final class ClientRecommender implements MyrrixRecommender {
     Preconditions.checkNotNull(unit);
     long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
     long waitIntervalMS = FastMath.min(1000L, waitForMS);
-    long start = System.currentTimeMillis();
+    Stopwatch stopwatch = new Stopwatch().start();
     while (!isReady()) {
-      if (System.currentTimeMillis() > start + waitForMS) {
+      if (stopwatch.elapsed(TimeUnit.MILLISECONDS) > waitForMS) {
         return false;
       }
       Thread.sleep(waitIntervalMS);

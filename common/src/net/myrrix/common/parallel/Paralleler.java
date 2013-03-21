@@ -119,7 +119,7 @@ public final class Paralleler<T> {
     }
     
     @Override
-    public Object call() throws Exception {
+    public Object call() throws ExecutionException {
       while (true) {
         T value;
         synchronized (values) {
