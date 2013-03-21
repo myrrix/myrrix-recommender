@@ -215,6 +215,13 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(0.0f, client.estimatePreference(0L, 90L));
     assertEquals(0.0f, client.estimatePreference(10L, 0L));
   }
+  
+  @Test
+  public void testEstimateForAnonymous() throws Exception {
+    ClientRecommender client = getClient();
+    float estimate = client.estimateForAnonymous(10L, new long[] {90L, 91L, 92L});
+    assertEquals(-0.005063545f, estimate);
+  }
 
   @Test
   public void testBecause() throws Exception {

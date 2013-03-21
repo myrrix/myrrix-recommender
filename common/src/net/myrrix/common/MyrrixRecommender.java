@@ -316,7 +316,9 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * Computes recommendations for a user that is not known to the model yet; instead, the user's
    * associated items are supplied to the method and it proceeds as if a user with these associated
    * items were in the model.
-   *
+   * 
+   * @param itemIDs item IDs that the anonymous user has interacted with
+   * @param howMany how many recommendations to return
    * @see #recommend(long, int)
    * @throws NotReadyException if the implementation has no usable model yet
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
@@ -327,8 +329,11 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
   /**
    * Like {@link #recommendToAnonymous(long[], int)} but allows specifying values associated with items.
    *
+   * @param itemIDs item IDs that the anonymous user has interacted with
    * @param values values associated with given {@code itemIDs}. If not null, must be as many values as
    *  there are item IDs
+   * @param howMany how many recommendations to return
+   * @see #estimateForAnonymous(long[], float[], long) 
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany) throws TasteException;
 
@@ -337,6 +342,9 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * {@link #recommend(long, int, boolean, IDRescorer)}. All items are assumed to be equally important
    * to the anonymous users -- strength "1".
    *
+   * @param itemIDs item IDs that the anonymous user has interacted with
+   * @param howMany how many recommendations to return
+   * @param rescorer rescoring function used to modify association strengths before ranking results
    * @see #recommendToAnonymous(long[], int)
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
    *  exist in the model. Otherwise, unknown items are ignored.
@@ -347,7 +355,11 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * Like {@link #recommendToAnonymous(long[], int, IDRescorer)} but lets caller specify strength scores associated
    * to each of the items.
    *
+   * @param itemIDs item IDs that the anonymous user has interacted with
    * @param values values corresponding to {@code itemIDs}
+   * @param howMany how many recommendations to return
+   * @param rescorer rescoring function used to modify association strengths before ranking results
+   * @see #recommendToAnonymous(long[], int)
    * @see #recommendToAnonymous(long[], int, IDRescorer)
    * @throws org.apache.mahout.cf.taste.common.NoSuchItemException if <em>none</em> of {@code itemIDs}
    *  exist in the model. Otherwise, unknown items are ignored.
@@ -386,6 +398,29 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    */
   float[] estimatePreferences(long userID, long... itemIDs) throws TasteException;
 
+  /**
+   * A version of {@link #estimatePreference(long, long)} that, like 
+   * {@link #recommendToAnonymous(long[], float[], int)}, operates on "anonymous" users -- 
+   * defined not by a previously known set of data, but data given in the request.
+   * 
+   * @param toItemID item for which the anonymous user's strength of interaction is to be estimated
+   * @param itemIDs item IDs that the anonymous user has interacted with
+   * @see #recommendToAnonymous(long[], float[], int) 
+   */
+  float estimateForAnonymous(long toItemID, long[] itemIDs) throws TasteException;
+  
+  /**
+   * A version of {@link #estimatePreference(long, long)} that, like 
+   * {@link #recommendToAnonymous(long[], float[], int)}, operates on "anonymous" users -- 
+   * defined not by a previously known set of data, but data given in the request.
+   * 
+   * @param toItemID item for which the anonymous user's strength of interaction is to be estimated
+   * @param itemIDs item IDs that the anonymous user has interacted with
+   * @param values values corresponding to {@code itemIDs}
+   * @see #recommendToAnonymous(long[], float[], int) 
+   */
+  float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values) throws TasteException;
+  
   /**
    * Like {@link #ingest(File)}, but reads from a {@link Reader}.
    *

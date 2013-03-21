@@ -107,6 +107,11 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
   <servlet>
+    <servlet-name>EstimateForAnonymousServlet</servlet-name>
+    <servlet-class>net.myrrix.web.servlets.EstimateForAnonymousServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet>
     <servlet-name>BecauseServlet</servlet-name>
     <servlet-class>net.myrrix.web.servlets.BecauseServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
@@ -191,6 +196,10 @@
   <servlet-mapping>
     <servlet-name>EstimateServlet</servlet-name>
     <url-pattern>/estimate/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>EstimateForAnonymousServlet</servlet-name>
+    <url-pattern>/estimateForAnonymous/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>BecauseServlet</servlet-name>

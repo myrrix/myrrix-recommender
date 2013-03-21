@@ -529,10 +529,38 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
                                                     IDRescorer rescorer)
       throws NotReadyException, NoSuchItemException {
 
-    Preconditions.checkArgument(values == null || values.length == itemIDs.length,
-                                "Number of values doesn't match number of items");
     Preconditions.checkArgument(howMany > 0, "howMany must be positive");
 
+    float[] anonymousUserFeatures = buildAnonymousUserFeatures(itemIDs, values);
+
+    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.25f);
+    for (long itemID : itemIDs) {
+      userKnownItemIDs.add(itemID);
+    }
+
+    float[][] anonymousFeaturesAsArray = { anonymousUserFeatures };
+
+    Generation generation = getCurrentGeneration();    
+    Lock yLock = generation.getYLock().readLock();    
+    yLock.lock();
+    try {
+      return multithreadedTopN(anonymousFeaturesAsArray,
+                               userKnownItemIDs,
+                               generation.getUserTagIDs(),
+                               rescorer,
+                               howMany,
+                               generation.getCandidateFilter());
+    } finally {
+      yLock.unlock();
+    }
+  }
+  
+  private float[] buildAnonymousUserFeatures(long[] itemIDs, float[] values) 
+      throws NotReadyException, NoSuchItemException {
+
+    Preconditions.checkArgument(values == null || values.length == itemIDs.length,
+                                "Number of values doesn't match number of items");
+    
     Generation generation = getCurrentGeneration();
 
     FastByIDMap<float[]> Y = generation.getY();
@@ -573,24 +601,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throw new NoSuchItemException(Arrays.toString(itemIDs));
     }
 
-    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.25f);
-    for (long itemID : itemIDs) {
-      userKnownItemIDs.add(itemID);
-    }
-
-    float[][] anonymousFeaturesAsArray = { anonymousUserFeatures };
-
-    yLock.lock();
-    try {
-      return multithreadedTopN(anonymousFeaturesAsArray,
-                               userKnownItemIDs,
-                               generation.getUserTagIDs(),
-                               rescorer,
-                               howMany,
-                               generation.getCandidateFilter());
-    } finally {
-      yLock.unlock();
-    }
+    return anonymousUserFeatures;
   }
 
   @Override
@@ -710,6 +721,35 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     } finally {
       yLock.unlock();
     }
+  }
+  
+  @Override
+  public float estimateForAnonymous(long toItemID, long[] itemIDs) throws NotReadyException, NoSuchItemException {
+    return estimateForAnonymous(toItemID, itemIDs, null);
+  }
+  
+  @Override
+  public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values)
+      throws NotReadyException, NoSuchItemException {
+
+    Generation generation = getCurrentGeneration();    
+    FastByIDMap<float[]> Y = generation.getY();
+    Lock yLock = generation.getYLock().readLock();
+    float[] toItemFeatures;    
+    yLock.lock();
+    try {
+      toItemFeatures = Y.get(toItemID);
+    } finally {
+      yLock.unlock();
+    }
+    
+    if (toItemFeatures == null) {
+      throw new NoSuchItemException(toItemID);
+    }
+    
+    float[] anonymousUserFeatures = buildAnonymousUserFeatures(itemIDs, values);    
+    
+    return (float) SimpleVectorMath.dot(anonymousUserFeatures, toItemFeatures);
   }
 
   /**

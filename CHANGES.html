@@ -14,19 +14,32 @@ hr {margin:20px 0 10px 0}
 
 <h1>Version 0.11</h1>
 
-<p>March 2013</p>
+<p>March 29 2013</p>
 
 <h2>New Features</h2>
+
+<ul>
+  <li>New "tag" API which allows callers to record interactions between users/items and concepts, or labels,
+  which inform the model but are not returned in results. For example a user can be "female" and an item
+  "yellow".</li>
+  <li>New <code>estimateToAnonymous</code> method, which functions like <code>estimatePreference</code> for
+  "anonymous" users, like <code>recommendToAnonymous</code>.</li>
+</ul>
 
 <h2>Other</h2>
 
 <ul>
+  <li>Improved speed in Computation Layer.</li>
   <li><code>IDRescorer</code> behavior has slightly changed for <code>recommendToMany</code>. See Upgrade Notes.</li>
   <li>Default value of <code>model.als.alpha</code> and negative strength values has changed. This should result in
   a small improvement in quality on many data sets. See Upgrade Notes.</li>
 </ul>
 
 <h2>Fixes</h2>
+
+<ul>
+  <li>Minor fixes and improvements to model loading and persistence in Serving Layer.</li>
+</ul>
 
 <h1>Version 0.10</h1>
 

@@ -450,6 +450,62 @@ public final class ClientRecommender implements MyrrixRecommender {
       throw new TasteException(ioe);
     }
   }
+  
+  @Override
+  public float estimateForAnonymous(long toItemID, long[] itemIDs) throws TasteException {
+    return estimateForAnonymous(toItemID, itemIDs, null);
+  }
+  
+  @Override
+  public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values) throws TasteException {
+    return estimateForAnonymous(toItemID, itemIDs, values, null);
+  }
+  
+  public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values, Long contextUserID) 
+      throws TasteException {  
+    Preconditions.checkArgument(values == null || values.length == itemIDs.length,
+                                "Number of values doesn't match number of items");
+    StringBuilder urlPath = new StringBuilder();
+    urlPath.append("/estimateForAnonymous/");
+    urlPath.append(toItemID);
+    for (int i = 0; i < itemIDs.length; i++) {
+      urlPath.append('/').append(itemIDs[i]);
+      if (values != null) {
+        urlPath.append('=').append(values[i]);
+      }
+    }
+
+    try {
+      // Requests are typically partitioned by user, but this request does not directly depend on a user.
+      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+      // requests related to that user. Otherwise just partition on the "to" item ID, which is at least
+      // deterministic.
+      long idToPartitionOn = contextUserID == null ? toItemID : contextUserID;
+      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
+      try {
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            break;
+          case HttpURLConnection.HTTP_NOT_FOUND:
+            throw new NoSuchItemException(Arrays.toString(itemIDs) + ' ' + toItemID);
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
+        try {
+          return LangUtils.parseFloat(reader.readLine());
+        } finally {
+          Closeables.close(reader, true);
+        }
+      } finally {
+        connection.disconnect();
+      }
+    } catch (IOException ioe) {
+      throw new TasteException(ioe);
+    }
+  }
 
   /**
    * Like {@link #recommend(long, int, boolean, IDRescorer)}, and sets {@code considerKnownItems} to {@code false}
@@ -605,7 +661,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     urlPath.append("/mostPopularItems");
     appendCommonQueryParams(howMany, false, null, urlPath);
     try {
-      // TODO does it make sense to force this to partition 0?
+      // Always send to partition 0 for consistency
       HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", 0L);
       try {
         switch (connection.getResponseCode()) {

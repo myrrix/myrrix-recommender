@@ -173,9 +173,12 @@ public final class LoadRunner implements Callable<Void> {
         } else if (r < 0.15) {
           client.mostPopularItems(10);
           mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
-        } else if (r < 0.20) {
+        } else if (r < 0.19) {
           client.estimatePreference(userID, itemID);
           estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
+        } else if (r < 0.20) {
+          client.estimateForAnonymous(itemID, new long[] {itemID2});
+          estimatePreference.addDatum(System.currentTimeMillis() - stepStart);          
         } else if (r < 0.25) {
           client.mostSimilarItems(new long[]{itemID}, 10);
           mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);

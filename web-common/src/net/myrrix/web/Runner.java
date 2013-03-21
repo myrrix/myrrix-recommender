@@ -66,6 +66,7 @@ import net.myrrix.online.io.ResourceRetriever;
 import net.myrrix.web.servlets.AllItemIDsServlet;
 import net.myrrix.web.servlets.AllUserIDsServlet;
 import net.myrrix.web.servlets.BecauseServlet;
+import net.myrrix.web.servlets.EstimateForAnonymousServlet;
 import net.myrrix.web.servlets.EstimateServlet;
 import net.myrrix.web.servlets.IngestServlet;
 import net.myrrix.web.servlets.ItemClusterServlet;
@@ -323,6 +324,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     addServlet(context, new SimilarityServlet(), "/similarity/*");
     addServlet(context, new SimilarityToItemServlet(), "/similarityToItem/*");
     addServlet(context, new EstimateServlet(), "/estimate/*");
+    addServlet(context, new EstimateForAnonymousServlet(), "/estimateForAnonymous/*");    
     addServlet(context, new BecauseServlet(), "/because/*");
     addServlet(context, new ReadyServlet(), "/ready/*");
     addServlet(context, new AllUserIDsServlet(), "/user/allIDs/*");
