@@ -230,4 +230,18 @@ public final class IOUtils {
     return new BufferedReader(new InputStreamReader(in, Charsets.UTF_8));
   }
 
+  /**
+   * @return true iff the given file is a gzip-compressed file with no content; the file itself may not
+   *  be empty because it contains gzip headers and footers
+   * @throw IOException if the file is not a gzip file or can't be read
+   */
+  public static boolean isGZIPFileEmpty(File f) throws IOException {
+    InputStream in = new GZIPInputStream(new FileInputStream(f));
+    try {
+      return in.read() == -1;
+    } finally {
+      Closeables.close(in, true);
+    }
+  }
+
 }

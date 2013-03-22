@@ -201,13 +201,13 @@ public final class DelegateGenerationManager implements GenerationManager {
         log.warn("Failed to close appender cleanly", ioe);
       }
       if (appendFile.exists()) {
-        if (appendFile.length() > 20) { // 20 is size of gzip header; <= 20 means empty
-          Files.move(appendFile, new File(inputDir, System.currentTimeMillis() + ".csv.gz"));
-        } else {
+        if (IOUtils.isGZIPFileEmpty(appendFile)) {
           log.info("File appears to have no data, deleting: {}", appendFile);
           if (!appendFile.delete()) {
             log.warn("Could not delete {}", appendFile);
           }
+        } else {
+          Files.move(appendFile, new File(inputDir, System.currentTimeMillis() + ".csv.gz"));
         }
       }
     }
