@@ -32,9 +32,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.zip.DeflaterInputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
 
 import com.google.common.base.Charsets;
@@ -118,7 +118,7 @@ public final class IOUtils {
       return new ZipInputStream(in);
     }
     if (name.endsWith(".deflate")) {
-      return new DeflaterInputStream(in);
+      return new InflaterInputStream(in);
     }
     if (name.endsWith(".bz2") || name.endsWith(".bzip2")) {
       return new BZip2CompressorInputStream(in);
