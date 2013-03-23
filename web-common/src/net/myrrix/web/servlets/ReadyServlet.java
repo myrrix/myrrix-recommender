@@ -23,13 +23,18 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.mahout.cf.taste.common.TasteException;
 
 /**
- * <p>Responds to a HEAD request to {@code /ready} and in turn calls
+ * <p>Responds to a HEAD or GET request to {@code /ready} and in turn calls
  * {@link net.myrrix.common.MyrrixRecommender#isReady()}. Returns "OK" or "Unavailable" status depending on
  * whether the recommender is ready.</p>
  *
  * @author Sean Owen
  */
 public final class ReadyServlet extends AbstractMyrrixServlet {
+
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    doHead(request, response);
+  }
 
   @Override
   protected void doHead(HttpServletRequest request, HttpServletResponse response) throws IOException {
