@@ -1383,7 +1383,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   
   @Override
   public boolean await(long time, TimeUnit unit) throws InterruptedException {
-    Preconditions.checkArgument(time >= 0L);
+    Preconditions.checkArgument(time >= 0L, "time must be positive: {}", time);
     Preconditions.checkNotNull(unit);
     long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
     long waitIntervalMS = FastMath.min(1000L, waitForMS);

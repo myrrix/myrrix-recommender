@@ -87,7 +87,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
    */
   public LocationSensitiveHash(FastByIDMap<float[]> Y) {
     Preconditions.checkNotNull(Y);
-    Preconditions.checkArgument(!Y.isEmpty());
+    Preconditions.checkArgument(!Y.isEmpty(), "Y is empty");
     Preconditions.checkState(LSH_SAMPLE_RATIO < 1.0);
 
     this.Y = Y;

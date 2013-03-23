@@ -36,7 +36,7 @@ public final class MultiRescorer implements IDRescorer {
 
   public MultiRescorer(List<IDRescorer> rescorers) {
     Preconditions.checkNotNull(rescorers);
-    Preconditions.checkState(!rescorers.isEmpty());
+    Preconditions.checkState(!rescorers.isEmpty(), "rescorers is empty");
     this.rescorers = rescorers.toArray(new IDRescorer[rescorers.size()]);
   }
 

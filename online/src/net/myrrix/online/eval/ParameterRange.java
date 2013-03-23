@@ -48,7 +48,7 @@ public final class ParameterRange {
    *  elements. The values are not necessarily distributed uniformly in the range.
    */
   public Number[] buildSteps(int numSteps) {
-    Preconditions.checkArgument(numSteps >= 2);
+    Preconditions.checkArgument(numSteps >= 2, "numSteps must be at least 2: {}", numSteps);
     Number[] stepValues = new Number[numSteps];
     stepValues[0] = maybeRound(min);
     stepValues[stepValues.length - 1] = maybeRound(max);

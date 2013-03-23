@@ -71,7 +71,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
                             Callable<? extends Number> evaluator,
                             boolean minimize) {
     Preconditions.checkNotNull(parameterRanges);
-    Preconditions.checkArgument(!parameterRanges.isEmpty());
+    Preconditions.checkArgument(!parameterRanges.isEmpty(), "parameterRanges is empty");
     Preconditions.checkArgument(numSteps >= 2);
     Preconditions.checkNotNull(evaluator);
     this.parameterRanges = parameterRanges;

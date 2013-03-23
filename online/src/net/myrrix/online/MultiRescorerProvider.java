@@ -41,7 +41,7 @@ public final class MultiRescorerProvider extends AbstractRescorerProvider {
   
   public MultiRescorerProvider(RescorerProvider... providers) {
     Preconditions.checkNotNull(providers);
-    Preconditions.checkArgument(providers.length > 0);
+    Preconditions.checkArgument(providers.length > 0, "providers is empty");
     this.providers = providers;
   }
   

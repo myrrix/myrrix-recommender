@@ -66,7 +66,9 @@ public final class DoSFilter implements Filter {
         maxAccessPerHostPerMinString == null ? 
         DEFAULT_MAX_ACCESS_PER_HOST_PER_MIN : 
         Integer.parseInt(maxAccessPerHostPerMinString);
-    Preconditions.checkArgument(maxAccessPerHostPerMin > 0);
+    Preconditions.checkArgument(maxAccessPerHostPerMin > 0, 
+                                "Bad max accesses per host per min: {}", 
+                                maxAccessPerHostPerMin);
     
     executor = Executors.newSingleThreadScheduledExecutor();
     executor.scheduleAtFixedRate(new Runnable() {

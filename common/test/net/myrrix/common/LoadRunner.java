@@ -93,7 +93,7 @@ public final class LoadRunner implements Callable<Void> {
     Preconditions.checkNotNull(client);
     Preconditions.checkNotNull(uniqueItemIDs);
     Preconditions.checkNotNull(uniqueItemIDs);
-    Preconditions.checkArgument(steps > 0);
+    Preconditions.checkArgument(steps > 0, "steps must be positive: {}", steps);
     this.client = client;
     this.uniqueUserIDs = uniqueUserIDs;
     this.uniqueItemIDs = uniqueItemIDs;

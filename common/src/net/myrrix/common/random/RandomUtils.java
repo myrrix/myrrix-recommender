@@ -209,7 +209,7 @@ public final class RandomUtils {
    */
   public static int randomFrom(FastIDSet set, RandomGenerator random) {
     int size = set.size();
-    Preconditions.checkArgument(size > 0);
+    Preconditions.checkArgument(size > 0, "Empty set");
     LongPrimitiveIterator it = set.iterator();
     it.skip(random.nextInt(size));
     return (int) it.nextLong();

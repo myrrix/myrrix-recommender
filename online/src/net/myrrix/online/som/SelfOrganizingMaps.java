@@ -71,8 +71,9 @@ public final class SelfOrganizingMaps {
    *   vector will move vector centers.
    */
   public SelfOrganizingMaps(double minDecay, double initLearningRate) {
-    Preconditions.checkArgument(minDecay > 0.0);
-    Preconditions.checkArgument(initLearningRate > 0.0 && initLearningRate <= 1.0);
+    Preconditions.checkArgument(minDecay > 0.0, "Min decay must be positive: {}", minDecay);
+    Preconditions.checkArgument(initLearningRate > 0.0 && initLearningRate <= 1.0,
+                                "Learning rate should be in (0,1]: {}", initLearningRate);
     this.minDecay = minDecay;
     this.initLearningRate = initLearningRate;
   }
