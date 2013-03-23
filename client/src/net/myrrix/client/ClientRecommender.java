@@ -187,7 +187,13 @@ public final class ClientRecommender implements MyrrixRecommender {
       TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
       tmf.init(keyStore);
 
-      SSLContext ctx = SSLContext.getInstance("TLS");
+      SSLContext ctx;
+      try {
+        ctx = SSLContext.getInstance("TLSv1.1"); // Java 7 only
+      } catch (NoSuchAlgorithmException ignored) {
+        log.info("TLSv1.1 unavailable, falling back to TLSv1");
+        ctx = SSLContext.getInstance("TLSv1"); // Java 6       
+      }
       ctx.init(null, tmf.getTrustManagers(), null);
       return ctx.getSocketFactory();
 

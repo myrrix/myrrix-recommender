@@ -20,9 +20,11 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import javax.net.ssl.SSLContext;
 import javax.servlet.Filter;
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.Servlet;
@@ -452,8 +454,10 @@ public final class Runner implements Callable<Boolean>, Closeable {
       connector.setSecure(true);
       connector.setScheme("https");
       connector.setAttribute("SSLEnabled", "true");
-      connector.setAttribute("sslProtocol", "TLS");
-      connector.setAttribute("clientAuth", "false");
+      String protocol = chooseSSLProtocol("TLSv1.1", "TLSv1");
+      if (protocol != null) {
+        connector.setAttribute("sslProtocol", protocol);
+      }
       connector.setAttribute("keystoreFile", keystoreFile.getAbsoluteFile());
       connector.setAttribute("keystorePass", keystorePassword);
     }
@@ -475,6 +479,18 @@ public final class Runner implements Callable<Boolean>, Closeable {
     connector.setAttribute("disableUploadTimeout", false);
 
     return connector;
+  }
+  
+  private static String chooseSSLProtocol(String... protocols) {
+    for (String protocol : protocols) {
+      try {
+        SSLContext.getInstance(protocol);
+        return protocol;
+      } catch (NoSuchAlgorithmException ignored) {
+        // continue
+      }
+    }
+    return null;
   }
 
   private Context makeContext(Tomcat tomcat, File noSuchBaseDir, int port) throws IOException {
