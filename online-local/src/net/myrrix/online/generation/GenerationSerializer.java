@@ -64,15 +64,7 @@ public final class GenerationSerializer implements Serializable {
    * @return {@link Generation} it serializes
    */
   public static Generation readGeneration(File f) throws IOException {
-    ObjectInputStream in = new ObjectInputStream(IOUtils.openMaybeDecompressing(f));
-    try {
-      GenerationSerializer serializer = (GenerationSerializer) in.readObject();
-      return serializer.getGeneration();
-    } catch (ClassNotFoundException cnfe) {
-      throw new IllegalStateException(cnfe);
-    } finally {
-      in.close();
-    }
+    return IOUtils.readObjectFromFile(f, GenerationSerializer.class).getGeneration();
   }
 
   /**
@@ -80,13 +72,7 @@ public final class GenerationSerializer implements Serializable {
    * @param f file to serialize a {@code GenerationSerializer} to
    */
   public static void writeGeneration(Generation generation, File f) throws IOException {
-    Preconditions.checkArgument(f.getName().endsWith(".gz"), "File should end in .gz: %s", f);
-    ObjectOutputStream out = new ObjectOutputStream(IOUtils.buildGZIPOutputStream(f));
-    try {
-      out.writeObject(new GenerationSerializer(generation));
-    } finally {
-      out.close();
-    }
+    IOUtils.writeObjectToFile(f, new GenerationSerializer(generation));
   }
 
   private void writeObject(ObjectOutputStream out) throws IOException {

@@ -23,9 +23,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
@@ -38,6 +41,7 @@ import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Closeables;
@@ -241,6 +245,33 @@ public final class IOUtils {
       return in.read() == -1;
     } finally {
       Closeables.close(in, true);
+    }
+  }
+  
+  /**
+   * @return object of type T that was serialized into the given file
+   */
+  public static <T extends Serializable> T readObjectFromFile(File f, Class<T> clazz) throws IOException {
+    ObjectInputStream in = new ObjectInputStream(openMaybeDecompressing(f));
+    try {
+      return (T) in.readObject();
+    } catch (ClassNotFoundException cnfe) {
+      throw new IllegalStateException(cnfe);
+    } finally {
+      Closeables.close(in, true);
+    }
+  }
+
+  /**
+   * Serializes an object, with gzip compression, to a given file.
+   */
+  public static <T extends Serializable> void writeObjectToFile(File f, T t) throws IOException {
+    Preconditions.checkArgument(f.getName().endsWith(".gz"), "File should end in .gz: %s", f);
+    ObjectOutputStream out = new ObjectOutputStream(buildGZIPOutputStream(f));
+    try {
+      out.writeObject(t);
+    } finally {
+      out.close();
     }
   }
 
