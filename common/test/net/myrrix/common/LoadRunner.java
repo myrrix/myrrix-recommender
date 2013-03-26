@@ -128,7 +128,7 @@ public final class LoadRunner implements Callable<Void> {
     Processor<Integer> processor = new Processor<Integer>() {
       private final RandomGenerator random = RandomManager.getRandom();      
       @Override
-      public void process(Integer step, long count) throws ExecutionException {
+      public void process(Integer step, long count) {
         double r;
         long userID;
         long itemID;
@@ -191,7 +191,7 @@ public final class LoadRunner implements Callable<Void> {
             recommend.addDatum(System.currentTimeMillis() - stepStart);
           }
         } catch (TasteException te) {
-          throw new ExecutionException(te);
+          log.warn("Error during request", te);
         }
         if (count % 1000 == 0) {
           log.info("Finished {} load steps", count);
