@@ -212,87 +212,74 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   /**
+   * @param replica host and port of replica to connect to
    * @param path URL to access (relative to context root)
    * @param method HTTP method to use
-   * @param unnormalizedID ID value that determines partition
-   * @return a {@link HttpURLConnection} to the Serving Layer with default configuration in place
    */
-  private HttpURLConnection makeConnection(String path,
-                                           String method,
-                                           long unnormalizedID) throws IOException {
-    return makeConnection(path, method, unnormalizedID, false, false, null);
+  private HttpURLConnection buildConnectionToReplica(HostAndPort replica,
+                                                     String path,
+                                                     String method) throws IOException {
+    return buildConnectionToReplica(replica, path, method, false, false, null);
   }
 
   /**
+   * @param replica host and port of replica to connect to
    * @param path URL to access (relative to context root)
    * @param method HTTP method to use
-   * @param unnormalizedID ID value that determines partition
    * @param doOutput if true, will need to write data into the request body
    * @param chunkedStreaming if true, use chunked streaming to accommodate a large upload, if possible
    * @param requestProperties additional request key/value pairs or {@code null} for none
-   * @return a {@link HttpURLConnection} to the Serving Layer with default configuration in place
    */
-  private HttpURLConnection makeConnection(String path,
-                                           String method,
-                                           long unnormalizedID,
-                                           boolean doOutput,
-                                           boolean chunkedStreaming,
-                                           Map<String,String> requestProperties) throws IOException {
-
+  private HttpURLConnection buildConnectionToReplica(HostAndPort replica,
+                                                     String path,
+                                                     String method,
+                                                     boolean doOutput,
+                                                     boolean chunkedStreaming,
+                                                     Map<String,String> requestProperties) throws IOException {
     String contextPath = config.getContextPath();
     if (contextPath != null) {
       path = '/' + contextPath + path;
     }
-    String protocol = config.isSecure() ? "https" : "http";
-    List<HostAndPort> replicas = choosePartitionAndReplicas(unnormalizedID);
-    IOException savedException = null;
-    for (HostAndPort replica : replicas) {
-      URL url;
-      try {
-        url = new URL(protocol, replica.getHostText(), replica.getPort(), path);
-      } catch (MalformedURLException mue) {
-        // can't happen
-        throw new IllegalStateException(mue);
-      }
-      log.debug("{} to {}", method, url);
+    String protocol = config.isSecure() ? "https" : "http";    
+    URL url;
+    try {
+      url = new URL(protocol, replica.getHostText(), replica.getPort(), path);
+    } catch (MalformedURLException mue) {
+      // can't happen
+      throw new IllegalStateException(mue);
+    }
+    log.debug("{} {}", method, url);
 
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      connection.setRequestMethod(method);
-      connection.setDoInput(true);
-      connection.setDoOutput(doOutput);
-      connection.setUseCaches(false);
-      connection.setAllowUserInteraction(false);
-      connection.setRequestProperty(HttpHeaders.ACCEPT, DESIRED_RESPONSE_CONTENT_TYPE);
-      if (closeConnection) {
-        connection.setRequestProperty(HttpHeaders.CONNECTION, "close");
-      }
-      if (chunkedStreaming) {
-        if (needAuthentication) {
-          // Must buffer in memory if using authentication since it won't handle the authorization challenge
-          log.debug("Authentication is enabled, so ingest data must be buffered in memory");
-        } else {
-          connection.setChunkedStreamingMode(0); // Use default buffer size
-        }
-      }
-      if (requestProperties != null) {
-        for (Map.Entry<String,String> entry : requestProperties.entrySet()) {
-          connection.setRequestProperty(entry.getKey(), entry.getValue());
-        }
-      }
-
-      try {
-        connection.connect();
-        return connection;
-      } catch (IOException ioe) {
-        // Replica is down, try another
-        log.info("Can't {} to {} ({})", method, url, ioe.toString());
-        savedException = ioe;
+    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+    connection.setRequestMethod(method);
+    connection.setDoInput(true);
+    connection.setDoOutput(doOutput);
+    connection.setUseCaches(false);
+    connection.setAllowUserInteraction(false);
+    connection.setRequestProperty(HttpHeaders.ACCEPT, DESIRED_RESPONSE_CONTENT_TYPE);
+    if (closeConnection) {
+      connection.setRequestProperty(HttpHeaders.CONNECTION, "close");
+    }
+    if (chunkedStreaming) {
+      if (needAuthentication) {
+        // Must buffer in memory if using authentication since it won't handle the authorization challenge
+        log.debug("Authentication is enabled, so ingest data must be buffered in memory");
+      } else {
+        connection.setChunkedStreamingMode(0); // Use default buffer size
       }
     }
-    throw savedException;
+    if (requestProperties != null) {
+      for (Map.Entry<String,String> entry : requestProperties.entrySet()) {
+        connection.setRequestProperty(entry.getKey(), entry.getValue());
+      }
+    }
+    return connection;
   }
 
-  private List<HostAndPort> choosePartitionAndReplicas(long unnormalizedID) {
+  /**
+   * @param unnormalizedID ID value that determines partition
+   */
+  private Iterable<HostAndPort> choosePartitionAndReplicas(long unnormalizedID) {
     List<HostAndPort> replicas = partitions.get(LangUtils.mod(unnormalizedID, partitions.size()));
     int numReplicas = replicas.size();
     if (numReplicas <= 1) {
@@ -346,14 +333,16 @@ public final class ClientRecommender implements MyrrixRecommender {
       bytes = null;
     }
 
-    try {
-      HttpURLConnection connection = makeConnection(path,
-                                                    set ? "POST" : "DELETE",
-                                                    unnormalizedID,
-                                                    sendValue,
-                                                    false,
-                                                    requestProperties);
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(unnormalizedID)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica,
+                                              path,
+                                              set ? "POST" : "DELETE",
+                                              sendValue,
+                                              false,
+                                              requestProperties);
         if (sendValue) {
           OutputStream out = connection.getOutputStream();
           out.write(bytes);
@@ -363,12 +352,20 @@ public final class ClientRecommender implements MyrrixRecommender {
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
           throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
+        return;
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", path, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", path, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   @Override
@@ -431,33 +428,42 @@ public final class ClientRecommender implements MyrrixRecommender {
     for (long itemID : itemIDs) {
       urlPath.append('/').append(itemID);
     }
-    try {
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", userID);
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(userID)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
+            try {
+              float[] result = new float[itemIDs.length];
+              for (int i = 0; i < itemIDs.length; i++) {
+                result[i] = LangUtils.parseFloat(reader.readLine());
+              }
+              return result;
+            } finally {
+              Closeables.close(reader, true);
+            }
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
-        try {
-          float[] result = new float[itemIDs.length];
-          for (int i = 0; i < itemIDs.length; i++) {
-            result[i] = LangUtils.parseFloat(reader.readLine());
-          }
-          return result;
-        } finally {
-          Closeables.close(reader, true);
-        }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
   
   @Override
@@ -484,17 +490,25 @@ public final class ClientRecommender implements MyrrixRecommender {
       }
     }
 
-    try {
-      // Requests are typically partitioned by user, but this request does not directly depend on a user.
-      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
-      // requests related to that user. Otherwise just partition on the "to" item ID, which is at least
-      // deterministic.
-      long idToPartitionOn = contextUserID == null ? toItemID : contextUserID;
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
+    // Requests are typically partitioned by user, but this request does not directly depend on a user.
+    // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+    // requests related to that user. Otherwise just partition on the "to" item ID, which is at least
+    // deterministic.
+    long idToPartitionOn = contextUserID == null ? toItemID : contextUserID;
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
+            try {
+              return LangUtils.parseFloat(reader.readLine());
+            } finally {
+              Closeables.close(reader, true);
+            }
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchItemException(Arrays.toString(itemIDs) + ' ' + toItemID);
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -502,18 +516,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
-        try {
-          return LangUtils.parseFloat(reader.readLine());
-        } finally {
-          Closeables.close(reader, true);
-        }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   /**
@@ -547,12 +562,14 @@ public final class ClientRecommender implements MyrrixRecommender {
     urlPath.append(userID);
     appendCommonQueryParams(howMany, considerKnownItems, rescorerParams, urlPath);
 
-    try {
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", userID);
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(userID)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            return consumeItems(connection);
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchUserException(userID);
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -560,14 +577,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        return consumeItems(connection);
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   private static List<RecommendedItem> consumeItems(HttpURLConnection connection) throws IOException {
@@ -614,12 +636,14 @@ public final class ClientRecommender implements MyrrixRecommender {
 
     // Note that this assumes that all user IDs are on the same partiiton. It will fail at request
     // time if not since the partition of the first user doesn't contain the others.
-    try {
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", userIDs[0]);
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(userIDs[0])) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            return consumeItems(connection);
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchUserException(Arrays.toString(userIDs));
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -627,14 +651,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        return consumeItems(connection);
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   @Override
@@ -669,26 +698,34 @@ public final class ClientRecommender implements MyrrixRecommender {
     StringBuilder urlPath = new StringBuilder(32);
     urlPath.append("/mostPopularItems");
     appendCommonQueryParams(howMany, false, null, urlPath);
-    try {
-      // Always send to partition 0 for consistency
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", 0L);
+
+    // Always send to partition 0 for consistency    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(0L)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            return consumeItems(connection);
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        return consumeItems(connection);
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   /**
@@ -742,17 +779,20 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     appendCommonQueryParams(howMany, false, rescorerParams, urlPath);
 
-    try {
-      // Requests are typically partitioned by user, but this request does not directly depend on a user.
-      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
-      // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
-      // deterministic.
-      long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
+    // Requests are typically partitioned by user, but this request does not directly depend on a user.
+    // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+    // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
+    // deterministic.
+    long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            return consumeItems(connection);
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchItemException(Arrays.toString(itemIDs));
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -760,13 +800,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        return consumeItems(connection);
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   /**
@@ -796,17 +842,30 @@ public final class ClientRecommender implements MyrrixRecommender {
     for (long itemID : itemIDs) {
       urlPath.append('/').append(itemID);
     }
-    try {
-      // Requests are typically partitioned by user, but this request does not directly depend on a user.
-      // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
-      // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
-      // deterministic.
-      long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
-      HttpURLConnection connection = makeConnection(urlPath.toString(), "GET", idToPartitionOn);
+    
+    // Requests are typically partitioned by user, but this request does not directly depend on a user.
+    // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
+    // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
+    // deterministic.
+    long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath.toString(), "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
+            try {
+              float[] result = new float[itemIDs.length];
+              for (int i = 0; i < itemIDs.length; i++) {
+                result[i] = LangUtils.parseFloat(reader.readLine());
+              }
+              return result;
+            } finally {
+              Closeables.close(reader, true);
+            }
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchItemException(connection.getResponseMessage());
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -814,23 +873,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
-        try {
-          float[] result = new float[itemIDs.length];
-          for (int i = 0; i < itemIDs.length; i++) {
-            result[i] = LangUtils.parseFloat(reader.readLine());
-          }
-          return result;
-        } finally {
-          Closeables.close(reader, true);
-        }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   /**
@@ -853,13 +908,16 @@ public final class ClientRecommender implements MyrrixRecommender {
    */
   @Override
   public List<RecommendedItem> recommendedBecause(long userID, long itemID, int howMany) throws TasteException {
-    try {
-      HttpURLConnection connection =
-          makeConnection("/because/" + userID + '/' + itemID + "?howMany=" + howMany, "GET", userID);
+    String urlPath = "/because/" + userID + '/' + itemID + "?howMany=" + howMany;
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(userID)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath, "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            return consumeItems(connection);
           case HttpURLConnection.HTTP_NOT_FOUND:
             String connectionMessage = connection.getResponseMessage();
             if (connectionMessage != null &&
@@ -873,14 +931,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        return consumeItems(connection);
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   @Override
@@ -923,12 +986,12 @@ public final class ClientRecommender implements MyrrixRecommender {
           int partition = LangUtils.mod(userID, partitions.size());
           Pair<Writer,HttpURLConnection> writerAndConnection = writersAndConnections.get(partition);
           if (writerAndConnection == null) {
-            HttpURLConnection connection =
-                makeConnection("/ingest", "POST", partition, true, true, INGEST_REQUEST_PROPS);
+            HttpURLConnection connection = buildConnectionToAReplica(partition);
             Writer writer = IOUtils.buildGZIPWriter(connection.getOutputStream());
             writerAndConnection = Pair.of(writer, connection);
             writersAndConnections.put(partition, writerAndConnection);
           }
+          // TODO this doesn't automatically find another replica if this write fails
           Writer writer = writerAndConnection.getFirst();
           writer.write(line);
           writer.write('\n');
@@ -950,6 +1013,28 @@ public final class ClientRecommender implements MyrrixRecommender {
     } catch (IOException ioe) {
       throw new TasteException(ioe);
     }
+  }
+
+  private HttpURLConnection buildConnectionToAReplica(int partition) throws TasteException {
+    String urlPath = "/ingest";
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : partitions.get(partition)) {
+      HttpURLConnection connection = null;
+      try {
+        connection = buildConnectionToReplica(replica, urlPath, "POST", true, true, INGEST_REQUEST_PROPS);
+        connection.connect();
+        return connection;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
+      } finally {
+        if (connection != null) {
+          connection.disconnect();
+        }
+      }
+    }
+    throw savedException;
   }
 
   @Deprecated
@@ -974,18 +1059,24 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   private void refreshPartition(int partition) {
-    try {
-      HttpURLConnection connection = makeConnection("/refresh", "POST", partition);
+    String urlPath = "/refresh";
+    
+    for (HostAndPort replica : partitions.get(partition)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath, "POST");
         if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
           log.warn("Unable to refresh partition {} ({} {}); continuing",
                    partition, connection.getResponseCode(), connection.getResponseMessage());
+          // Yes, continue
         }
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      log.warn("Unable to refresh ({}); continuing", ioe.toString());
     }
   }
 
@@ -1186,9 +1277,13 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   private boolean isPartitionReady(int partition) throws TasteException {
-    try {
-      HttpURLConnection connection = makeConnection("/ready", "HEAD", partition);
+    String urlPath = "/ready";
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : partitions.get(partition)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath, "HEAD");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
             return true;
@@ -1197,12 +1292,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   @Override
@@ -1230,16 +1332,12 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public FastIDSet getAllUserIDs() throws TasteException {
-    try {
-      FastIDSet result = new FastIDSet();
-      int numPartitions = partitions.size();
-      for (int i = 0; i < numPartitions; i++) {
-        getAllIDsFromPartition(i, true, result);
-      }
-      return result;
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
+    FastIDSet result = new FastIDSet();
+    int numPartitions = partitions.size();
+    for (int i = 0; i < numPartitions; i++) {
+      getAllIDsFromPartition(i, true, result);
     }
+    return result;
   }
 
 
@@ -1247,35 +1345,44 @@ public final class ClientRecommender implements MyrrixRecommender {
   public FastIDSet getAllItemIDs() throws TasteException {
     // Yes, loop over all partitions. Most item IDs will be returned from all partitions but it's
     // possible for some to exist only on a few.
-    try {
-      FastIDSet result = new FastIDSet();
-      int numPartitions = partitions.size();
-      for (int i = 0; i < numPartitions; i++) {
-        getAllIDsFromPartition(i, false, result);
-      }
-      return result;
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
+    FastIDSet result = new FastIDSet();
+    int numPartitions = partitions.size();
+    for (int i = 0; i < numPartitions; i++) {
+      getAllIDsFromPartition(i, false, result);
     }
+    return result;
   }
 
-  private void getAllIDsFromPartition(int partition, boolean user, FastIDSet result)
-      throws IOException, TasteException {
-    String path = '/' + (user ? "user" : "item") + "/allIDs";
-    HttpURLConnection connection = makeConnection(path, "GET", (long) partition);
-    try {
-      switch (connection.getResponseCode()) {
-        case HttpURLConnection.HTTP_OK:
-          break;
-        case HttpURLConnection.HTTP_UNAVAILABLE:
-          throw new NotReadyException();
-        default:
-          throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+  private void getAllIDsFromPartition(int partition, boolean user, FastIDSet result) throws TasteException {
+    String urlPath = '/' + (user ? "user" : "item") + "/allIDs";
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : partitions.get(partition)) {
+      HttpURLConnection connection = null;
+      try {
+        connection = buildConnectionToReplica(replica, urlPath, "GET");
+        switch (connection.getResponseCode()) {
+          case HttpURLConnection.HTTP_OK:
+            consumeIDs(connection, result);
+            return;
+          case HttpURLConnection.HTTP_UNAVAILABLE:
+            throw new NotReadyException();
+          default:
+            throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
+      } finally {
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-      consumeIDs(connection, result);
-    } finally {
-      connection.disconnect();
     }
+    throw savedException;
   }
 
   private static void consumeIDs(HttpURLConnection connection, FastIDSet result) throws IOException {
@@ -1301,12 +1408,21 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   private int getNumClusters(boolean user) throws TasteException {
-    try {
-      HttpURLConnection connection = makeConnection('/' + (user ? "user" : "item") + "/clusters/count", "GET", 0L);
+    String urlPath = '/' + (user ? "user" : "item") + "/clusters/count";
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(0L)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath, "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
+            BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
+            try {
+              return Integer.parseInt(reader.readLine());
+            } finally {
+              Closeables.close(reader, true);
+            }          
           case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
             throw new UnsupportedOperationException();
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -1314,18 +1430,19 @@ public final class ClientRecommender implements MyrrixRecommender {
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
-        try {
-          return Integer.parseInt(reader.readLine());
-        } finally {
-          Closeables.close(reader, true);
-        }
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   @Override
@@ -1339,28 +1456,37 @@ public final class ClientRecommender implements MyrrixRecommender {
   }
 
   private FastIDSet getCluster(int n, boolean user) throws TasteException {
-    try {
-      HttpURLConnection connection = makeConnection('/' + (user ? "user" : "item") + "/clusters/" + n, "GET", 0L);
+    String urlPath = '/' + (user ? "user" : "item") + "/clusters/" + n;
+    
+    TasteException savedException = null;
+    for (HostAndPort replica : choosePartitionAndReplicas(0L)) {
+      HttpURLConnection connection = null;
       try {
+        connection = buildConnectionToReplica(replica, urlPath, "GET");
         switch (connection.getResponseCode()) {
           case HttpURLConnection.HTTP_OK:
-            break;
-          case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
+            FastIDSet members = new FastIDSet();
+            consumeIDs(connection, members);
+            return members;          case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
             throw new UnsupportedOperationException();
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
           default:
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        FastIDSet members = new FastIDSet();
-        consumeIDs(connection, members);
-        return members;
+      } catch (TasteException te) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        savedException = te;
+      } catch (IOException ioe) {
+        log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
+        savedException = new TasteException(ioe);
       } finally {
-        connection.disconnect();
+        if (connection != null) {
+          connection.disconnect();
+        }
       }
-    } catch (IOException ioe) {
-      throw new TasteException(ioe);
     }
+    throw savedException;
   }
 
   private static void appendCommonQueryParams(int howMany,

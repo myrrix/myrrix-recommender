@@ -34,6 +34,15 @@ hr {margin:20px 0 10px 0}
   user scores has been taken, not before.</li>
 </ul>
 
+<h3>Computation Layer</h3>
+
+<ul>
+  <li>Computation Layer <code>model.cluster.k</code> parameter has been split into <code>model.cluster.user.k</code>
+  and <code>model.cluster.item.k</code> to control k for user and item clustering, respectively. If using the
+  old parameter, specify one (or both) new paramters now instead.</li>
+  <li>Note that the Computation Layer will now delete old generations, keeping 10 generations by default</li>
+</ul>
+
 <h2>Version 0.10</h2>
 
 <h3>All</h3>
