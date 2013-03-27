@@ -194,7 +194,9 @@ public final class ClientRecommender implements MyrrixRecommender {
         log.info("TLSv1.1 unavailable, falling back to TLSv1");
         ctx = SSLContext.getInstance("TLSv1"); // Java 6       
         // This also seems to be necessary:
-        System.setProperty("https.protocols", "TLSv1");
+        if (System.getProperty("https.protocols") == null) {
+          System.setProperty("https.protocols", "TLSv1");
+        }
       }
       ctx.init(null, tmf.getTrustManagers(), null);
       return ctx.getSocketFactory();
