@@ -163,14 +163,17 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     X = new FastByIDMap<float[]>(RbyRow.size(), 1.25f);
 
+    boolean randomY;
     if (previousY == null ||
         previousY.isEmpty() ||
         previousY.entrySet().iterator().next().getValue().length != features) {
       log.info("Starting from random Y matrix");
       Y = constructInitialY(null);
+      randomY = true;
     } else {
       log.info("Starting from previous generation's Y matrix");
       Y = constructInitialY(previousY);
+      randomY = false;
     }
 
     // This will be used to compute rows/columns in parallel during iteration
@@ -230,7 +233,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           log.warn("Invalid convergence value, aborting iteration! {}", convergenceValue);
           break;
         }
-        if (convergenceValue < estimateErrorConvergenceThreshold) {
+        // Don't converge after 1 iteration if starting from a random point
+        if (!(randomY && iterationNumber == 1) && convergenceValue < estimateErrorConvergenceThreshold) {
           log.info("Converged");          
           break;
         }
