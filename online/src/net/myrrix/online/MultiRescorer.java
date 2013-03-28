@@ -42,14 +42,13 @@ public final class MultiRescorer implements IDRescorer {
 
   @Override
   public double rescore(long itemID, double value) {
-    double result = value;
     for (IDRescorer rescorer : rescorers) {
       value = rescorer.rescore(itemID, value);
       if (Double.isNaN(value)) {
         return Double.NaN;
       }
     }
-    return result;
+    return value;
   }
 
   @Override

@@ -49,14 +49,13 @@ public final class MultiLongPairRescorer implements Rescorer<LongPair> {
 
   @Override
   public double rescore(LongPair itemIDs, double value) {
-    double result = value;
     for (Rescorer<LongPair> rescorer : rescorers) {
       value = rescorer.rescore(itemIDs, value);
       if (Double.isNaN(value)) {
         return Double.NaN;
       }
     }
-    return result;
+    return value;
   }
 
   @Override
