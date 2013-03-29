@@ -70,12 +70,12 @@ public interface TranslatingRecommender {
   float[] estimatePreferences(String userID, String... itemIDs) throws TasteException;
 
   /**
-   * @see net.myrrix.common.MyrrixRecommender#estimateForAnonymous(long[], long) 
+   * @see net.myrrix.common.MyrrixRecommender#estimateForAnonymous(long, long[])
    */
   float estimateForAnonymous(String toItemID, String[] itemIDs) throws TasteException;
   
   /**
-   * @see net.myrrix.common.MyrrixRecommender#estimateForAnonymous(long[], float[], long) 
+   * @see net.myrrix.common.MyrrixRecommender#estimateForAnonymous(long, long[], float[])
    */
   float estimateForAnonymous(String toItemID, String[] itemIDs, float[] values) throws TasteException;
   

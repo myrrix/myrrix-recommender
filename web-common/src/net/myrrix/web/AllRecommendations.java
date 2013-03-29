@@ -79,7 +79,7 @@ public final class AllRecommendations implements Callable<Object> {
       public void process(Long userID, long count) throws ExecutionException {
         IDRescorer rescorer =
             rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID}, recommender);
-        List<RecommendedItem> recs = null;
+        List<RecommendedItem> recs;
         try {
           recs = recommender.recommend(userID, howMany, rescorer);
         } catch (TasteException te) {

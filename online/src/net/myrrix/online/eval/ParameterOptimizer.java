@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -46,7 +47,9 @@ import org.slf4j.LoggerFactory;
 public final class ParameterOptimizer implements Callable<Map<String,Number>> {
   
   private static final Logger log = LoggerFactory.getLogger(ParameterOptimizer.class);
-  
+  private static final Pattern EQUALS = Pattern.compile("=");
+  private static final Pattern COLON = Pattern.compile(":");
+
   private final Map<String,ParameterRange> parameterRanges;
   private final int numSteps;  
   private final Callable<? extends Number> evaluator;
@@ -177,9 +180,9 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     
     Map<String,ParameterRange> parameterRanges = Maps.newHashMapWithExpectedSize(args.length);
     for (int i = 1; i < args.length; i++) {
-      String[] propValue = args[i].split("=");
+      String[] propValue = EQUALS.split(args[i]);
       String systemProperty = propValue[0];
-      String[] minMax = propValue[1].split(":");
+      String[] minMax = COLON.split(propValue[1]);
       ParameterRange range;
       try {
         int min = Integer.parseInt(minMax[0]);

@@ -42,7 +42,6 @@ td.htt:hover div, td.htt div:hover {display:block}
 <jsp:scriptlet>
 String maxMapSizeParam = request.getParameter("maxMapSize");
 int maxMapSize = maxMapSizeParam == null ? 40 : Integer.parseInt(maxMapSizeParam);
-int nodeMaxSize = 9;
 boolean userMatrix = "user".equalsIgnoreCase(request.getParameter("matrix"));
 ServerRecommender rec = (ServerRecommender) application.getAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY);
 Generation generation = rec.getGenerationManager().getCurrentGeneration();
@@ -54,7 +53,10 @@ if (generation != null) {
 </jsp:scriptlet>
 
 <table class="htt">
-  <jsp:scriptlet> for (Node[] mapRow : map) { </jsp:scriptlet>
+  <jsp:scriptlet>
+      int nodeMaxSize = 9;
+      for (Node[] mapRow : map) { 
+  </jsp:scriptlet>
   <tr class="htt">
     <jsp:scriptlet>
       for (Node node : mapRow) {

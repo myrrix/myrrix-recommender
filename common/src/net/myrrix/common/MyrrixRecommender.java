@@ -333,7 +333,7 @@ public interface MyrrixRecommender extends ItemBasedRecommender {
    * @param values values associated with given {@code itemIDs}. If not null, must be as many values as
    *  there are item IDs
    * @param howMany how many recommendations to return
-   * @see #estimateForAnonymous(long[], float[], long) 
+   * @see #estimateForAnonymous(long, long[], float[])
    */
   List<RecommendedItem> recommendToAnonymous(long[] itemIDs, float[] values, int howMany) throws TasteException;
 

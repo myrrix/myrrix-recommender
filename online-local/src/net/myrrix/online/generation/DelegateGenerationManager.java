@@ -282,63 +282,6 @@ public final class DelegateGenerationManager implements GenerationManager {
     Files.move(newModelFile, modelFile);
   }
 
-  private static MatrixFactorizer runFactorization(Generation currentGeneration,
-                                                   FastByIDMap<FastByIDFloatMap> rbyRow,
-                                                   FastByIDMap<FastByIDFloatMap> rbyColumn) throws IOException {
-    log.info("Building factorization...");
-
-    String featuresString = System.getProperty("model.features");
-    int features = featuresString == null ?
-        MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
-
-    if (System.getProperty("model.iterations") != null) {
-      log.warn("model.iterations system property is deprecated and ignored; " +
-               "use model.als.iterations.convergenceThreshold");
-    }
-
-    String iterationsConvergenceString = 
-        System.getProperty("model.als.iterations.convergenceThreshold",
-                           Double.toString(AlternatingLeastSquares.DEFAULT_CONVERGENCE_THRESHOLD));
-    String maxIterationsString = 
-        System.getProperty("model.iterations.max", 
-                           Integer.toString(AlternatingLeastSquares.DEFAULT_MAX_ITERATIONS));    
-    MatrixFactorizer als = new AlternatingLeastSquares(rbyRow, 
-                                                       rbyColumn, 
-                                                       features, 
-                                                       Double.parseDouble(iterationsConvergenceString),
-                                                       Integer.parseInt(maxIterationsString));
-
-    if (currentGeneration != null) {
-      FastByIDMap<float[]> previousY = currentGeneration.getY();
-      if (previousY != null) {
-        FastByIDMap<float[]> previousYClone;
-        Lock yLock = currentGeneration.getYLock().readLock();
-        yLock.lock();
-        try {
-          previousYClone = new FastByIDMap<float[]>(previousY.size());
-          for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
-            previousYClone.put(entry.getKey(), entry.getValue().clone());
-          }
-        } finally {
-          yLock.unlock();
-        }
-        als.setPreviousY(previousYClone);
-      }
-    }
-
-    try {
-      als.call();
-      log.info("Factorization complete");
-    } catch (ExecutionException ee) {
-      throw new IOException(ee.getCause());
-    } catch (InterruptedException ignored) {
-      log.warn("ALS computation was interrupted");
-    }
-
-    return als;
-  }
-
-
   private class RefreshCallable implements Callable<Void> {
     @Override
     public Void call() {
@@ -419,5 +362,60 @@ public final class DelegateGenerationManager implements GenerationManager {
       return null;
     }
 
+    private MatrixFactorizer runFactorization(Generation currentGeneration,
+                                              FastByIDMap<FastByIDFloatMap> rbyRow,
+                                              FastByIDMap<FastByIDFloatMap> rbyColumn) throws IOException {
+      log.info("Building factorization...");
+  
+      String featuresString = System.getProperty("model.features");
+      int features = featuresString == null ?
+          MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+  
+      if (System.getProperty("model.iterations") != null) {
+        log.warn("model.iterations system property is deprecated and ignored; " +
+                 "use model.als.iterations.convergenceThreshold");
+      }
+  
+      String iterationsConvergenceString = 
+          System.getProperty("model.als.iterations.convergenceThreshold",
+                             Double.toString(AlternatingLeastSquares.DEFAULT_CONVERGENCE_THRESHOLD));
+      String maxIterationsString = 
+          System.getProperty("model.iterations.max", 
+                             Integer.toString(AlternatingLeastSquares.DEFAULT_MAX_ITERATIONS));    
+      MatrixFactorizer als = new AlternatingLeastSquares(rbyRow, 
+                                                         rbyColumn, 
+                                                         features, 
+                                                         Double.parseDouble(iterationsConvergenceString),
+                                                         Integer.parseInt(maxIterationsString));
+  
+      if (currentGeneration != null) {
+        FastByIDMap<float[]> previousY = currentGeneration.getY();
+        if (previousY != null) {
+          FastByIDMap<float[]> previousYClone;
+          Lock yLock = currentGeneration.getYLock().readLock();
+          yLock.lock();
+          try {
+            previousYClone = new FastByIDMap<float[]>(previousY.size());
+            for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
+              previousYClone.put(entry.getKey(), entry.getValue().clone());
+            }
+          } finally {
+            yLock.unlock();
+          }
+          als.setPreviousY(previousYClone);
+        }
+      }
+  
+      try {
+        als.call();
+        log.info("Factorization complete");
+      } catch (ExecutionException ee) {
+        throw new IOException(ee.getCause());
+      } catch (InterruptedException ignored) {
+        log.warn("ALS computation was interrupted");
+      }
+  
+      return als;
+    }    
   }
 }

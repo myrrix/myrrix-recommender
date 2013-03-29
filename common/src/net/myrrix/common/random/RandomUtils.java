@@ -228,7 +228,7 @@ public final class RandomUtils {
                                               RandomGenerator random) {
     LongPrimitiveIterator it;
     if (n < streamSize) {
-      it = new SamplingLongPrimitiveIterator(random, stream, (double) n / (double) streamSize);      
+      it = new SamplingLongPrimitiveIterator(random, stream, (double) n / streamSize);      
     } else {
       it = stream;
     }
