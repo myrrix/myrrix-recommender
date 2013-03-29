@@ -18,27 +18,27 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-online-local</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Online Local</name>
-  <version>0.11-SNAPSHOT</version>
+  <version>0.11</version>
   <description>Bindings for Serving Layer standalone mode, for local storage and computation</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/online-local</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/online-local</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/online-local</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/online-local</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/online-local</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/online-local</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-online</artifactId>
-      <version>0.11-SNAPSHOT</version>
+      <version>0.11</version>
     </dependency>
   </dependencies>
 

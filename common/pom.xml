@@ -18,20 +18,20 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>0.11-SNAPSHOT</version>
+    <version>0.11</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-common</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Common</name>
-  <version>0.11-SNAPSHOT</version>
+  <version>0.11</version>
   <description>Myrrix common code</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/common</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/common</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/common</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/common</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/common</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11/common</developerConnection>
   </scm>
 
   <dependencies>
