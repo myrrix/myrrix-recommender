@@ -237,7 +237,7 @@ public final class IOUtils {
   /**
    * @return true iff the given file is a gzip-compressed file with no content; the file itself may not
    *  be empty because it contains gzip headers and footers
-   * @throw IOException if the file is not a gzip file or can't be read
+   * @throws IOException if the file is not a gzip file or can't be read
    */
   public static boolean isGZIPFileEmpty(File f) throws IOException {
     InputStream in = new GZIPInputStream(new FileInputStream(f));

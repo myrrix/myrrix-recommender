@@ -33,7 +33,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * {@link net.myrrix.online.RescorerProvider}. That is a run-time, per-request filter; this class represents
  * a more global, precomputed filtering that is not parameterized by the request.</p>
  *
- * <p>Implementations should define a constructor that accepts a parameter of type {@link FastByIDMap<float[]>}.
+ * <p>Implementations should define a constructor that accepts a parameter of type {@link FastByIDMap}.
  * This is a reference to the "Y" matrix in the model -- item-feature matrix.
  * Access to Y is protected by a lock, but, the implementation can assume that it is locked for
  * reading (not writing) during the constructor call, and is locked for reading (not writing) during
@@ -50,7 +50,7 @@ public interface CandidateFilter {
    * @param userVectors user feature vector(s) for which recommendations are being made. This may or may not
    *  influence which items are returned.
    * @return a set of items most likely to be a good recommendation for the given users. These are returned
-   *  as item ID / vector pairs ({@link FastByIDMap.MapEntry}). They are returned as an {@link Iterator} --
+   *  as item ID / vector pairs ({@link FastByIDMap}'s {@code MapEntry}). They are returned as an {@link Iterator} --
    *  and not just one, but potentially many. If several are returned, then the caller will process the
    *  {@link Iterator}s in parallel for speed.
    */
