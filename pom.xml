@@ -26,13 +26,13 @@
   <artifactId>myrrix</artifactId>
   <packaging>pom</packaging>
   <name>Myrrix (Parent)</name>
-  <version>0.11</version>
+  <version>1.0-SNAPSHOT</version>
   <description>Contains configuration common to all modules</description>
 
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-0.11</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk</developerConnection>
   </scm>
 
   <inceptionYear>2012</inceptionYear>
