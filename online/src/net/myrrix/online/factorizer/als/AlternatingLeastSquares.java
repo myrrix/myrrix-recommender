@@ -74,6 +74,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
   private static final int WORK_UNIT_SIZE = 100;
   private static final int NUM_USER_ITEMS_TO_TEST_CONVERGENCE = 100;
+  
+  private static final long LOG_INTERVAL = 100000;
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
@@ -261,7 +263,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         randomY.put(id, vector);
         recentVectors.add(vector);
       }
-      if (++count % 100000 == 0) {
+      if (++count % LOG_INTERVAL == 0) {
         log.info("Computed {} initial Y rows", count);
       }
     }
@@ -279,11 +281,11 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     addWorkers(RbyRow, Y, YTY, X, executor, futures);
 
     int count = 0;
-    int total = 0;
+    long total = 0;
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 10000) {
+      if (count >= LOG_INTERVAL) {
         total += count;
         JVMEnvironment env = new JVMEnvironment();
         log.info("{} X/tag rows computed ({}MB heap)", total, env.getUsedMemoryMB());
@@ -306,11 +308,11 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     addWorkers(RbyColumn, X, XTX, Y, executor, futures);
 
     int count = 0;
-    int total = 0;
+    long total = 0;
     for (Future<?> f : futures) {
       f.get();
       count += WORK_UNIT_SIZE;
-      if (count >= 10000) {
+      if (count >= LOG_INTERVAL) {
         total += count;
         JVMEnvironment env = new JVMEnvironment();
         log.info("{} Y/tag rows computed ({}MB heap)", total, env.getUsedMemoryMB());
