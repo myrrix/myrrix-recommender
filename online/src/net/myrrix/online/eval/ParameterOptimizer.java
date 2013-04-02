@@ -172,14 +172,15 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 2) {
-      System.err.println("Usage: dataDirectory property=min:max [property2=min2:max2 ...]");
+    if (args.length < 3) {
+      System.err.println("Usage: dataDirectory numSteps property=min:max [property2=min2:max2 ...]");
     }
     
     final File dataDir = new File(args[0]);
+    int numSteps = Integer.parseInt(args[1]);
     
     Map<String,ParameterRange> parameterRanges = Maps.newHashMapWithExpectedSize(args.length);
-    for (int i = 1; i < args.length; i++) {
+    for (int i = 2; i < args.length; i++) {
       String[] propValue = EQUALS.split(args[i]);
       String systemProperty = propValue[0];
       String[] minMax = COLON.split(propValue[1]);
@@ -205,7 +206,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
       }
     };
     
-    ParameterOptimizer optimizer = new ParameterOptimizer(parameterRanges, evaluator);
+    ParameterOptimizer optimizer = new ParameterOptimizer(parameterRanges, numSteps, evaluator, false);
     Map<String,Number> optimalValues = optimizer.findGoodParameterValues();
     System.out.println(optimalValues);
   }
