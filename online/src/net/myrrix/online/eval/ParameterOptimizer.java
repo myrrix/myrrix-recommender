@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * 
  * <p>It can be run on the command line with:</p>
  * 
- * <p>{@code java net.myrrix.online.eval.ParameterOptimizer dataDirectory property=min:max [property2=min2:max2 ...]}</p>
+ * <p>{@code java net.myrrix.online.eval.ParameterOptimizer dataDirectory numSteps property=min:max [property2=min2:max2 ...]}</p>
  * 
  * @author Sean Owen
  */
