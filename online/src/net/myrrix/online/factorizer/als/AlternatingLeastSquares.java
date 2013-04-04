@@ -76,6 +76,11 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private static final int NUM_USER_ITEMS_TO_TEST_CONVERGENCE = 100;
   
   private static final long LOG_INTERVAL = 100000;
+  
+  // This will cause the ALS algorithm to reconstruction the input matrix R, rather than the
+  // matrix P = R > 0 . Don't use this unless you understand it!
+  private static final boolean RECONSTRUCT_R_MATRIX = 
+      Boolean.parseBoolean(System.getProperty("model.reconstructRMatrix", "true"));
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
@@ -396,14 +401,18 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
           // Wu and YTCupu
           for (int row = 0; row < features; row++) {
-            float vectorAtRow = vector[row];
-            double rowValue = vectorAtRow * (cu - 1.0);
-            for (int col = 0; col < features; col++) {
-              WuData[row][col] += rowValue * vector[col];
-              //Wu.addToEntry(row, col, rowValue * vector[col]);
-            }
-            if (xu > 0.0) {
-              YTCupu[row] += vectorAtRow * cu;
+            if (RECONSTRUCT_R_MATRIX) {
+              YTCupu[row] += xu * vector[row];              
+            } else {
+              float vectorAtRow = vector[row];
+              double rowValue = vectorAtRow * (cu - 1.0);
+              for (int col = 0; col < features; col++) {
+                WuData[row][col] += rowValue * vector[col];
+                //Wu.addToEntry(row, col, rowValue * vector[col]);
+              }
+              if (xu > 0.0) {
+                YTCupu[row] += vectorAtRow * cu;
+              }
             }
           }
 
