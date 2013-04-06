@@ -80,7 +80,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   // This will cause the ALS algorithm to reconstruction the input matrix R, rather than the
   // matrix P = R > 0 . Don't use this unless you understand it!
   private static final boolean RECONSTRUCT_R_MATRIX = 
-      Boolean.parseBoolean(System.getProperty("model.reconstructRMatrix", "true"));
+      Boolean.parseBoolean(System.getProperty("model.reconstructRMatrix", "false"));
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
