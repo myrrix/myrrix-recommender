@@ -60,18 +60,6 @@ public final class MatrixUtilsTest extends MyrrixTest {
   }
 
   @Test
-  public void testPseudoInverse() {
-    FastByIDMap<float[]> M = new FastByIDMap<float[]>();
-    M.put(0L, new float[] {1.0f, 4.0f, 0.0f});
-    M.put(2L, new float[] {-1.0f, -2.0f, 3.0f});
-    M.put(3L, new float[] {0.0f, 0.0f, 7.0f});
-    FastByIDMap<float[]> Minv = MatrixUtils.getPseudoInverse(M);
-    assertArrayEquals(new float[] {     -1.0f,        0.5f,       0.0f}, Minv.get(0L));
-    assertArrayEquals(new float[] {     -2.0f,        0.5f,       0.0f}, Minv.get(2L));
-    assertArrayEquals(new float[] {0.8571429f, -0.2142857f, 0.1428571f}, Minv.get(3L));
-  }
-
-  @Test
   public void testTransposeTimesSelf() {
     FastByIDMap<float[]> M = new FastByIDMap<float[]>();
     M.put(1L, new float[] {4.0f, -1.0f, -5.0f});

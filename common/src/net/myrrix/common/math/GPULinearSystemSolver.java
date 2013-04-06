@@ -19,25 +19,26 @@ package net.myrrix.common.math;
 import org.apache.commons.math3.linear.RealMatrix;
 
 /**
- * Encapsulates inverting a matrix. This allows for swapping in other strategies later.
+ * Placeholder for implementation based on a GPU.
  * 
  * @author Sean Owen
  */
-interface MatrixInverter {
+public final class GPULinearSystemSolver implements LinearSystemSolver {
 
-  double SINGULARITY_THRESHOLD = Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", "0.001"));
-  
   /**
-   * @param M a square matrix to invert
-   * @return the inverse if it exists
-   * @throws org.apache.commons.math3.linear.SingularMatrixException if the matrix is singular
-   *  to within a tolerance defined by {@link #SINGULARITY_THRESHOLD}.
+   * @throws UnsupportedOperationException
    */
-  RealMatrix invert(RealMatrix M);
-  
+  @Override
+  public Solver getSolver(RealMatrix M) {
+    throw new UnsupportedOperationException();
+  }  
+
   /**
-   * @return true if M appears to be invertible ({@link #invert(RealMatrix)} would succeed)
+   * @throws UnsupportedOperationException
    */
-  boolean isInvertible(RealMatrix M);
-  
+  @Override
+  public boolean isNonSingular(RealMatrix M) {
+    throw new UnsupportedOperationException();
+  }  
+
 }

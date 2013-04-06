@@ -43,7 +43,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
@@ -61,6 +60,7 @@ import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.ClassUtils;
 import net.myrrix.common.OneWayMigrator;
+import net.myrrix.common.math.Solver;
 import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.MutableRecommendedItem;
@@ -73,7 +73,6 @@ import net.myrrix.common.NotReadyException;
 import net.myrrix.common.TopN;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.online.candidate.CandidateFilter;
-import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.online.generation.Generation;
 import net.myrrix.online.generation.GenerationManager;
@@ -564,8 +563,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     Generation generation = getCurrentGeneration();
 
     FastByIDMap<float[]> Y = generation.getY();
-    RealMatrix ytyInv = generation.getYTYInverse();
-    if (ytyInv == null) {
+    Solver ytySolver = generation.getYTYSolver();
+    if (ytySolver == null) {
       throw new NotReadyException();
     }
 
@@ -586,7 +585,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         continue;
       }
       anyItemIDFound = true;
-      double[] userFoldIn = MatrixUtils.multiply(ytyInv, itemFeatures);
+      double[] userFoldIn = ytySolver.solveFToD(itemFeatures);
       if (anonymousUserFeatures == null) {
         anonymousUserFeatures = new float[userFoldIn.length];
       }
@@ -872,15 +871,15 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     // This is multiplied on the left by (X'*X)^-1. That's our left-inverse of X or at least the one
     // column we need. Which is what the new data point is multiplied on the left by. The result is a column;
     // we scale to complete the multiplication of the fold-in and add it in.
-    RealMatrix xtxInverse = generation.getXTXInverse();
-    double[] itemFoldIn = xtxInverse == null ? null : MatrixUtils.multiply(xtxInverse, userFeatures);
+    Solver xtxSolver = generation.getXTXSolver();
+    double[] itemFoldIn = xtxSolver == null ? null : xtxSolver.solveFToD(userFeatures);
 
     // Same, but reversed. Multiply itemFeatures, which is a row of Y, on the right by (Y'*Y)^-1.
     // This is the right-inverse for Y', or at least the row we need. Because of the symmetries we can use
     // the same method above to carry out the multiply; the result is conceptually a row vector.
     // The result is scaled and added in.
-    RealMatrix ytyInverse = generation.getYTYInverse();
-    double[] userFoldIn = ytyInverse == null ? null : MatrixUtils.multiply(ytyInverse, itemFeatures);
+    Solver ytySolver = generation.getYTYSolver();
+    double[] userFoldIn = ytySolver == null ? null : ytySolver.solveFToD(itemFeatures);
 
     if (itemFoldIn != null) {
       if (SimpleVectorMath.norm(userFoldIn) > BIG_FOLDIN_THRESHOLD) {

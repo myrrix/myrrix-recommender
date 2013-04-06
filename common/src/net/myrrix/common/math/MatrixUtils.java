@@ -40,11 +40,11 @@ public final class MatrixUtils {
   private static final int PRINT_COLUMN_WIDTH = 12;
   // This hack saves a lot of time spent copying out data from Array2DRowRealMatrix objects
   private static final Field MATRIX_DATA_FIELD;
-  private static final MatrixInverter MATRIX_INVERTER;
+  private static final LinearSystemSolver MATRIX_INVERTER;
   static {
     MATRIX_DATA_FIELD = ClassUtils.loadField(Array2DRowRealMatrix.class, "data");
     MATRIX_INVERTER = 
-        ClassUtils.loadInstanceOf("net.myrrix.common.math.CommonsMathMatrixInverter", MatrixInverter.class);
+        ClassUtils.loadInstanceOf("net.myrrix.common.math.CommonsMathLinearSystemSolver", LinearSystemSolver.class);
   }
 
   private MatrixUtils() {
@@ -123,37 +123,17 @@ public final class MatrixUtils {
   }
 
   /**
-   * <p>Pseudo-inverts a tall skinny matrix M. The result can be used as a left-inverse of M or
-   * right-inverse of MT:</p>
-   *
-   * <p>{@code ((MT * M)^-1 * MT) * M = I}</p>
-   * <p>{@code MT * (M * (MT * M)^-1) = I}</p>
-   *
-   * @param M tall skinny matrix
-   * @return a pseudo-inverse of M
+   * @return {@link LinearSystemSolver#isNonSingular(RealMatrix)}
    */
-  public static FastByIDMap<float[]> getPseudoInverse(FastByIDMap<float[]> M) {
-    if (M == null || M.isEmpty()) {
-      return M;
-    }
-    // Second argument is really MT. Passing M since it will be treated as MT.
-    return multiply(getTransposeTimesSelfInverse(M), M);
+  public static boolean isNonSingular(RealMatrix M) {
+    return MATRIX_INVERTER.isNonSingular(M);    
   }
 
-  public static RealMatrix getTransposeTimesSelfInverse(FastByIDMap<float[]> M) {
-    if (M == null || M.isEmpty()) {
-      return null;
-    }
-    RealMatrix MTM = transposeTimesSelf(M);
-    return invert(MTM);
-  }
-
-  public static boolean isInvertible(RealMatrix M) {
-    return MATRIX_INVERTER.isInvertible(M);    
-  }
-
-  public static RealMatrix invert(RealMatrix M) {
-    return MATRIX_INVERTER.invert(M);
+  /**
+   * @return {@link LinearSystemSolver#getSolver(RealMatrix)}
+   */
+  public static Solver getSolver(RealMatrix M) {
+    return MATRIX_INVERTER.getSolver(M);
   }
 
   /**
@@ -235,6 +215,9 @@ public final class MatrixUtils {
    * @return MT * M as a dense matrix
    */
   public static RealMatrix transposeTimesSelf(FastByIDMap<float[]> M) {
+    if (M == null || M.isEmpty()) {
+      return null;
+    }
     RealMatrix result = null;
     for (FastByIDMap.MapEntry<float[]> entry : M.entrySet()) {
       float[] vector = entry.getValue();

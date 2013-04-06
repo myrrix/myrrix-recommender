@@ -19,26 +19,24 @@ package net.myrrix.common.math;
 import org.apache.commons.math3.linear.RealMatrix;
 
 /**
- * Placeholder for implementation based on a GPU.
+ * Encapsulates a strategy for solving a linear system Ax = b. 
+ * This allows for swapping in other strategies later.
  * 
  * @author Sean Owen
  */
-public final class GPUMatrixInverter implements MatrixInverter {
+interface LinearSystemSolver {
+
+  double SINGULARITY_THRESHOLD = 
+      Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", "0.001"));
 
   /**
-   * @throws UnsupportedOperationException
+   * @return a {@link Solver} for A, which can solve Ax = b for x, given b. 
    */
-  @Override
-  public RealMatrix invert(RealMatrix M) {
-    throw new UnsupportedOperationException();
-  }
-
+  Solver getSolver(RealMatrix A);
+  
   /**
-   * @throws UnsupportedOperationException
+   * @return true if A appears to be invertible ({@link #getSolver(RealMatrix)} would succeed)
    */
-  @Override
-  public boolean isInvertible(RealMatrix M) {
-    throw new UnsupportedOperationException();
-  }  
-
+  boolean isNonSingular(RealMatrix A);
+  
 }

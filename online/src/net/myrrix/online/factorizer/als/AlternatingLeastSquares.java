@@ -406,8 +406,9 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
             } else {
               float vectorAtRow = vector[row];
               double rowValue = vectorAtRow * (cu - 1.0);
+              double[] WuDataRow = WuData[row];              
               for (int col = 0; col < features; col++) {
-                WuData[row][col] += rowValue * vector[col];
+                WuDataRow[col] += rowValue * vector[col];
                 //Wu.addToEntry(row, col, rowValue * vector[col]);
               }
               if (xu > 0.0) {
@@ -423,17 +424,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           WuData[x][x] += lambdaTimesCount;          
           //Wu.addToEntry(x, x, lambdaTimesCount);
         }
-        Wu = MatrixUtils.invert(Wu);
 
-        float[] xu = new float[features];
-        for (int row = 0; row < features; row++) {
-          double[] wuRow = Wu.getRow(row);
-          double total = 0.0;
-          for (int col = 0; col < features; col++) {
-            total += wuRow[col] * YTCupu[col];
-          }
-          xu[row] = (float) total;
-        }
+        float[] xu = MatrixUtils.getSolver(Wu).solveDToF(YTCupu);
 
         // Store result:
         synchronized (X) {

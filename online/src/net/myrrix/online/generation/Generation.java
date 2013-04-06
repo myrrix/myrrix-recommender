@@ -23,11 +23,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.commons.math3.linear.RealMatrix;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.MatrixUtils;
+import net.myrrix.common.math.Solver;
 import net.myrrix.online.candidate.CandidateFilter;
 import net.myrrix.online.candidate.CandidateFilterFactory;
 
@@ -58,9 +58,9 @@ public final class Generation {
   private final FastByIDMap<FastIDSet> knownItemIDs;
   private final FastByIDMap<FastIDSet> knownUserIDs;
   private final FastByIDMap<float[]> X;
-  private RealMatrix XTXinv;
+  private Solver XTXsolver;
   private final FastByIDMap<float[]> Y;
-  private RealMatrix YTYinv;
+  private Solver YTYsolver;
   private final FastIDSet itemTagIDs;
   private final FastIDSet userTagIDs;
   private final List<IDCluster> userClusters;
@@ -105,9 +105,9 @@ public final class Generation {
     this.knownItemIDs = knownItemIDs;
     this.knownUserIDs = null; // Not used yet
     this.X = X;
-    this.XTXinv = null;
+    this.XTXsolver = null;
     this.Y = Y;
-    this.YTYinv = null;
+    this.YTYsolver = null;
     this.itemTagIDs = itemTagIDs;
     this.userTagIDs = userTagIDs;
     this.userClusters = userClusters;
@@ -123,15 +123,15 @@ public final class Generation {
   }
 
   void recomputeState() {
-    XTXinv = recomputeInverse(X, xLock.readLock());
-    YTYinv = recomputeInverse(Y, yLock.readLock());
+    XTXsolver = recomputeSolver(X, xLock.readLock());
+    YTYsolver = recomputeSolver(Y, yLock.readLock());
     candidateFilter = CandidateFilterFactory.buildCandidateFilter(Y, yLock.readLock());
   }
 
-  private static RealMatrix recomputeInverse(FastByIDMap<float[]> M, Lock readLock) {
+  private static Solver recomputeSolver(FastByIDMap<float[]> M, Lock readLock) {
     readLock.lock();
     try {
-      return MatrixUtils.getTransposeTimesSelfInverse(M);
+      return MatrixUtils.getSolver(MatrixUtils.transposeTimesSelf(M));
     } finally {
       readLock.unlock();
     }
@@ -159,10 +159,10 @@ public final class Generation {
   }
 
   /**
-   * @return the inverse of X' * X
+   * @return {@link Solver} for the matrix X' * X
    */
-  public RealMatrix getXTXInverse() {
-    return XTXinv;
+  public Solver getXTXSolver() {
+    return XTXsolver;
   }
 
   /**
@@ -173,10 +173,10 @@ public final class Generation {
   }
 
   /**
-   * @return the inverse of Y' * Y
-   */
-  public RealMatrix getYTYInverse() {
-    return YTYinv;
+   * @return {@link Solver} for the matrix Y' * Y
+   */  
+  public Solver getYTYSolver() {
+    return YTYsolver;
   }
 
   /**

@@ -19,7 +19,6 @@ package net.myrrix.common.math;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -35,28 +34,28 @@ import net.myrrix.common.ClassUtils;
  * 
  * @author Sean Owen
  */
-public final class CommonsMathMatrixInverter implements MatrixInverter {
+public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
   
-  private static final Logger log = LoggerFactory.getLogger(CommonsMathMatrixInverter.class);
+  private static final Logger log = LoggerFactory.getLogger(CommonsMathLinearSystemSolver.class);
 
   private static final Field RDIAG_FIELD = ClassUtils.loadField(QRDecomposition.class, "rDiag");
   
   @Override
-  public RealMatrix invert(RealMatrix M) {
+  public Solver getSolver(RealMatrix M) {
+    if (M == null) {
+      return null;
+    }
     QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
     DecompositionSolver solver = decomposition.getSolver();
-    RealMatrix inverse;
-    try {
-      inverse = solver.getInverse();
-    } catch (SingularMatrixException sme) {
+    if (!solver.isNonSingular()) {
       log.warn("{} x {} matrix is near-singular (threshold {}); add more data or decrease the value of model.features",
-               M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD);
+                     M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD);
       double[] rDiag;
       try {
         rDiag = (double[]) RDIAG_FIELD.get(decomposition);
-      } catch (IllegalAccessException ignored) {
+      } catch (IllegalAccessException iae) {
         log.warn("Can't read QR decomposition fields to suggest dimensionality");
-        throw sme;
+        throw new IllegalStateException(iae);
       }
       log.info("QR decomposition diagonal: {}", Arrays.toString(rDiag));
       for (int i = 0; i < rDiag.length; i++) {
@@ -65,21 +64,16 @@ public final class CommonsMathMatrixInverter implements MatrixInverter {
           break;
         }
       }
-      throw sme;
+      throw new SingularMatrixException();
     }
-    return new Array2DRowRealMatrix(inverse.getData());
-  }
+    return new CommonsMathSolver(solver);
+  }  
 
   @Override
-  public boolean isInvertible(RealMatrix M) {
+  public boolean isNonSingular(RealMatrix M) {
     QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
     DecompositionSolver solver = decomposition.getSolver();
-    try {
-      solver.getInverse();
-      return true;
-    } catch (SingularMatrixException ignored) {
-      return false;
-    }
+    return solver.isNonSingular();
   }  
 
 }
