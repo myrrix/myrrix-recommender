@@ -38,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.primes.Primes;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
@@ -109,7 +110,7 @@ public final class RandomUtils {
                                                 List<float[]> farFrom,
                                                 RandomGenerator random) {
     int size = farFrom.size();
-    int numSamples = Math.min(100, size);
+    int numSamples = FastMath.min(100, size);
     float[] vector = new float[dimensions];
     boolean accepted = false;
     while (!accepted) {
@@ -148,41 +149,11 @@ public final class RandomUtils {
     if (n <= 3) {
       return 5;
     }
-    int next = nextPrime(n);
-    while (isNotPrime(next + 2)) {
-      next = nextPrime(next + 4);
+    int next = Primes.nextPrime(n);
+    while (!Primes.isPrime(next + 2)) {
+      next = Primes.nextPrime(next + 4);
     }
     return next + 2;
-  }
-
-  /**
-   * Finds smallest prime p such that p is greater than or equal to n.
-   */
-  private static int nextPrime(int n) {
-    if (n <= 2) {
-      return 2;
-    }
-    // Make sure the number is odd. Is this too clever?
-    n |= 0x1;
-    // There is no problem with overflow since Integer.MAX_INT is prime, as it happens
-    while (isNotPrime(n)) {
-      n += 2;
-    }
-    return n;
-  }
-
-  /** @return {@code true} iff n is not a prime */
-  private static boolean isNotPrime(int n) {
-    if (n < 2 || (n & 0x1) == 0) { // < 2 or even
-      return n != 2;
-    }
-    int max = 1 + (int) FastMath.sqrt(n);
-    for (int d = 3; d <= max; d += 2) {
-      if (n % d == 0) {
-        return true;
-      }
-    }
-    return false;
   }
 
   public static long md5HashToLong(long l) {

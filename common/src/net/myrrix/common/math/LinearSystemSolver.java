@@ -27,7 +27,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 interface LinearSystemSolver {
 
   double SINGULARITY_THRESHOLD = 
-      Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", "0.001"));
+      Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", Double.toString(1.0e-5)));
 
   /**
    * @return a {@link Solver} for A, which can solve Ax = b for x, given b. 

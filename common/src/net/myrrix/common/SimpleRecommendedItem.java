@@ -66,12 +66,7 @@ public final class SimpleRecommendedItem implements RecommendedItem, Comparable<
 
   @Override
   public int compareTo(SimpleRecommendedItem other) {
-    if (other.value < value) {
-      return -1;
-    }
-    if (other.value > value) {
-      return 1;
-    }
-    return 0;
+    return Float.compare(other.value, value);
   }
+
 }

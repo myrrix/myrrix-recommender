@@ -16,62 +16,46 @@
 
 package net.myrrix.common.math;
 
-import java.lang.reflect.Field;
-import java.util.Arrays;
-
 import org.apache.commons.math3.linear.DecompositionSolver;
-import org.apache.commons.math3.linear.QRDecomposition;
+import org.apache.commons.math3.linear.RRQRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularMatrixException;
-import org.apache.commons.math3.util.FastMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.myrrix.common.ClassUtils;
-
 /**
- * An implementation based on {@link QRDecomposition} from Commons Math.
+ * An implementation based on {@link RRQRDecomposition} from Commons Math.
  * 
  * @author Sean Owen
  */
 public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
   
   private static final Logger log = LoggerFactory.getLogger(CommonsMathLinearSystemSolver.class);
-
-  private static final Field RDIAG_FIELD = ClassUtils.loadField(QRDecomposition.class, "rDiag");
   
   @Override
   public Solver getSolver(RealMatrix M) {
     if (M == null) {
       return null;
     }
-    QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
+    RRQRDecomposition decomposition = new RRQRDecomposition(M, SINGULARITY_THRESHOLD);
     DecompositionSolver solver = decomposition.getSolver();
-    if (!solver.isNonSingular()) {
-      log.warn("{} x {} matrix is near-singular (threshold {}); add more data or decrease the value of model.features",
-                     M.getRowDimension(), M.getColumnDimension(), SINGULARITY_THRESHOLD);
-      double[] rDiag;
-      try {
-        rDiag = (double[]) RDIAG_FIELD.get(decomposition);
-      } catch (IllegalAccessException iae) {
-        log.warn("Can't read QR decomposition fields to suggest dimensionality");
-        throw new IllegalStateException(iae);
-      }
-      log.info("QR decomposition diagonal: {}", Arrays.toString(rDiag));
-      for (int i = 0; i < rDiag.length; i++) {
-        if (FastMath.abs(rDiag[i]) <= SINGULARITY_THRESHOLD) {
-          log.warn("Suggested value of -Dmodel.features is less than {}", i);
-          break;
-        }
-      }
-      throw new SingularMatrixException();
+    if (solver.isNonSingular()) {
+      return new CommonsMathSolver(solver);
     }
-    return new CommonsMathSolver(solver);
+    // Otherwise try to report apparent rank
+    int apparentRank = decomposition.getRank(0.01); // Better value?
+    log.warn("{} x {} matrix is near-singular (threshold {}). Add more data or decrease the value of model.features, " +
+             "to <= about {}",
+             M.getRowDimension(), 
+             M.getColumnDimension(), 
+             SINGULARITY_THRESHOLD,
+             apparentRank);
+    throw new SingularMatrixException();
   }  
 
   @Override
   public boolean isNonSingular(RealMatrix M) {
-    QRDecomposition decomposition = new QRDecomposition(M, SINGULARITY_THRESHOLD);
+    RRQRDecomposition decomposition = new RRQRDecomposition(M, SINGULARITY_THRESHOLD);
     DecompositionSolver solver = decomposition.getSolver();
     return solver.isNonSingular();
   }  
