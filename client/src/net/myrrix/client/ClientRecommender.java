@@ -404,7 +404,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     Preconditions.checkNotNull(tag);
     Preconditions.checkArgument(!tag.isEmpty());
     long idToPartitionOn = contextUserID == null ? itemID : contextUserID;    
-    doSetOrRemove("/tag/item/" + IOUtils.urlEncode(tag) + '/' + itemID, idToPartitionOn, value, true);
+    doSetOrRemove("/tag/item/" + itemID + '/' + IOUtils.urlEncode(tag), idToPartitionOn, value, true);
   }
 
   /**

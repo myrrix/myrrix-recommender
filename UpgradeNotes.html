@@ -14,6 +14,17 @@ hr {margin:20px 0 10px 0}
 
 <h1>Myrrix Upgrade Notes</h1>
 
+<h2>Version 1.0</h2>
+
+<h3>Serving Layer</h3>
+
+<ul>
+  <li>The endpoint for <code>setItemTag</code> was declared incorrectly. Requests should access
+  <code>/tag/item/<strong>[itemID]/[tag]</strong></code>, not 
+  <code>/tag/item/<strong>[tag]/[itemID]</strong></code>. Callers who access the REST API directly
+  will need to use the corrected path.</li>
+</ul>
+
 <h2>Version 0.11</h2>
 
 <h3>All</h3>

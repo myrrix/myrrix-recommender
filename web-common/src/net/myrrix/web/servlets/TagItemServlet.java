@@ -44,8 +44,8 @@ public final class TagItemServlet extends AbstractMyrrixServlet {
     String itemTag;
     long itemID;
     try {
+      itemID = Long.parseLong(pathComponents.next());      
       itemTag = pathComponents.next();      
-      itemID = Long.parseLong(pathComponents.next());
     } catch (NoSuchElementException nsee) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, nsee.toString());
       return;
