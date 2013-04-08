@@ -126,4 +126,8 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <testSourceDirectory>test</testSourceDirectory>
+  </build>
+
 </project>
