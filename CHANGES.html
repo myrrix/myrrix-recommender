@@ -18,7 +18,10 @@ hr {margin:20px 0 10px 0}
 
 <ul>
   <li>Issue 63: the REST API endpoint for the <code>setItemTag</code> has been corrected. See Upgrade Notes.</li>
+  <li>Issue 64: Values of &lambda; that are too large should cause the model build to be rejected, 
+    rather than cause runtime errors related to large user and item vectors during fold-in.</li>
 </ul>
+
 
 <h1>Version 0.11</h1>
 

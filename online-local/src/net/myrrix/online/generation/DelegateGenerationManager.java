@@ -32,7 +32,7 @@ import java.util.concurrent.locks.Lock;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.math3.linear.SingularMatrixException;
+import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -349,7 +349,7 @@ public final class DelegateGenerationManager implements GenerationManager {
                    "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
           currentGeneration = null;
           throw oome;
-        } catch (SingularMatrixException ignored) {
+        } catch (MathIllegalArgumentException ignored) {
           log.warn("Unable to compute a valid generation yet; waiting for more data");
           currentGeneration = null;
         }
