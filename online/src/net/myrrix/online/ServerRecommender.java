@@ -903,18 +903,27 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
   }
   
-  private static void updateClusters(long id, float[] featureVector, Collection<IDCluster> clusters, Lock readLock) {
+  private static void updateClusters(long id, 
+                                     float[] featureVector, 
+                                     Collection<IDCluster> clusters, 
+                                     Lock clustersReadLock) {
     if (featureVector == null || clusters == null || clusters.isEmpty()) {
       return;
     } 
     
-    FastIDSet newMembers;
-    readLock.lock();
+    IDCluster closestCentroid;
+    clustersReadLock.lock();
     try {
-      newMembers = findClosestCentroid(featureVector, clusters).getMembers();
+      closestCentroid = findClosestCentroid(featureVector, clusters);
     } finally {
-      readLock.unlock();
+      clustersReadLock.unlock();
     }
+    
+    if (closestCentroid == null) {
+      return;
+    }
+
+    FastIDSet newMembers = closestCentroid.getMembers();
     
     boolean removeFromCurrentCluster;        
     synchronized (newMembers) {
@@ -923,7 +932,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
     }
     
     if (removeFromCurrentCluster) {
-      readLock.lock();
+      clustersReadLock.lock();
       try {
         for (IDCluster cluster : clusters) {
           FastIDSet oldMembers = cluster.getMembers();
@@ -934,7 +943,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
           }
         }
       } finally {
-        readLock.unlock();
+        clustersReadLock.unlock();
       }
     }
   }
@@ -950,7 +959,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
         closestCentroid = cluster;
       }
     }
-    Preconditions.checkNotNull(closestCentroid, "Could not find closest centroid?");
     return closestCentroid;
   }
 
