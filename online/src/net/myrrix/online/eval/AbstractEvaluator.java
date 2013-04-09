@@ -127,7 +127,9 @@ public abstract class AbstractEvaluator implements Evaluator {
                                                double evaluationPercentage,
                                                RescorerProvider provider) throws IOException {
 
-    Multimap<Long,RecommendedItem> data = readDataFile(dataDir, evaluationPercentage, provider);
+    DataFileContents dataFileContents = readDataFile(dataDir, evaluationPercentage, provider);
+    
+    Multimap<Long,RecommendedItem> data = dataFileContents.getData();
     log.info("Read data for {} users from input; splitting...", data.size());
 
     Multimap<Long,RecommendedItem> testData = ArrayListMultimap.create();
@@ -163,6 +165,24 @@ public abstract class AbstractEvaluator implements Evaluator {
         }
 
       }
+      
+      // All tags go in training data
+      for (Map.Entry<String,RecommendedItem> entry : dataFileContents.getItemTags().entries()) {
+        trainingOut.write(entry.getKey());        
+        trainingOut.write(DELIMITER);        
+        trainingOut.write(Long.toString(entry.getValue().getItemID()));
+        trainingOut.write(DELIMITER);
+        trainingOut.write(Float.toString(entry.getValue().getValue()));
+        trainingOut.write('\n');
+      }
+      for (Map.Entry<String,RecommendedItem> entry : dataFileContents.getUserTags().entries()) {
+        trainingOut.write(Long.toString(entry.getValue().getItemID()));
+        trainingOut.write(DELIMITER);
+        trainingOut.write(entry.getKey());
+        trainingOut.write(DELIMITER);
+        trainingOut.write(Float.toString(entry.getValue().getValue()));
+        trainingOut.write('\n');
+      }
 
     } finally {
       trainingOut.close(); // Want to know of output stream close failed -- maybe failed to write
@@ -173,15 +193,17 @@ public abstract class AbstractEvaluator implements Evaluator {
     return testData;
   }
 
-  private static Multimap<Long,RecommendedItem> readDataFile(File dataDir,
-                                                             double evaluationPercentage,
-                                                             RescorerProvider provider) throws IOException {
+  private static DataFileContents readDataFile(File dataDir,
+                                               double evaluationPercentage,
+                                               RescorerProvider provider) throws IOException {
     // evaluationPercentage filters per user and item, not per datum, since time scales with users and
     // items. We select sqrt(evaluationPercentage) of users and items to overall select about evaluationPercentage
     // of all data.
     int perMillion = (int) (1000000 * FastMath.sqrt(evaluationPercentage));
 
     Multimap<Long,RecommendedItem> data = ArrayListMultimap.create();
+    Multimap<String,RecommendedItem> itemTags = ArrayListMultimap.create();
+    Multimap<String,RecommendedItem> userTags = ArrayListMultimap.create();
 
     for (File dataFile : dataDir.listFiles(new PatternFilenameFilter(".+\\.csv(\\.(zip|gz))?"))) {
       log.info("Reading {}", dataFile);
@@ -192,12 +214,47 @@ public abstract class AbstractEvaluator implements Evaluator {
         if (userIDString.hashCode() % 1000000 <= perMillion) {
           String itemIDString = parts.next();
           if (itemIDString.hashCode() % 1000000 <= perMillion) {
-            long userID = Long.parseLong(userIDString);
-            long itemID = Long.parseLong(itemIDString);
+            
+            Long userID = null;
+            boolean userIsTag = userIDString.startsWith("\"");
+            if (!userIsTag) {
+              userID = Long.valueOf(userIDString);
+            }
+            
+            boolean itemIsTag = itemIDString.startsWith("\"");
+            Long itemID = null;
+            if (!itemIsTag) {
+              itemID = Long.valueOf(itemIDString);            
+            }
+            
+            Preconditions.checkArgument(!(userIsTag && itemIsTag), "Can't have a user tag and item tag in one line");
+            
             if (parts.hasNext()) {
               String token = parts.next().trim();
               if (!token.isEmpty()) {
                 float value = LangUtils.parseFloat(token);
+                if (userIsTag) {
+                  itemTags.put(userIDString, new GenericRecommendedItem(itemID, value));
+                } else if (itemIsTag) {
+                  userTags.put(itemIDString, new GenericRecommendedItem(userID, value));
+                } else {
+                  if (provider != null) {
+                    IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
+                    if (rescorer != null) {
+                      value = (float) rescorer.rescore(itemID, value);
+                    }
+                  }
+                  data.put(userID, new GenericRecommendedItem(itemID, value));
+                }
+              }
+              // Ignore remove lines
+            } else {
+              if (userIsTag) {
+                itemTags.put(userIDString, new GenericRecommendedItem(itemID, 1.0f));
+              } else if (itemIsTag) {
+                userTags.put(itemIDString, new GenericRecommendedItem(userID, 1.0f));
+              } else {
+                float value = 1.0f;                
                 if (provider != null) {
                   IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
                   if (rescorer != null) {
@@ -206,16 +263,6 @@ public abstract class AbstractEvaluator implements Evaluator {
                 }
                 data.put(userID, new GenericRecommendedItem(itemID, value));
               }
-              // Ignore remove lines
-            } else {
-              float value = 1.0f;
-              if (provider != null) {
-                IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
-                if (rescorer != null) {
-                  value = (float) rescorer.rescore(itemID, value);
-                }
-              }
-              data.put(userID, new GenericRecommendedItem(itemID, value));
             }
           }
         }
@@ -224,7 +271,8 @@ public abstract class AbstractEvaluator implements Evaluator {
         }
       }
     }
-    return data;
+    
+    return new DataFileContents(data, itemTags, userTags);
   }
 
 }
