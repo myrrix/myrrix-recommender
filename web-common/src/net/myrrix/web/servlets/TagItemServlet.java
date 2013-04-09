@@ -39,8 +39,10 @@ public final class TagItemServlet extends AbstractMyrrixServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
+    }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-
     String itemTag;
     long itemID;
     try {

@@ -21,8 +21,10 @@ hr {margin:20px 0 10px 0}
   <li>Issue 64: Values of &lambda; that are too large should cause the model build to be rejected, 
     rather than cause runtime errors related to large user and item vectors during fold-in.</li>
   <li>Issue 65: Evaluation framework can again handle files with tag data</li>
-  <li>Issue 66: Resolved an usse that generated an exception on adding new data, when few or no clusters
+  <li>Issue 66: Resolved an issue that generated an exception on adding new data, when few or no clusters
     are present, but clustering is enabled</li>
+  <li>Issue 67: REST API endpoints correctly return a client error instead of exception when expecting a
+    URL path but none is presented</li>
 </ul>
 
 

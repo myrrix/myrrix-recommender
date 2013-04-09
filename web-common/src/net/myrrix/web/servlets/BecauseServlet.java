@@ -46,6 +46,9 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
+    }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
     long itemID;
@@ -87,6 +90,9 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
   @Override
   protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      return null;    
+    }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
     try {

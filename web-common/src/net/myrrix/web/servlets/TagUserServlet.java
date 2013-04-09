@@ -39,8 +39,10 @@ public final class TagUserServlet extends AbstractMyrrixServlet {
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
+    }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
-
     long userID;
     String userTag;
     try {
@@ -78,6 +80,9 @@ public final class TagUserServlet extends AbstractMyrrixServlet {
   @Override
   protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
     String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      return null;
+    }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
     try {
