@@ -110,8 +110,8 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     }
     
     int numTests = 1;
-    for (int i = 0; i < numProperties; i++) {
-      numTests *= numSteps;
+    for (Number[] toTry : parameterValuesToTry) {
+      numTests *= toTry.length;
     }
     
     List<Pair<Double,String>> testResultLinesByValue = Lists.newArrayListWithCapacity(numTests);
@@ -162,12 +162,12 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     return bestParameterValues;
   }
 
-  private Number getParameterValueToTry(Number[][] parameterValuesToTry, int test, int prop) {
+  private static Number getParameterValueToTry(Number[][] parameterValuesToTry, int test, int prop) {
     int whichValueToTry = test;
     for (int i = 0; i < prop; i++) {
-      whichValueToTry /= numSteps;
+      whichValueToTry /= parameterValuesToTry[i].length;
     }
-    whichValueToTry %= numSteps;
+    whichValueToTry %= parameterValuesToTry[prop].length;
     return parameterValuesToTry[prop][whichValueToTry];
   }
 
@@ -177,7 +177,9 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     }
     
     final File dataDir = new File(args[0]);
+    Preconditions.checkArgument(dataDir.exists() && dataDir.isDirectory(), "Not a directory: %s", dataDir);
     int numSteps = Integer.parseInt(args[1]);
+    Preconditions.checkArgument(numSteps >= 2, "# steps must be at least 2: %s", numSteps);
     
     Map<String,ParameterRange> parameterRanges = Maps.newHashMapWithExpectedSize(args.length);
     for (int i = 2; i < args.length; i++) {

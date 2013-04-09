@@ -36,7 +36,7 @@ public final class ParameterRange {
    * @param integerOnly only supply integer values, not any real value
    */
   public ParameterRange(double min, double max, boolean integerOnly) {
-    Preconditions.checkArgument(max > min, "Max must exceed min");
+    Preconditions.checkArgument(max >= min, "Max must not be less than min");
     this.min = min;
     this.max = max;
     this.integerOnly = integerOnly;
@@ -49,6 +49,22 @@ public final class ParameterRange {
    */
   public Number[] buildSteps(int numSteps) {
     Preconditions.checkArgument(numSteps >= 2, "numSteps must be at least 2: {}", numSteps);
+    if (min == max) {
+      return new Number[] { maybeRound(min) };
+    }
+    if (integerOnly) {
+      int roundedMin = (int) FastMath.round(min);
+      int roundedMax = (int) FastMath.round(max);
+      int maxResonableSteps = roundedMax - roundedMin + 1;
+      if (numSteps >= maxResonableSteps) {
+        Number[] sequence = new Number[maxResonableSteps];
+        for (int i = 0; i < sequence.length; i++) {
+          sequence[i] = roundedMin + i;
+        }
+        return sequence;
+      }
+    }
+
     Number[] stepValues = new Number[numSteps];
     stepValues[0] = maybeRound(min);
     stepValues[stepValues.length - 1] = maybeRound(max);
@@ -68,6 +84,11 @@ public final class ParameterRange {
       return FastMath.round(value);
     }
     return value;
+  }
+  
+  @Override
+  public String toString() {
+    return maybeRound(min) + ":" + maybeRound(max);
   }
   
 }
