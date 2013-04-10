@@ -23,6 +23,7 @@ import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.common.Pair;
 
@@ -82,6 +83,8 @@ public final class EstimateForAnonymousServlet extends AbstractMyrrixServlet {
       out.write('\n');
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
+    } catch (NoSuchItemException nsie) {
+      response.sendError(HttpServletResponse.SC_NOT_FOUND, nsie.toString());
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);
