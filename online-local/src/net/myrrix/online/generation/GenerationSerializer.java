@@ -27,6 +27,8 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDMap;
@@ -41,6 +43,11 @@ import net.myrrix.common.io.IOUtils;
  * @author Sean Owen
  */
 public final class GenerationSerializer implements Serializable {
+  
+  private static final Logger log = LoggerFactory.getLogger(GenerationSerializer.class);
+  
+  // We do need this here since we want to carefully manage compatibility of the serialized representation
+  private static final long serialVersionUID = 1L;
 
   private Generation generation;
 
@@ -87,20 +94,25 @@ public final class GenerationSerializer implements Serializable {
   }
 
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    FastByIDMap<FastIDSet> newKnownItemIDs = readKnownIDs(in);
-    FastByIDMap<float[]> newX = readMatrix(in);
-    FastByIDMap<float[]> newY = readMatrix(in);
-    FastIDSet itemTagIDs = readIDSet(in);
-    FastIDSet userTagIDs = readIDSet(in);
-    List<IDCluster> userClusters = readClusters(in);
-    List<IDCluster> itemClusters = readClusters(in);
-    generation = new Generation(newKnownItemIDs,
-                                newX,
-                                newY,
-                                itemTagIDs,
-                                userTagIDs,
-                                userClusters,
-                                itemClusters);
+    try {
+      FastByIDMap<FastIDSet> newKnownItemIDs = readKnownIDs(in);
+      FastByIDMap<float[]> newX = readMatrix(in);
+      FastByIDMap<float[]> newY = readMatrix(in);
+      FastIDSet itemTagIDs = readIDSet(in);
+      FastIDSet userTagIDs = readIDSet(in);
+      List<IDCluster> userClusters = readClusters(in);
+      List<IDCluster> itemClusters = readClusters(in);
+      generation = new Generation(newKnownItemIDs,
+                                  newX,
+                                  newY,
+                                  itemTagIDs,
+                                  userTagIDs,
+                                  userClusters,
+                                  itemClusters);
+    } catch (IOException ioe) {
+      log.error("Can't read model. If you have recently upgraded versions, delete the model file and try again");
+      throw ioe;
+    }
   }
 
   private static FastByIDMap<FastIDSet> readKnownIDs(ObjectInputStream in) throws IOException {
