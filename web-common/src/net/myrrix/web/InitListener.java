@@ -28,6 +28,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
@@ -82,6 +83,8 @@ public final class InitListener implements ServletContextListener {
 
     configureLogging(context);
     
+    configureTempDir(context);
+    
     File localInputDir = configureLocalInputDir(context);
     int partition = configurePartition(context);
     
@@ -118,6 +121,22 @@ public final class InitListener implements ServletContextListener {
       java.util.logging.Logger.getLogger("").addHandler(logHandler);
     }
     context.setAttribute(LOG_HANDLER, logHandler);
+  }
+
+  /**
+   * This is a possible workaround for Tomcat on Windows, not creating the temp dir it allocates?
+   */
+  private static void configureTempDir(ServletContext context) {
+    File tempDir = (File) context.getAttribute(ServletContext.TEMPDIR);
+    Preconditions.checkNotNull(tempDir, "Servlet container didn't set %s", ServletContext.TEMPDIR);
+    if (!tempDir.exists()) {
+      log.warn("{} was set to {} but it did not exist", ServletContext.TEMPDIR, tempDir);
+      if (!tempDir.mkdirs()) {
+        log.warn("Failed to create dir {}", tempDir);
+      }
+    } else if (tempDir.isFile()) {
+      log.warn("{} is a file, not directory", tempDir);
+    }
   }
   
   private File configureLocalInputDir(ServletContext context) {
