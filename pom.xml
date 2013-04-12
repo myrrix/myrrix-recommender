@@ -29,13 +29,24 @@
   <version>1.0-SNAPSHOT</version>
   <description>Contains configuration common to all modules</description>
 
-  <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk</developerConnection>
-  </scm>
+  <issueManagement>
+    <system>Google Code</system>
+    <url>https://code.google.com/p/myrrix-recommender/issues/list</url>
+  </issueManagement>
 
   <inceptionYear>2012</inceptionYear>
+  
+  <mailingLists>
+    <mailingList>
+      <name>GetSatisfaction</name>
+      <archive>https://getsatisfaction.com/myrrix</archive>
+    </mailingList>
+    <mailingList>
+      <name>Announcements</name>
+      <subscribe>http://eepurl.com/l07Sr</subscribe>
+    </mailingList>
+  </mailingLists>
+  
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -43,6 +54,17 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+  
+  <scm>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk</developerConnection>
+  </scm>
+  
+  <organization>
+    <name>Myrrix Ltd</name>
+    <url>http://myrrix.com/</url>
+  </organization>
 
   <developers>
     <developer>
@@ -53,6 +75,14 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <commons.compress.version>1.5</commons.compress.version>
+    <commons.math.version>3.2</commons.math.version>
+    <google.guava.version>14.0.1</google.guava.version>
+    <jewelcli.version>0.8.3</jewelcli.version>
+    <junit.version>4.11</junit.version>
+    <mahout.version>0.7</mahout.version>
+    <slf4j.version>1.7.5</slf4j.version>
+    <tomcat.version>7.0.39</tomcat.version>
   </properties>
   
   <modules>
