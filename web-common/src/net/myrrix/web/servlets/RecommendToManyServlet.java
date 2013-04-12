@@ -82,9 +82,9 @@ public final class RecommendToManyServlet extends AbstractMyrrixServlet {
 
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
-    IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getRecommendRescorer(userIDs, recommender, getRescorerParams(request));
     try {
+      IDRescorer rescorer = rescorerProvider == null ? null :
+          rescorerProvider.getRecommendRescorer(userIDs, recommender, getRescorerParams(request));
       List<RecommendedItem> recommended =
           recommender.recommendToMany(userIDs, getHowMany(request), getConsiderKnownItems(request), rescorer);
       output(request, response, recommended);

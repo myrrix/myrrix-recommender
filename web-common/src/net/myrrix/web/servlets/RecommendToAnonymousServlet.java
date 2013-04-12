@@ -81,9 +81,9 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
-    IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, recommender, getRescorerParams(request));
     try {
+      IDRescorer rescorer = rescorerProvider == null ? null :
+          rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, recommender, getRescorerParams(request));
       List<RecommendedItem> recommended =
           recommender.recommendToAnonymous(itemIDs, values, getHowMany(request), rescorer);
       output(request, response, recommended);

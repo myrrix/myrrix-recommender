@@ -43,9 +43,9 @@ public final class MostPopularItemsServlet extends AbstractMyrrixServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     MyrrixRecommender recommender = getRecommender();
     RescorerProvider rescorerProvider = getRescorerProvider();
-    IDRescorer rescorer = rescorerProvider == null ? null :
-        rescorerProvider.getMostPopularItemsRescorer(recommender, getRescorerParams(request));
     try {
+      IDRescorer rescorer = rescorerProvider == null ? null :
+          rescorerProvider.getMostPopularItemsRescorer(recommender, getRescorerParams(request));
       output(request, response, recommender.mostPopularItems(getHowMany(request), rescorer));
     } catch (NotReadyException nre) {
       response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, nre.toString());
