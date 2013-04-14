@@ -194,6 +194,17 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     log.info("Iterating using {} threads", numThreads);
 
+    // Only of any use if using a Y matrix that was specially constructed and fixed ahead of time
+    if (!Boolean.parseBoolean(System.getProperty("model.als.iterate", "true"))) {
+      // Just figure X from Y and stop
+      try {
+        iterateXFromY(executor);
+      } finally {
+        ExecutorUtils.shutdownNowAndAwait(executor);        
+      }
+      return null;      
+    }
+
     RandomGenerator random = RandomManager.getRandom();
     long[] testUserIDs = RandomUtils.chooseAboutNFromStream(NUM_USER_ITEMS_TO_TEST_CONVERGENCE, 
                                                             RbyRow.keySetIterator(), 
