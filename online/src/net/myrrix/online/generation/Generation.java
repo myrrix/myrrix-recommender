@@ -129,8 +129,12 @@ public final class Generation {
   }
 
   void recomputeState() {
-    XTXsolver = recomputeSolver(X, xLock.readLock());
-    YTYsolver = recomputeSolver(Y, yLock.readLock());
+    if (Boolean.parseBoolean(System.getProperty("model.solver.xtx.compute", "true"))) {
+      XTXsolver = recomputeSolver(X, xLock.readLock());
+    }
+    if (Boolean.parseBoolean(System.getProperty("model.solver.yty.compute", "true"))) {
+      YTYsolver = recomputeSolver(Y, yLock.readLock());
+    }
     candidateFilter = CandidateFilterFactory.buildCandidateFilter(Y, yLock.readLock());
   }
 
