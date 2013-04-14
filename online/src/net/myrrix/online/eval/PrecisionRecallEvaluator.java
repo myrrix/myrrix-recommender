@@ -132,8 +132,13 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
       }
     };
     
+    Paralleler<Long> paralleler = new Paralleler<Long>(testData.keySet().iterator(), processor, "PREval");
     try {
-      new Paralleler<Long>(testData.keySet().iterator(), processor, "PREval").runInParallel();
+      if (Boolean.parseBoolean(System.getProperty("eval.parallel", "true"))) {
+        paralleler.runInParallel();
+      } else {
+        paralleler.runInSerial();
+      }
     } catch (InterruptedException ie) {
       throw new TasteException(ie);
     } catch (ExecutionException e) {

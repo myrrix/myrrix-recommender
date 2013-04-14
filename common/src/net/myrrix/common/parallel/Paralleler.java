@@ -63,6 +63,13 @@ public final class Paralleler<T> {
     this.name = name;    
   }
 
+  public void runInSerial() throws ExecutionException {
+    AtomicLong count = new AtomicLong(0);
+    while (values.hasNext()) {
+      processor.process(values.next(), count.incrementAndGet());
+    }
+  }
+
   public void runInParallel() throws InterruptedException, ExecutionException {
     ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
     if (name != null) {
