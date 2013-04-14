@@ -109,7 +109,7 @@ public abstract class AbstractEvaluator implements Evaluator {
     // If the test has a model, copy it to use as a starting point as part of the test
     File trainingModelFile = new File(originalDataDir, "model.bin.gz");
     if (trainingModelFile.exists() && trainingModelFile.isFile()) {
-      Files.copy(trainingModelFile, new File(trainingDataDir, "mode.bin.gz"));
+      Files.copy(trainingModelFile, new File(trainingDataDir, trainingModelFile.getName()));
     }
 
     ServerRecommender recommender = null;
