@@ -105,6 +105,12 @@ public abstract class AbstractEvaluator implements Evaluator {
     trainingDataDir.deleteOnExit();
     File trainingFile = new File(trainingDataDir, "training.csv.gz");
     trainingFile.deleteOnExit();
+    
+    // If the test has a model, copy it to use as a starting point as part of the test
+    File trainingModelFile = new File(originalDataDir, "model.bin.gz");
+    if (trainingModelFile.exists() && trainingModelFile.isFile()) {
+      Files.copy(trainingModelFile, new File(trainingDataDir, "mode.bin.gz"));
+    }
 
     ServerRecommender recommender = null;
     try {
