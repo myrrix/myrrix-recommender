@@ -48,6 +48,8 @@ public final class GenerationSerializer implements Serializable {
   
   // We do need this here since we want to carefully manage compatibility of the serialized representation
   private static final long serialVersionUID = 1L;
+  
+  private static final int NULL_COUNT = -1;
 
   private Generation generation;
 
@@ -117,27 +119,25 @@ public final class GenerationSerializer implements Serializable {
 
   private static FastByIDMap<FastIDSet> readKnownIDs(ObjectInputStream in) throws IOException {
     int knownItemIDsCount = in.readInt();
-    FastByIDMap<FastIDSet> newKnownItemIDs;
-    if (knownItemIDsCount == 0) {
-      newKnownItemIDs = null;
-    } else {
-      newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
-      for (int i = 0; i < knownItemIDsCount; i++) {
-        long id = in.readLong();
-        int setCount = in.readInt();
-        FastIDSet set = new FastIDSet(setCount, 1.25f);
-        for (int j = 0; j < setCount; j++) {
-          set.add(in.readLong());
-        }
-        newKnownItemIDs.put(id, set);
+    if (knownItemIDsCount == NULL_COUNT) { // Want to be able to record 'null'
+      return null;
+    }
+    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
+    for (int i = 0; i < knownItemIDsCount; i++) {
+      long id = in.readLong();
+      int setCount = in.readInt();
+      FastIDSet set = new FastIDSet(setCount, 1.25f);
+      for (int j = 0; j < setCount; j++) {
+        set.add(in.readLong());
       }
+      newKnownItemIDs.put(id, set);
     }
     return newKnownItemIDs;
   }
 
   private static void writeKnownIDs(ObjectOutputStream out, FastByIDMap<FastIDSet> knownItemIDs) throws IOException {
     if (knownItemIDs == null) {
-      out.writeInt(0);
+      out.writeInt(NULL_COUNT);
     } else {
       out.writeInt(knownItemIDs.size());
       for (FastByIDMap.MapEntry<FastIDSet> entry : knownItemIDs.entrySet()) {

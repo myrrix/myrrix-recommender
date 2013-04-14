@@ -113,9 +113,6 @@ final class GenerationLoader {
   }
 
   private static <T> void updateMap(FastByIDMap<T> knownItemIDs, FastByIDMap<T> updated, Lock writeLock) {
-    if (updated == null) {
-      return;
-    }
     writeLock.lock();
     try {
       for (FastByIDMap.MapEntry<T> entry : updated.entrySet()) {
