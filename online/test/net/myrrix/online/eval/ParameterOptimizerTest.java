@@ -54,7 +54,7 @@ public final class ParameterOptimizerTest extends MyrrixTest {
     ParameterOptimizer optimizer = new ParameterOptimizer(propertyRanges, evaluator);
     Map<String,Number> parameterValues = optimizer.findGoodParameterValues();
     log.info(parameterValues.toString());
-    assertEquals(0.0112, parameterValues.get("model.als.lambda").doubleValue());
+    assertEquals(0.1, parameterValues.get("model.als.lambda").doubleValue());
     assertEquals(23, parameterValues.get("model.features").intValue());
   }
 

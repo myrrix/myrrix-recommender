@@ -102,7 +102,6 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
         double score = 0.0;
         double maxScore = 0.0;
         RunningAverage precisionAtI = new FullRunningAverage();
-        double changeInRecall = 1.0 / numValues;
         double averagePrecision = 0.0;
   
         for (int i = 0; i < numRecs; i++) {
@@ -112,10 +111,13 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
             intersectionSize++;
             score += value;
             precisionAtI.addDatum(1.0);
+            averagePrecision += precisionAtI.getAverage();            
+          } else {
+            precisionAtI.addDatum(0.0);
           }
           maxScore += value;
-          averagePrecision += precisionAtI.getCount() == 0 ? 0.0 : precisionAtI.getAverage() * changeInRecall;
         }
+        averagePrecision /= numValues;
   
         synchronized (precision) {
           precision.addDatum(numRecs == 0 ? 0.0 : (double) intersectionSize / numRecs);
