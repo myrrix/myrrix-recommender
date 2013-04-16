@@ -30,6 +30,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
+import com.google.common.io.Closer;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
 import org.apache.mahout.cf.taste.model.IDMigrator;
@@ -313,32 +314,29 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     File tempFile = File.createTempFile("myrrix-", ".csv.gz");
     tempFile.deleteOnExit();
     log.debug("Translating ingest input to {}", tempFile);
-    BufferedReader buffered = IOUtils.buffer(reader);
+    Closer closer = Closer.create();
     try {
-      Writer out = IOUtils.buildGZIPWriter(tempFile);
-      try {
-        String line;
-        while ((line = buffered.readLine()) != null) {
-          Iterator<String> it = COMMA_SPLIT.split(line).iterator();
-          String userIDString = it.next();
-          String itemIDString = it.next();
-          long longUserID = translateUser(userIDString);
-          long longItemID = translateItem(itemIDString);
-          String translatedLine;
-          if (it.hasNext()) {
-            String valueString = it.next();
-            translatedLine = COMMA_JOIN.join(longUserID, longItemID, valueString);
-          } else {
-            translatedLine = COMMA_JOIN.join(longUserID, longItemID);
-          }
-          out.write(translatedLine);
-          out.write('\n');
+      BufferedReader buffered = closer.register(IOUtils.buffer(reader));      
+      Writer out = closer.register(IOUtils.buildGZIPWriter(tempFile));
+      String line;
+      while ((line = buffered.readLine()) != null) {
+        Iterator<String> it = COMMA_SPLIT.split(line).iterator();
+        String userIDString = it.next();
+        String itemIDString = it.next();
+        long longUserID = translateUser(userIDString);
+        long longItemID = translateItem(itemIDString);
+        String translatedLine;
+        if (it.hasNext()) {
+          String valueString = it.next();
+          translatedLine = COMMA_JOIN.join(longUserID, longItemID, valueString);
+        } else {
+          translatedLine = COMMA_JOIN.join(longUserID, longItemID);
         }
-      } finally {
-        out.close(); // Want to know if output stream close failed -- maybe failed to write
+        out.write(translatedLine);
+        out.write('\n');
       }
     } finally {
-      Closeables.close(buffered, true);
+      closer.close();
     }
     log.debug("Done translating ingest input to {}", tempFile);    
     return tempFile;
