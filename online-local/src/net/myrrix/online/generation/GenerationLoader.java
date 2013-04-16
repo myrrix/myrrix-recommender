@@ -67,31 +67,33 @@ final class GenerationLoader {
     FastIDSet updatedYKeys = keysToSet(newY);
     FastIDSet updatedUserIDsForKnownItems = updatedKnownItemIDs == null ? null : keysToSet(updatedKnownItemIDs);
     
-    log.info("Pruning old entries...");
-
     synchronized (lockForRecent) {
-      removeNotUpdated(currentGeneration.getX().keySetIterator(),
-                       updatedXKeys,
-                       recentlyActiveUsers,
-                       currentGeneration.getXLock().writeLock());
-      removeNotUpdated(currentGeneration.getY().keySetIterator(),
-                       updatedYKeys,
-                       recentlyActiveItems,
-                       currentGeneration.getYLock().writeLock());
-      if (updatedUserIDsForKnownItems != null && currentGeneration.getKnownItemIDs() != null) {
-        removeNotUpdated(currentGeneration.getKnownItemIDs().keySetIterator(),
-                         updatedUserIDsForKnownItems,
+      // Not recommended to set this to 'false' -- may be useful in rare cases      
+      if (Boolean.parseBoolean(System.getProperty("model.removeNotUpdatedData", "true"))) {
+        log.info("Pruning old entries...");        
+        removeNotUpdated(currentGeneration.getX().keySetIterator(),
+                         updatedXKeys,
                          recentlyActiveUsers,
-                         currentGeneration.getKnownItemLock().writeLock());
+                         currentGeneration.getXLock().writeLock());
+        removeNotUpdated(currentGeneration.getY().keySetIterator(),
+                         updatedYKeys,
+                         recentlyActiveItems,
+                         currentGeneration.getYLock().writeLock());
+        if (updatedUserIDsForKnownItems != null && currentGeneration.getKnownItemIDs() != null) {
+          removeNotUpdated(currentGeneration.getKnownItemIDs().keySetIterator(),
+                           updatedUserIDsForKnownItems,
+                           recentlyActiveUsers,
+                           currentGeneration.getKnownItemLock().writeLock());
+        }
+        removeNotUpdated(currentGeneration.getItemTagIDs().iterator(),
+                         updatedItemTagIDs,
+                         recentlyActiveUsers,
+                         currentGeneration.getXLock().writeLock());
+        removeNotUpdated(currentGeneration.getUserTagIDs().iterator(),
+                         updatedUserTagIDs,
+                         recentlyActiveItems,
+                         currentGeneration.getYLock().writeLock());
       }
-      removeNotUpdated(currentGeneration.getItemTagIDs().iterator(),
-                       updatedItemTagIDs,
-                       recentlyActiveUsers,
-                       currentGeneration.getXLock().writeLock());
-      removeNotUpdated(currentGeneration.getUserTagIDs().iterator(),
-                       updatedUserTagIDs,
-                       recentlyActiveItems,
-                       currentGeneration.getYLock().writeLock());
       recentlyActiveUsers.clear();
       recentlyActiveItems.clear();
     }
