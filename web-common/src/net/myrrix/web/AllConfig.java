@@ -37,13 +37,19 @@ public final class AllConfig {
   private final File localInputDir;
   private final RescorerProvider rescorerProvider;
   private final int howMany;
+  private final boolean parallel;
 
   public AllConfig(File localInputDir, RescorerProvider rescorerProvider, int howMany) {
+    this(localInputDir, rescorerProvider, howMany, true);
+  }
+  
+  public AllConfig(File localInputDir, RescorerProvider rescorerProvider, int howMany, boolean parallel) {  
     Preconditions.checkNotNull(localInputDir);
     Preconditions.checkArgument(howMany > 0, "howMany must be positive: %s", howMany);
     this.localInputDir = localInputDir;
     this.rescorerProvider = rescorerProvider;
     this.howMany = howMany;
+    this.parallel = parallel;
   }
 
   public File getLocalInputDir() {
@@ -56,6 +62,10 @@ public final class AllConfig {
 
   public int getHowMany() {
     return howMany;
+  }
+
+  public boolean isParallel() {
+    return parallel;
   }
 
   static AllConfig build(String[] args) {
@@ -78,7 +88,7 @@ public final class AllConfig {
       rescorerProvider = AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, null);
     }
 
-    return new AllConfig(allArgs.getLocalInputDir(), rescorerProvider, allArgs.getHowMany());
+    return new AllConfig(allArgs.getLocalInputDir(), rescorerProvider, allArgs.getHowMany(), allArgs.isParallel());
   }
 
 }

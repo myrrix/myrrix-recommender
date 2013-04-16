@@ -98,7 +98,14 @@ public final class AllItemSimilarities implements Callable<Object> {
       }
     };
 
-    new Paralleler<Long>(recommender.getAllItemIDs().iterator(), processor, "AllItemSimilarities").runInParallel();
+    Paralleler<Long> paralleler = 
+        new Paralleler<Long>(recommender.getAllItemIDs().iterator(), processor, "AllItemSimilarities");
+    if (config.isParallel()) {
+      paralleler.runInParallel();
+    } else {
+      paralleler.runInSerial();
+    }
+
     return null;
   }
 

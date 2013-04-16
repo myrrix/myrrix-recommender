@@ -39,4 +39,7 @@ public interface AllUtilityArgs {
   @Option(helpRequest = true)
   boolean getHelp();
 
+  @Option(defaultValue = "true", description = "Whether to compute results in parallel")  
+  boolean isParallel();
+
 }

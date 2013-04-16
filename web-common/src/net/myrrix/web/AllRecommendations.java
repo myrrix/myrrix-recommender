@@ -97,7 +97,14 @@ public final class AllRecommendations implements Callable<Object> {
       }
     };
 
-    new Paralleler<Long>(recommender.getAllUserIDs().iterator(), processor, "AllRecommendations").runInParallel();
+    Paralleler<Long> paralleler = 
+        new Paralleler<Long>(recommender.getAllUserIDs().iterator(), processor, "AllRecommendations");
+    if (config.isParallel()) {
+      paralleler.runInParallel();
+    } else {
+      paralleler.runInSerial();
+    }
+
     return null;
   }
 
