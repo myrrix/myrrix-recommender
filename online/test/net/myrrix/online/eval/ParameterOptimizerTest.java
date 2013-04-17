@@ -47,7 +47,8 @@ public final class ParameterOptimizerTest extends MyrrixTest {
       @Override
       public Number call() throws IOException, TasteException, InterruptedException {
         PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
-        MyrrixIRStatistics stats = (MyrrixIRStatistics) prEvaluator.evaluate(new File("testdata/grouplens100K"));
+        MyrrixIRStatistics stats = 
+            (MyrrixIRStatistics) prEvaluator.evaluate(new File("testdata/grouplens100K"), 0.9, 0.5, null);
         return stats.getMeanAveragePrecision();
       }
     };

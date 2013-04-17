@@ -40,7 +40,17 @@ import org.slf4j.LoggerFactory;
  * 
  * <p>It can be run on the command line with:</p>
  * 
- * <p>{@code java net.myrrix.online.eval.ParameterOptimizer dataDirectory numSteps property=min:max [property2=min2:max2 ...]}</p>
+ * <p>{@code java net.myrrix.online.eval.ParameterOptimizer dataDirectory numSteps evaluationPercentage
+ *  property=min:max [property2=min2:max2 ...]}</p>
+ *  
+ * <ul>
+ *   <li>{@code dataDirectory}: directory containing test data</li>
+ *   <li>{@code numSteps}: number of different values of each parameter to try. Generally use 3-5.</li>
+ *   <li>{@code evaluationPercentage}: fraction of all data to use in the test. Lower this to down-sample
+ *    a very large data set. Must be in (0,1].</li>
+ *   <li>{@code property=min:max}: repeated argument specifying a system property and the range of values 
+ *    to try, inclusive</li>
+ * </ul>
  * 
  * @author Sean Owen
  */
@@ -64,7 +74,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
    * @param parameterRanges mapping between names of {@link System} properties whose parameters will be optimized
    *  (e.g. {@code model.als.lambda}), and a {@link ParameterRange} describing a range of parameter values to try
    * @param numSteps number of different values of each parameter to try. Note that with m parameters, and
-   *  n steps, running time will scale proportionally to n^m
+   *  n steps, running time will scale proportionally to n<sup>m</sup>
    * @param evaluator the objective to maximize (or minimize). This typically wraps a call to something like
    *  {@link PrecisionRecallEvaluator}
    * @param minimize if {@code true}, find values that maximize {@code evaluator}'s value, otherwise minimize
@@ -172,28 +182,34 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 3) {
-      System.err.println("Usage: dataDirectory numSteps property=min:max [property2=min2:max2 ...]");
+    if (args.length < 4) {
+      System.err.println(
+          "Usage: dataDirectory numSteps evaluationPercentage property=min:max [property2=min2:max2 ...]");
+      return;
     }
     
     final File dataDir = new File(args[0]);
     Preconditions.checkArgument(dataDir.exists() && dataDir.isDirectory(), "Not a directory: %s", dataDir);
+    Preconditions.checkArgument(dataDir.listFiles().length > 0, "No files in: %s", dataDir);
     int numSteps = Integer.parseInt(args[1]);
     Preconditions.checkArgument(numSteps >= 2, "# steps must be at least 2: %s", numSteps);
+    final double evaluationPercentage = Double.parseDouble(args[2]);
+    Preconditions.checkArgument(evaluationPercentage > 0.0 && evaluationPercentage <= 1.0,
+                                "evaluationPercentage must be in (0,1]: %s", evaluationPercentage);
     
     Map<String,ParameterRange> parameterRanges = Maps.newHashMapWithExpectedSize(args.length);
-    for (int i = 2; i < args.length; i++) {
+    for (int i = 3; i < args.length; i++) {
       String[] propValue = EQUALS.split(args[i]);
       String systemProperty = propValue[0];
       String[] minMax = COLON.split(propValue[1]);
       ParameterRange range;
       try {
         int min = Integer.parseInt(minMax[0]);
-        int max = Integer.parseInt(minMax[1]);
+        int max = Integer.parseInt(minMax.length == 1 ? minMax[0] : minMax[1]);
         range = new ParameterRange(min, max, true);
       } catch (NumberFormatException ignored) {
         double min = Double.parseDouble(minMax[0]);
-        double max = Double.parseDouble(minMax[1]);
+        double max = Double.parseDouble(minMax.length == 1 ? minMax[0] : minMax[1]);
         range = new ParameterRange(min, max, false);
       }
       parameterRanges.put(systemProperty, range);
@@ -203,7 +219,8 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
       @Override
       public Number call() throws IOException, TasteException, InterruptedException {
         PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
-        MyrrixIRStatistics stats = (MyrrixIRStatistics) prEvaluator.evaluate(dataDir);
+        MyrrixIRStatistics stats = 
+            (MyrrixIRStatistics) prEvaluator.evaluate(dataDir, 0.9, evaluationPercentage, null);
         return stats.getMeanAveragePrecision();
       }
     };
