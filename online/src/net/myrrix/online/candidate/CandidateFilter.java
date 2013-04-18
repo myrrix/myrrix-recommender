@@ -45,6 +45,13 @@ import net.myrrix.common.collection.FastByIDMap;
  * @see net.myrrix.online.RescorerProvider
  */
 public interface CandidateFilter {
+  
+  // Note that your implementation will need a constructor matching the following, which is how it
+  // gets a reference to the set of items:
+  
+  // public YourCandidateFilter(FastByIDMap<float[]> Y) {
+  //   ...
+  // }
 
   /**
    * @param userVectors user feature vector(s) for which recommendations are being made. This may or may not
