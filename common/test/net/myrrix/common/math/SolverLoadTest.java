@@ -23,6 +23,8 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.random.RandomManager;
@@ -34,17 +36,21 @@ import net.myrrix.common.random.RandomManager;
  */
 public final class SolverLoadTest extends MyrrixTest {
   
+  private static final Logger log = LoggerFactory.getLogger(SolverLoadTest.class);
+  
   @Test
   public void testLoad() {
-    RealMatrix symmetric = randomSymmetricMatrix(1000);
+    RealMatrix symmetric = randomSymmetricMatrix(500);
     Stopwatch stopwatch = new Stopwatch();
     stopwatch.start();
     int iterations = 100;
     for (int i = 0; i < iterations; i++) {
       MatrixUtils.getSolver(symmetric);
     }
-    stopwatch.stop(); 
-    assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 500 * iterations);
+    stopwatch.stop();
+    long elapsedMS = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+    log.info("{}ms elapsed", elapsedMS);
+    assertTrue(elapsedMS < 200 * iterations);
   }
   
   private static RealMatrix randomSymmetricMatrix(int dimension) {
