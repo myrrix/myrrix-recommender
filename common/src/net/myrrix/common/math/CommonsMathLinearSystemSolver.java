@@ -19,7 +19,6 @@ package net.myrrix.common.math;
 import org.apache.commons.math3.linear.DecompositionSolver;
 import org.apache.commons.math3.linear.RRQRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.SingularMatrixException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +49,7 @@ public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
              M.getColumnDimension(), 
              SINGULARITY_THRESHOLD,
              apparentRank);
-    throw new SingularMatrixException();
+    throw new SingularMatrixSolverException("Apparent rank: " + apparentRank);
   }  
 
   @Override

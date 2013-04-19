@@ -19,26 +19,35 @@ package net.myrrix.common.math;
 import org.apache.commons.math3.linear.RealMatrix;
 
 /**
- * Encapsulates a strategy for solving a linear system Ax = b. 
- * This allows for swapping in other strategies later.
+ * An implementation that solves based on an explicitly computed inverse, A<sup>-1</sup>.
  * 
  * @author Sean Owen
  */
-interface LinearSystemSolver {
-
-  double SINGULARITY_THRESHOLD = 
-      Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", Double.toString(1.0e-5)));
-
-  /**
-   * @return a {@link Solver} for A, which can solve Ax = b for x, given b. 
-   *  Note that this only works for symmetric matrices!
-   */
-  Solver getSolver(RealMatrix A);
+final class InverseBasedSolver implements Solver {
   
-  /**
-   * @return true if A appears to be invertible ({@link #getSolver(RealMatrix)} would succeed).
-   *  Note that this only works for symmetric matrices!
-   */
-  boolean isNonSingular(RealMatrix A);
+  private final RealMatrix Ainv;
+  
+  InverseBasedSolver(RealMatrix Ainv) {
+    this.Ainv = Ainv;
+  }
+  
+  @Override
+  public float[] solveDToF(double[] b) {
+    double[] x = Ainv.operate(b);
+    float[] xCopy = new float[x.length];
+    for (int i = 0; i < xCopy.length; i++) {
+      xCopy[i] = (float) x[i];
+    }
+    return xCopy;
+  }
+  
+  @Override
+  public double[] solveFToD(float[] b) {
+    double[] bCopy = new double[b.length];
+    for (int i = 0; i < bCopy.length; i++) {
+      bCopy[i] = b[i];
+    }
+    return Ainv.operate(bCopy);
+  }
   
 }

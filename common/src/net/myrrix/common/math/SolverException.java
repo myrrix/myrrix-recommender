@@ -16,29 +16,17 @@
 
 package net.myrrix.common.math;
 
-import org.apache.commons.math3.linear.RealMatrix;
-
-/**
- * Placeholder for implementation based on a GPU.
- * 
- * @author Sean Owen
- */
-public final class GPULinearSystemSolver implements LinearSystemSolver {
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public Solver getSolver(RealMatrix M) {
-    throw new UnsupportedOperationException();
-  }  
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public boolean isNonSingular(RealMatrix M) {
-    throw new UnsupportedOperationException();
-  }  
-
+public abstract class SolverException extends RuntimeException {
+  
+  protected SolverException() {
+  }
+  
+  protected SolverException(String message) {
+    super(message);
+  }
+  
+  protected SolverException(Throwable cause) {
+    super(cause);
+  }
+  
 }

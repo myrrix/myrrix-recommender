@@ -23,13 +23,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import org.apache.commons.math3.linear.IllConditionedOperatorException;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.math.IllConditionedSolverException;
 import net.myrrix.common.math.MatrixUtils;
 import net.myrrix.common.math.Solver;
 import net.myrrix.online.candidate.CandidateFilter;
@@ -148,7 +148,7 @@ public final class Generation {
       double infNorm = MTM.getNorm();
       if (infNorm < 1.0) {
         log.warn("X'*X or Y'*Y has small inf norm ({}); try decreasing model.als.lambda", infNorm);
-        throw new IllConditionedOperatorException(infNorm); // Not really a condition number...
+        throw new IllConditionedSolverException("infNorm: " + infNorm);
       }
       return MatrixUtils.getSolver(MTM);
     } finally {

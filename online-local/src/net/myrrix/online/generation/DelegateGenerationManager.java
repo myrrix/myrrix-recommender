@@ -32,12 +32,12 @@ import java.util.concurrent.locks.Lock;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import org.apache.commons.math3.exception.MathIllegalArgumentException;
 import org.apache.mahout.cf.taste.model.IDMigrator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.OneWayMigrator;
+import net.myrrix.common.math.SolverException;
 import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
 import net.myrrix.common.collection.FastByIDFloatMap;
@@ -349,7 +349,7 @@ public final class DelegateGenerationManager implements GenerationManager {
                    "-XX:NewRatio value, and/or use -XX:+UseCompressedOops");
           currentGeneration = null;
           throw oome;
-        } catch (MathIllegalArgumentException ignored) {
+        } catch (SolverException ignored) {
           log.warn("Unable to compute a valid generation yet; waiting for more data");
           currentGeneration = null;
         }

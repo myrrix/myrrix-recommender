@@ -43,8 +43,9 @@ public final class MatrixUtils {
   private static final LinearSystemSolver MATRIX_INVERTER;
   static {
     MATRIX_DATA_FIELD = ClassUtils.loadField(Array2DRowRealMatrix.class, "data");
-    MATRIX_INVERTER = 
-        ClassUtils.loadInstanceOf("net.myrrix.common.math.CommonsMathLinearSystemSolver", LinearSystemSolver.class);
+    String lssClassName = Boolean.parseBoolean(System.getProperty("common.matrix.nativeMath", "false")) ?
+        "net.myrrix.common.math.JBlasLinearSystemSolver" : "net.myrrix.common.math.CommonsMathLinearSystemSolver";
+    MATRIX_INVERTER = ClassUtils.loadInstanceOf(lssClassName, LinearSystemSolver.class);
   }
 
   private MatrixUtils() {
