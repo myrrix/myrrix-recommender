@@ -64,4 +64,58 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <finalName>myrrix-serving-${project.version}</finalName>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <filters>
+                <filter>
+                  <artifact>com.lexicalscope.jewelcli:jewelcli</artifact>
+                  <excludes>
+                    <exclude>uk/co/flamingpenguin/**</exclude>
+                  </excludes>
+                </filter>
+                <filter>
+                  <artifact>org.apache.mahout:mahout-core</artifact>
+                  <includes>
+                    <include>org/apache/mahout/cf/taste/**</include>
+                    <include>org/apache/mahout/common/**</include>
+                    <include>org/apache/mahout/math/*.class</include>
+                  </includes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <manifestEntries>
+                    <Main-Class>net.myrrix.web.Runner</Main-Class>
+                    <Sealed>true</Sealed>
+                  </manifestEntries>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>META-INF/myrrix/LICENSE.txt</resource>
+                  <file>../LICENSE.txt</file>
+                </transformer>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                  <resource>META-INF/myrrix/NOTICE.txt</resource>
+                  <file>../NOTICE.txt</file>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
