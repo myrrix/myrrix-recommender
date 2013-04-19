@@ -47,10 +47,10 @@
       </manifest>
       <zipfileset dir="${client.output.dir}"/>
       <zipfileset dir="${common.output.dir}"/>
-      <zipfileset src="common/lib/guava-14.0.1.jar"/>
-      <zipfileset src="common/lib/jewelcli-0.8.3.jar">
+      <zipfileset src="client/lib/jewelcli-0.8.3.jar">
         <exclude name="uk/co/flamingpenguin/**"/>
       </zipfileset>
+      <zipfileset src="common/lib/guava-14.0.1.jar"/>
       <zipfileset src="common/lib/mahout-core-0.7.jar">
         <include name="org/apache/mahout/cf/taste/**"/>
         <include name="org/apache/mahout/common/**"/>
@@ -74,9 +74,6 @@
       <zipfileset dir="${common.output.dir}"/>
       <zipfileset dir="${online-local.output.dir}"/>
       <zipfileset src="common/lib/guava-14.0.1.jar"/>
-      <zipfileset src="common/lib/jewelcli-0.8.3.jar">
-        <exclude name="uk/co/flamingpenguin/**"/>
-      </zipfileset>
       <zipfileset src="common/lib/mahout-core-0.7.jar">
         <include name="org/apache/mahout/cf/taste/**"/>
         <include name="org/apache/mahout/common/**"/>
@@ -85,7 +82,10 @@
       <zipfileset src="common/lib/slf4j-jdk14-1.7.5.jar"/>
       <zipfileset src="common/lib/slf4j-api-1.7.5.jar"/>
       <zipfileset src="common/lib/commons-math3-3.2.jar"/>
-      <zipfileset src="common/lib/commons-compress-1.5.jar"/>      
+      <zipfileset src="common/lib/commons-compress-1.5.jar"/>  
+      <zipfileset src="web-common/lib/jewelcli-0.8.3.jar">
+        <exclude name="uk/co/flamingpenguin/**"/>
+      </zipfileset>
       <zipfileset src="web-common/lib/tomcat-embed-logging-juli.jar"/>
       <zipfileset src="web-common/lib/tomcat-embed-jasper.jar"/>
       <zipfileset src="web-common/lib/tomcat-embed-core.jar"/>

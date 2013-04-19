@@ -36,7 +36,6 @@
       <classpath>
         <pathelement location="${online.output.dir}"/>
         <pathelement location="${common.output.dir}"/>
-        <pathelement location="common/lib/jewelcli-0.8.3.jar"/>
         <pathelement location="common/lib/guava-14.0.1.jar"/>
         <pathelement location="common/lib/mahout-core-0.7.jar"/>
         <pathelement location="common/lib/slf4j-api-1.7.5.jar"/>
