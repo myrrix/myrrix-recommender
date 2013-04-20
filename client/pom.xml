@@ -162,7 +162,7 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-              <finalName>myrrix-client-${project.version}</finalName>              
+              <finalName>myrrix-client-java-${project.version}</finalName>              
               <shadedArtifactAttached>true</shadedArtifactAttached>
               <filters>
                 <filter>
