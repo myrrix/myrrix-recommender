@@ -76,7 +76,7 @@ public final class LangUtils {
    *
    * @param l long value
    * @param m modulus
-   * @return {@code l % m} if l is nonnegative, {@code (l % m) + m} otherwise
+   * @return {@code l mod m} if l is nonnegative, {@code (l mod m) + m} otherwise
    */
   public static int mod(long l, int m) {
     return ((int) (l % m) + m) % m;

@@ -636,7 +636,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     appendCommonQueryParams(howMany, considerKnownItems, rescorerParams, urlPath);
 
-    // Note that this assumes that all user IDs are on the same partiiton. It will fail at request
+    // Note that this assumes that all user IDs are on the same partition. It will fail at request
     // time if not since the partition of the first user doesn't contain the others.
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(userIDs[0])) {

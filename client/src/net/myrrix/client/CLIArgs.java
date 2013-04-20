@@ -29,7 +29,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
  */
 public interface CLIArgs {
 
-  @Option(description = "Vebose logging")
+  @Option(description = "Verbose logging")
   boolean isVerbose();
 
   @Option(defaultValue = "localhost", description = "Serving Layer host name")

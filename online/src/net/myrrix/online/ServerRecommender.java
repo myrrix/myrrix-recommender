@@ -117,7 +117,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    * @param instanceID instance ID that the Serving Layer is serving. May be 0 for local mode.
    * @param localInputDir local input and model file directory
    * @param partition partition number in a partitioned distributed mode. 0 if not partitioned.
-   * @param allPartitions reference to an object that can describe all parititions; only used to get their count
+   * @param allPartitions reference to an object that can describe all partitions; only used to get their count
    * @param licenseFile see {@code RunnerConfiguration} for name and contents. Only used in distributed mode.
    */
   public ServerRecommender(String bucket,
@@ -675,7 +675,6 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
    *  same as will be returned from {@link #recommend(long, int)}. They are opaque values and have no interpretation
    *  other than that larger means stronger. The values are typically in the range [0,1] but are not guaranteed
    *  to be so. Note that 0 will be returned if the user or item is not known in the data.
-   * @throws NoSuchItemException if the item is not known in the model
    * @throws NotReadyException if the recommender has no model available yet
    */
   @Override
