@@ -50,6 +50,11 @@ import net.myrrix.common.MyrrixRecommender;
  * logic for the request.  For example, the argument may be the user's current location, used to filter
  * results by location.</p>
  *
+ * <p>For example, a request containing {@code ...?rescorerParams=xxx,yyy,zzz} will result in an {@code args}
+ * parameter with <em>one</em> elements, {@code xxx,yyy,zzz}. A request containing 
+ * {@code ...?rescorerParams=xxx&...rescorerParams=yyy&...rescorerParams=zzz...} will result in an
+ * {@code args} parameter with 3 elements, {@code xxx}, {@code yyy}, {@code zzz}.</p>
+ *
  * @author Sean Owen
  * @see MultiRescorer
  * @see net.myrrix.online.candidate.CandidateFilter
