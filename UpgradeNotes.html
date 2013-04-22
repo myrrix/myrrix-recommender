@@ -23,6 +23,8 @@ hr {margin:20px 0 10px 0}
   <code>/tag/item/<strong>[itemID]/[tag]</strong></code>, not 
   <code>/tag/item/<strong>[tag]/[itemID]</strong></code>. Callers who access the REST API directly
   will need to use the corrected path.</li>
+  <li>Stand-alone: the format of <code>model.bin.gz</code> has changed in a backwards-incompatible way.
+  Remove it and let the server build a new model.</li>
 </ul>
 
 <h2>Version 0.11</h2>
