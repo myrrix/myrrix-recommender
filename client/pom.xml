@@ -196,7 +196,6 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>net.myrrix.client.CLI</Main-Class>
-                    <Sealed>true</Sealed>
                   </manifestEntries>
                 </transformer>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
