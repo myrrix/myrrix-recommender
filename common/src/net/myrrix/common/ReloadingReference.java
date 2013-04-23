@@ -22,7 +22,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.math3.util.FastMath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encapsulates a reference to something that is created the first time it is needed. Instead
@@ -32,6 +33,8 @@ import org.apache.commons.math3.util.FastMath;
  * @author Sean Owen
  */
 public final class ReloadingReference<V> {
+
+  private static final Logger log = LoggerFactory.getLogger(ReloadingReference.class);
 
   public static final long NO_RELOAD = -1L;
 
@@ -109,12 +112,19 @@ public final class ReloadingReference<V> {
     if (value == null || (reloading && now > lastRetrieval + currentDurationMS)) {
       try {
         value = retriever.call();
+        Preconditions.checkState(value != null);
       } catch (Exception e) {
         // Kind of arbitrary exponential backoff -- 2x after each error up to 16x
-        currentDurationMS = FastMath.min(currentDurationMS * 2, originalDurationMS * 16);
-        throw new IllegalStateException(e);
+        // If too many errors, or error on first retrieval, die
+        if (currentDurationMS >= originalDurationMS * 16 || value == null) {
+          // Too many errors, start failing
+          throw new IllegalStateException(e);          
+        }
+        // else log and quietly back off
+        log.warn("Retrieval failed; using previous cached value", e);
+        currentDurationMS *= 2;
       }
-      lastRetrieval = now;      
+      lastRetrieval = System.currentTimeMillis();      
       // Reset backoff
       currentDurationMS = originalDurationMS;      
     }
@@ -132,7 +142,12 @@ public final class ReloadingReference<V> {
    * Clears the reference, requiring a load on next access.
    */
   public void clear() {
-    value = null;
+    lock.lock();
+    try {
+      value = null;
+    } finally {
+      lock.unlock();
+    }
   }
 
 }
