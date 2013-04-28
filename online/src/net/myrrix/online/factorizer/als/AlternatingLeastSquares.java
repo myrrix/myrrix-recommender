@@ -82,6 +82,10 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private static final boolean RECONSTRUCT_R_MATRIX = 
       Boolean.parseBoolean(System.getProperty("model.reconstructRMatrix", "false"));
 
+  // Leaving out this experimental flag for now:
+  //private static final boolean IGNORE_ZERO_ENTRIES = 
+  //    Boolean.parseBoolean(System.getProperty("model.ignoreZero", "true"));
+
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
   private final int features;
@@ -396,6 +400,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         FastByIDFloatMap ru = work.getSecond();
 
         RealMatrix Wu = YTY.copy();
+        /*
+        RealMatrix Wu = 
+            IGNORE_ZERO_ENTRIES ? 
+            partialTransposeTimesSelf(Y, YTY.getRowDimension(), ru.keySetIterator()) : 
+            YTY.copy();
+         */
+
         double[][] WuData = MatrixUtils.accessMatrixDataDirectly(Wu);
         double[] YTCupu = new double[features];
 
@@ -459,6 +470,26 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       String lambdaProperty = System.getProperty("model.als.lambda");
       return lambdaProperty == null ? DEFAULT_LAMBDA : LangUtils.parseDouble(lambdaProperty);
     }
+    
+    // See IGNORE_ZERO_ENTRIES
+    /*
+    private static RealMatrix partialTransposeTimesSelf(FastByIDMap<float[]> M, 
+                                                        int dimension, 
+                                                        LongPrimitiveIterator keys) {
+      RealMatrix result = new Array2DRowRealMatrix(dimension, dimension);
+      while (keys.hasNext()) {
+        long key = keys.next();
+        float[] vector = M.get(key);
+        for (int row = 0; row < dimension; row++) {
+          float rowValue = vector[row];
+          for (int col = 0; col < dimension; col++) {
+            result.addToEntry(row, col, rowValue * vector[col]);
+          }
+        }
+      }
+      return result;
+    }
+     */
 
   }
 
