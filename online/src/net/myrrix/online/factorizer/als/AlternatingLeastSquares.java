@@ -402,7 +402,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         for (FastByIDFloatMap.MapEntry entry : ru.entrySet()) {
 
           double xu = entry.getValue();
-          double cu = 1.0 + alpha * FastMath.abs(xu);
 
           float[] vector = Y.get(entry.getKey());
           if (vector == null) {
@@ -411,10 +410,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           }
 
           // Wu and YTCupu
-          for (int row = 0; row < features; row++) {
-            if (RECONSTRUCT_R_MATRIX) {
-              YTCupu[row] += xu * vector[row];              
-            } else {
+          if (RECONSTRUCT_R_MATRIX) {
+            for (int row = 0; row < features; row++) {
+              YTCupu[row] += xu * vector[row];
+            }
+          } else {
+            double cu = 1.0 + alpha * FastMath.abs(xu);            
+            for (int row = 0; row < features; row++) {
               float vectorAtRow = vector[row];
               double rowValue = vectorAtRow * (cu - 1.0);
               double[] WuDataRow = WuData[row];              
