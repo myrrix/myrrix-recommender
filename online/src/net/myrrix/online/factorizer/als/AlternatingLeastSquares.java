@@ -76,6 +76,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   private static final int NUM_USER_ITEMS_TO_TEST_CONVERGENCE = 100;
   
   private static final long LOG_INTERVAL = 100000;
+  private static final int MAX_FAR_FROM_VECTORS = 100000;
   
   // This will cause the ALS algorithm to reconstruction the input matrix R, rather than the
   // matrix P = R > 0 . Don't use this unless you understand it!
@@ -174,18 +175,8 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
 
     X = new FastByIDMap<float[]>(RbyRow.size(), 1.25f);
 
-    boolean randomY;
-    if (previousY == null ||
-        previousY.isEmpty() ||
-        previousY.entrySet().iterator().next().getValue().length != features) {
-      log.info("Starting from random Y matrix");
-      Y = constructInitialY(null);
-      randomY = true;
-    } else {
-      log.info("Starting from previous generation's Y matrix");
-      Y = constructInitialY(previousY);
-      randomY = false;
-    }
+    boolean randomY = previousY == null || previousY.isEmpty();
+    Y = constructInitialY(previousY);
 
     // This will be used to compute rows/columns in parallel during iteration
 
@@ -268,10 +259,57 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   }
 
   private FastByIDMap<float[]> constructInitialY(FastByIDMap<float[]> previousY) {
-    FastByIDMap<float[]> randomY = previousY == null ? new FastByIDMap<float[]>(RbyColumn.size(), 1.25f) : previousY;
+
     RandomGenerator random = RandomManager.getRandom();
+    
+    FastByIDMap<float[]> randomY;
+    if (previousY == null || previousY.isEmpty()) {
+      // Common case: have to start from scratch
+      log.info("Starting from new, random Y matrix");      
+      randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
+      
+    } else {
+      
+      int oldFeatureCount = previousY.entrySet().iterator().next().getValue().length;
+      if (oldFeatureCount > features) {
+        // Fewer features, use some dimensions from prior larger number of features as-is
+        log.info("Feature count has decreased to {}, projecting down previous generation's Y matrix", features);                
+        randomY = new FastByIDMap<float[]>(previousY.size(), 1.25f);
+        for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
+          float[] oldLargerVector = entry.getValue();
+          float[] newSmallerVector = new float[features];
+          System.arraycopy(oldLargerVector, 0, newSmallerVector, 0, newSmallerVector.length);
+          SimpleVectorMath.normalize(newSmallerVector);
+          randomY.put(entry.getKey(), newSmallerVector);
+        }
+        
+      } else if (oldFeatureCount < features) {
+        log.info("Feature count has increased to {}, using previous generation's Y matrix as subspace", features);        
+        randomY = new FastByIDMap<float[]>(previousY.size(), 1.25f);
+        for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
+          float[] oldSmallerVector = entry.getValue();
+          float[] newLargerVector = new float[features];
+          System.arraycopy(oldSmallerVector, 0, newLargerVector, 0, oldSmallerVector.length);
+          // Fill in new dimensions with random values
+          for (int i = oldSmallerVector.length; i < newLargerVector.length; i++) {
+            newLargerVector[i] = (float) random.nextGaussian();
+          }
+          SimpleVectorMath.normalize(newLargerVector);          
+          randomY.put(entry.getKey(), newLargerVector);
+        }
+        
+      } else {
+        // Common case: previous generation is same number of features
+        log.info("Starting from previous generation's Y matrix");        
+        randomY = previousY;
+      }
+    }
+    
     List<float[]> recentVectors = Lists.newArrayList();
     for (FastByIDMap.MapEntry<float[]> entry : randomY.entrySet()) {
+      if (recentVectors.size() >= MAX_FAR_FROM_VECTORS) {
+        break;
+      }
       recentVectors.add(entry.getValue());
     }
     LongPrimitiveIterator it = RbyColumn.keySetIterator();
@@ -281,7 +319,9 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       if (!randomY.containsKey(id)) {
         float[] vector = RandomUtils.randomUnitVectorFarFrom(features, recentVectors, random);
         randomY.put(id, vector);
-        recentVectors.add(vector);
+        if (recentVectors.size() < MAX_FAR_FROM_VECTORS) {
+          recentVectors.add(vector);
+        }
       }
       if (++count % LOG_INTERVAL == 0) {
         log.info("Computed {} initial Y rows", count);

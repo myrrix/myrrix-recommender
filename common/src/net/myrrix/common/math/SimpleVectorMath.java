@@ -18,6 +18,11 @@ package net.myrrix.common.math;
 
 import org.apache.commons.math3.util.FastMath;
 
+/**
+ * Simple utility methods related to vectors represented as simple {@code float[]}s.
+ * 
+ * @author Sean Owen
+ */
 public final class SimpleVectorMath {
 
   private SimpleVectorMath() {}
@@ -34,6 +39,9 @@ public final class SimpleVectorMath {
     return dot;
   }
 
+  /**
+   * @return the L2 norm of vector x
+   */
   public static double norm(float[] x) {
     double total = 0.0;
     for (float f : x) {
@@ -42,6 +50,9 @@ public final class SimpleVectorMath {
     return FastMath.sqrt(total);
   }
 
+  /**
+   * @return the L2 norm of vector x
+   */
   public static double norm(double[] x) {
     double total = 0.0;
     for (double d : x) {
@@ -50,6 +61,9 @@ public final class SimpleVectorMath {
     return FastMath.sqrt(total);
   }
 
+  /**
+   * @return the square of the distance between the vectors {@code x} and {@code y}
+   */
   public static double distanceSquared(float[] x, float[] y) {
     int length = x.length;
     double total = 0.0;
@@ -58,6 +72,16 @@ public final class SimpleVectorMath {
       total += d * d;
     }
     return total;
+  }
+
+  /**
+   * @param x vector that will modified to have unit length
+   */
+  public static void normalize(float[] x) {
+    float norm = (float) norm(x);
+    for (int i = 0; i < x.length; i++) {
+      x[i] /= norm;
+    }
   }
 
 }
