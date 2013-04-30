@@ -111,6 +111,9 @@
         <configuration>
           <source>6</source>
           <target>6</target>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
       <plugin>

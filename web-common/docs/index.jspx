@@ -157,6 +157,7 @@ if (Float.isNaN(avgEstimateError)) {
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
 
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
+@SuppressWarnings("unchecked")
 ReloadingReference&lt;List&lt;?&gt;&gt; partitionRef =
     (ReloadingReference&lt;List&lt;?&gt;&gt;) application.getAttribute(AbstractMyrrixServlet.ALL_PARTITIONS_REF_KEY);
 int numPartitions = partitionRef == null ? 0 : partitionRef.get(1, TimeUnit.SECONDS).size();
@@ -215,6 +216,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
     <th>Server<br/>Errors</th>
   </tr>
   <jsp:scriptlet>
+    @SuppressWarnings("unchecked")
     Map&lt;String,ServletStats&gt; timings =
         (Map&lt;String,ServletStats&gt;) application.getAttribute(AbstractMyrrixServlet.TIMINGS_KEY);
     for (Map.Entry&lt;String,ServletStats&gt; entry : timings.entrySet()) {

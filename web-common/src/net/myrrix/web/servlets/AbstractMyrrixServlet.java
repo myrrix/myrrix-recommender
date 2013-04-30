@@ -108,7 +108,9 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
 
     Map<String,ServletStats> timings;
     synchronized (context) {
-      timings = (Map<String,ServletStats>) context.getAttribute(TIMINGS_KEY);
+      @SuppressWarnings("unchecked")
+      Map<String,ServletStats> temp = (Map<String,ServletStats>) context.getAttribute(TIMINGS_KEY);
+      timings = temp;
       if (timings == null) {
         timings = Maps.newTreeMap();
         context.setAttribute(TIMINGS_KEY, timings);

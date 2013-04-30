@@ -44,7 +44,9 @@ public final class MultiLongPairRescorer implements Rescorer<LongPair> {
   public MultiLongPairRescorer(List<Rescorer<LongPair>> rescorers) {
     Preconditions.checkNotNull(rescorers);
     Preconditions.checkState(!rescorers.isEmpty());
-    this.rescorers = rescorers.toArray((Rescorer<LongPair>[]) new Rescorer[rescorers.size()]);
+    @SuppressWarnings("unchecked")
+    Rescorer<LongPair>[] newArray = (Rescorer<LongPair>[]) new Rescorer[rescorers.size()];
+    this.rescorers = rescorers.toArray(newArray);
   }
 
   @Override

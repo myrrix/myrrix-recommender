@@ -160,7 +160,9 @@ public final class ClassUtils {
    */
   public static <T extends Cloneable> T clone(T original) {
     try {
-      return (T) CLONE_METHOD.invoke(original);
+      @SuppressWarnings("unchecked")
+      T clone = (T) CLONE_METHOD.invoke(original);
+      return clone;
     } catch (IllegalAccessException iae) {
       throw new AssertionError(iae);
     } catch (InvocationTargetException ite) {

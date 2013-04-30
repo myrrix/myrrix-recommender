@@ -254,7 +254,9 @@ public final class IOUtils {
   public static <T extends Serializable> T readObjectFromFile(File f, Class<T> clazz) throws IOException {
     ObjectInputStream in = new ObjectInputStream(openMaybeDecompressing(f));
     try {
-      return (T) in.readObject();
+      @SuppressWarnings("unchecked")
+      T result = (T) in.readObject();
+      return result;
     } catch (ClassNotFoundException cnfe) {
       throw new IllegalStateException(cnfe);
     } finally {
