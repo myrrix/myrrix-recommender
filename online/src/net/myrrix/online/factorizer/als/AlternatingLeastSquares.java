@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
@@ -82,10 +83,11 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   // matrix P = R > 0 . Don't use this unless you understand it!
   private static final boolean RECONSTRUCT_R_MATRIX = 
       Boolean.parseBoolean(System.getProperty("model.reconstructRMatrix", "false"));
-
-  // Leaving out this experimental flag for now:
-  //private static final boolean IGNORE_ZERO_ENTRIES = 
-  //    Boolean.parseBoolean(System.getProperty("model.ignoreZero", "true"));
+  // Causes the loss function to exclude entries for any input pairs that do not appear in the
+  // input and are implicitly 0
+  // Likewise, don't touch this for now unless you know what it does.
+  private static final boolean LOSS_IGNORES_UNSPECIFIED = 
+      Boolean.parseBoolean(System.getProperty("model.lossIgnoresUnspecified", "false"));
 
   private final FastByIDMap<FastByIDFloatMap> RbyRow;
   private final FastByIDMap<FastByIDFloatMap> RbyColumn;
@@ -439,13 +441,12 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         // This is Ru:
         FastByIDFloatMap ru = work.getSecond();
 
-        RealMatrix Wu = YTY.copy();
-        /*
+        // Start computing Wu = (YT*Cu*Y + lambda*I) = (YT*Y + YT*(Cu-I)*Y + lambda*I),
+        // by first starting with a copy of YT * Y. Or, a variant on YT * Y, if LOSS_IGNORES_UNSPECIFIED is set
         RealMatrix Wu = 
-            IGNORE_ZERO_ENTRIES ? 
+            LOSS_IGNORES_UNSPECIFIED ? 
             partialTransposeTimesSelf(Y, YTY.getRowDimension(), ru.keySetIterator()) : 
             YTY.copy();
-         */
 
         double[][] WuData = MatrixUtils.accessMatrixDataDirectly(Wu);
         double[] YTCupu = new double[features];
@@ -510,9 +511,15 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       String lambdaProperty = System.getProperty("model.als.lambda");
       return lambdaProperty == null ? DEFAULT_LAMBDA : LangUtils.parseDouble(lambdaProperty);
     }
-    
-    // See IGNORE_ZERO_ENTRIES
-    /*
+
+    /**
+     * Like {@link MatrixUtils#transposeTimesSelf(FastByIDMap)}, but instead of computing MT * M, 
+     * it computes MT * C * M, where C is a diagonal matrix of 1s and 0s. This is like pretending some
+     * rows of M are 0.
+     * 
+     * @see MatrixUtils#transposeTimesSelf(FastByIDMap) 
+     * @see #LOSS_IGNORES_UNSPECIFIED
+     */
     private static RealMatrix partialTransposeTimesSelf(FastByIDMap<float[]> M, 
                                                         int dimension, 
                                                         LongPrimitiveIterator keys) {
@@ -529,7 +536,6 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       }
       return result;
     }
-     */
 
   }
 
