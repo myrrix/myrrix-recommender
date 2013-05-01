@@ -31,11 +31,27 @@ public final class ParameterRange {
   private final boolean integerOnly;
 
   /**
+   * @param min smallest value to try; only integer values will be tried in between
+   * @param max largest value to try; only integer values will be tried in between
+   */
+  public ParameterRange(int min, int max) {
+    this(min, max, true);
+  }
+  
+  /**
+   * @param min smallest value to try
+   * @param max largest value to try
+   */
+  public ParameterRange(double min, double max) {
+    this(min, max, false);
+  }
+
+  /**
    * @param min smallest value to try
    * @param max largest value to try
    * @param integerOnly only supply integer values, not any real value
    */
-  public ParameterRange(double min, double max, boolean integerOnly) {
+  private ParameterRange(double min, double max, boolean integerOnly) {
     Preconditions.checkArgument(max >= min, "Max must not be less than min");
     this.min = min;
     this.max = max;

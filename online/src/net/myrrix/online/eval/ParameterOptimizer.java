@@ -206,11 +206,11 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
       try {
         int min = Integer.parseInt(minMax[0]);
         int max = Integer.parseInt(minMax.length == 1 ? minMax[0] : minMax[1]);
-        range = new ParameterRange(min, max, true);
+        range = new ParameterRange(min, max);
       } catch (NumberFormatException ignored) {
         double min = Double.parseDouble(minMax[0]);
         double max = Double.parseDouble(minMax.length == 1 ? minMax[0] : minMax[1]);
-        range = new ParameterRange(min, max, false);
+        range = new ParameterRange(min, max);
       }
       parameterRanges.put(systemProperty, range);
     }
