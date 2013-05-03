@@ -41,8 +41,8 @@ public final class ParameterOptimizerTest extends MyrrixTest {
   @Test
   public void testFindGoodParameterValues() throws Exception {
     Map<String,ParameterRange> propertyRanges = Maps.newHashMap();
-    propertyRanges.put("model.als.lambda", new ParameterRange(0.0001, 0.1, false));
-    propertyRanges.put("model.features", new ParameterRange(10, 40, true));
+    propertyRanges.put("model.als.lambda", new ParameterRange(0.0001, 0.1));
+    propertyRanges.put("model.features", new ParameterRange(10, 40));
     Callable<Number> evaluator = new Callable<Number>() {
       @Override
       public Number call() throws IOException, TasteException, InterruptedException {
