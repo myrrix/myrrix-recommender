@@ -47,10 +47,10 @@ public final class LoadTest extends AbstractClientTest {
   @Test
   public void testLoad() throws Exception {
     ClientRecommender client = getClient();
-    LoadRunner runner = new LoadRunner(client, getTestTempDir(), 20000);
+    LoadRunner runner = new LoadRunner(client, getTestTempDir(), 10000);
     Stopwatch stopwatch = new Stopwatch().start();
     runner.runLoad();
-    assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 30 * runner.getSteps());
+    assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 40 * runner.getSteps());
   }
 
 }

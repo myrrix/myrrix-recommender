@@ -50,7 +50,7 @@ public final class SolverLoadTest extends MyrrixTest {
     stopwatch.stop();
     long elapsedMS = stopwatch.elapsed(TimeUnit.MILLISECONDS);
     log.info("{}ms elapsed", elapsedMS);
-    assertTrue(elapsedMS < 200 * iterations);
+    assertTrue(elapsedMS < 300 * iterations);
   }
   
   private static RealMatrix randomSymmetricMatrix(int dimension) {

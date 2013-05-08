@@ -120,16 +120,14 @@
     </dependency>
     <dependency>
       <groupId>net.myrrix</groupId>
-      <artifactId>myrrix-web-common</artifactId>
+      <artifactId>myrrix-web</artifactId>
       <version>1.0-SNAPSHOT</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
 
   <build>
-    <!--
     <testSourceDirectory>test</testSourceDirectory>
-    -->    
     <plugins>
       <!--
       <plugin>
