@@ -28,8 +28,11 @@ hr {margin:20px 0 10px 0}
   <li>Issue 68: Fixed error in /estimateForAnonymous endpiont that returned a server error / exception
     when all items in the request were unknown, instead of a simple client error</li>
   <li>Issue 70: Mean average precision computation has been corrected</li>
-  <li>Issue 74: Computation Layer: Fixed a possible incorrect cluster assignment can be incorrect when 
+  <li>Issue 74: Computation Layer: Fixed a possible incorrect cluster assignment; can be incorrect when 
     input is small, cluster count is high</li>
+  <li>Issue 75: Fixed an important error in the Computation Layer (only) that can cause recommendations 
+    or similar items, or in some cases steps in iteration, to be missed in some cases where 
+    multi-threaded reducers are used.</li>
 </ul>
 
 <h2>Other</h2>
