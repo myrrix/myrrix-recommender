@@ -112,6 +112,41 @@ public final class SimpleTest extends AbstractClientTest {
     assertEquals(288L, recs.get(1).getItemID());
     assertEquals(302L, recs.get(2).getItemID());
   }
+  
+  @Test
+  public void testRecommendToMany2() throws Exception {
+    ClientRecommender client = getClient();
+    List<RecommendedItem> recs =
+        client.recommendToMany(new long[] {3L, 4L, 5L, 6L, 7L}, 3, true, (String[]) null);
+
+    assertNotNull(recs);
+    assertEquals(3, recs.size());
+
+    log.info("{}", recs);
+
+    assertEquals(50L, recs.get(0).getItemID());
+    assertEquals(258L, recs.get(1).getItemID());
+    assertEquals(288L, recs.get(2).getItemID());
+  }
+  
+  @Test
+  public void testRecommendVersusToMany() throws Exception {
+    ClientRecommender client = getClient();
+    List<RecommendedItem> recs = client.recommend(1L, 3);
+    List<RecommendedItem> recs2 =
+        client.recommendToMany(new long[] {1L}, 3, false, (String[]) null);
+    assertEquals(recs, recs2);
+  }
+  
+  @Test
+  public void testRecommendVersusToMany2() throws Exception {
+    ClientRecommender client = getClient();
+    List<RecommendedItem> recs =
+        client.recommendToMany(new long[] {4L, 2L}, 3, true, (String[]) null);
+    List<RecommendedItem> recs2 =
+        client.recommendToMany(new long[] {2L, 4L}, 3, true, (String[]) null);
+    assertEquals(recs, recs2);
+  }
 
   @Test(expected = NoSuchUserException.class)
   public void testRecommendToManyNonexistent1() throws Exception {
