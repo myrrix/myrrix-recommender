@@ -14,7 +14,7 @@ hr {margin:20px 0 10px 0}
 
 <h1>Myrrix Upgrade Notes</h1>
 
-<h2>Version 1.0</h2>
+<h2>Version 1.0 RC1</h2>
 
 <h3>Serving Layer</h3>
 
@@ -25,6 +25,9 @@ hr {margin:20px 0 10px 0}
   will need to use the corrected path.</li>
   <li>Stand-alone: the format of <code>model.bin.gz</code> has changed in a backwards-incompatible way.
   Remove it and let the server build a new model.</li>
+  <li>Stand-alone: AllItemSimilarities and AllRecommendations programs now require an --outFile parameter
+  instead of printing to stdout. Their output format has changed as well, to match the output of the
+  Comptuation Layer. See the javadoc.</li>
 </ul>
 
 <h2>Version 0.11</h2>

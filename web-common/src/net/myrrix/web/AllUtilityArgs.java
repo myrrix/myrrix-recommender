@@ -42,4 +42,7 @@ public interface AllUtilityArgs {
   @Option(defaultValue = "true", description = "Whether to compute results in parallel")  
   boolean isParallel();
 
+  @Option(description = "Output file")  
+  File getOutFile();
+
 }

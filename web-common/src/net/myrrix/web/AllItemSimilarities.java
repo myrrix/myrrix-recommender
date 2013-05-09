@@ -16,10 +16,16 @@
 
 package net.myrrix.web;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
@@ -38,14 +44,14 @@ import net.myrrix.online.ServerRecommender;
  * locally, in bulk. This may be useful to create a simple batch recommendation process when that is
  * all that's needed.</p>
  *
- * <p>Results are written to {@link System#out}. Each item ID is written on line to start.
- * Following that, similar items are written in {@code item,value} format on subsequent lines. The next
- * item ID follows and so on.</p>
+ * <p>Results are written to the file indicated by {@code --outFile}. The format mirrors that of the Computation
+ * Layer. Each line begins with an item ID, followed by tab, followed "[item1:sim1,item2:sim2,...]"</p>
  *
  * <p>Example usage:</p>
  *
- * <p>{@code java -Xmx2g -cp myrrix-serving-x.y.jar net.myrrix.web.AllItemSimilarities
- *   --localInputDir=[work dir] --howMany=[# similar items] --rescorerProviderClass=[your class(es)]}</p>
+ * <p>{@code java -cp myrrix-serving-x.y.jar net.myrrix.web.AllItemSimilarities
+ *   --localInputDir=[work dir] --outFile=out.txt --howMany=[# similar items] 
+ *   --rescorerProviderClass=[your class(es)]}</p>
  *
  * @author Sean Owen
  * @see AllRecommendations
@@ -67,7 +73,7 @@ public final class AllItemSimilarities implements Callable<Object> {
   }
 
   @Override
-  public Object call() throws InterruptedException, NotReadyException, ExecutionException {
+  public Object call() throws IOException, InterruptedException, NotReadyException, ExecutionException {
 
     final ServerRecommender recommender = new ServerRecommender(config.getLocalInputDir());
     recommender.await();
@@ -75,6 +81,10 @@ public final class AllItemSimilarities implements Callable<Object> {
     final RescorerProvider rescorerProvider = config.getRescorerProvider();
     final int howMany = config.getHowMany();
 
+    File outFile = config.getOutFile();
+    outFile.delete();
+    final Writer out = new OutputStreamWriter(new FileOutputStream(outFile), Charsets.UTF_8);
+    
     Processor<Long> processor = new Processor<Long>() {
       @Override
       public void process(Long itemID, long count) throws ExecutionException {
@@ -86,13 +96,12 @@ public final class AllItemSimilarities implements Callable<Object> {
         } catch (TasteException te) {
           throw new ExecutionException(te);
         }
-        synchronized (System.out) {
-          System.out.println(Long.toString(itemID));
-          StringBuilder line = new StringBuilder(30);
-          for (RecommendedItem sim : similar) {
-            line.setLength(0);
-            line.append(Long.toString(sim.getItemID())).append(',').append(Float.toString(sim.getValue()));
-            System.out.println(line);
+        String outLine = formatOutLine(itemID, similar);
+        synchronized (out) {
+          try {
+            out.write(outLine);
+          } catch (IOException e) {
+            throw new ExecutionException(e);
           }
         }
       }
@@ -106,7 +115,25 @@ public final class AllItemSimilarities implements Callable<Object> {
       paralleler.runInSerial();
     }
 
+    out.close();
     return null;
+  }
+  
+  static String formatOutLine(long id, Iterable<RecommendedItem> recs) {
+    StringBuilder result = new StringBuilder(100);
+    result.append(id);
+    result.append("\t[");
+    boolean first = true;
+    for (RecommendedItem rec : recs) {
+      if (first) {
+        first = false;
+      } else {
+        result.append(',');
+      }
+      result.append(rec.getItemID()).append(':').append(rec.getValue());
+    }
+    result.append("]\n");
+    return result.toString();
   }
 
 }

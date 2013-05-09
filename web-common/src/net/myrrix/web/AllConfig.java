@@ -38,18 +38,26 @@ public final class AllConfig {
   private final RescorerProvider rescorerProvider;
   private final int howMany;
   private final boolean parallel;
+  private final File outFile;
 
-  public AllConfig(File localInputDir, RescorerProvider rescorerProvider, int howMany) {
-    this(localInputDir, rescorerProvider, howMany, true);
+  public AllConfig(File localInputDir, File outFile, RescorerProvider rescorerProvider, int howMany) {
+    this(localInputDir, outFile, rescorerProvider, howMany, true);
   }
   
-  public AllConfig(File localInputDir, RescorerProvider rescorerProvider, int howMany, boolean parallel) {  
+  public AllConfig(File localInputDir, 
+                   File outFile, 
+                   RescorerProvider rescorerProvider, 
+                   int howMany, 
+                   boolean parallel) {  
     Preconditions.checkNotNull(localInputDir);
+    Preconditions.checkArgument(localInputDir.exists() && localInputDir.isDirectory());
+    Preconditions.checkNotNull(outFile);
     Preconditions.checkArgument(howMany > 0, "howMany must be positive: %s", howMany);
     this.localInputDir = localInputDir;
     this.rescorerProvider = rescorerProvider;
     this.howMany = howMany;
     this.parallel = parallel;
+    this.outFile = outFile;
   }
 
   public File getLocalInputDir() {
@@ -66,6 +74,10 @@ public final class AllConfig {
 
   public boolean isParallel() {
     return parallel;
+  }
+
+  public File getOutFile() {
+    return outFile;
   }
 
   static AllConfig build(String[] args) {
@@ -88,7 +100,11 @@ public final class AllConfig {
       rescorerProvider = AbstractRescorerProvider.loadRescorerProviders(rescorerProviderClassNames, null);
     }
 
-    return new AllConfig(allArgs.getLocalInputDir(), rescorerProvider, allArgs.getHowMany(), allArgs.isParallel());
+    return new AllConfig(allArgs.getLocalInputDir(), 
+                         allArgs.getOutFile(),
+                         rescorerProvider, 
+                         allArgs.getHowMany(), 
+                         allArgs.isParallel());
   }
 
 }
