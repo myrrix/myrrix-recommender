@@ -191,6 +191,7 @@ import net.myrrix.web.servlets.UserClusterServlet;
  * </ul>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class Runner implements Callable<Boolean>, Closeable {
 

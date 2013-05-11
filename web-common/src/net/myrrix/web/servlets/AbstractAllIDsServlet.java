@@ -35,6 +35,7 @@ import net.myrrix.common.collection.FastIDSet;
  * JSON, the output is an array of IDs.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class AbstractAllIDsServlet extends AbstractMyrrixServlet {
 

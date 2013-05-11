@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
  * General utility methods related to the language, or primitves.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class LangUtils {
 

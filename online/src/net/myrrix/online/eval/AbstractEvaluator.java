@@ -54,6 +54,7 @@ import net.myrrix.online.ServerRecommender;
  * Superclass of implementations which can evaluate a recommender according to some metric or process.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class AbstractEvaluator implements Evaluator {
 
@@ -81,6 +82,7 @@ public abstract class AbstractEvaluator implements Evaluator {
    *
    * @param originalDataDir directory containing recommender input data, as (possibly compressed) CSV files
    *  sets. This is useful for quickly evaluating using a subset of a large data set.
+   * @return {@link EvaluationResult} representing the evaluation's result (metrics)
    */
   public final EvaluationResult evaluate(File originalDataDir) 
       throws TasteException, IOException, InterruptedException {

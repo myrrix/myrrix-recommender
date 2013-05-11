@@ -53,6 +53,7 @@ import net.myrrix.online.ServerRecommender;
  *   --rescorerProviderClass=[your class(es)]}</p>
  *
  * @author Sean Owen
+ * @since 1.0
  * @see AllItemSimilarities
  */
 public final class AllRecommendations implements Callable<Object> {

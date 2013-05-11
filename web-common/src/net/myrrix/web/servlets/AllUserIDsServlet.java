@@ -16,6 +16,10 @@
 
 package net.myrrix.web.servlets;
 
+/**
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class AllUserIDsServlet extends AbstractAllIDsServlet {
 
   @Override

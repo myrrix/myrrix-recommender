@@ -26,6 +26,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * typically of much lower rank.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface MatrixFactorizer extends Callable<Void> {
 

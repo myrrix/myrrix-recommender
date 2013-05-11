@@ -25,6 +25,7 @@ import java.io.IOException;
  * at runtime from odd places like a distributed file system.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface ResourceRetriever {
 

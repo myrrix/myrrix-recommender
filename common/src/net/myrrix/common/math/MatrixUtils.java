@@ -34,6 +34,7 @@ import net.myrrix.common.collection.FastIDSet;
  * {@link FastByIDMap}s of {@link FastByIDFloatMap}s, or of {@code float[]}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class MatrixUtils {
 

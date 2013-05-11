@@ -45,6 +45,7 @@ import org.apache.commons.math3.random.RandomGenerator;
  *
  * @author Sean Owen
  * @author Mahout
+ * @since 1.0
  */
 public final class RandomManager {
 
@@ -56,6 +57,9 @@ public final class RandomManager {
   private RandomManager() {
   }
 
+  /**
+   * @return a new, seeded {@link RandomGenerator}
+   */
   public static RandomGenerator getRandom() {
     if (useTestSeed) {
       // No need to track instances anymore
@@ -68,6 +72,10 @@ public final class RandomManager {
     return random;
   }
 
+  /**
+   * Causes all known instances of {@link RandomGenerator}, and future ones, to be started from a fixed
+   * seed. This is useful for making tests deterministic.
+   */
   public static void useTestSeed() {
     useTestSeed = true;
     synchronized (INSTANCES) {

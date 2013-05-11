@@ -23,6 +23,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.myrrix.common.stats.RunningStatistics;
 import net.myrrix.common.stats.RunningStatisticsPerTime;
 
+/**
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class ServletStats implements Serializable {
 
   private final RunningStatistics allTimeNanosec;

@@ -31,6 +31,13 @@ import net.myrrix.common.MyrrixTest;
 import net.myrrix.web.Runner;
 import net.myrrix.web.RunnerConfiguration;
 
+/**
+ * Superclass of various tests that exercise the server-side and client-side Java code,
+ * by making requests through the client to a local serving layer instance.
+ * 
+ * @author Sean Owen
+ * @since 1.0
+ */
 public abstract class AbstractClientTest extends MyrrixTest {
 
   private static final Logger log = LoggerFactory.getLogger(AbstractClientTest.class);

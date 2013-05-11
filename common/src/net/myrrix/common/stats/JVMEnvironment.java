@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
  * A bean encapsulating some characteristics of the JVM's runtime environment.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class JVMEnvironment {
 
@@ -70,10 +71,16 @@ public final class JVMEnvironment {
     return (int) (getMaxMemory() / 1000000);
   }
 
+  /**
+   * @return {@link #getUsedMemoryMB()} as a percentage of {@link #getMaxMemoryMB()} as a percentage in [0,100]
+   */
   public int getPercentUsedMemory() {
     return (100 * getUsedMemoryMB()) / getMaxMemoryMB();
   }
 
+  /**
+   * @return the hostname of the local machine, or {@link #UNKNOWN_HOST} if it can't be determined
+   */
   public String getHostName() {
     if (hostName == null || UNKNOWN_HOST.equals(hostName)) {
       try {

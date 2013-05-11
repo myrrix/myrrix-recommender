@@ -32,6 +32,7 @@ import net.myrrix.common.MyrrixRecommender;
  * Abstract implementation of {@link RescorerProvider} which implements all methods to return {@code null}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class AbstractRescorerProvider implements RescorerProvider {
 

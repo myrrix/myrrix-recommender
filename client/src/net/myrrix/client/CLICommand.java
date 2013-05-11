@@ -21,6 +21,7 @@ package net.myrrix.client;
  * {@link ClientRecommender}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public enum CLICommand {
 

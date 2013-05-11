@@ -43,6 +43,7 @@ import net.myrrix.common.parallel.ExecutorUtils;
  * with HTTP status {@link HttpServletResponse#SC_FORBIDDEN}. The host remians banned for about an hour.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class DoSFilter implements Filter {
 

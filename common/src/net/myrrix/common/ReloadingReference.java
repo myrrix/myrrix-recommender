@@ -31,6 +31,8 @@ import org.slf4j.LoggerFactory;
  * This can also periodically re-create or reload the value.
  *
  * @author Sean Owen
+ * @since 1.0
+ * @param <V> type of referent encapsulated and reloaded by this class
  */
 public final class ReloadingReference<V> {
 

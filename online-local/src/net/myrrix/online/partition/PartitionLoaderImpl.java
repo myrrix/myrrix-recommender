@@ -24,6 +24,7 @@ import com.google.common.net.HostAndPort;
  * Does nothing; not applicable in local mode.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class PartitionLoaderImpl implements PartitionLoader {
 

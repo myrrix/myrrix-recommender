@@ -35,6 +35,7 @@ import net.myrrix.common.collection.FastIDSet;
  * <p>{@code java -cp ... net.myrrix.online.generation.PrintGeneration [model.bin.gz file]}</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class PrintGeneration {
 
@@ -59,6 +60,10 @@ public final class PrintGeneration {
     }
   }
 
+  /**
+   * @param generation {@link Generation} to print
+   * @param out {@link Appendable} to print representation to
+   */
   public static void print(Generation generation, Appendable out) throws IOException {
     out.append("X:\n");
     printFeatureMatrix(generation.getX(), out);

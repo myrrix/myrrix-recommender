@@ -47,6 +47,7 @@ import net.myrrix.online.RescorerProvider;
  * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class AUCEvaluator extends AbstractEvaluator {
 

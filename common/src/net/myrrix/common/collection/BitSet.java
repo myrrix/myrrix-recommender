@@ -22,7 +22,9 @@ import java.io.Serializable;
 /**
  * A simplified and streamlined version of {@link java.util.BitSet}.
  *
- * @author Sean Owen, Mahout
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
  */
 public final class BitSet implements Serializable, Cloneable {
   

@@ -54,6 +54,7 @@ import net.myrrix.online.ServerRecommender;
  *   --rescorerProviderClass=[your class(es)]}</p>
  *
  * @author Sean Owen
+ * @since 1.0
  * @see AllRecommendations
  */
 public final class AllItemSimilarities implements Callable<Object> {

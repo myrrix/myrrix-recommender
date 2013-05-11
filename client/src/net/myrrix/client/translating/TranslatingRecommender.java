@@ -35,6 +35,9 @@ import org.apache.mahout.cf.taste.common.TasteException;
  * value from the Serving Layer, and must have been initialized with {@link #addItemIDs(Iterable)} or
  * {@link #addItemIDs(File)} first in order to perform the reverse translation. Otherwise the returned item IDs
  * will be (string representations of) the hashed value only.</p>
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public interface TranslatingRecommender {
 

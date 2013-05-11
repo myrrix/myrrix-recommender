@@ -26,9 +26,17 @@ import com.google.common.net.HostAndPort;
  * in distributed mode, and the implementation used in local mode does nothing.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface PartitionLoader {
 
+  /**
+   * @param defaultPort port that is assumed if none is specified for a replica
+   * @param bucket bucket for which partitions and replicas are loaded
+   * @param instanceID instance for which partitions and replicas are loaded
+   * @return {@link List} of partitions, where each partition is a {@link List} of replicas, where each
+   *  replica is a host-port pair, as {@link HostAndPort}
+   */
   List<List<HostAndPort>> loadPartitions(int defaultPort, String bucket, String instanceID);
 
 }

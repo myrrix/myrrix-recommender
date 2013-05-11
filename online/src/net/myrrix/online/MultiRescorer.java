@@ -27,6 +27,7 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
  * the rescorings in the given order.
  *
  * @author Sean Owen
+ * @since 1.0
  * @see MultiLongPairRescorer
  * @see MultiRescorerProvider
  */
@@ -34,6 +35,9 @@ public final class MultiRescorer implements IDRescorer {
 
   private final IDRescorer[] rescorers;
 
+  /**
+   * @param rescorers {@link IDRescorer} objects to delegate to
+   */
   public MultiRescorer(List<IDRescorer> rescorers) {
     Preconditions.checkNotNull(rescorers);
     Preconditions.checkState(!rescorers.isEmpty(), "rescorers is empty");

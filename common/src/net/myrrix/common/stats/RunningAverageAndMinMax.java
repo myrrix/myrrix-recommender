@@ -23,6 +23,7 @@ import org.apache.mahout.cf.taste.impl.common.RunningAverage;
  *
  * @see org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev
  * @author Sean Owen
+ * @since 1.0
  */
 public interface RunningAverageAndMinMax extends RunningAverage {
 

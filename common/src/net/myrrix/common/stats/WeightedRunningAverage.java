@@ -26,6 +26,7 @@ import org.apache.mahout.cf.taste.impl.common.RunningAverage;
  * <p>Ported from Mahout {@code WeightedRunningAverage} but uses {@code int} weights.</p>
  *
  * @author Mahout
+ * @since 1.0
  */
 public final class WeightedRunningAverage implements RunningAverage, Serializable {
   

@@ -26,6 +26,7 @@ import net.myrrix.common.ClassUtils;
  * its subclass at runtime, since it may not exist on all platforms.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class SignalManager {
 
@@ -35,6 +36,10 @@ public abstract class SignalManager {
 
   abstract void doRegister(Runnable handler, SignalType... types);
 
+  /**
+   * @param handler {@link Runnable} to execute on signal of given types
+   * @param types signals to respond to with {@code handler}
+   */
   public static void register(Runnable handler, SignalType... types) {
     if (ClassUtils.classExists(IMPL_NAME)) {
       SignalManager manager = ClassUtils.loadInstanceOf(IMPL_NAME, SignalManager.class);

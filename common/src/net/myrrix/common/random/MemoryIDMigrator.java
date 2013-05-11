@@ -27,6 +27,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * Copied from Mahout.
  *
  * @author Mahout
+ * @since 1.0
  */
 public final class MemoryIDMigrator extends AbstractIDMigrator implements UpdatableIDMigrator {
   

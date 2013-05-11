@@ -41,6 +41,7 @@ import net.myrrix.common.io.IOUtils;
  * {@link #writeGeneration(Generation, File)} to do so.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class GenerationSerializer implements Serializable {
   
@@ -60,10 +61,18 @@ public final class GenerationSerializer implements Serializable {
     this(null);
   }
 
+  /**
+   * Creates a serializer for the given {@link Generation}.
+   * 
+   * @param generation {@link Generation} to serialize
+   */
   public GenerationSerializer(Generation generation) {
     this.generation = generation;
   }
 
+  /**
+   * @return {@link Generation} to be serialized, or that was just unserialized
+   */
   public Generation getGeneration() {
     return generation;
   }

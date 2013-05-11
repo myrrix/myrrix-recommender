@@ -38,6 +38,7 @@ import net.myrrix.common.math.MatrixUtils;
  * <p>This is a simple utility class and an experiment which may be removed.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class MergeModels {
 

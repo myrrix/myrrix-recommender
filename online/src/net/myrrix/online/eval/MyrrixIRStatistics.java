@@ -22,6 +22,7 @@ import org.apache.mahout.cf.taste.eval.IRStatistics;
  * Extends {@link IRStatistics} with more metrics.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public interface MyrrixIRStatistics extends IRStatistics {
 

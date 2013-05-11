@@ -24,7 +24,9 @@ import net.myrrix.common.MyrrixTest;
 import net.myrrix.common.random.RandomManager;
 
 /**
- * @author Sean Owen, Mahout
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
  */
 public final class BitSetTest extends MyrrixTest {
 

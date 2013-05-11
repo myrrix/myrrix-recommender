@@ -16,6 +16,10 @@
 
 package net.myrrix.common.math;
 
+/**
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class SingularMatrixSolverException extends SolverException {
   
   public SingularMatrixSolverException() {

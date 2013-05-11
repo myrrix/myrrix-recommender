@@ -28,6 +28,7 @@ import net.myrrix.common.MyrrixRecommender;
  * <p>Be sure to stop the thread reliably in {@link Closeable#close()}.</p>
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public interface ClientThread extends Runnable, Closeable {
 

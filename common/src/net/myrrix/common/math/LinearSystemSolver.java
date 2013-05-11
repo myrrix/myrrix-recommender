@@ -26,6 +26,10 @@ import org.apache.commons.math3.linear.RealMatrix;
  */
 interface LinearSystemSolver {
 
+  /**
+   * Threshold below which a value is considered 0 for purposes of deciding that a matrix's singular
+   * value is 0 and therefore is singular
+   */
   double SINGULARITY_THRESHOLD = 
       Double.parseDouble(System.getProperty("common.matrix.singularityThreshold", Double.toString(1.0e-5)));
 

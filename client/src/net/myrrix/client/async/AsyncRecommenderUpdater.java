@@ -37,6 +37,7 @@ import net.myrrix.common.MyrrixRecommender;
  * execution.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class AsyncRecommenderUpdater implements Closeable {
 

@@ -16,6 +16,12 @@
 
 package net.myrrix.common.math;
 
+/**
+ * Superclass of exceptions related to solving a linear system.
+ * 
+ * @author Sean Owen
+ * @since 1.0
+ */
 public abstract class SolverException extends RuntimeException {
   
   protected SolverException() {

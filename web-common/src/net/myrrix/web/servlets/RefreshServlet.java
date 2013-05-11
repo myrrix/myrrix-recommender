@@ -26,6 +26,7 @@ import net.myrrix.common.MyrrixRecommender;
  * and in turn calls {@link MyrrixRecommender#refresh()}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class RefreshServlet extends AbstractMyrrixServlet {
 

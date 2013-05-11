@@ -85,6 +85,9 @@ import net.myrrix.online.generation.IDCluster;
  * <p>It is useful to note here, again, that the API methods {@link #setPreference(long, long)}
   * and {@link #removePreference(long, long)}, retained from Apache Mahout, have a somewhat different meaning
   * than in Mahout. They add to an association strength, rather than replace it. See the javadoc.</p>
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class ServerRecommender implements MyrrixRecommender, Closeable {
   
@@ -107,6 +110,8 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   /**
    * Calls {@link #ServerRecommender(String, String, File, int, ReloadingReference, File)} for simple local mode,
    * with no bucket, instance ID 0, and no partitions (partition 0 of 1 total).
+   * 
+   * @param localInputDir local input and model file directory   
    */
   public ServerRecommender(File localInputDir) {
     this(null, null, localInputDir, 0, null, null);

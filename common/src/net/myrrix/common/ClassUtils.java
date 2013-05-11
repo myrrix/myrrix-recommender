@@ -25,6 +25,9 @@ import java.net.URLClassLoader;
 
 /**
  * {@link Class}-related utility methods.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class ClassUtils {
 
@@ -79,6 +82,14 @@ public final class ClassUtils {
                             ClassUtils.class.getClassLoader());
   }
 
+  /**
+   * Load an instance of a class from a JAR file at a remote location.
+   * 
+   * @param implClassName implementation class name
+   * @param superClass superclass or interface that the implementation extends
+   * @param url URL pointing to a JAR file containing the class
+   * @return instance of {@code implClassName}
+   */
   public static <T> T loadFromRemote(String implClassName, Class<T> superClass, URL url) {
     URLClassLoader urlClassloader = new URLClassLoader(new URL[] {url}, ClassUtils.class.getClassLoader());
     return doLoadInstanceOf(implClassName, superClass, NO_TYPES, NO_ARGS, urlClassloader);

@@ -45,6 +45,7 @@ import net.myrrix.online.RescorerProvider;
  * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SimilarityServlet extends AbstractMyrrixServlet {
 

@@ -64,6 +64,7 @@ import net.myrrix.common.collection.FastIDSet;
  *
  * @author Sean Owen
  * @author Mahout
+ * @since 1.0
  */
 public interface MyrrixRecommender extends ItemBasedRecommender {
 

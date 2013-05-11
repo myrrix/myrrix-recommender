@@ -30,6 +30,7 @@ import org.apache.mahout.common.Pair;
  * components.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class Node {
 

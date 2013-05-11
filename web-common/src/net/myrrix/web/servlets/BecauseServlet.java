@@ -39,6 +39,7 @@ import net.myrrix.common.NotReadyException;
  * <p>Outputs item/score pairs in CSV or JSON format, like {@link RecommendServlet} does.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class BecauseServlet extends AbstractMyrrixServlet {
 

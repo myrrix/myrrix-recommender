@@ -24,6 +24,10 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Preconditions;
 import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 
+/**
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, Serializable {
 
   private final WeightedRunningAverage average;

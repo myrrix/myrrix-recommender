@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  * Utility methods related to {@link ExecutorService} and related classes.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ExecutorUtils {
 

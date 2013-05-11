@@ -53,6 +53,7 @@ import net.myrrix.common.math.SimpleVectorMath;
  *
  * @author Sean Owen
  * @author Mahout
+ * @since 1.0
  */
 public final class RandomUtils {
 
@@ -156,6 +157,11 @@ public final class RandomUtils {
     return next + 2;
   }
 
+  /**
+   * @param l long to MD5 hash
+   * @return the bottom 8 bytes, as a {@link long}, of the MD5 hash of the given {@link long},
+   *  which is itself treated as a big-endian sequence of 8 bytes
+   */
   public static long md5HashToLong(long l) {
     byte[] hash;
     synchronized (MD5_DIGEST) {

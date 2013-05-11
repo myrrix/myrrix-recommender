@@ -25,6 +25,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
  * (And breaks ties by sorting by item ID, descending then.)
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ByValueAscComparator implements Comparator<RecommendedItem> {
 

@@ -42,6 +42,7 @@ import net.myrrix.common.collection.FastIDSet;
  * <p>This is only supported in distributed mode, and when computing clusters in the Computation Layer.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class AbstractClusterServlet extends AbstractMyrrixServlet {
 

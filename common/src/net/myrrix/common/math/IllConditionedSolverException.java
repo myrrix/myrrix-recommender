@@ -16,6 +16,12 @@
 
 package net.myrrix.common.math;
 
+/**
+ * Thrown when a matrix operator seems to be ill-conditioned -- large max absolute row sum norm.
+ * 
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class IllConditionedSolverException extends SolverException {
   
   public IllConditionedSolverException() {

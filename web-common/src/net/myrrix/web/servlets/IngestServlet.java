@@ -48,6 +48,7 @@ import net.myrrix.common.MyrrixRecommender;
  * file may be gzipped or zipped.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class IngestServlet extends AbstractMyrrixServlet {
 

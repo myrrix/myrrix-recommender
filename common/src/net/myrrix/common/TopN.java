@@ -28,7 +28,9 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 /**
  * Utility methods for finding the top N things from a stream.
  *
- * @author Sean Owen, Mahout
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
  */
 public final class TopN {
 

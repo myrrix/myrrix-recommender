@@ -27,6 +27,7 @@ import net.myrrix.common.LangUtils;
  * <p>A simple implementation of {@link TranslatedRecommendedItem}.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class GenericTranslatedRecommendedItem implements TranslatedRecommendedItem, Serializable {
 

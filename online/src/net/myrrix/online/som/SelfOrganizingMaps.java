@@ -49,6 +49,7 @@ import net.myrrix.common.random.RandomUtils;
  * to each other -- a sort of randomized ad-hoc 2D map of the space.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SelfOrganizingMaps {
 

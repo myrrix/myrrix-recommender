@@ -23,6 +23,7 @@ import java.io.InputStream;
  * {@link InputStream} which returns no bytes.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class NullInputStream extends InputStream {
 

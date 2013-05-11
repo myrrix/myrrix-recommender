@@ -24,6 +24,7 @@ import com.lexicalscope.jewel.cli.Option;
  * Arguments for {@link AllItemSimilarities} and {@link AllRecommendations}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface AllUtilityArgs {
 

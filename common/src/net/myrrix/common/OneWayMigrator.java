@@ -20,6 +20,9 @@ import org.apache.mahout.cf.taste.impl.model.AbstractIDMigrator;
 
 /**
  * Used when translation is needed only one-way, never back. The mappings do not need to be remembered.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class OneWayMigrator extends AbstractIDMigrator {
 

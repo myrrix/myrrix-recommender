@@ -21,6 +21,7 @@ package net.myrrix.online.eval;
  * across processes, but all are guaranteed to provide at least one score, where bigger is better.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface EvaluationResult {
 

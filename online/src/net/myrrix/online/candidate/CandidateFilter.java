@@ -42,6 +42,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * methods and only for reading.</p>
  * 
  * @author Sean Owen
+ * @since 1.0
  * @see net.myrrix.online.RescorerProvider
  */
 public interface CandidateFilter {

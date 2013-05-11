@@ -46,6 +46,7 @@ import net.myrrix.common.NotReadyException;
  * to calling {@link MyrrixRecommender#removePreference(long, long)} instead.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class PreferenceServlet extends AbstractMyrrixServlet {
 

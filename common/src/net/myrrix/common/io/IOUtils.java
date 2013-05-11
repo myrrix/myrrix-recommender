@@ -53,6 +53,7 @@ import net.myrrix.common.ClassUtils;
  * Simple utility methods related to I/O.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class IOUtils {
 
@@ -168,6 +169,11 @@ public final class IOUtils {
     }
   }
 
+  /**
+   * @param url URL whose contents are to be read
+   * @return the contents of the URL, interpreted as a UTF-8 encoded string
+   * @throws IOException if the URL can't be read or the file can't be written
+   */
   public static String readSmallTextFromURL(URL url) throws IOException {
     Reader in = new InputStreamReader(url.openStream(), Charsets.UTF_8);
     try {

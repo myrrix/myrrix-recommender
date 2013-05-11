@@ -27,6 +27,9 @@ import com.google.common.collect.Lists;
 
 /**
  * Simple {@link Handler} that records recent log lines in memory.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class MemoryHandler extends Handler {
 
@@ -41,6 +44,9 @@ public final class MemoryHandler extends Handler {
     setLevel(Level.FINE);
   }
 
+  /**
+   * @return recent log lines
+   */
   public Collection<String> getLogLines() {
     return logLines;
   }

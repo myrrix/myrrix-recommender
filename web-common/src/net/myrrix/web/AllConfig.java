@@ -29,6 +29,7 @@ import net.myrrix.online.RescorerProvider;
  * Encapsulates configuration for {@link AllRecommendations} and {@link AllItemSimilarities}.
  *
  * @author Sean Owen
+ * @since 1.0
  * @see AllItemSimilarities
  * @see AllRecommendations
  */

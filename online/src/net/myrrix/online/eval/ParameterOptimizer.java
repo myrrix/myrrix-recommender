@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ParameterOptimizer implements Callable<Map<String,Number>> {
   

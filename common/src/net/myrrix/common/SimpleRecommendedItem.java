@@ -24,6 +24,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
  * Simple and complete implementation of {@link RecommendedItem} which can be compared with itself.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SimpleRecommendedItem implements RecommendedItem, Comparable<SimpleRecommendedItem> {
 

@@ -53,6 +53,7 @@ import net.myrrix.online.candidate.CandidateFilterFactory;
  * </ul>
  *
  * @author Sean Owen
+ * @since 1.0
  * @see net.myrrix.online.factorizer.MatrixFactorizer
  */
 public final class Generation {

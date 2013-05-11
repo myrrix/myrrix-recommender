@@ -65,6 +65,7 @@ import net.myrrix.web.common.stats.ServletStats;
  * </ul>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public abstract class AbstractMyrrixServlet extends HttpServlet {
 
@@ -205,6 +206,9 @@ public abstract class AbstractMyrrixServlet extends HttpServlet {
     return rescorerProvider;
   }
 
+  /**
+   * @return timing information for requests directed at this servlet instance
+   */
   public final ServletStats getTiming() {
     return timing;
   }

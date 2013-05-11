@@ -99,6 +99,7 @@ import net.myrrix.common.random.RandomUtils;
  * </ul>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ClientRecommender implements MyrrixRecommender {
 

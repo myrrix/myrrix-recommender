@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
  * Configuration for a {@link Runner}. This configures the Serving Layer server instance that it runs.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class RunnerConfiguration {
 

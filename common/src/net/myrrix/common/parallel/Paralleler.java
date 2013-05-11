@@ -40,8 +40,9 @@ import org.slf4j.LoggerFactory;
  * machines, when calling {@link #runInParallel()}. The operations may also be invoked with a given 
  * {@link ExecutorService} and parallelism with {@link #runInParallel(ExecutorService, int)}.</p>
  * 
- * @param <T> type of value to operate on
  * @author Sean Owen
+ * @since 1.0
+ * @param <T> type of value to operate on
  */
 public final class Paralleler<T> {
   
@@ -51,10 +52,23 @@ public final class Paralleler<T> {
   private final Iterator<T> values;
   private final Processor<T> processor;
   
+  /**
+   * Creates an instance which will apply a {@link Processor} to many values.
+   * 
+   * @param values values to be processed with {@code processor}
+   * @param processor {@link Processor} to apply to each value
+   */
   public Paralleler(Iterator<T> values, Processor<T> processor) {
     this(values, processor, null);
   }
   
+  /**
+   * Creates an instance which will apply a {@link Processor} to many values.
+   * 
+   * @param values values to be processed with {@code processor}
+   * @param processor {@link Processor} to apply to each value
+   * @param name thread name prefix
+   */
   public Paralleler(Iterator<T> values, Processor<T> processor, String name) {
     Preconditions.checkNotNull(values);
     Preconditions.checkNotNull(processor);    
@@ -63,6 +77,11 @@ public final class Paralleler<T> {
     this.name = name;    
   }
 
+  /**
+   * Run {@link Processor}, but only in 1 thread, on values.
+   * 
+   * @throws ExecutionException if any execution fails
+   */
   public void runInSerial() throws ExecutionException {
     AtomicLong count = new AtomicLong(0);
     while (values.hasNext()) {
@@ -70,6 +89,11 @@ public final class Paralleler<T> {
     }
   }
 
+  /**
+   * Run {@link Processor}, in as many threads as available cores, on values.
+   * 
+   * @throws ExecutionException if any execution fails
+   */
   public void runInParallel() throws InterruptedException, ExecutionException {
     ThreadFactoryBuilder builder = new ThreadFactoryBuilder();
     if (name != null) {
@@ -84,7 +108,14 @@ public final class Paralleler<T> {
     }
   }
   
-  public void runInParallel(ExecutorService executor, int parallelism) throws InterruptedException, ExecutionException {
+  /**
+   * Run {@link Processor}, in as many threads as available cores, on values. The given 
+   * {@link ExecutorService} and number of threads are used instead of a new one.
+   * 
+   * @throws ExecutionException if any execution fails
+   */
+  public void runInParallel(ExecutorService executor, int parallelism) 
+      throws InterruptedException, ExecutionException {
     Collection<Callable<Object>> callables = Lists.newArrayListWithCapacity(parallelism);
     AtomicLong count = new AtomicLong(0);
     for (int i = 0; i < parallelism; i++) {

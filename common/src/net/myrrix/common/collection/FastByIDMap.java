@@ -36,7 +36,10 @@ import net.myrrix.common.random.RandomUtils;
 /**
  * Based on Mahout's {@code FastByIDMap}; adds new methods.
  *
- * @author Sean Owen, Mahout
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
+ * @param <V> value type of mapping
  */
 public final class FastByIDMap<V> implements Serializable, Cloneable {
   

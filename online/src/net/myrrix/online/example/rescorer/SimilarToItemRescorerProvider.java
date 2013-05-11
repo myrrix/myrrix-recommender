@@ -25,6 +25,7 @@ import net.myrrix.online.AbstractRescorerProvider;
  * Provides instances of {@link SimilarToItemRescorer}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SimilarToItemRescorerProvider extends AbstractRescorerProvider {
 

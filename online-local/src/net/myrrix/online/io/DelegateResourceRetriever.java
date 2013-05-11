@@ -22,6 +22,7 @@ import java.io.File;
  * An implementation that does nothing; not necessary/used in this version.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class DelegateResourceRetriever implements ResourceRetriever {
 

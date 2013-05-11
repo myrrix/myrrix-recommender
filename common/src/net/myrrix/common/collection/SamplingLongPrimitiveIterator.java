@@ -32,6 +32,10 @@ import net.myrrix.common.random.RandomManager;
  * as determined by a sampling rate parameter.
  * 
  * Adapted from the same class in Mahout 0.8.
+ * 
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
  */
 public final class SamplingLongPrimitiveIterator extends AbstractLongPrimitiveIterator {
   

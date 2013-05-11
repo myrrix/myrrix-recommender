@@ -18,6 +18,9 @@ package net.myrrix.client.translating;
 
 /**
  * Like {@link org.apache.mahout.cf.taste.recommender.RecommendedItem} but uses a {@link String} as ID value.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public interface TranslatedRecommendedItem {
   

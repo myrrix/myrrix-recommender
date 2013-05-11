@@ -32,6 +32,7 @@ import net.myrrix.common.MyrrixRecommender;
  * the value is 1.0, otherwise the value in the request body's first line is used.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class TagItemServlet extends AbstractMyrrixServlet {
 

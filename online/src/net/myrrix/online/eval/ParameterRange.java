@@ -23,6 +23,7 @@ import org.apache.commons.math3.util.FastMath;
  * Represents a range of values to try for a parameter.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ParameterRange {
   

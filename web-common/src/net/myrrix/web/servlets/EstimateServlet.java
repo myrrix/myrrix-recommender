@@ -41,6 +41,7 @@ import net.myrrix.common.NotReadyException;
  * order as the item ID, one per line.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class EstimateServlet extends AbstractMyrrixServlet {
 

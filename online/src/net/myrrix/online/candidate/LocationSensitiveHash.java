@@ -61,6 +61,7 @@ import net.myrrix.common.random.RandomManager;
  * <p><em>This is experimental, and is disabled unless "model.lsh.sampleRatio" is set to a value less than 1.</em></p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class LocationSensitiveHash implements CandidateFilter {
 

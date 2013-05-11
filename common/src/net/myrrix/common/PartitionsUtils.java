@@ -49,6 +49,7 @@ import org.xml.sax.SAXException;
  * Utility methods for dealing with partitions in distributed mode.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class PartitionsUtils {
 
@@ -69,7 +70,7 @@ public final class PartitionsUtils {
    *  "part1rep1:port11,part1rep2:port12;part2rep1:port21,part2rep2:port22;...". Example:
    *  "foo:80,foo2:8080;bar:8080;baz2:80,baz3:80"
    * @return {@link List} of partitions, where each partition is a {@link List} of replicas, where each
-   *  replica is a host-port pair, as {@link String} and {@link Integer}
+   *  replica is a host-port pair, as {@link HostAndPort}
    */
   public static List<List<HostAndPort>> parseAllPartitions(CharSequence value) {
     if (value == null) {
@@ -96,7 +97,7 @@ public final class PartitionsUtils {
   /**
    * @param port port the instance is configured to run on
    * @return a simple structure representing one partition, one replica: the local host
-      * and configured instance port
+   *  and configured instance port
    */
   public static List<List<HostAndPort>> getDefaultLocalPartition(int port) {
     InetAddress localhost;
@@ -109,6 +110,15 @@ public final class PartitionsUtils {
     return Collections.singletonList(Collections.singletonList(HostAndPort.fromParts(host, port)));
   }
 
+  /**
+   * Reads partition information from an XML status document from the cluster, which includes information
+   * on partitions and their replicas.
+   * 
+   * @param url URL holding cluster status as an XML document
+   * @return a {@link List} of partitions, each of which is a {@link List} of replicas in a partition,
+   *  each represented as a {@link HostAndPort}
+   * @throws IOException if the URL can't be accessed or its XML content parsed
+   */
   public static List<List<HostAndPort>> parsePartitionsFromStatus(URL url) throws IOException {
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

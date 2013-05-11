@@ -22,6 +22,7 @@ import org.apache.commons.math3.util.FastMath;
  * Simple utility methods related to vectors represented as simple {@code float[]}s.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SimpleVectorMath {
 

@@ -34,6 +34,7 @@ import net.myrrix.common.collection.FastByIDMap;
  * <p>Otherwise an implementation that does no filtering will be returned.</p>
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class CandidateFilterFactory {
 
@@ -42,6 +43,9 @@ public final class CandidateFilterFactory {
 
   /**
    * @return an implementation of {@link CandidateFilter} chosen per above. It will be non-null.
+   * 
+   * @param Y item-feature matrix
+   * @param yReadLock read lock that should be acquired to access {@code Y}
    */
   public static CandidateFilter buildCandidateFilter(FastByIDMap<float[]> Y, Lock yReadLock) {
     Preconditions.checkNotNull(Y);

@@ -25,6 +25,7 @@ import org.apache.mahout.cf.taste.recommender.RecommendedItem;
  * reuse one object during its iterations rather than create new objects for each element.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class MutableRecommendedItem implements RecommendedItem, Serializable {
 

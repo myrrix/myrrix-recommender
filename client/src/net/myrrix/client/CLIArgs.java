@@ -26,6 +26,7 @@ import com.lexicalscope.jewel.cli.Unparsed;
  * Command line argument object for {@link CLI}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface CLIArgs {
 

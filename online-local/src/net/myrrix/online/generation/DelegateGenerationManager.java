@@ -52,6 +52,7 @@ import net.myrrix.online.factorizer.als.AlternatingLeastSquares;
  * written to a local file system, and the intermediate model is stored on a local file system.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class DelegateGenerationManager implements GenerationManager {
 
@@ -78,6 +79,12 @@ public final class DelegateGenerationManager implements GenerationManager {
   private final ExecutorService refreshExecutor;
   private final Semaphore refreshSemaphore;
 
+  /**
+   * @param localInputDir local work directory from which input is read,
+   *  and to which additional input is written. The model file is stored here too. Input in CSV format can
+   *  be placed in this directory at any time. The file name should end in ".csv" and the file should
+   *  contain lines of the form "userID,itemID(,value)".
+   */
   public DelegateGenerationManager(File localInputDir) throws IOException {
     this(null, null, localInputDir, 0, null, null);
   }

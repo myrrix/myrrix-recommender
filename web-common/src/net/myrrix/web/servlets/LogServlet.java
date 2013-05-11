@@ -28,6 +28,9 @@ import net.myrrix.common.log.MemoryHandler;
 
 /**
  * Prints recent log messages to the response.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class LogServlet extends HttpServlet {
 

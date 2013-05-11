@@ -20,10 +20,13 @@ package net.myrrix.common.signal;
  * Encapsulates some OS signals that may be useful to handle.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public enum SignalType {
 
+  /** SIGINT (2) */
   INT,
+  /** SIGTERM (15) */
   TERM,
 
 }

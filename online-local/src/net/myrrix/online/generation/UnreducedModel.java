@@ -45,6 +45,7 @@ import net.myrrix.common.collection.FastIDSet;
  * <p>Usage: {@code UnreducedModel [input file dir]}</p>
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class UnreducedModel {
   

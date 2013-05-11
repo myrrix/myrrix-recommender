@@ -32,6 +32,7 @@ import net.myrrix.common.PartitionsUtils;
  * Encapsulates all configuration for a {@link ClientRecommender}.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class MyrrixClientConfiguration {
 

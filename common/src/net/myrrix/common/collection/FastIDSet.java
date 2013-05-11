@@ -34,6 +34,7 @@ import net.myrrix.common.random.RandomUtils;
  *
  * @author Sean Owen
  * @author Mahout
+ * @since 1.0
  */
 public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> {
   

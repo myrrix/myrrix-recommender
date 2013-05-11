@@ -36,7 +36,9 @@ import net.myrrix.common.random.RandomUtils;
 /**
  * Based on Mahout's {@code FastByIDMap}; used with {@code float} instead of {@code double}.
  *
- * @author Sean Owen, Mahout
+ * @author Sean Owen
+ * @author Mahout
+ * @since 1.0
  */
 public final class FastByIDFloatMap implements Serializable, Cloneable {
 

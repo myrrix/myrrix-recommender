@@ -36,6 +36,7 @@ import net.myrrix.online.RescorerProvider;
  * <p>Output is as in {@link RecommendServlet}.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class MostPopularItemsServlet extends AbstractMyrrixServlet {
 

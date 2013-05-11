@@ -48,6 +48,9 @@ import net.myrrix.common.random.MemoryIDMigrator;
 /**
  * Default implementation of {@link TranslatingRecommender}. It delegates to an underlying {@link ClientRecommender}
  * which must be created and configured first.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class TranslatingClientRecommender implements TranslatingRecommender {
 

@@ -56,6 +56,7 @@ import net.myrrix.common.MyrrixRecommender;
  * {@code args} parameter with 3 elements, {@code xxx}, {@code yyy}, {@code zzz}.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  * @see MultiRescorer
  * @see net.myrrix.online.candidate.CandidateFilter
  */

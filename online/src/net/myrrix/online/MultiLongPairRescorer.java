@@ -28,6 +28,7 @@ import org.apache.mahout.common.LongPair;
  * by applying the rescorings in the given order.
  *
  * @author Sean Owen
+ * @since 1.0
  * @see MultiRescorer
  * @see MultiRescorerProvider
  */

@@ -38,6 +38,7 @@ import net.myrrix.common.collection.FastIDSet;
  * remote resource.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ExampleCandidateFilter implements CandidateFilter {
   

@@ -19,6 +19,9 @@ package net.myrrix.common.math;
 /**
  * A solver for the system Ax = b, where A is an n x n matrix and x and b are n-element vectors.
  * An implementation of this class encapsulates a solver which implicitly contains A.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public interface Solver {
   

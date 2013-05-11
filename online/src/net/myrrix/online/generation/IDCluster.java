@@ -21,6 +21,12 @@ import com.google.common.base.Preconditions;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.math.SimpleVectorMath;
 
+/**
+ * A cluser of IDs, including the centroid and its members as IDs.
+ * 
+ * @author Sean Owen
+ * @since 1.0
+ */
 public final class IDCluster {
 
   private final FastIDSet members;

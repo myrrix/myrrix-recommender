@@ -27,6 +27,7 @@ import java.io.IOException;
  * using data stored in the local file system.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface GenerationManager extends Closeable {
 

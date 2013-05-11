@@ -59,6 +59,7 @@ import net.myrrix.online.generation.Generation;
  * The {@link EvaluationResult} is printed to standard out.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ReconstructionEvaluator {
 

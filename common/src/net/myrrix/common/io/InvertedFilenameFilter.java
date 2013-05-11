@@ -21,6 +21,9 @@ import java.io.FilenameFilter;
 
 /**
  * Accepts only the files that are not accepted by another given {@link FilenameFilter}.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class InvertedFilenameFilter implements FilenameFilter {
 

@@ -23,6 +23,7 @@ import com.google.common.collect.AbstractIterator;
  * Counts through [0,to).
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class CountingIterator extends AbstractIterator<Integer> {
 

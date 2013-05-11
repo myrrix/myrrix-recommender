@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  * An implementation based on {@link RRQRDecomposition} from Commons Math.
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
   

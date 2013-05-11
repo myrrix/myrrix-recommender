@@ -28,6 +28,7 @@ import org.apache.mahout.cf.taste.common.TasteException;
  * whether the recommender is ready.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class ReadyServlet extends AbstractMyrrixServlet {
 

@@ -30,6 +30,7 @@ import net.myrrix.online.RescorerProvider;
  * Interface for implementations which can evaluate a recommender according to some metric or process.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public interface Evaluator {
   

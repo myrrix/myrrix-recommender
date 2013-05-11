@@ -34,6 +34,7 @@ import net.myrrix.online.RescorerProvider;
  * <p>To switch to filtering odd-numbered IDs, pass the rescorer the argument "odd".</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class FilterHalfRescorerProvider extends AbstractRescorerProvider {
 

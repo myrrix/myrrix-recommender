@@ -20,6 +20,9 @@ import org.apache.mahout.cf.taste.common.TasteException;
 
 /**
  * Thrown when a component is not ready to answer a request yet.
+ * 
+ * @author Sean Owen
+ * @since 1.0
  */
 public final class NotReadyException extends TasteException {
 }

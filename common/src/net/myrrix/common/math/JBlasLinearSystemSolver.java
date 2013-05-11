@@ -30,6 +30,7 @@ import org.apache.commons.math3.linear.RealMatrix;
  * <p>Not yet enabled.</p>
  * 
  * @author Sean Owen
+ * @since 1.0
  */
 public final class JBlasLinearSystemSolver implements LinearSystemSolver {
 

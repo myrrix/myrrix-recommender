@@ -22,7 +22,9 @@ import java.util.concurrent.ExecutionException;
  * A process that can operate on a given value. Used with {@link Paralleler}.
  * 
  * @author Sean Owen
+ * @since 1.0
  * @see Paralleler
+ * @param <T> the type of object the instance will process
  */
 public interface Processor<T> {
 

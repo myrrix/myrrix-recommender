@@ -43,6 +43,7 @@ import net.myrrix.common.NotReadyException;
  * <p>Outputs the result of the method call as a value on one line.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class EstimateForAnonymousServlet extends AbstractMyrrixServlet {
   

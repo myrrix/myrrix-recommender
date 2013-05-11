@@ -61,6 +61,7 @@ import net.myrrix.online.factorizer.MatrixFactorizer;
  * needed (sparse rows, dense columns). This is represented with {@link FastByIDMap} of {@code float[]}.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class AlternatingLeastSquares implements MatrixFactorizer {
 

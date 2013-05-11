@@ -53,6 +53,7 @@ import net.myrrix.web.servlets.AbstractMyrrixServlet;
  * is initialized at startup, along with related objects, and shut down when the container is destroyed.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class InitListener implements ServletContextListener {
 

@@ -25,6 +25,7 @@ import org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev;
  * Like implementations of {@link RunningAverageAndStdDev} but adds more statistics, like min and max.
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class RunningStatistics implements RunningAverageAndStdDev, RunningAverageAndMinMax, Serializable {
 

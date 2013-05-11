@@ -41,6 +41,7 @@ import net.myrrix.common.NotReadyException;
  * <p>The output are similarities, in the same order as the item IDs, one per line.</p>
  *
  * @author Sean Owen
+ * @since 1.0
  */
 public final class SimilarityToItemServlet extends AbstractMyrrixServlet {
 
