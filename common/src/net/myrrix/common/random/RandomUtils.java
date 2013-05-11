@@ -159,7 +159,7 @@ public final class RandomUtils {
 
   /**
    * @param l long to MD5 hash
-   * @return the bottom 8 bytes, as a {@link long}, of the MD5 hash of the given {@link long},
+   * @return the bottom 8 bytes, as a {@code long}, of the MD5 hash of the given {@code long},
    *  which is itself treated as a big-endian sequence of 8 bytes
    */
   public static long md5HashToLong(long l) {
