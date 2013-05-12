@@ -76,6 +76,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <skipTests>true</skipTests>
     <commons.compress.version>1.5</commons.compress.version>
     <commons.math.version>3.2</commons.math.version>
     <google.guava.version>14.0.1</google.guava.version>
@@ -189,6 +190,7 @@
         <configuration>
           <forkCount>1C</forkCount>
           <reuseForks>false</reuseForks>
+          <skipTests>${skipTests}</skipTests>
         </configuration>
       </plugin>
       <plugin>
