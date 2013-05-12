@@ -19,14 +19,14 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-web-war</artifactId>
   <packaging>war</packaging>
   <name>Myrrix Web (WAR)</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <description>Web application source code from Serving Layer standalone mode (WAR packaging)</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
@@ -39,12 +39,12 @@
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-web-common</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-online-local</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.0.0-SNAPSHOT</version>
       <scope>runtime</scope>
     </dependency>
   </dependencies>

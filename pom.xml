@@ -27,7 +27,7 @@
   <artifactId>myrrix</artifactId>
   <packaging>pom</packaging>
   <name>Myrrix (Parent)</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <description>Contains configuration common to all modules</description>
 
   <issueManagement>
