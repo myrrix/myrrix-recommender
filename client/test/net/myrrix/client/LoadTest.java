@@ -34,7 +34,7 @@ public final class LoadTest extends AbstractClientTest {
   public static void setUpMaxIterations() {
     // No real need for accuracy for a simple load test
     if (System.getProperty("model.iterations.max") == null) {
-      System.setProperty("model.iterations.max", "2");
+      System.setProperty("model.iterations.max", "1");
     }
   }
 
@@ -51,7 +51,7 @@ public final class LoadTest extends AbstractClientTest {
   @Test
   public void testLoad() throws Exception {
     ClientRecommender client = getClient();
-    LoadRunner runner = new LoadRunner(client, getTestTempDir(), 10000);
+    LoadRunner runner = new LoadRunner(client, getTestTempDir(), 5000);
     Stopwatch stopwatch = new Stopwatch().start();
     runner.runLoad();
     assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 40 * runner.getSteps());

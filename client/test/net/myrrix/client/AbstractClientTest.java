@@ -17,6 +17,7 @@
 package net.myrrix.client;
 
 import java.io.File;
+import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
@@ -69,6 +70,13 @@ public abstract class AbstractClientTest extends MyrrixTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+
+    // Clear some sys properties that may have been set per test
+    for (Iterator<?> it = System.getProperties().keySet().iterator(); it.hasNext();) {
+      if (it.next().toString().startsWith("model.")) {
+        it.remove();
+      }
+    }
 
     File tempDir = getTestTempDir();
     File testDataDir = new File(getTestDataPath());
