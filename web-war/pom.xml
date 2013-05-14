@@ -56,6 +56,7 @@
         <artifactId>maven-war-plugin</artifactId>
         <version>2.3</version>
         <configuration>
+          <warName>myrrix-serving-${project.version}</warName>
           <webResources>
             <resource>
               <directory>../web-common/docs</directory>
