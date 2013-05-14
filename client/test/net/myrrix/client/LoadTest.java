@@ -19,7 +19,7 @@ package net.myrrix.client;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import net.myrrix.common.LoadRunner;
@@ -30,12 +30,12 @@ import net.myrrix.common.LoadRunner;
  */
 public final class LoadTest extends AbstractClientTest {
   
-  @BeforeClass
-  public static void setUpMaxIterations() {
+  @Override
+  @Before
+  public void setUp() throws Exception {
+    super.setUp();
     // No real need for accuracy for a simple load test
-    if (System.getProperty("model.iterations.max") == null) {
-      System.setProperty("model.iterations.max", "1");
-    }
+    System.setProperty("model.iterations.max", "1");
   }
 
   @Override
