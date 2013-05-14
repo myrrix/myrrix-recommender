@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.OneWayMigrator;
+import net.myrrix.common.math.SingularMatrixSolverException;
 import net.myrrix.common.math.SolverException;
 import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.ReloadingReference;
@@ -335,9 +336,26 @@ public final class DelegateGenerationManager implements GenerationManager {
       
           if (!RbyRow.isEmpty() && !RbyColumn.isEmpty()) {
             // Compute latest generation:
-            MatrixFactorizer als = runFactorization(theCurrentGeneration, RbyRow, RbyColumn);
+            MatrixFactorizer als;
+            Generation latestGeneration;
+            // Repeat with fewer features if fails to build:
+            while (true) {
+              try {
+                als = runFactorization(theCurrentGeneration, RbyRow, RbyColumn);                
+                latestGeneration = new Generation(knownItemIDs, als.getX(), als.getY(), itemTagIDs, userTagIDs);
+                break;
+              } catch (SingularMatrixSolverException smse) {
+                int currentFeatures = readNumFeatures();
+                int fewerFeatures = smse.getApparentRank();
+                if (fewerFeatures <= 1) {
+                  throw smse;
+                }
+                log.warn("Could not build model with {} features; setting model.features down to {}", 
+                         currentFeatures, fewerFeatures);
+                System.setProperty("model.features", Integer.toString(fewerFeatures));
+              }
+            }
             // Save it:
-            Generation latestGeneration = new Generation(knownItemIDs, als.getX(), als.getY(), itemTagIDs, userTagIDs);
             saveModel(latestGeneration, modelFile);
             // Merge into potentially live current generation:
             loader.loadModel(theCurrentGeneration, als.getX(), als.getY(), knownItemIDs, itemTagIDs, userTagIDs);
@@ -374,9 +392,7 @@ public final class DelegateGenerationManager implements GenerationManager {
                                               FastByIDMap<FastByIDFloatMap> rbyColumn) throws IOException {
       log.info("Building factorization...");
   
-      String featuresString = System.getProperty("model.features");
-      int features = featuresString == null ?
-          MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+      int features = readNumFeatures();
   
       if (System.getProperty("model.iterations") != null) {
         log.warn("model.iterations system property is deprecated and ignored; " +
@@ -425,4 +441,10 @@ public final class DelegateGenerationManager implements GenerationManager {
       return als;
     }    
   }
+
+  private static int readNumFeatures() {
+    String featuresString = System.getProperty("model.features");
+    return featuresString == null ? MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+  }
+
 }

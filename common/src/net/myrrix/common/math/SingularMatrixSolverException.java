@@ -22,15 +22,32 @@ package net.myrrix.common.math;
  */
 public final class SingularMatrixSolverException extends SolverException {
   
+  private final int apparentRank;
+  
   public SingularMatrixSolverException() {
+    apparentRank = 0;
   }
   
   public SingularMatrixSolverException(String message) {
-    super(message);
+    this(0, message);
   }
   
   public SingularMatrixSolverException(Throwable cause) {
+    this(0, cause);
+  }
+  
+  public SingularMatrixSolverException(int apparentRank, String message) {
+    super(message);
+    this.apparentRank = apparentRank;
+  }
+  
+  public SingularMatrixSolverException(int apparentRank, Throwable cause) {
     super(cause);
+    this.apparentRank = apparentRank;
+  }
+  
+  public int getApparentRank() {
+    return apparentRank;
   }
   
 }

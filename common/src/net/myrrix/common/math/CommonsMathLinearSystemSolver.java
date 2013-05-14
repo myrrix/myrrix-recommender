@@ -50,7 +50,7 @@ public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
              M.getColumnDimension(), 
              SINGULARITY_THRESHOLD,
              apparentRank);
-    throw new SingularMatrixSolverException("Apparent rank: " + apparentRank);
+    throw new SingularMatrixSolverException(apparentRank, "Apparent rank: " + apparentRank);
   }  
 
   @Override
