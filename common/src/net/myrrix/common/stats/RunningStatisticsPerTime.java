@@ -22,19 +22,18 @@ import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Preconditions;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 
 /**
  * @author Sean Owen
  * @since 1.0
  */
-public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, Serializable {
+public final class RunningStatisticsPerTime implements Serializable {
 
   private final WeightedRunningAverage average;
   private double min;
   private double max;
   private final long bucketTimeMS;
-  private final Deque<RunningAverageAndMinMax> subBuckets;
+  private final Deque<RunningStatistics> subBuckets;
   private long frontBucketValidUntil;
 
   public RunningStatisticsPerTime(TimeUnit timeUnit) {
@@ -47,7 +46,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
     min = Double.NaN;
     max = Double.NaN;
     bucketTimeMS = TimeUnit.MILLISECONDS.convert(1, subTimeUnit);
-    subBuckets = new LinkedList<RunningAverageAndMinMax>();
+    subBuckets = new LinkedList<RunningStatistics>();
     for (int i = 0; i < numBuckets; i++) {
       subBuckets.add(new RunningStatistics());
     }
@@ -58,7 +57,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
     long now = System.currentTimeMillis();
     while (now > frontBucketValidUntil) {
 
-      RunningAverageAndMinMax removedBucket = subBuckets.removeLast();
+      RunningStatistics removedBucket = subBuckets.removeLast();
       int count = removedBucket.getCount();
       if (count > 0) {
         average.removeDatum(removedBucket.getAverage(), count);
@@ -66,7 +65,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
 
       if (removedBucket.getMin() <= min) {
         double newMin = Double.NaN;
-        for (RunningAverageAndMinMax bucket : subBuckets) {
+        for (RunningStatistics bucket : subBuckets) {
           double bucketMin = bucket.getMin();
           if (Double.isNaN(newMin) || bucketMin < newMin) {
             newMin = bucketMin;
@@ -76,7 +75,7 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
       }
       if (removedBucket.getMax() >= max) {
         double newMax = Double.NaN;
-        for (RunningAverageAndMinMax bucket : subBuckets) {
+        for (RunningStatistics bucket : subBuckets) {
           double bucketMax = bucket.getMax();
           if (Double.isNaN(newMax) || bucketMax > newMax) {
             newMax = bucketMax;
@@ -90,7 +89,6 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
     }
   }
 
-  @Override
   public synchronized void addDatum(double value) {
     refresh();
     average.addDatum(value);
@@ -103,46 +101,18 @@ public final class RunningStatisticsPerTime implements RunningAverageAndMinMax, 
     }
   }
 
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void removeDatum(double v) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void changeDatum(double v) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public int getCount() {
     return average.getCount();
   }
 
-  @Override
   public double getAverage() {
     return average.getAverage();
   }
 
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public RunningAverage inverse() {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
   public synchronized double getMin() {
     return min;
   }
 
-  @Override
   public synchronized double getMax() {
     return max;
   }

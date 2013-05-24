@@ -27,9 +27,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,18 +111,18 @@ public final class LoadRunner implements Callable<Void> {
   
   public void runLoad() throws ExecutionException, InterruptedException {
 
-    final RunningAverage recommendedBecause = new FullRunningAverageAndStdDev();
-    final RunningAverage setPreference = new FullRunningAverageAndStdDev();
-    final RunningAverage removePreference = new FullRunningAverageAndStdDev();
-    final RunningAverage setTag = new FullRunningAverageAndStdDev();
-    final RunningAverage ingest = new FullRunningAverageAndStdDev();
-    final RunningAverage refresh = new FullRunningAverageAndStdDev();
-    final RunningAverage estimatePreference = new FullRunningAverageAndStdDev();
-    final RunningAverage mostSimilarItems = new FullRunningAverageAndStdDev();
-    final RunningAverage similarityToItem = new FullRunningAverageAndStdDev(); 
-    final RunningAverage mostPopularItems = new FullRunningAverageAndStdDev();
-    final RunningAverage recommendToMany = new FullRunningAverageAndStdDev();
-    final RunningAverage recommend = new FullRunningAverageAndStdDev();
+    final Mean recommendedBecause = new Mean();
+    final Mean setPreference = new Mean();
+    final Mean removePreference = new Mean();
+    final Mean setTag = new Mean();
+    final Mean ingest = new Mean();
+    final Mean refresh = new Mean();
+    final Mean estimatePreference = new Mean();
+    final Mean mostSimilarItems = new Mean();
+    final Mean similarityToItem = new Mean(); 
+    final Mean mostPopularItems = new Mean();
+    final Mean recommendToMany = new Mean();
+    final Mean recommend = new Mean();
 
     Processor<Integer> processor = new Processor<Integer>() {
       private final RandomGenerator random = RandomManager.getRandom();      
@@ -145,50 +144,50 @@ public final class LoadRunner implements Callable<Void> {
         try {
           if (r < 0.05) {
             client.recommendedBecause(userID, itemID, 10);
-            recommendedBecause.addDatum(System.currentTimeMillis() - stepStart);
+            recommendedBecause.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.07) {
             client.setPreference(userID, itemID);
-            setPreference.addDatum(System.currentTimeMillis() - stepStart);
+            setPreference.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.08) {
             client.setPreference(userID, itemID, value);
-            setPreference.addDatum(System.currentTimeMillis() - stepStart);
+            setPreference.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.09) {
             client.setUserTag(userID, Long.toString(itemID));
-            setTag.addDatum(System.currentTimeMillis() - stepStart);
+            setTag.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.10) {
             client.setItemTag(Long.toString(userID), itemID);
-            setTag.addDatum(System.currentTimeMillis() - stepStart);
+            setTag.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.11) {
             client.removePreference(userID, itemID);
-            removePreference.addDatum(System.currentTimeMillis() - stepStart);
+            removePreference.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.12) {
             StringReader reader = new StringReader(userID + "," + itemID + ',' + value + '\n');
             client.ingest(reader);
-            ingest.addDatum(System.currentTimeMillis() - stepStart);
+            ingest.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.13) {
             client.refresh();
-            refresh.addDatum(System.currentTimeMillis() - stepStart);
+            refresh.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.14) {
             client.similarityToItem(itemID, itemID2);
-            similarityToItem.addDatum(System.currentTimeMillis() - stepStart);
+            similarityToItem.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.15) {
             client.mostPopularItems(10);
-            mostPopularItems.addDatum(System.currentTimeMillis() - stepStart);
+            mostPopularItems.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.19) {
             client.estimatePreference(userID, itemID);
-            estimatePreference.addDatum(System.currentTimeMillis() - stepStart);
+            estimatePreference.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.20) {
             client.estimateForAnonymous(itemID, new long[] {itemID2});
-            estimatePreference.addDatum(System.currentTimeMillis() - stepStart);          
+            estimatePreference.increment(System.currentTimeMillis() - stepStart);          
           } else if (r < 0.25) {
             client.mostSimilarItems(new long[]{itemID}, 10);
-            mostSimilarItems.addDatum(System.currentTimeMillis() - stepStart);
+            mostSimilarItems.increment(System.currentTimeMillis() - stepStart);
           } else if (r < 0.30) {
             client.recommendToMany(new long[] { userID, userID }, 10, true, null);
-            recommendToMany.addDatum(System.currentTimeMillis() - stepStart);
+            recommendToMany.increment(System.currentTimeMillis() - stepStart);
           } else {
             client.recommend(userID, 10);
-            recommend.addDatum(System.currentTimeMillis() - stepStart);
+            recommend.increment(System.currentTimeMillis() - stepStart);
           }
         } catch (TasteException te) {
           log.warn("Error during request", te);
@@ -206,18 +205,18 @@ public final class LoadRunner implements Callable<Void> {
 
     log.info("Finished {} steps in {}ms", steps, end - start);
 
-    log.info("recommendedBecause: {}", recommendedBecause);
-    log.info("setPreference: {}", setPreference);
-    log.info("removePreference: {}", removePreference);
-    log.info("setTag: {}", setTag);
-    log.info("ingest: {}", ingest);
-    log.info("refresh: {}", refresh);
-    log.info("estimatePreference: {}", estimatePreference);
-    log.info("mostSimilarItems: {}", mostSimilarItems);
-    log.info("similarityToItem: {}", similarityToItem);
-    log.info("mostPopularItems: {}", mostPopularItems);        
-    log.info("recommendToMany: {}", recommendToMany);
-    log.info("recommend: {}", recommend);    
+    log.info("recommendedBecause: {}", recommendedBecause.getResult());
+    log.info("setPreference: {}", setPreference.getResult());
+    log.info("removePreference: {}", removePreference.getResult());
+    log.info("setTag: {}", setTag.getResult());
+    log.info("ingest: {}", ingest.getResult());
+    log.info("refresh: {}", refresh.getResult());
+    log.info("estimatePreference: {}", estimatePreference.getResult());
+    log.info("mostSimilarItems: {}", mostSimilarItems.getResult());
+    log.info("similarityToItem: {}", similarityToItem.getResult());
+    log.info("mostPopularItems: {}", mostPopularItems.getResult());        
+    log.info("recommendToMany: {}", recommendToMany.getResult());
+    log.info("recommend: {}", recommend.getResult());    
   }
 
 }

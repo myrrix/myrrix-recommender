@@ -25,8 +25,7 @@ import java.util.SortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +53,9 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
     System.setProperty("model.lsh.numHashes", "20");
     RandomGenerator random = RandomManager.getRandom();
 
-    RunningAverage avgPercentTopRecsConsidered = new FullRunningAverage();
-    RunningAverage avgNDCG = new FullRunningAverage();
-    RunningAverage avgPercentAllItemsConsidered= new FullRunningAverage();
+    Mean avgPercentTopRecsConsidered = new Mean();
+    Mean avgNDCG = new Mean();
+    Mean avgPercentAllItemsConsidered= new Mean();
 
     for (int iteration = 0; iteration < ITERATIONS; iteration++) {
 
@@ -76,18 +75,18 @@ public final class LocationSensitiveHashTest extends MyrrixTest {
                ndcg,
                100 * percentTopRecsConsidered);
 
-      avgPercentTopRecsConsidered.addDatum(percentTopRecsConsidered);
-      avgNDCG.addDatum(ndcg);
-      avgPercentAllItemsConsidered.addDatum(percentAllItemsConsidered);
+      avgPercentTopRecsConsidered.increment(percentTopRecsConsidered);
+      avgNDCG.increment(ndcg);
+      avgPercentAllItemsConsidered.increment(percentAllItemsConsidered);
     }
 
-    log.info(avgPercentTopRecsConsidered.toString());
-    log.info(avgNDCG.toString());
-    log.info(avgPercentAllItemsConsidered.toString());
+    log.info("{}", avgPercentTopRecsConsidered.getResult());
+    log.info("{}", avgNDCG.getResult());
+    log.info("{}", avgPercentAllItemsConsidered.getResult());
 
-    assertTrue(avgPercentTopRecsConsidered.getAverage() > 0.55);
-    assertTrue(avgNDCG.getAverage() > 0.55);
-    assertTrue(avgPercentAllItemsConsidered.getAverage() < 0.075);
+    assertTrue(avgPercentTopRecsConsidered.getResult() > 0.55);
+    assertTrue(avgNDCG.getResult() > 0.55);
+    assertTrue(avgPercentAllItemsConsidered.getResult() < 0.075);
   }
 
   private static double[] doTestRandomVecs(FastByIDMap<float[]> Y, float[] userVec) {

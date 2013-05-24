@@ -29,10 +29,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.common.iterator.FileLineIterable;
@@ -90,7 +89,7 @@ public final class ReconstructionEvaluator {
       FastByIDMap<float[]> X = generation.getX();
       FastByIDMap<float[]> Y = generation.getY();
 
-      RunningAverage averageError = new FullRunningAverage();
+      Mean averageError = new Mean();
       // Only compute average over existing entries...
       for (Map.Entry<Long,RecommendedItem> entry : data.entries()) {
         long userID = entry.getKey();
@@ -98,10 +97,10 @@ public final class ReconstructionEvaluator {
         // Each of which was a "1" in the factor P matrix
         double value = SimpleVectorMath.dot(X.get(userID), Y.get(itemID));
         // So store abs(1-value), except, don't penalize for reconstructing > 1. Error is 0 in this case.
-        averageError.addDatum(FastMath.max(0.0, 1.0 - value));
+        averageError.increment(FastMath.max(0.0, 1.0 - value));
       }
 
-      return new EvaluationResultImpl(averageError.getAverage());
+      return new EvaluationResultImpl(averageError.getResult());
     } finally {
       Closeables.close(recommender, true);
       IOUtils.deleteRecursively(tempDir);

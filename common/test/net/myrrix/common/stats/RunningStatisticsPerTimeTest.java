@@ -26,7 +26,7 @@ public final class RunningStatisticsPerTimeTest extends MyrrixTest {
 
   @Test
   public void testInit() {
-    RunningAverageAndMinMax perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
+    RunningStatisticsPerTime perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
     assertTrue(Double.isNaN(perTime.getMin()));
     assertTrue(Double.isNaN(perTime.getMax()));
     assertTrue(Double.isNaN(perTime.getAverage()));
@@ -35,7 +35,7 @@ public final class RunningStatisticsPerTimeTest extends MyrrixTest {
 
   @Test
   public void testOneBucket() {
-    RunningAverageAndMinMax perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
+    RunningStatisticsPerTime perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
     perTime.addDatum(1.2);
     assertEquals(1.2, perTime.getMin());
     assertEquals(1.2, perTime.getMax());

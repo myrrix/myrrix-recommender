@@ -18,89 +18,48 @@ package net.myrrix.common.stats;
 
 import java.io.Serializable;
 
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverageAndStdDev;
-import org.apache.mahout.cf.taste.impl.common.RunningAverageAndStdDev;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.rank.Max;
+import org.apache.commons.math3.stat.descriptive.rank.Min;
 
 /**
- * Like implementations of {@link RunningAverageAndStdDev} but adds more statistics, like min and max.
+ * Encapsulates statistics like mean, min and max.
  *
  * @author Sean Owen
  * @since 1.0
  */
-public final class RunningStatistics implements RunningAverageAndStdDev, RunningAverageAndMinMax, Serializable {
+public final class RunningStatistics implements Serializable {
 
-  private final RunningAverageAndStdDev delegate;
-  private double min;
-  private double max;
+  private final Mean mean;
+  private final Min min;
+  private final Max max;
 
   public RunningStatistics() {
-    this(new FullRunningAverageAndStdDev(), Double.NaN, Double.NaN);
+    this.mean = new Mean();
+    this.min = new Min();
+    this.max = new Max();
   }
 
-  private RunningStatistics(RunningAverageAndStdDev delegate, double min, double max) {
-    this.delegate = delegate;
-    this.min = min;
-    this.max = max;
-  }
-
-  @Override
   public int getCount() {
-    return delegate.getCount();
+    return (int) mean.getN();
   }
 
-  @Override
   public double getAverage() {
-    return delegate.getAverage();
+    return mean.getResult();
   }
 
-  @Override
-  public double getStandardDeviation() {
-    return delegate.getStandardDeviation();
-  }
-
-  @Override
   public double getMin() {
-    return min;
+    return min.getResult();
   }
 
-  @Override
   public double getMax() {
-    return max;
+    return max.getResult();
   }
 
-  @Override
   public void addDatum(double v) {
-    delegate.addDatum(v);
-    if (Double.isNaN(max) || v > max) {
-      max = v;
-    }
-    if (Double.isNaN(min) || v < min) {
-      min = v;
-    }
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void removeDatum(double v) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public void changeDatum(double v) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * @throws UnsupportedOperationException
-   */
-  @Override
-  public RunningAverageAndStdDev inverse() {
-    throw new UnsupportedOperationException();
+    mean.increment(v);
+    min.increment(v);
+    max.increment(v);
   }
 
 }

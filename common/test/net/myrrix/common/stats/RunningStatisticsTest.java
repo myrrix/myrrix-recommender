@@ -24,7 +24,7 @@ public final class RunningStatisticsTest extends MyrrixTest {
 
   @Test
   public void testInstantiate() {
-    RunningAverageAndMinMax stats = new RunningStatistics();
+    RunningStatistics stats = new RunningStatistics();
     assertNaN(stats.getMin());
     assertNaN(stats.getMax());
     stats.addDatum(Integer.MIN_VALUE);

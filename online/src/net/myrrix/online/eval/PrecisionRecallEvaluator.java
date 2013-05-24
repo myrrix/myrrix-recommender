@@ -23,10 +23,9 @@ import java.util.concurrent.ExecutionException;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.FullRunningAverage;
-import org.apache.mahout.cf.taste.impl.common.RunningAverage;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
@@ -63,10 +62,10 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
                                    final RescorerProvider provider,
                                    final Multimap<Long,RecommendedItem> testData) throws TasteException {
 
-    final RunningAverage precision = new FullRunningAverage();
-    final RunningAverage recall = new FullRunningAverage();
-    final RunningAverage ndcg = new FullRunningAverage();
-    final RunningAverage meanAveragePrecision = new FullRunningAverage();
+    final Mean precision = new Mean();
+    final Mean recall = new Mean();
+    final Mean ndcg = new Mean();
+    final Mean meanAveragePrecision = new Mean();
     
     Processor<Long> processor = new Processor<Long>() {
       @Override
@@ -102,7 +101,7 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
         int intersectionSize = 0;
         double score = 0.0;
         double maxScore = 0.0;
-        RunningAverage precisionAtI = new FullRunningAverage();
+        Mean precisionAtI = new Mean();
         double averagePrecision = 0.0;
   
         for (int i = 0; i < numRecs; i++) {
@@ -111,25 +110,25 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
           if (valueIDs.contains(rec.getItemID())) {
             intersectionSize++;
             score += value;
-            precisionAtI.addDatum(1.0);
-            averagePrecision += precisionAtI.getAverage();            
+            precisionAtI.increment(1.0);
+            averagePrecision += precisionAtI.getResult();            
           } else {
-            precisionAtI.addDatum(0.0);
+            precisionAtI.increment(0.0);
           }
           maxScore += value;
         }
         averagePrecision /= numValues;
   
         synchronized (precision) {
-          precision.addDatum(numRecs == 0 ? 0.0 : (double) intersectionSize / numRecs);
-          recall.addDatum((double) intersectionSize / numValues);
-          ndcg.addDatum(maxScore == 0.0 ? 0.0 : score / maxScore);
-          meanAveragePrecision.addDatum(averagePrecision);
+          precision.increment(numRecs == 0 ? 0.0 : (double) intersectionSize / numRecs);
+          recall.increment((double) intersectionSize / numValues);
+          ndcg.increment(maxScore == 0.0 ? 0.0 : score / maxScore);
+          meanAveragePrecision.increment(averagePrecision);
           if (count % 10000 == 0) {
-            log.info(new IRStatisticsImpl(precision.getAverage(),
-                                          recall.getAverage(),
-                                          ndcg.getAverage(),
-                                          meanAveragePrecision.getAverage()).toString());
+            log.info(new IRStatisticsImpl(precision.getResult(),
+                                          recall.getResult(),
+                                          ndcg.getResult(),
+                                          meanAveragePrecision.getResult()).toString());
           }
         }
       }
@@ -148,10 +147,10 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
       throw new TasteException(e.getCause());
     }
 
-    EvaluationResult result = new IRStatisticsImpl(precision.getAverage(), 
-                                                   recall.getAverage(), 
-                                                   ndcg.getAverage(),
-                                                   meanAveragePrecision.getAverage());
+    EvaluationResult result = new IRStatisticsImpl(precision.getResult(), 
+                                                   recall.getResult(), 
+                                                   ndcg.getResult(),
+                                                   meanAveragePrecision.getResult());
     log.info(result.toString());
     return result;
   }
