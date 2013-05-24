@@ -21,8 +21,6 @@
 <jsp:directive.page import="net.myrrix.common.stats.RunningStatistics"/>
 <jsp:directive.page import="net.myrrix.common.stats.RunningStatisticsPerTime"/>
 <jsp:directive.page import="net.myrrix.web.servlets.AbstractMyrrixServlet"/>
-<jsp:directive.page import="net.myrrix.web.servlets.PreferenceServlet"/>
-<jsp:directive.page import="org.apache.mahout.cf.taste.impl.common.RunningAverage"/>
 <jsp:directive.page import="net.myrrix.common.ReloadingReference"/>
 <jsp:directive.page import="net.myrrix.online.ServerRecommender"/>
 <jsp:directive.page import="java.util.concurrent.TimeUnit"/>
@@ -149,12 +147,14 @@ if (localInputDir.length() > 32) {
 }
 pageContext.setAttribute("localInputDirDisplay", localInputDirDisplay);
 
+/*
 RunningAverage estimateError = (RunningAverage) application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY);
 float avgEstimateError = estimateError == null ? 0.0f : (float) estimateError.getAverage();
 if (Float.isNaN(avgEstimateError)) {
   avgEstimateError = 0.0f;
 }
 pageContext.setAttribute("avgEstimateError", avgEstimateError);
+ */
 
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
 @SuppressWarnings("unchecked")
@@ -195,7 +195,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
   <tr><td>Ready?</td><td style="text-align:left"><code>${rec.ready}</code></td></tr>
   <tr><td>User Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numUsers}</td></tr>
   <tr><td>Item Count</td><td style="text-align:left">${rec.generationManager.currentGeneration.numItems}</td></tr>
-  <tr><td>Avg. Estimate Error (beta)</td><td style="text-align:left">${avgEstimateError}</td></tr>
+  <!--<tr><td>Avg. Estimate Error (beta)</td><td style="text-align:left">${avgEstimateError}</td></tr>-->
 </table>
 
 </td></tr></table>

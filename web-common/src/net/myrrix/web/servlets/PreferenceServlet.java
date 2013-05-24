@@ -20,22 +20,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.io.Closeables;
-import org.apache.commons.math3.util.FastMath;
-import org.apache.mahout.cf.taste.common.NoSuchItemException;
-import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
-import net.myrrix.common.NotReadyException;
 
 /**
  * <p>Responds to a POST request to {@code /pref/[userID]/[itemID]} and in turn calls
@@ -50,6 +43,7 @@ import net.myrrix.common.NotReadyException;
  */
 public final class PreferenceServlet extends AbstractMyrrixServlet {
 
+  /*  
   public static final String AVG_ESTIMATE_ERROR_KEY = PreferenceServlet.class.getName() + ".AVG_ESTIMATE_ERROR";
 
   private WeightedRunningAverage avgEstimateError;
@@ -60,6 +54,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     avgEstimateError = new WeightedRunningAverage();
     config.getServletContext().setAttribute(AVG_ESTIMATE_ERROR_KEY, avgEstimateError);
   }
+   */
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -97,6 +92,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
     MyrrixRecommender recommender = getRecommender();
     try {
 
+      /*
       // Experimental: see what the recommender thought before adding the datum, whether it would
       // have expected this. It "should" reproduce a 1, and the closer the better. Compute the
       // average difference from 1. Where the estimate is > 1, count it as a 0 difference.
@@ -112,6 +108,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
           // continue
         }
       }
+       */
 
       // Now set value
       recommender.setPreference(userID, itemID, prefValue);
