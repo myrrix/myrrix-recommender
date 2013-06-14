@@ -76,12 +76,6 @@ public interface RescorerProvider {
   IDRescorer getRecommendRescorer(long[] userIDs, MyrrixRecommender recommender, String... args);
 
   /**
-   * @deprecated use {@link #getRecommendRescorer(long[], MyrrixRecommender, String...)}
-   */
-  @Deprecated
-  IDRescorer getRecommendRescorer(long[] userIDs, String... args);
-
-  /**
    * @param itemIDs items that the anonymous user is associated to
    * @param recommender the recommender instance that is rescoring results
    * @param args arguments, if any, that should be used when making the {@link IDRescorer}. This is additional
@@ -93,12 +87,6 @@ public interface RescorerProvider {
    *  to {@link IDRescorer#rescore(long, double)}
    */
   IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, MyrrixRecommender recommender, String... args);
-
-  /**
-   * @deprecated use {@link #getRecommendToAnonymousRescorer(long[], MyrrixRecommender, String...)}
-   */
-  @Deprecated
-  IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args);
 
   /**
    * @param recommender the recommender instance that is rescoring results
@@ -123,11 +111,5 @@ public interface RescorerProvider {
    *  {@link Rescorer#rescore(Object, double)}
    */
   Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args);
-
-  /**
-   * @deprecated use {@link #getMostSimilarItemsRescorer(MyrrixRecommender, String...)}
-   */
-  @Deprecated
-  Rescorer<LongPair> getMostSimilarItemsRescorer(String... args);
 
 }

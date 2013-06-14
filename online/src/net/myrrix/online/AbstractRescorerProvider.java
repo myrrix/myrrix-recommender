@@ -47,29 +47,11 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
   }
 
   /**
-   * @return {@link #getRecommendRescorer(long[], MyrrixRecommender, String...)}
-   */
-  @Override
-  @Deprecated
-  public IDRescorer getRecommendRescorer(long[] userIDs, String... args) {
-    return getRecommendRescorer(userIDs, null, args);
-  }
-
-  /**
    * @return {@code null}
    */
   @Override
   public IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, MyrrixRecommender recommender, String... args) {
     return null;
-  }
-
-  /**
-   * @return {@link #getRecommendToAnonymousRescorer(long[], MyrrixRecommender, String...)}
-   */
-  @Override
-  @Deprecated
-  public IDRescorer getRecommendToAnonymousRescorer(long[] itemIDs, String... args) {
-    return getRecommendToAnonymousRescorer(itemIDs, null, args);
   }
 
   /**
@@ -86,15 +68,6 @@ public abstract class AbstractRescorerProvider implements RescorerProvider {
   @Override
   public Rescorer<LongPair> getMostSimilarItemsRescorer(MyrrixRecommender recommender, String... args) {
     return null;
-  }
-
-  /**
-   * @return {@link #getMostSimilarItemsRescorer(MyrrixRecommender, String...)}
-   */
-  @Override
-  @Deprecated
-  public Rescorer<LongPair> getMostSimilarItemsRescorer(String... args) {
-    return getMostSimilarItemsRescorer(null, args);
   }
   
   public static RescorerProvider loadRescorerProviders(String classNamesString, URL url) {
