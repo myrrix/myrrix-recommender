@@ -21,7 +21,7 @@ limitations under the License.
 <jsp:directive.page import="net.myrrix.online.generation.Generation"/>
 <jsp:directive.page import="net.myrrix.online.som.SelfOrganizingMaps"/>
 <jsp:directive.page import="net.myrrix.online.som.Node"/>
-<jsp:directive.page import="org.apache.mahout.common.Pair"/>
+<jsp:directive.page import="org.apache.commons.math3.util.Pair"/>
 <jsp:directive.page import="java.util.Iterator"/>
 <jsp:directive.page import="java.util.List"/>
 <jsp:directive.page import="org.apache.commons.math3.util.FastMath"/>

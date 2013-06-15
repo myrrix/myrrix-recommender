@@ -22,8 +22,8 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.math3.distribution.PascalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +157,7 @@ public final class SelfOrganizingMaps {
         float[] center = node.getCenter();
         double currentScore =
             SimpleVectorMath.dot(V, center) / (SimpleVectorMath.norm(center) * SimpleVectorMath.norm(V));
-        Pair<Double,Long> newAssignedID = Pair.of(currentScore, entry.getKey());
+        Pair<Double,Long> newAssignedID = new Pair<Double,Long>(currentScore, entry.getKey());
         node.addAssignedID(newAssignedID);
       }
     }

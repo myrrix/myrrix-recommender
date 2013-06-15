@@ -59,6 +59,7 @@ import com.google.common.net.HostAndPort;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.Refreshable;
@@ -69,7 +70,6 @@ import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.apache.mahout.cf.taste.recommender.Rescorer;
 import org.apache.mahout.common.LongPair;
-import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -991,7 +991,7 @@ public final class ClientRecommender implements MyrrixRecommender {
           if (writerAndConnection == null) {
             HttpURLConnection connection = buildConnectionToAReplica(partition);
             Writer writer = IOUtils.buildGZIPWriter(connection.getOutputStream());
-            writerAndConnection = Pair.of(writer, connection);
+            writerAndConnection = new Pair<Writer,HttpURLConnection>(writer, connection);
             writersAndConnections.put(partition, writerAndConnection);
           }
           // TODO this doesn't automatically find another replica if this write fails

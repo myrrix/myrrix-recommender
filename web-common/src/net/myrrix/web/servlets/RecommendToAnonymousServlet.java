@@ -24,11 +24,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.Pair;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
@@ -116,16 +116,16 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
       values[i] = value == null ? 1.0f : value;
     }
     
-    return Pair.of(itemIDs, values);
+    return new Pair<long[],float[]>(itemIDs, values);
   }
 
   private static Pair<Long,Float> parseItemValue(String s) {
     int equals = s.indexOf('=');
     if (equals < 0) {
-      return Pair.of(Long.parseLong(s), null);
-    } else {
-      return Pair.of(Long.parseLong(s.substring(0, equals)), LangUtils.parseFloat(s.substring(equals + 1)));
+      return new Pair<Long,Float>(Long.parseLong(s), null);
     }
+    return new Pair<Long,Float>(Long.parseLong(s.substring(0, equals)), 
+                                LangUtils.parseFloat(s.substring(equals + 1)));
   }
 
 }

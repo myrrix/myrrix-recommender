@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import org.apache.mahout.common.Pair;
+import org.apache.commons.math3.util.Pair;
 
 /**
  * Represents a node in the final self-organizing map, which has both a set of members and a "center"

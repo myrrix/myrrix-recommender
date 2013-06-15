@@ -19,6 +19,7 @@ package net.myrrix.online.eval;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,8 +29,8 @@ import java.util.regex.Pattern;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.common.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,7 +150,7 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
         throw new ExecutionException(e);
       }
       testResultLine.append("= ").append(testValue);
-      testResultLinesByValue.add(Pair.of(testValue, testResultLine.toString()));
+      testResultLinesByValue.add(new Pair<Double,String>(testValue, testResultLine.toString()));
       log.info("{}", testResultLine);
       
       if (minimize ? testValue < bestValue : testValue > bestValue) {
@@ -162,7 +163,19 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
         }
       }
       
-      Collections.sort(testResultLinesByValue, Collections.reverseOrder());
+      Collections.sort(testResultLinesByValue, new Comparator<Pair<Double,String>>() {
+        @Override
+        public int compare(Pair<Double,String> a, Pair<Double,String> b) {
+          if (a.getFirst() > b.getFirst()) {
+            return -1;
+          }
+          if (a.getFirst() < b.getFirst()) {
+            return 1;
+          }
+          return 0;
+        }
+      });
+      
       for (Pair<Double,String> result : testResultLinesByValue) {
         log.info("{}", result.getSecond());
       }
