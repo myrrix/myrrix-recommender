@@ -87,7 +87,7 @@ public final class DelegateGenerationManager implements GenerationManager {
    *  contain lines of the form "userID,itemID(,value)".
    */
   public DelegateGenerationManager(File localInputDir) throws IOException {
-    this(null, null, localInputDir, 0, null, null);
+    this(null, null, localInputDir, 0, null);
   }
 
   /**
@@ -99,14 +99,12 @@ public final class DelegateGenerationManager implements GenerationManager {
    *  contain lines of the form "userID,itemID(,value)".
    * @param partition not used; required for API compatibility internally
    * @param allPartitions not used; required for API compatibility internally
-   * @param licenseFile not used; required for API compatibility internally
    */
   public DelegateGenerationManager(String bucket,
                                    String instanceID,
                                    File localInputDir,
                                    int partition,
-                                   ReloadingReference<List<?>> allPartitions,
-                                   File licenseFile) throws IOException {
+                                   ReloadingReference<List<?>> allPartitions) throws IOException {
     // Most arguments above are unused but here for compatibility with other DelegateGenerationManager
     log.info("Using local computation, and data in {}", localInputDir);
     inputDir = localInputDir;
@@ -259,7 +257,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     try {
       return GenerationSerializer.readGeneration(modelFile);
     } catch (ObjectStreamException ose) {
-      log.warn("Model file was not readable, rebuilding ({})", ose);
+      log.warn("Model file was not readable, rebuilding", ose);
       return null;
     }
   }
@@ -290,7 +288,7 @@ public final class DelegateGenerationManager implements GenerationManager {
     Files.move(newModelFile, modelFile);
   }
 
-  private class RefreshCallable implements Callable<Void> {
+  private final class RefreshCallable implements Callable<Void> {
     @Override
     public Void call() {
       try {
@@ -439,12 +437,13 @@ public final class DelegateGenerationManager implements GenerationManager {
       }
   
       return als;
-    }    
-  }
+    }
 
-  private static int readNumFeatures() {
-    String featuresString = System.getProperty("model.features");
-    return featuresString == null ? MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+    private int readNumFeatures() {
+      String featuresString = System.getProperty("model.features");
+      return featuresString == null ? MatrixFactorizer.DEFAULT_FEATURES : Integer.parseInt(featuresString);
+    }
+
   }
 
 }

@@ -70,7 +70,6 @@ public final class InitListener implements ServletContextListener {
   public static final String CLIENT_THREAD_CLASS_KEY = KEY_PREFIX + ".CLIENT_THREAD_CLASS";  
   public static final String ALL_PARTITIONS_SPEC_KEY = KEY_PREFIX + ".ALL_PARTITIONS_SPEC";
   public static final String PARTITION_KEY = KEY_PREFIX + ".PARTITION";
-  public static final String LICENSE_FILE_KEY = KEY_PREFIX + ".LICENSE_FILE";
 
   private static final Pattern COMMA = Pattern.compile(",");
 
@@ -97,9 +96,8 @@ public final class InitListener implements ServletContextListener {
     ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = 
         configureAllPartitionsReference(context, bucket, instanceID);
     
-    File licenseFile = (File) context.getAttribute(LICENSE_FILE_KEY);
-    MyrrixRecommender recommender =
-        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference, licenseFile);
+    MyrrixRecommender recommender = 
+        new ServerRecommender(bucket, instanceID, localInputDir, partition, allPartitionsReference);
     context.setAttribute(AbstractMyrrixServlet.RECOMMENDER_KEY, recommender);
     
     configureClientThread(context, bucket, instanceID, recommender);

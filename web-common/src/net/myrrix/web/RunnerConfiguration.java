@@ -49,7 +49,6 @@ public final class RunnerConfiguration {
   private String clientThreadClassName;  
   private Integer partition;
   private String allPartitionsSpecification;
-  private File licenseFile;
 
   public RunnerConfiguration() {
     port = DEFAULT_PORT;
@@ -275,20 +274,5 @@ public final class RunnerConfiguration {
   public void setAllPartitionsSpecification(String allPartitionsSpecification) {
     this.allPartitionsSpecification = allPartitionsSpecification;
   }
-
-  /**
-   * @return (Optional in standalone mode). location of a license file named [subject].lic, where [subject] is the
-   *  subject name authorized in the license. The license file should be valid at the time the app is
-   *  run, and contain authorization to use the amount of parallelism (max simultaneous Hadoop workers)
-   *  requested.
-   */
-  public File getLicenseFile() {
-    return licenseFile;
-  }
-
-  public void setLicenseFile(File licenseFile) {
-    this.licenseFile = licenseFile;
-  }
-
 
 }
