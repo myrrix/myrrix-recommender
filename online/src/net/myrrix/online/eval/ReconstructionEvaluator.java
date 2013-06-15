@@ -34,11 +34,11 @@ import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
+import net.myrrix.common.iterator.FileLineIterable;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.io.IOUtils;

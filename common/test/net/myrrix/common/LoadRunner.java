@@ -29,12 +29,12 @@ import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.collection.CountingIterator;
 import net.myrrix.common.collection.FastIDSet;
+import net.myrrix.common.iterator.FileLineIterable;
 import net.myrrix.common.parallel.Paralleler;
 import net.myrrix.common.parallel.Processor;
 import net.myrrix.common.random.RandomManager;

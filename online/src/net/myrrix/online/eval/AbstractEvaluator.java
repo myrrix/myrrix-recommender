@@ -39,7 +39,6 @@ import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.recommender.GenericRecommendedItem;
 import org.apache.mahout.cf.taste.recommender.IDRescorer;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
-import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +46,7 @@ import net.myrrix.common.ByValueAscComparator;
 import net.myrrix.common.io.IOUtils;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.iterator.FileLineIterable;
 import net.myrrix.online.RescorerProvider;
 import net.myrrix.online.ServerRecommender;
 

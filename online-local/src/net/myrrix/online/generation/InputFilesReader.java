@@ -27,7 +27,6 @@ import com.google.common.base.Splitter;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.mahout.cf.taste.model.IDMigrator;
-import org.apache.mahout.common.iterator.FileLineIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +36,7 @@ import net.myrrix.common.collection.FastByIDFloatMap;
 import net.myrrix.common.collection.FastByIDMap;
 import net.myrrix.common.collection.FastIDSet;
 import net.myrrix.common.io.InvertedFilenameFilter;
+import net.myrrix.common.iterator.FileLineIterable;
 import net.myrrix.common.math.MatrixUtils;
 
 /**
