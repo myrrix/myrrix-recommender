@@ -43,19 +43,6 @@ import net.myrrix.common.MyrrixRecommender;
  */
 public final class PreferenceServlet extends AbstractMyrrixServlet {
 
-  /*  
-  public static final String AVG_ESTIMATE_ERROR_KEY = PreferenceServlet.class.getName() + ".AVG_ESTIMATE_ERROR";
-
-  private WeightedRunningAverage avgEstimateError;
-
-  @Override
-  public void init(ServletConfig config) throws ServletException {
-    super.init(config);
-    avgEstimateError = new WeightedRunningAverage();
-    config.getServletContext().setAttribute(AVG_ESTIMATE_ERROR_KEY, avgEstimateError);
-  }
-   */
-
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -91,28 +78,7 @@ public final class PreferenceServlet extends AbstractMyrrixServlet {
 
     MyrrixRecommender recommender = getRecommender();
     try {
-
-      /*
-      // Experimental: see what the recommender thought before adding the datum, whether it would
-      // have expected this. It "should" reproduce a 1, and the closer the better. Compute the
-      // average difference from 1. Where the estimate is > 1, count it as a 0 difference.
-      if (prefValue > 0.0f) {
-        try {
-          float estimate = recommender.estimatePreference(userID, itemID);
-          avgEstimateError.addDatum(FastMath.max(0.0, 1.0 - estimate), prefValue);
-        } catch (NoSuchUserException nsue) {
-          // continue
-        } catch (NoSuchItemException nsie) {
-          // continue
-        } catch (NotReadyException nre) {
-          // continue
-        }
-      }
-       */
-
-      // Now set value
       recommender.setPreference(userID, itemID, prefValue);
-
     } catch (TasteException te) {
       response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, te.toString());
       getServletContext().log("Unexpected error in " + getClass().getSimpleName(), te);

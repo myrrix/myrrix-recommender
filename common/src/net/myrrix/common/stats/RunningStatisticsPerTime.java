@@ -29,7 +29,7 @@ import com.google.common.base.Preconditions;
  */
 public final class RunningStatisticsPerTime implements Serializable {
 
-  private final WeightedRunningAverage average;
+  private final IntWeightedMean mean;
   private double min;
   private double max;
   private final long bucketTimeMS;
@@ -42,7 +42,7 @@ public final class RunningStatisticsPerTime implements Serializable {
     TimeUnit subTimeUnit = TimeUnit.values()[timeUnitOrdinal - 1];
     int numBuckets = (int) subTimeUnit.convert(1, timeUnit);
 
-    average = new WeightedRunningAverage();
+    mean = new IntWeightedMean();
     min = Double.NaN;
     max = Double.NaN;
     bucketTimeMS = TimeUnit.MILLISECONDS.convert(1, subTimeUnit);
@@ -60,7 +60,7 @@ public final class RunningStatisticsPerTime implements Serializable {
       RunningStatistics removedBucket = subBuckets.removeLast();
       int count = removedBucket.getCount();
       if (count > 0) {
-        average.removeDatum(removedBucket.getAverage(), count);
+        mean.decrement(removedBucket.getAverage(), count);
       }
 
       if (removedBucket.getMin() <= min) {
@@ -89,9 +89,9 @@ public final class RunningStatisticsPerTime implements Serializable {
     }
   }
 
-  public synchronized void addDatum(double value) {
+  public synchronized void increment(double value) {
     refresh();
-    average.addDatum(value);
+    mean.increment(value);
     subBuckets.getFirst().addDatum(value);
     if (Double.isNaN(min) || value < min) {
       min = value;
@@ -101,12 +101,12 @@ public final class RunningStatisticsPerTime implements Serializable {
     }
   }
 
-  public int getCount() {
-    return average.getCount();
+  public synchronized long getCount() {
+    return mean.getN();
   }
 
-  public double getAverage() {
-    return average.getAverage();
+  public synchronized double getMean() {
+    return mean.getResult();
   }
 
   public synchronized double getMin() {

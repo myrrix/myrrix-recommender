@@ -29,53 +29,53 @@ public final class RunningStatisticsPerTimeTest extends MyrrixTest {
     RunningStatisticsPerTime perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
     assertTrue(Double.isNaN(perTime.getMin()));
     assertTrue(Double.isNaN(perTime.getMax()));
-    assertTrue(Double.isNaN(perTime.getAverage()));
-    assertEquals(0, perTime.getCount());
+    assertTrue(Double.isNaN(perTime.getMean()));
+    assertEquals(0L, perTime.getCount());
   }
 
   @Test
   public void testOneBucket() {
     RunningStatisticsPerTime perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
-    perTime.addDatum(1.2);
+    perTime.increment(1.2);
     assertEquals(1.2, perTime.getMin());
     assertEquals(1.2, perTime.getMax());
-    assertEquals(1.2, perTime.getAverage());
-    assertEquals(1, perTime.getCount());
+    assertEquals(1.2, perTime.getMean());
+    assertEquals(1L, perTime.getCount());
   }
 
   @Test
   public void testRoll() throws Exception {
     RunningStatisticsPerTime perTime = new RunningStatisticsPerTime(TimeUnit.MINUTES);
-    perTime.addDatum(1.2);
+    perTime.increment(1.2);
 
     assertEquals(1.2, perTime.getMin());
     assertEquals(1.2, perTime.getMax());
-    assertEquals(1.2, perTime.getAverage());
-    assertEquals(1, perTime.getCount());
+    assertEquals(1.2, perTime.getMean());
+    assertEquals(1L, perTime.getCount());
 
     Thread.sleep(2000L);
-    perTime.addDatum(2.0);
+    perTime.increment(2.0);
 
     assertEquals(1.2, perTime.getMin());
     assertEquals(2.0, perTime.getMax());
-    assertEquals(1.6, perTime.getAverage());
-    assertEquals(2, perTime.getCount());
+    assertEquals(1.6, perTime.getMean());
+    assertEquals(2L, perTime.getCount());
 
     Thread.sleep(58000L);
     perTime.refresh();
 
     assertEquals(2.0, perTime.getMin());
     assertEquals(2.0, perTime.getMax());
-    assertEquals(2.0, perTime.getAverage());
-    assertEquals(1, perTime.getCount());
+    assertEquals(2.0, perTime.getMean());
+    assertEquals(1L, perTime.getCount());
 
     Thread.sleep(2000L);
     perTime.refresh();
 
     assertTrue(Double.isNaN(perTime.getMin()));
     assertTrue(Double.isNaN(perTime.getMax()));
-    assertTrue(Double.isNaN(perTime.getAverage()));
-    assertEquals(0, perTime.getCount());
+    assertTrue(Double.isNaN(perTime.getMean()));
+    assertEquals(0L, perTime.getCount());
   }
 
 

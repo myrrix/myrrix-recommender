@@ -24,13 +24,13 @@ import com.google.common.collect.Multimap;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
 import org.apache.mahout.cf.taste.common.NoSuchUserException;
 import org.apache.mahout.cf.taste.common.TasteException;
-import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 import org.apache.mahout.cf.taste.recommender.RecommendedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.MyrrixRecommender;
+import net.myrrix.common.stats.DoubleWeightedMean;
 import net.myrrix.online.RescorerProvider;
 
 /**
@@ -59,7 +59,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
   public EvaluationResult evaluate(MyrrixRecommender recommender,
                                    RescorerProvider provider, // ignored
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
-    WeightedRunningAverage score = new WeightedRunningAverage();
+    DoubleWeightedMean score = new DoubleWeightedMean();
     int count = 0;
     for (Map.Entry<Long,RecommendedItem> entry : testData.entries()) {
       long userID = entry.getKey();
@@ -67,7 +67,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
       try {
         float estimate = recommender.estimatePreference(userID, itemPref.getItemID());
         Preconditions.checkState(LangUtils.isFinite(estimate));
-        score.addDatum(1.0 - estimate, itemPref.getValue());
+        score.increment(1.0 - estimate, itemPref.getValue());
       } catch (NoSuchItemException nsie) {
         // continue
       } catch (NoSuchUserException nsue) {
@@ -78,7 +78,7 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
       }
     }
     log.info("Score: {}", score);
-    return new EvaluationResultImpl(score.getAverage());
+    return new EvaluationResultImpl(score.getResult());
   }
   
   public static void main(String[] args) throws Exception {

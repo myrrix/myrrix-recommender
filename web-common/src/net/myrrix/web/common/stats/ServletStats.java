@@ -43,7 +43,7 @@ public final class ServletStats implements Serializable {
 
   public void addTimingNanosec(long timingNanosec) {
     allTimeNanosec.addDatum(timingNanosec);
-    lastHourNanosec.addDatum(timingNanosec);
+    lastHourNanosec.increment(timingNanosec);
   }
 
   public RunningStatistics getAllTimeNanosec() {

@@ -9,8 +9,6 @@
 package net.myrrix.web;
 
 import javax.servlet.*;
-import javax.servlet.http.*;
-import javax.servlet.jsp.*;
 import java.util.List;
 import java.util.Map;
 import net.myrrix.common.stats.JVMEnvironment;
@@ -318,7 +316,7 @@ pageContext.setAttribute("numPartitions", numPartitions);
         pageContext.setAttribute("averageMicroSec", (long) (allTimeNanosec.getAverage() / 1000.0));
         pageContext.setAttribute("maxMicroSec", (long) (allTimeNanosec.getMax() / 1000.0));
         RunningStatisticsPerTime lastHourNanosec = entry.getValue().getLastHourNanosec();
-        pageContext.setAttribute("averageLastHourMicroSec", (long) (lastHourNanosec.getAverage() / 1000.0));
+        pageContext.setAttribute("averageLastHourMicroSec", (long) (lastHourNanosec.getMean() / 1000.0));
         pageContext.setAttribute("maxLastHourMicroSec", (long) (lastHourNanosec.getMax() / 1000.0));
         pageContext.setAttribute("clientErrors", entry.getValue().getNumClientErrors());
         pageContext.setAttribute("serverErrors", entry.getValue().getNumServerErrors());

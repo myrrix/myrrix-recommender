@@ -33,7 +33,6 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
-import org.apache.mahout.cf.taste.impl.common.WeightedRunningAverage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +40,7 @@ import net.myrrix.common.parallel.ExecutorUtils;
 import net.myrrix.common.math.SimpleVectorMath;
 import net.myrrix.common.random.RandomManager;
 import net.myrrix.common.random.RandomUtils;
+import net.myrrix.common.stats.DoubleWeightedMean;
 import net.myrrix.common.stats.JVMEnvironment;
 import net.myrrix.common.LangUtils;
 import net.myrrix.common.collection.FastByIDFloatMap;
@@ -227,13 +227,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       while (true) {
         iterateXFromY(executor);
         iterateYFromX(executor);
-        WeightedRunningAverage averageAbsoluteEstimateDiff = new WeightedRunningAverage();
+        DoubleWeightedMean averageAbsoluteEstimateDiff = new DoubleWeightedMean();
         for (int i = 0; i < testUserIDs.length; i++) {
           for (int j = 0; j < testItemIDs.length; j++) {
             double newValue = SimpleVectorMath.dot(X.get(testUserIDs[i]), Y.get(testItemIDs[j]));            
             double oldValue = estimates[i][j];
             estimates[i][j] = newValue;
-            averageAbsoluteEstimateDiff.addDatum(FastMath.abs(newValue - oldValue), FastMath.max(0.0, newValue));
+            averageAbsoluteEstimateDiff.increment(FastMath.abs(newValue - oldValue), FastMath.max(0.0, newValue));
           }
         }
       
@@ -244,7 +244,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
           break;
         }
         log.info("Avg absolute difference in estimate vs prior iteration: {}", averageAbsoluteEstimateDiff);
-        double convergenceValue = averageAbsoluteEstimateDiff.getAverage();
+        double convergenceValue = averageAbsoluteEstimateDiff.getResult();
         if (!LangUtils.isFinite(convergenceValue)) {
           log.warn("Invalid convergence value, aborting iteration! {}", convergenceValue);
           break;
