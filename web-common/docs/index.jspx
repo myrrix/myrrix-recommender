@@ -147,15 +147,6 @@ if (localInputDir.length() > 32) {
 }
 pageContext.setAttribute("localInputDirDisplay", localInputDirDisplay);
 
-/*
-RunningAverage estimateError = (RunningAverage) application.getAttribute(PreferenceServlet.AVG_ESTIMATE_ERROR_KEY);
-float avgEstimateError = estimateError == null ? 0.0f : (float) estimateError.getAverage();
-if (Float.isNaN(avgEstimateError)) {
-  avgEstimateError = 0.0f;
-}
-pageContext.setAttribute("avgEstimateError", avgEstimateError);
- */
-
 pageContext.setAttribute("partition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
 @SuppressWarnings("unchecked")
 ReloadingReference&lt;List&lt;?&gt;&gt; partitionRef =

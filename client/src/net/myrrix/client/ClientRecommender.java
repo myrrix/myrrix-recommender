@@ -994,7 +994,6 @@ public final class ClientRecommender implements MyrrixRecommender {
             writerAndConnection = new Pair<Writer,HttpURLConnection>(writer, connection);
             writersAndConnections.put(partition, writerAndConnection);
           }
-          // TODO this doesn't automatically find another replica if this write fails
           Writer writer = writerAndConnection.getFirst();
           writer.write(line);
           writer.write('\n');
