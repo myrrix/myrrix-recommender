@@ -40,9 +40,9 @@ public final class PrecisionRecallWithNegativeEvaluationTest extends MyrrixTest 
     log.info(stats.toString());
     assertTrue(stats.getPrecision() > 0.2);
     assertTrue(stats.getRecall() > 0.2);
-    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.225);
+    assertTrue(stats.getNormalizedDiscountedCumulativeGain() > 0.22);
     assertTrue(stats.getF1Measure() > 0.2);
-    assertTrue(stats.getMeanAveragePrecision() > 0.13);
+    assertTrue(stats.getMeanAveragePrecision() > 0.125);
   }
 
 }
