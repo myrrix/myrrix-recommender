@@ -19,27 +19,27 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-online</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Online</name>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <description>Generic online recommender core of the Myrrix Serving Layer, for embedding</description>
   <url>http://myrrix.com/documentation-java-client/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/trunk/online</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/online</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/online</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.0/online</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.0/online</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.0/online</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-common</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -110,7 +110,7 @@
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-common</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>1.0.0</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
