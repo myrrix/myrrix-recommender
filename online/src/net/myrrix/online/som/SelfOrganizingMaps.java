@@ -17,6 +17,7 @@
 package net.myrrix.online.som;
 
 import java.util.Collections;
+import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.distribution.PascalDistribution;
@@ -260,7 +261,18 @@ public final class SelfOrganizingMaps {
   private static void sortMembers(Node[][] map) {
     for (Node[] mapRow : map) {
       for (Node node : mapRow) {
-        Collections.sort(node.getAssignedIDs(), Collections.reverseOrder());
+        Collections.sort(node.getAssignedIDs(), new Comparator<Pair<Double,Long>>() {
+          @Override
+          public int compare(Pair<Double,Long> a, Pair<Double,Long> b) {
+            if (a.getFirst() > b.getFirst()) {
+              return -1;
+            }
+            if (a.getFirst() < b.getFirst()) {
+              return 1;
+            }
+            return 0;
+          }
+        });
       }
     }
   }
