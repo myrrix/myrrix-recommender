@@ -49,6 +49,7 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.JasperListener;
 import org.apache.catalina.core.JreMemoryLeakPreventionListener;
 import org.apache.catalina.core.ThreadLocalLeakPreventionListener;
+import org.apache.catalina.deploy.ApplicationListener;
 import org.apache.catalina.deploy.ErrorPage;
 import org.apache.catalina.deploy.FilterDef;
 import org.apache.catalina.deploy.FilterMap;
@@ -498,7 +499,7 @@ public final class Runner implements Callable<Boolean>, Closeable {
     String contextPathURIBase = config.getContextPath();
     Context context = 
         tomcat.addContext(contextPathURIBase == null ? "" : contextPathURIBase, contextPath.getAbsolutePath());
-    context.addApplicationListener(InitListener.class.getName());
+    context.addApplicationListener(new ApplicationListener(InitListener.class.getName(), false));
     context.setWebappVersion("3.0");
     context.addWelcomeFile("index.jspx");
     addErrorPages(context);
