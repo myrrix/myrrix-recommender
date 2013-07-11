@@ -19,27 +19,27 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-web-common</artifactId>
   <packaging>jar</packaging>
   <name>Myrrix Web (common)</name>
-  <version>1.0.1</version>
+  <version>1.0.2-SNAPSHOT</version>
   <description>Web application source code from Serving Layer (common files)</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-common</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-common</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-common</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web-common</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web-common</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web-common</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-online</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

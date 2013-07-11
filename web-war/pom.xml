@@ -19,32 +19,32 @@
   <parent>
     <groupId>net.myrrix</groupId>
     <artifactId>myrrix</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <artifactId>myrrix-web-war</artifactId>
   <packaging>war</packaging>
   <name>Myrrix Web (WAR)</name>
-  <version>1.0.1</version>
+  <version>1.0.2-SNAPSHOT</version>
   <description>Web application source code from Serving Layer standalone mode (WAR packaging)</description>
   <url>http://myrrix.com/documentation-serving-layer/</url>
   <scm>
-    <url>http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-war</url>
-    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-war</connection>
-    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/tags/myrrix-1.0.1/web-war</developerConnection>
+    <url>http://myrrix-recommender.googlecode.com/svn/trunk/web-war</url>
+    <connection>scm:svn:http://myrrix-recommender.googlecode.com/svn/trunk/web-war</connection>
+    <developerConnection>scm:svn:https://myrrix-recommender.googlecode.com/svn/trunk/web-war</developerConnection>
   </scm>
 
   <dependencies>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-web-common</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>net.myrrix</groupId>
       <artifactId>myrrix-online-local</artifactId>
-      <version>1.0.1</version>
+      <version>1.0.2-SNAPSHOT</version>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
