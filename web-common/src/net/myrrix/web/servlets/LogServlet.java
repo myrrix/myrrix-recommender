@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
 import net.myrrix.web.InitListener;
 import net.myrrix.common.log.MemoryHandler;
 
@@ -38,7 +39,7 @@ public final class LogServlet extends HttpServlet {
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     MemoryHandler logHandler = (MemoryHandler) getServletContext().getAttribute(InitListener.LOG_HANDLER);
     response.setContentType("text/plain");
-    response.setCharacterEncoding("UTF-8");
+    response.setCharacterEncoding(Charsets.UTF_8.name());
     Writer out = response.getWriter();
     Collection<String> lines = logHandler.getLogLines();
     synchronized (lines) {

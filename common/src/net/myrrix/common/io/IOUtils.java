@@ -67,7 +67,7 @@ public final class IOUtils {
    */
   public static String urlEncode(String raw) {
     try {
-      return URLEncoder.encode(raw, "UTF-8");
+      return URLEncoder.encode(raw, Charsets.UTF_8.name());
     } catch (UnsupportedEncodingException uee) {
       // Can't happen for UTF-8
       throw new AssertionError(uee);
