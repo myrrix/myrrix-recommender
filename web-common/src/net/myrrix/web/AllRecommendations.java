@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -90,7 +89,7 @@ public final class AllRecommendations implements Callable<Object> {
       public void process(Long userID, long count) throws ExecutionException {
         IDRescorer rescorer =
             rescorerProvider == null ? null : rescorerProvider.getRecommendRescorer(new long[]{userID}, recommender);
-        List<RecommendedItem> recs;
+        Iterable<RecommendedItem> recs;
         try {
           recs = recommender.recommend(userID, howMany, rescorer);
         } catch (TasteException te) {

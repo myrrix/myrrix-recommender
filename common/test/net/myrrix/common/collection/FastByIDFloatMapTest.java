@@ -96,7 +96,7 @@ public final class FastByIDFloatMapTest extends MyrrixTest {
       double d = r.nextDouble();
       Long key = (long) r.nextInt(100);
       if (d < 0.4) {
-        Float expectedValue = expected.get(key);
+        Number expectedValue = expected.get(key);
         float actualValue = actual.get(key);
         if (expectedValue == null) {
           assertNaN(actualValue);

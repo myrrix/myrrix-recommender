@@ -20,6 +20,7 @@ package net.myrrix.common.collection;
 import java.util.NoSuchElementException;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.PascalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.mahout.cf.taste.impl.common.AbstractLongPrimitiveIterator;
@@ -39,7 +40,7 @@ import net.myrrix.common.random.RandomManager;
  */
 public final class SamplingLongPrimitiveIterator extends AbstractLongPrimitiveIterator {
   
-  private final PascalDistribution geometricDistribution;
+  private final IntegerDistribution geometricDistribution;
   private final LongPrimitiveIterator delegate;
   private long next;
   private boolean hasNext;

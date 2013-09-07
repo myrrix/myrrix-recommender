@@ -39,7 +39,7 @@ public final class TagItemServlet extends AbstractMyrrixServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }

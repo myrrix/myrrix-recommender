@@ -415,13 +415,13 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     private final FastByIDMap<float[]> Y;
     private final RealMatrix YTY;
     private final FastByIDMap<float[]> X;
-    private final List<Pair<Long,FastByIDFloatMap>> workUnit;
+    private final Iterable<Pair<Long, FastByIDFloatMap>> workUnit;
 
     private Worker(int features,
                    FastByIDMap<float[]> Y,
                    RealMatrix YTY,
                    FastByIDMap<float[]> X,
-                   List<Pair<Long,FastByIDFloatMap>> workUnit) {
+                   Iterable<Pair<Long, FastByIDFloatMap>> workUnit) {
       this.features = features;
       this.Y = Y;
       this.YTY = YTY;

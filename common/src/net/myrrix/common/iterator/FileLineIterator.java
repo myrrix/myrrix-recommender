@@ -30,7 +30,6 @@ import java.util.zip.ZipInputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.AbstractIterator;
-import com.google.common.io.Closeables;
 
 /**
  * Iterates over the lines of a text file. This assumes the text file's lines are delimited in a manner
@@ -133,7 +132,7 @@ public final class FileLineIterator extends AbstractIterator<String> implements 
   public void close() {
     endOfData();
     try {
-      Closeables.close(reader, true);
+      reader.close();
     } catch (IOException ioe) {
       // Can't happen
       throw new IllegalStateException(ioe);

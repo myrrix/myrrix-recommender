@@ -17,6 +17,7 @@
 package net.myrrix.common.math;
 
 import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.QRDecomposition;
 import org.apache.commons.math3.linear.RRQRDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.slf4j.Logger;
@@ -55,7 +56,7 @@ public final class CommonsMathLinearSystemSolver implements LinearSystemSolver {
 
   @Override
   public boolean isNonSingular(RealMatrix M) {
-    RRQRDecomposition decomposition = new RRQRDecomposition(M, SINGULARITY_THRESHOLD);
+    QRDecomposition decomposition = new RRQRDecomposition(M, SINGULARITY_THRESHOLD);
     DecompositionSolver solver = decomposition.getSolver();
     return solver.isNonSingular();
   }  

@@ -18,7 +18,6 @@ package net.myrrix.client;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -307,7 +306,7 @@ public final class CLI {
       if (isUser) {
         throw new UnsupportedOperationException();
       }
-      Collection<String> ids = translatingRecommender.getAllItemIDs();
+      Iterable<String> ids = translatingRecommender.getAllItemIDs();
       for (String id : ids) {
         System.out.println(id);
       }
@@ -339,7 +338,7 @@ public final class CLI {
         System.out.println(Long.toString(it.nextLong()));
       }
     } else {
-      Collection<String> ids =
+      Iterable<String> ids =
           isUser ? translatingRecommender.getUserCluster(n) : translatingRecommender.getItemCluster(n);
       for (String id : ids) {
         System.out.println(id);
@@ -412,7 +411,7 @@ public final class CLI {
       for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
-      List<RecommendedItem> result;
+      Iterable<RecommendedItem> result;
       if (contextUserIDString == null) {
         result = recommender.mostSimilarItems(itemIDs, howMany, rescorerParams, null);
       } else {
@@ -475,7 +474,7 @@ public final class CLI {
       for (int i = 1; i < programArgs.length; i++) {
         itemIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
-      List<RecommendedItem> result;
+      Iterable<RecommendedItem> result;
       if (contextUserIDString == null) {
         result = recommender.recommendToAnonymous(itemIDs, null, howMany, rescorerParams, null);
       } else {
@@ -510,7 +509,7 @@ public final class CLI {
       for (int i = 1; i < programArgs.length; i++) {
         userIDs[i - 1] = Long.parseLong(unquote(programArgs[i]));
       }
-      List<RecommendedItem> result = recommender.recommendToMany(userIDs, howMany, considerKnownItems, rescorerParams);
+      Iterable<RecommendedItem> result = recommender.recommendToMany(userIDs, howMany, considerKnownItems, rescorerParams);
       output(result);
     } else {
       String[] userIDs = new String[programArgs.length - 1];

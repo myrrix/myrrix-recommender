@@ -41,8 +41,7 @@ public final class SolverLoadTest extends MyrrixTest {
   @Test
   public void testLoad() {
     RealMatrix symmetric = randomSymmetricMatrix(500);
-    Stopwatch stopwatch = new Stopwatch();
-    stopwatch.start();
+    Stopwatch stopwatch = Stopwatch.createStarted();
     int iterations = 100;
     for (int i = 0; i < iterations; i++) {
       MatrixUtils.getSolver(symmetric);

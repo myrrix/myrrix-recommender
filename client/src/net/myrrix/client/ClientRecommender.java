@@ -29,6 +29,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -54,10 +55,10 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
+import com.google.common.net.UrlEscapers;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -182,7 +183,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       try {
         keyStore.load(in, password.toCharArray());
       } finally {
-        Closeables.close(in, true);
+        in.close();
       }
 
       TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -290,7 +291,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     // Fix first replica; cycle through remainder in order since the remainder doesn't matter
     int currentReplica = LangUtils.mod(RandomUtils.md5HashToLong(unnormalizedID), numReplicas);
-    List<HostAndPort> rotatedReplicas = Lists.newArrayListWithCapacity(numReplicas);
+    Collection<HostAndPort> rotatedReplicas = Lists.newArrayListWithCapacity(numReplicas);
     for (int i = 0; i < numReplicas; i++) {
       rotatedReplicas.add(replicas.get(currentReplica));
       if (++currentReplica == numReplicas) {
@@ -380,7 +381,8 @@ public final class ClientRecommender implements MyrrixRecommender {
   public void setUserTag(long userID, String tag, float value) throws TasteException {
     Preconditions.checkNotNull(tag);    
     Preconditions.checkArgument(!tag.isEmpty());
-    doSetOrRemove("/tag/user/" + userID + '/' + IOUtils.urlEncode(tag), userID, value, true);
+    doSetOrRemove("/tag/user/" + userID + '/' + UrlEscapers.urlPathSegmentEscaper().escape(tag),
+                  userID, value, true);
   }
 
   @Override
@@ -405,7 +407,8 @@ public final class ClientRecommender implements MyrrixRecommender {
     Preconditions.checkNotNull(tag);
     Preconditions.checkArgument(!tag.isEmpty());
     long idToPartitionOn = contextUserID == null ? itemID : contextUserID;    
-    doSetOrRemove("/tag/item/" + itemID + '/' + IOUtils.urlEncode(tag), idToPartitionOn, value, true);
+    doSetOrRemove("/tag/item/" + itemID + '/' + UrlEscapers.urlPathSegmentEscaper().escape(tag),
+                  idToPartitionOn, value, true);
   }
 
   /**
@@ -447,7 +450,7 @@ public final class ClientRecommender implements MyrrixRecommender {
               }
               return result;
             } finally {
-              Closeables.close(reader, true);
+              reader.close();
             }
           case HttpURLConnection.HTTP_UNAVAILABLE:
             throw new NotReadyException();
@@ -510,7 +513,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             try {
               return LangUtils.parseFloat(reader.readLine());
             } finally {
-              Closeables.close(reader, true);
+              reader.close();
             }
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchItemException(Arrays.toString(itemIDs) + ' ' + toItemID);
@@ -595,11 +598,11 @@ public final class ClientRecommender implements MyrrixRecommender {
     throw savedException;
   }
 
-  private static List<RecommendedItem> consumeItems(HttpURLConnection connection) throws IOException {
+  private static List<RecommendedItem> consumeItems(URLConnection connection) throws IOException {
     List<RecommendedItem> result = Lists.newArrayList();
     BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
     try {
-      String line;
+      CharSequence line;
       while ((line = reader.readLine()) != null) {
         Iterator<String> tokens = COMMA.split(line).iterator();
         long itemID = Long.parseLong(tokens.next());
@@ -607,7 +610,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         result.add(new GenericRecommendedItem(itemID, value));
       }
     } finally {
-      Closeables.close(reader, true);
+      reader.close();
     }
     return result;
   }
@@ -867,7 +870,7 @@ public final class ClientRecommender implements MyrrixRecommender {
               }
               return result;
             } finally {
-              Closeables.close(reader, true);
+              reader.close();
             }
           case HttpURLConnection.HTTP_NOT_FOUND:
             throw new NoSuchItemException(connection.getResponseMessage());
@@ -959,7 +962,7 @@ public final class ClientRecommender implements MyrrixRecommender {
       throw new TasteException(ioe);
     } finally {
       try {
-        Closeables.close(reader, true);
+        reader.close();
       } catch (IOException e) {
         // Can't happen, continue
       }
@@ -1008,7 +1011,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         }
       } finally {
         for (Pair<Writer,HttpURLConnection> writerAndConnection : writersAndConnections.values()) {
-          Closeables.close(writerAndConnection.getFirst(), true);
+          writerAndConnection.getFirst().close();
           writerAndConnection.getSecond().disconnect();
         }
       }
@@ -1322,7 +1325,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     Preconditions.checkNotNull(unit);
     long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
     long waitIntervalMS = FastMath.min(1000L, waitForMS);
-    Stopwatch stopwatch = new Stopwatch().start();
+    Stopwatch stopwatch = Stopwatch.createStarted();
     while (!isReady()) {
       if (stopwatch.elapsed(TimeUnit.MILLISECONDS) > waitForMS) {
         return false;
@@ -1387,7 +1390,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     throw savedException;
   }
 
-  private static void consumeIDs(HttpURLConnection connection, FastIDSet result) throws IOException {
+  private static void consumeIDs(URLConnection connection, FastIDSet result) throws IOException {
     BufferedReader reader = IOUtils.bufferStream(connection.getInputStream());
     try {
       String line;
@@ -1395,7 +1398,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         result.add(Long.parseLong(line));
       }
     } finally {
-      Closeables.close(reader, true);
+      reader.close();
     }
   }
 
@@ -1423,7 +1426,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             try {
               return Integer.parseInt(reader.readLine());
             } finally {
-              Closeables.close(reader, true);
+              reader.close();
             }          
           case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
             throw new UnsupportedOperationException();
@@ -1501,7 +1504,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     if (rescorerParams != null) {
       for (String rescorerParam : rescorerParams) {
-        urlPath.append("&rescorerParams=").append(IOUtils.urlEncode(rescorerParam));
+        urlPath.append("&rescorerParams=").append(UrlEscapers.urlPathSegmentEscaper().escape(rescorerParam));
       }
     }
   }

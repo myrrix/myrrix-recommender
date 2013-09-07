@@ -194,7 +194,7 @@ public final class InitListener implements ServletContextListener {
     context.setAttribute(AbstractMyrrixServlet.READ_ONLY_KEY, readOnly);
 
     final String portString = getAttributeOrParam(context, PORT_KEY);
-    final String allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
+    final CharSequence allPartitionsSpecString = getAttributeOrParam(context, ALL_PARTITIONS_SPEC_KEY);
 
     ReloadingReference<List<List<HostAndPort>>> allPartitionsReference = null;
     if (allPartitionsSpecString != null) {

@@ -40,7 +40,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.math3.util.FastMath;
@@ -192,7 +191,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       throw new TasteException(ioe);
     } finally {
       try {
-        Closeables.close(reader, true);
+        reader.close();
       } catch (IOException e) {
         // Can't happen, continue
       }
@@ -461,7 +460,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       final Iterator<Iterator<FastByIDMap.MapEntry<float[]>>> candidateIteratorsIterator =
           candidateIterators.iterator();
 
-      List<Future<?>> futures = Lists.newArrayList();
+      Collection<Future<?>> futures = Lists.newArrayList();
       for (int i = 0; i < numCores; i++) {
         futures.add(executorService.submit(new Callable<Void>() {
           @Override
@@ -1438,7 +1437,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public int getNumUserClusters() throws NotReadyException {
     Generation generation = getCurrentGeneration();
-    List<IDCluster> clusters = generation.getUserClusters();
+    Collection<IDCluster> clusters = generation.getUserClusters();
     if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }
@@ -1454,7 +1453,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   @Override
   public int getNumItemClusters() throws NotReadyException {
     Generation generation = getCurrentGeneration();
-    List<IDCluster> clusters = generation.getItemClusters();
+    Collection<IDCluster> clusters = generation.getItemClusters();
     if (clusters == null || clusters.isEmpty()) {
       throw new UnsupportedOperationException();
     }

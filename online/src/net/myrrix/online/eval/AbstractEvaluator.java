@@ -31,7 +31,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.util.FastMath;
@@ -124,7 +123,7 @@ public abstract class AbstractEvaluator implements Evaluator {
 
       return evaluate(recommender, testData);
     } finally {
-      Closeables.close(recommender, true);
+      recommender.close();
       IOUtils.deleteRecursively(trainingDataDir);
     }
   }
@@ -247,7 +246,7 @@ public abstract class AbstractEvaluator implements Evaluator {
                   userTags.put(itemIDString, new GenericRecommendedItem(userID, value));
                 } else {
                   if (provider != null) {
-                    IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
+                    IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, null);
                     if (rescorer != null) {
                       value = (float) rescorer.rescore(itemID, value);
                     }
@@ -264,7 +263,7 @@ public abstract class AbstractEvaluator implements Evaluator {
               } else {
                 float value = 1.0f;                
                 if (provider != null) {
-                  IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, (MyrrixRecommender) null);
+                  IDRescorer rescorer = provider.getRecommendRescorer(new long[] {userID}, null);
                   if (rescorer != null) {
                     value = (float) rescorer.rescore(itemID, value);
                   }

@@ -50,7 +50,7 @@ public final class EstimateForAnonymousServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }

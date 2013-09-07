@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.PascalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
@@ -171,7 +172,7 @@ public final class SelfOrganizingMaps {
   private static Node[][] buildInitialMap(FastByIDMap<float[]> vectors, int mapSize) {
 
     double p = ((double) mapSize * mapSize) / vectors.size(); // Choose mapSize^2 out of # vectors
-    PascalDistribution pascalDistribution;
+    IntegerDistribution pascalDistribution;
     if (p >= 1.0) {
       // No sampling at all, we can't fill the map with one pass even
       pascalDistribution = null;

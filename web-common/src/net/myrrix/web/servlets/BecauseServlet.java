@@ -18,7 +18,6 @@ package net.myrrix.web.servlets;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,7 +45,7 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }
@@ -70,7 +69,7 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
 
     MyrrixRecommender recommender = getRecommender();
     try {
-      List<RecommendedItem> similar = recommender.recommendedBecause(userID, itemID, getHowMany(request));
+      Iterable<RecommendedItem> similar = recommender.recommendedBecause(userID, itemID, getHowMany(request));
       output(request, response, similar);
     } catch (NoSuchUserException nsue) {
       response.sendError(HttpServletResponse.SC_NOT_FOUND, nsue.toString());
@@ -90,7 +89,7 @@ public final class BecauseServlet extends AbstractMyrrixServlet {
 
   @Override
   protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       return null;    
     }

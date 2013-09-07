@@ -34,7 +34,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.google.common.net.HostAndPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,9 +76,9 @@ public final class PartitionsUtils {
       return null;
     }
     List<List<HostAndPort>> allPartitions = Lists.newArrayList();
-    for (String partitionString : SEMICOLON.split(value)) {
+    for (CharSequence partitionString : SEMICOLON.split(value)) {
       List<HostAndPort> partition = Lists.newArrayList();
-      for (String replicaString : COMMA.split(partitionString)) {
+      for (CharSequence replicaString : COMMA.split(partitionString)) {
         String[] hostPort = COLON.split(replicaString);
         String host = hostPort[0];
         int port = hostPort.length > 1 ? Integer.parseInt(hostPort[1]) : 80;
@@ -129,14 +128,14 @@ public final class PartitionsUtils {
       throw new IllegalStateException(e);
     }
 
-    Reader reader = new InputStreamReader(url.openStream(), Charsets.UTF_8);
     Document doc;
+    Reader reader = new InputStreamReader(url.openStream(), Charsets.UTF_8);
     try {
       doc = builder.parse(new InputSource(reader));
     } catch (SAXException saxe) {
       throw new IllegalStateException(saxe);
     } finally {
-      Closeables.close(reader, true);
+      reader.close();
     }
 
     Element docElement = doc.getDocumentElement();
@@ -165,7 +164,7 @@ public final class PartitionsUtils {
       log.debug("No partitions parsed");
     } else {
       int partitionNumber = 0;
-      for (List<HostAndPort> partition : allPartitions) {
+      for (Iterable<HostAndPort> partition : allPartitions) {
         StringBuilder description = new StringBuilder();
         for (HostAndPort hostPort : partition) {
           description.append(hostPort).append(' ');

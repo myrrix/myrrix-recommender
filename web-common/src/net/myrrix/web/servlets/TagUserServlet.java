@@ -39,7 +39,7 @@ public final class TagUserServlet extends AbstractMyrrixServlet {
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }
@@ -80,7 +80,7 @@ public final class TagUserServlet extends AbstractMyrrixServlet {
 
   @Override
   protected Long getUnnormalizedPartitionToServe(HttpServletRequest request) {
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       return null;
     }

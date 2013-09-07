@@ -53,7 +53,7 @@ pageContext.setAttribute("rec", application.getAttribute(AbstractMyrrixServlet.R
     <jsp:scriptlet>
       pageContext.setAttribute("thisPartition", application.getAttribute(AbstractMyrrixServlet.PARTITION_KEY));
       int partitionNumber = 0;
-      for (List&lt;HostAndPort&gt; partition : ref.get(1, TimeUnit.SECONDS)) {
+      for (Iterable&lt;HostAndPort&gt; partition : ref.get(1, TimeUnit.SECONDS)) {
         pageContext.setAttribute("partitionNumber", partitionNumber);
     </jsp:scriptlet>
     <partitionNumber>${thisPartition}</partitionNumber>

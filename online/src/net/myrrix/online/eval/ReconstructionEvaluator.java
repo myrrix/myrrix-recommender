@@ -26,7 +26,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -102,7 +101,7 @@ public final class ReconstructionEvaluator {
 
       return new EvaluationResultImpl(averageError.getResult());
     } finally {
-      Closeables.close(recommender, true);
+      recommender.close();
       IOUtils.deleteRecursively(tempDir);
     }
   }

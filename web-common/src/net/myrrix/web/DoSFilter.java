@@ -24,7 +24,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -51,7 +51,7 @@ public final class DoSFilter implements Filter {
   private static final int DEFAULT_MAX_ACCESS_PER_HOST_PER_MIN = 1000;
 
   private final ConcurrentMap<String,AtomicInteger> numRecentAccesses;
-  private final Set<String> bannedIPAddresses;
+  private final Collection<String> bannedIPAddresses;
   private int maxAccessPerHostPerMin;
   private ScheduledExecutorService executor;
 

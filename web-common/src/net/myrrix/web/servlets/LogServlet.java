@@ -18,7 +18,6 @@ package net.myrrix.web.servlets;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collection;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,7 +40,7 @@ public final class LogServlet extends HttpServlet {
     response.setContentType("text/plain");
     response.setCharacterEncoding(Charsets.UTF_8.name());
     Writer out = response.getWriter();
-    Collection<String> lines = logHandler.getLogLines();
+    Iterable<String> lines = logHandler.getLogLines();
     synchronized (lines) {
       for (String line : lines) {
         out.write(line); // Already has newline

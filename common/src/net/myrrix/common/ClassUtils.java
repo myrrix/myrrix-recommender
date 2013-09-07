@@ -91,7 +91,7 @@ public final class ClassUtils {
    * @return instance of {@code implClassName}
    */
   public static <T> T loadFromRemote(String implClassName, Class<T> superClass, URL url) {
-    URLClassLoader urlClassloader = new URLClassLoader(new URL[] {url}, ClassUtils.class.getClassLoader());
+    ClassLoader urlClassloader = new URLClassLoader(new URL[] {url}, ClassUtils.class.getClassLoader());
     return doLoadInstanceOf(implClassName, superClass, NO_TYPES, NO_ARGS, urlClassloader);
     // In Java 7, should call close() on URLClassLoader
   }

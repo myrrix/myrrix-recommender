@@ -21,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -91,7 +90,7 @@ public final class AllItemSimilarities implements Callable<Object> {
       public void process(Long itemID, long count) throws ExecutionException {
         Rescorer<LongPair> rescorer =
             rescorerProvider == null ? null : rescorerProvider.getMostSimilarItemsRescorer(recommender);
-        List<RecommendedItem> similar;
+        Iterable<RecommendedItem> similar;
         try {
           similar = recommender.mostSimilarItems(new long[]{itemID}, howMany, rescorer);
         } catch (TasteException te) {

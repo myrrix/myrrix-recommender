@@ -56,7 +56,7 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }
@@ -85,7 +85,7 @@ public final class RecommendToAnonymousServlet extends AbstractMyrrixServlet {
     try {
       IDRescorer rescorer = rescorerProvider == null ? null :
           rescorerProvider.getRecommendToAnonymousRescorer(itemIDs, recommender, getRescorerParams(request));
-      List<RecommendedItem> recommended =
+      Iterable<RecommendedItem> recommended =
           recommender.recommendToAnonymous(itemIDs, values, getHowMany(request), rescorer);
       output(request, response, recommended);
     } catch (NotReadyException nre) {

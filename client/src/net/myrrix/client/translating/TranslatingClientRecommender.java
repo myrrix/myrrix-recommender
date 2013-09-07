@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.google.common.io.Closeables;
 import com.google.common.io.Closer;
 import org.apache.mahout.cf.taste.common.TasteException;
 import org.apache.mahout.cf.taste.impl.common.LongPrimitiveIterator;
@@ -116,7 +115,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   @Override
   public List<TranslatedRecommendedItem> recommend(String userID, int howMany) throws TasteException {
     long longUserID = translateUser(userID);
-    List<RecommendedItem> originals = delegate.recommend(longUserID, howMany);
+    Collection<RecommendedItem> originals = delegate.recommend(longUserID, howMany);
     return translate(originals);
   }
 
@@ -126,7 +125,8 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
                                                    boolean considerKnownItems,
                                                    String[] rescorerParams) throws TasteException {
     long longUserID = translateUser(userID);
-    List<RecommendedItem> originals = delegate.recommend(longUserID, howMany, considerKnownItems, rescorerParams);
+    Collection<RecommendedItem> originals =
+        delegate.recommend(longUserID, howMany, considerKnownItems, rescorerParams);
     return translate(originals);
   }
 
@@ -136,7 +136,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
                                                          boolean considerKnownItems,
                                                          String[] rescorerParams) throws TasteException {
     long[] longUserIDs = translateUsers(userIDs);
-    List<RecommendedItem> originals =
+    Collection<RecommendedItem> originals =
         delegate.recommendToMany(longUserIDs, howMany, considerKnownItems, rescorerParams);
     return translate(originals);
   }
@@ -217,7 +217,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
   @Override
   public List<TranslatedRecommendedItem> mostSimilarItems(String itemID, int howMany) throws TasteException {
     long longItemID = translateItem(itemID);
-    List<RecommendedItem> originals = delegate.mostSimilarItems(longItemID, howMany);
+    Collection<RecommendedItem> originals = delegate.mostSimilarItems(longItemID, howMany);
     return translate(originals);
   }
 
@@ -232,7 +232,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
                                                           String[] rescorerParams,
                                                           String contextUserID) throws TasteException {
     long[] longItemIDs = translateItems(itemIDs);
-    List<RecommendedItem> originals;
+    Collection<RecommendedItem> originals;
     if (contextUserID == null) {
       originals = delegate.mostSimilarItems(longItemIDs, howMany, rescorerParams, null);
     } else {
@@ -259,7 +259,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
       throws TasteException {
     long longUserID = translateUser(userID);
     long longItemID = translateItem(itemID);
-    List<RecommendedItem> originals = delegate.recommendedBecause(longUserID, longItemID, howMany);
+    Collection<RecommendedItem> originals = delegate.recommendedBecause(longUserID, longItemID, howMany);
     return translate(originals);
   }
 
@@ -283,7 +283,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
                                                               String contextUserID)
       throws TasteException {
     long[] longItemIDs = translateItems(itemIDs);
-    List<RecommendedItem> originals;
+    Collection<RecommendedItem> originals;
     if (contextUserID == null) {
       originals = delegate.recommendToAnonymous(longItemIDs, values, howMany, rescorerParams, null);
     } else {
@@ -321,7 +321,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
     try {
       BufferedReader buffered = closer.register(IOUtils.buffer(reader));      
       Writer out = closer.register(IOUtils.buildGZIPWriter(tempFile));
-      String line;
+      CharSequence line;
       while ((line = buffered.readLine()) != null) {
         Iterator<String> it = COMMA_SPLIT.split(line).iterator();
         String userIDString = it.next();
@@ -355,7 +355,7 @@ public final class TranslatingClientRecommender implements TranslatingRecommende
       throw new TasteException(ioe);
     } finally {
       try {
-        Closeables.close(reader, true);
+        reader.close();
       } catch (IOException e) {
         // Can't happen, continue
       }

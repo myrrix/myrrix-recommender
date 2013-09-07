@@ -16,6 +16,7 @@
 
 package net.myrrix.client;
 
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
@@ -51,7 +52,7 @@ public final class SimpleTest extends AbstractClientTest {
 
   @Test
   public void testIngest() throws Exception {
-    StringReader reader = new StringReader("0,1\n0,2,3.0\n");
+    Reader reader = new StringReader("0,1\n0,2,3.0\n");
 
     ClientRecommender client = getClient();
     client.ingest(reader);

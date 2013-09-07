@@ -18,7 +18,6 @@ package net.myrrix.web.servlets;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,7 +51,7 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-    String pathInfo = request.getPathInfo();
+    CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
     }
@@ -79,7 +78,7 @@ public final class SimilarityServlet extends AbstractMyrrixServlet {
     RescorerProvider rescorerProvider = getRescorerProvider();
     try {
       int howMany = getHowMany(request);
-      List<RecommendedItem> similar;
+      Iterable<RecommendedItem> similar;
       if (rescorerProvider == null) {
         similar = recommender.mostSimilarItems(itemIDSet.toArray(), howMany);
       } else {
