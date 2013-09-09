@@ -30,9 +30,9 @@ public final class TagsPREvaluationTest extends MyrrixTest {
 
   @Test
   public void testEval() throws Exception {
-    PrecisionRecallEvaluator evaluator = new PrecisionRecallEvaluator();
-    MyrrixIRStatistics stats = (MyrrixIRStatistics) evaluator.evaluate(new File("testdata/tagseval"));
-    log.info(stats.toString());
+    MyrrixIRStatistics stats = (MyrrixIRStatistics)
+        new PrecisionRecallEvaluator().evaluate(new File("testdata/tagseval"));
+    log.info(String.valueOf(stats));
     // Just checking it doesn't throw an error!
   }
 

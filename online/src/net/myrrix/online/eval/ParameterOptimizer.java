@@ -142,13 +142,17 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
         System.setProperty(property, propertyString);
         testResultLine.append('[').append(property).append('=').append(propertyString).append("] ");        
       }
-      
-      double testValue;
+
+      Number evaluatorResult;
       try {
-        testValue = evaluator.call().doubleValue();
+        evaluatorResult = evaluator.call();
       } catch (Exception e) {
         throw new ExecutionException(e);
       }
+      if (evaluatorResult == null) {
+        continue;
+      }
+      double testValue = evaluatorResult.doubleValue();
       testResultLine.append("= ").append(testValue);
       testResultLinesByValue.add(new Pair<Double,String>(testValue, testResultLine.toString()));
       log.info("{}", testResultLine);
@@ -232,10 +236,9 @@ public final class ParameterOptimizer implements Callable<Map<String,Number>> {
     Callable<Number> evaluator = new Callable<Number>() {
       @Override
       public Number call() throws IOException, TasteException, InterruptedException {
-        PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
-        MyrrixIRStatistics stats = 
-            (MyrrixIRStatistics) prEvaluator.evaluate(dataDir, 0.9, evaluationPercentage, null);
-        return stats.getMeanAveragePrecision();
+        MyrrixIRStatistics stats = (MyrrixIRStatistics)
+            new PrecisionRecallEvaluator().evaluate(dataDir, 0.9, evaluationPercentage, null);
+        return stats == null ? null : stats.getMeanAveragePrecision();
       }
     };
     

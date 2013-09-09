@@ -123,7 +123,9 @@ public abstract class AbstractEvaluator implements Evaluator {
 
       return evaluate(recommender, testData);
     } finally {
-      recommender.close();
+      if (recommender != null) {
+        recommender.close();
+      }
       IOUtils.deleteRecursively(trainingDataDir);
     }
   }

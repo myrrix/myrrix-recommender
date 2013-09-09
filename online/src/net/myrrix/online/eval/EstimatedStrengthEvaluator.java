@@ -82,9 +82,8 @@ public final class EstimatedStrengthEvaluator extends AbstractEvaluator {
   }
   
   public static void main(String[] args) throws Exception {
-    EstimatedStrengthEvaluator eval = new EstimatedStrengthEvaluator();
-    EvaluationResult result = eval.evaluate(new File(args[0]));
-    log.info(result.toString());
+    EvaluationResult result = new EstimatedStrengthEvaluator().evaluate(new File(args[0]));
+    log.info(String.valueOf(result));
   }
 
 }

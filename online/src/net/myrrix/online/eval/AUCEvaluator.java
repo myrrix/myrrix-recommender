@@ -141,9 +141,8 @@ public final class AUCEvaluator extends AbstractEvaluator {
   }
 
   public static void main(String[] args) throws Exception {
-    AUCEvaluator eval = new AUCEvaluator();
-    EvaluationResult result = eval.evaluate(new File(args[0]));
-    log.info(result.toString());
+    EvaluationResult result = new AUCEvaluator().evaluate(new File(args[0]));
+    log.info(String.valueOf(result));
   }
 
 }

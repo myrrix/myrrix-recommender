@@ -147,18 +147,22 @@ public final class PrecisionRecallEvaluator extends AbstractEvaluator {
       throw new TasteException(e.getCause());
     }
 
-    EvaluationResult result = new IRStatisticsImpl(precision.getResult(), 
-                                                   recall.getResult(), 
-                                                   ndcg.getResult(),
-                                                   meanAveragePrecision.getResult());
-    log.info(result.toString());
+    EvaluationResult result;
+    if (precision.getN() > 0) {
+      result = new IRStatisticsImpl(precision.getResult(),
+                                    recall.getResult(),
+                                    ndcg.getResult(),
+                                    meanAveragePrecision.getResult());
+    } else {
+      result = null;
+    }
+    log.info(String.valueOf(result));
     return result;
   }
   
   public static void main(String[] args) throws Exception {
-    PrecisionRecallEvaluator eval = new PrecisionRecallEvaluator();
-    EvaluationResult result = eval.evaluate(new File(args[0]));
-    log.info(result.toString());
+    EvaluationResult result = new PrecisionRecallEvaluator().evaluate(new File(args[0]));
+    log.info(String.valueOf(result));
   }
 
 }

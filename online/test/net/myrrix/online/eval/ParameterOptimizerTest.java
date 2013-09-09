@@ -46,15 +46,14 @@ public final class ParameterOptimizerTest extends MyrrixTest {
     Callable<Number> evaluator = new Callable<Number>() {
       @Override
       public Number call() throws IOException, TasteException, InterruptedException {
-        PrecisionRecallEvaluator prEvaluator = new PrecisionRecallEvaluator();
-        MyrrixIRStatistics stats = 
-            (MyrrixIRStatistics) prEvaluator.evaluate(new File("testdata/grouplens100K"), 0.9, 0.5, null);
-        return stats.getMeanAveragePrecision();
+        MyrrixIRStatistics stats = (MyrrixIRStatistics)
+            new PrecisionRecallEvaluator().evaluate(new File("testdata/grouplens100K"), 0.9, 0.5, null);
+        return stats == null ? null : stats.getMeanAveragePrecision();
       }
     };
     ParameterOptimizer optimizer = new ParameterOptimizer(propertyRanges, evaluator);
     Map<String,Number> parameterValues = optimizer.findGoodParameterValues();
-    log.info(parameterValues.toString());
+    log.info(String.valueOf(parameterValues));
     assertEquals(0.1, parameterValues.get("model.als.lambda").doubleValue());
     assertEquals(23, parameterValues.get("model.features").intValue());
   }

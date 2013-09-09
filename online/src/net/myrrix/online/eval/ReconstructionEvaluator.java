@@ -135,9 +135,8 @@ public final class ReconstructionEvaluator {
   }
 
   public static void main(String[] args) throws Exception {
-    ReconstructionEvaluator eval = new ReconstructionEvaluator();
-    EvaluationResult result = eval.evaluate(new File(args[0]));
-    log.info(result.toString());
+    EvaluationResult result = new ReconstructionEvaluator().evaluate(new File(args[0]));
+    log.info(String.valueOf(result));
   }
 
 }

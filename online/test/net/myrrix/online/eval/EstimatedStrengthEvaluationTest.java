@@ -35,9 +35,8 @@ public final class EstimatedStrengthEvaluationTest extends MyrrixTest {
 
   @Test
   public void testEval() throws Exception {
-    EstimatedStrengthEvaluator evaluator = new EstimatedStrengthEvaluator();
-    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"));
-    log.info(stats.toString());
+    EvaluationResult stats = new EstimatedStrengthEvaluator().evaluate(new File("testdata/grouplens10M"));
+    log.info(String.valueOf(stats));
     assertTrue(stats.getScore() < 0.77);
   }
 

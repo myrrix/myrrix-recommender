@@ -35,9 +35,8 @@ public final class ReconstructionEvaluationTest extends MyrrixTest {
 
   @Test
   public void testEval() throws Exception {
-    ReconstructionEvaluator evaluator = new ReconstructionEvaluator();
-    EvaluationResult stats = evaluator.evaluate(new File("testdata/grouplens10M"));
-    log.info(stats.toString());
+    EvaluationResult stats = new ReconstructionEvaluator().evaluate(new File("testdata/grouplens10M"));
+    log.info(String.valueOf(stats));
     assertTrue(stats.getScore() < 0.41);
   }
 
