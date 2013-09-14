@@ -58,7 +58,6 @@ import com.google.common.collect.Maps;
 import com.google.common.net.HostAndPort;
 import com.google.common.net.HttpHeaders;
 import com.google.common.net.MediaType;
-import com.google.common.net.UrlEscapers;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 import org.apache.mahout.cf.taste.common.NoSuchItemException;
@@ -244,7 +243,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     if (contextPath != null) {
       path = '/' + contextPath + path;
     }
-    String protocol = config.isSecure() ? "https" : "http";    
+    String protocol = config.isSecure() ? "https" : "http";
     URL url;
     try {
       url = new URL(protocol, replica.getHostText(), replica.getPort(), path);
@@ -322,7 +321,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   private void doSetOrRemovePreference(long userID, long itemID, float value, boolean set) throws TasteException {
     doSetOrRemove("/pref/" + userID + '/' + itemID, userID, value, set);
   }
-  
+
   private void doSetOrRemove(String path, long unnormalizedID, float value, boolean set) throws TasteException {
     boolean sendValue = value != 1.0f;
     Map<String,String> requestProperties;
@@ -358,7 +357,7 @@ public final class ClientRecommender implements MyrrixRecommender {
         }
         return;
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", path, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", path, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", path, replica, ioe.toString());
@@ -379,10 +378,9 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   @Override
   public void setUserTag(long userID, String tag, float value) throws TasteException {
-    Preconditions.checkNotNull(tag);    
+    Preconditions.checkNotNull(tag);
     Preconditions.checkArgument(!tag.isEmpty());
-    doSetOrRemove("/tag/user/" + userID + '/' + UrlEscapers.urlPathSegmentEscaper().escape(tag),
-                  userID, value, true);
+    doSetOrRemove("/tag/user/" + userID + '/' + IOUtils.urlEncode(tag), userID, value, true);
   }
 
   @Override
@@ -394,7 +392,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   public void setItemTag(String tag, long itemID, float value) throws TasteException {
     setItemTag(tag, itemID, value, null);
   }
-  
+
   /**
    * Like {@link #setItemTag(String, long, float)}, but allows caller to specify the user for
    * which the request is being made. This information does not directly affect the computation,
@@ -403,12 +401,11 @@ public final class ClientRecommender implements MyrrixRecommender {
    * request can take into account all the latest information from the user, including a very new
    * item like {@code itemID}.
    */
-  public void setItemTag(String tag, long itemID, float value, Long contextUserID) throws TasteException {  
+  public void setItemTag(String tag, long itemID, float value, Long contextUserID) throws TasteException {
     Preconditions.checkNotNull(tag);
     Preconditions.checkArgument(!tag.isEmpty());
-    long idToPartitionOn = contextUserID == null ? itemID : contextUserID;    
-    doSetOrRemove("/tag/item/" + itemID + '/' + UrlEscapers.urlPathSegmentEscaper().escape(tag),
-                  idToPartitionOn, value, true);
+    long idToPartitionOn = contextUserID == null ? itemID : contextUserID;
+    doSetOrRemove("/tag/item/" + itemID + '/' + IOUtils.urlEncode(tag), idToPartitionOn, value, true);
   }
 
   /**
@@ -434,7 +431,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     for (long itemID : itemIDs) {
       urlPath.append('/').append(itemID);
     }
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(userID)) {
       HttpURLConnection connection = null;
@@ -458,7 +455,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -471,19 +468,19 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     throw savedException;
   }
-  
+
   @Override
   public float estimateForAnonymous(long toItemID, long[] itemIDs) throws TasteException {
     return estimateForAnonymous(toItemID, itemIDs, null);
   }
-  
+
   @Override
   public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values) throws TasteException {
     return estimateForAnonymous(toItemID, itemIDs, values, null);
   }
-  
-  public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values, Long contextUserID) 
-      throws TasteException {  
+
+  public float estimateForAnonymous(long toItemID, long[] itemIDs, float[] values, Long contextUserID)
+      throws TasteException {
     Preconditions.checkArgument(values == null || values.length == itemIDs.length,
                                 "Number of values doesn't match number of items");
     StringBuilder urlPath = new StringBuilder(32);
@@ -501,7 +498,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     // requests related to that user. Otherwise just partition on the "to" item ID, which is at least
     // deterministic.
     long idToPartitionOn = contextUserID == null ? toItemID : contextUserID;
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
       HttpURLConnection connection = null;
@@ -523,7 +520,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -584,7 +581,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -658,7 +655,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -720,7 +717,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -790,7 +787,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
     // deterministic.
     long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
       HttpURLConnection connection = null;
@@ -807,7 +804,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -848,13 +845,13 @@ public final class ClientRecommender implements MyrrixRecommender {
     for (long itemID : itemIDs) {
       urlPath.append('/').append(itemID);
     }
-    
+
     // Requests are typically partitioned by user, but this request does not directly depend on a user.
     // If a user ID is supplied anyway, use it for partitioning since it will follow routing for other
     // requests related to that user. Otherwise just partition on (first0 item ID, which is at least
     // deterministic.
     long idToPartitionOn = contextUserID == null ? itemIDs[0] : contextUserID;
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(idToPartitionOn)) {
       HttpURLConnection connection = null;
@@ -880,7 +877,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -915,7 +912,7 @@ public final class ClientRecommender implements MyrrixRecommender {
   @Override
   public List<RecommendedItem> recommendedBecause(long userID, long itemID, int howMany) throws TasteException {
     String urlPath = "/because/" + userID + '/' + itemID + "?howMany=" + howMany;
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(userID)) {
       HttpURLConnection connection = null;
@@ -938,7 +935,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -1022,7 +1019,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private HttpURLConnection buildConnectionToAReplica(int partition) throws TasteException {
     String urlPath = "/ingest";
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : partitions.get(partition)) {
       HttpURLConnection connection = null;
@@ -1065,7 +1062,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private void refreshPartition(int partition) {
     String urlPath = "/refresh";
-    
+
     for (HostAndPort replica : partitions.get(partition)) {
       HttpURLConnection connection = null;
       try {
@@ -1283,7 +1280,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private boolean isPartitionReady(int partition) throws TasteException {
     String urlPath = "/ready";
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : partitions.get(partition)) {
       HttpURLConnection connection = null;
@@ -1298,7 +1295,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -1318,14 +1315,14 @@ public final class ClientRecommender implements MyrrixRecommender {
       Thread.sleep(1000L);
     }
   }
-  
+
   @Override
   public boolean await(long time, TimeUnit unit) throws TasteException, InterruptedException {
     Preconditions.checkArgument(time >= 0L, "time must be positive: {}", time);
     Preconditions.checkNotNull(unit);
     long waitForMS = TimeUnit.MILLISECONDS.convert(time, unit);
     long waitIntervalMS = FastMath.min(1000L, waitForMS);
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    Stopwatch stopwatch = new Stopwatch().start();
     while (!isReady()) {
       if (stopwatch.elapsed(TimeUnit.MILLISECONDS) > waitForMS) {
         return false;
@@ -1360,7 +1357,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private void getAllIDsFromPartition(int partition, boolean user, FastIDSet result) throws TasteException {
     String urlPath = '/' + (user ? "user" : "item") + "/allIDs";
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : partitions.get(partition)) {
       HttpURLConnection connection = null;
@@ -1376,7 +1373,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -1414,7 +1411,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private int getNumClusters(boolean user) throws TasteException {
     String urlPath = '/' + (user ? "user" : "item") + "/clusters/count";
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(0L)) {
       HttpURLConnection connection = null;
@@ -1427,7 +1424,7 @@ public final class ClientRecommender implements MyrrixRecommender {
               return Integer.parseInt(reader.readLine());
             } finally {
               reader.close();
-            }          
+            }
           case HttpURLConnection.HTTP_NOT_IMPLEMENTED:
             throw new UnsupportedOperationException();
           case HttpURLConnection.HTTP_UNAVAILABLE:
@@ -1436,7 +1433,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -1462,7 +1459,7 @@ public final class ClientRecommender implements MyrrixRecommender {
 
   private FastIDSet getCluster(int n, boolean user) throws TasteException {
     String urlPath = '/' + (user ? "user" : "item") + "/clusters/" + n;
-    
+
     TasteException savedException = null;
     for (HostAndPort replica : choosePartitionAndReplicas(0L)) {
       HttpURLConnection connection = null;
@@ -1480,7 +1477,7 @@ public final class ClientRecommender implements MyrrixRecommender {
             throw new TasteException(connection.getResponseCode() + " " + connection.getResponseMessage());
         }
       } catch (TasteException te) {
-        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());        
+        log.info("Can't access {} at {}: ({})", urlPath, replica, te.toString());
         savedException = te;
       } catch (IOException ioe) {
         log.info("Can't access {} at {}: ({})", urlPath, replica, ioe.toString());
@@ -1504,7 +1501,7 @@ public final class ClientRecommender implements MyrrixRecommender {
     }
     if (rescorerParams != null) {
       for (String rescorerParam : rescorerParams) {
-        urlPath.append("&rescorerParams=").append(UrlEscapers.urlPathSegmentEscaper().escape(rescorerParam));
+        urlPath.append("&rescorerParams=").append(IOUtils.urlEncode(rescorerParam));
       }
     }
   }

@@ -52,7 +52,7 @@ public final class LoadTest extends AbstractClientTest {
   public void testLoad() throws Exception {
     ClientRecommender client = getClient();
     LoadRunner runner = new LoadRunner(client, getTestTempDir(), 5000);
-    Stopwatch stopwatch = Stopwatch.createStarted();
+    Stopwatch stopwatch = new Stopwatch().start();
     runner.runLoad();
     assertTrue(stopwatch.elapsed(TimeUnit.MILLISECONDS) < 40 * runner.getSteps());
   }

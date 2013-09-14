@@ -29,8 +29,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.zip.GZIPInputStream;
@@ -55,6 +57,20 @@ import net.myrrix.common.ClassUtils;
 public final class IOUtils {
 
   private IOUtils() {
+  }
+
+  /**
+   * @param raw string to URL-encode
+   * @return the URL encoding of the argument, using the UTF-8 encoding if necessary to interpret
+   *  characters as bytes
+   */
+  public static String urlEncode(String raw) {
+    try {
+      return URLEncoder.encode(raw, Charsets.UTF_8.name());
+    } catch (UnsupportedEncodingException uee) {
+      // Can't happen for UTF-8
+      throw new AssertionError(uee);
+    }
   }
 
   /**
