@@ -66,6 +66,10 @@
           <artifactId>mahout-math</artifactId>
         </exclusion>
         <exclusion>
+          <groupId>org.apache.mahout.commons</groupId>
+          <artifactId>commons-cli</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-core</artifactId>
         </exclusion>
@@ -78,10 +82,6 @@
           <artifactId>jackson-mapper-asl</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.uncommons.watchmaker</groupId>
-          <artifactId>watchmaker-framework</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>com.thoughtworks.xstream</groupId>
           <artifactId>xstream</artifactId>
         </exclusion>
@@ -91,19 +91,15 @@
         </exclusion>
         <exclusion>
           <groupId>org.apache.lucene</groupId>
-          <artifactId>lucene-analyzers</artifactId>
+          <artifactId>lucene-analyzers-common</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.mahout.commons</groupId>
-          <artifactId>commons-cli</artifactId>
+          <groupId>org.apache.mrunit</groupId>
+          <artifactId>mrunit</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-math</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-lang</groupId>
-          <artifactId>commons-lang</artifactId>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
