@@ -42,7 +42,10 @@ import net.myrrix.common.random.RandomUtils;
  */
 public final class FastByIDFloatMap implements Serializable, Cloneable {
 
-  private static final float DEFAULT_LOAD_FACTOR = 1.5f;
+  private static final double DEFAULT_LOAD_FACTOR = 1.25;
+  private static final int MAX_SIZE =
+      (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / DEFAULT_LOAD_FACTOR);
+
 
   /** Dummy object used to represent a key that has been removed. */
   private static final long REMOVED = Long.MAX_VALUE;
@@ -52,7 +55,6 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
   // For faster access:
   long[] keys;
   float[] values;
-  private final float loadFactor;
   private int numEntries;
   private int numSlotsUsed;
 
@@ -62,16 +64,9 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
   }
 
   public FastByIDFloatMap(int size) {
-    this(size, DEFAULT_LOAD_FACTOR);
-  }
-
-  public FastByIDFloatMap(int size, float loadFactor) {
     Preconditions.checkArgument(size >= 0, "size must be at least 0");
-    Preconditions.checkArgument(loadFactor >= 1.0f, "loadFactor must be at least 1.0");
-    this.loadFactor = loadFactor;
-    int max = (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / loadFactor);
-    Preconditions.checkArgument(size < max, "size must be less than " + max);
-    int hashSize = RandomUtils.nextTwinPrime((int) (loadFactor * size));
+    Preconditions.checkArgument(size < MAX_SIZE, "size must be less than " + MAX_SIZE);
+    int hashSize = RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * size) + 1);
     keys = new long[hashSize];
     Arrays.fill(keys, KEY_NULL);
     values = new float[hashSize];
@@ -157,9 +152,9 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
   public void put(long key, float value) {
     Preconditions.checkArgument(key != KEY_NULL && key != REMOVED);
     // If less than half the slots are open, let's clear it up
-    if (numSlotsUsed * loadFactor >= keys.length) {
+    if (numSlotsUsed * DEFAULT_LOAD_FACTOR >= keys.length) {
       // If over half the slots used are actual entries, let's grow
-      if (numEntries * loadFactor >= numSlotsUsed) {
+      if (numEntries * DEFAULT_LOAD_FACTOR >= numSlotsUsed) {
         growAndRehash();
       } else {
         // Otherwise just rehash to clear REMOVED entries and don't grow
@@ -209,12 +204,12 @@ public final class FastByIDFloatMap implements Serializable, Cloneable {
   }
 
   public void rehash() {
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * numEntries)));
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * numEntries) + 1));
   }
 
   private void growAndRehash() {
-    Preconditions.checkState(keys.length * loadFactor < RandomUtils.MAX_INT_SMALLER_TWIN_PRIME, "Can't grow any more");
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * keys.length)));
+    Preconditions.checkState(keys.length * DEFAULT_LOAD_FACTOR < RandomUtils.MAX_INT_SMALLER_TWIN_PRIME, "Can't grow any more");
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * keys.length) + 1));
   }
 
   private void rehash(int newHashSize) {

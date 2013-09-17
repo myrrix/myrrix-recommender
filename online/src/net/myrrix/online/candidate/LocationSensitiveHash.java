@@ -120,7 +120,7 @@ public final class LocationSensitiveHash implements CandidateFilter {
 
     meanVector = findMean(Y, features);
 
-    buckets = new FastByIDMap<long[]>(1000, 1.25f);
+    buckets = new FastByIDMap<long[]>(1000);
     int count = 0;
     int maxBucketSize = 0;
     for (FastByIDMap.MapEntry<float[]> entry : Y.entrySet()) {

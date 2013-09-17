@@ -126,7 +126,7 @@ final class GenerationLoader {
   }
   
   private static FastIDSet keysToSet(FastByIDMap<?> map) {
-    FastIDSet result = new FastIDSet(map.size(), 1.25f);
+    FastIDSet result = new FastIDSet(map.size());
     LongPrimitiveIterator it = map.keySetIterator();
     while (it.hasNext()) {
       result.add(it.nextLong());

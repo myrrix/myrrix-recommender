@@ -90,15 +90,6 @@ public final class FastByIDMapTest extends MyrrixTest {
     assertNull(map.get(500000L));
     assertEquals("bang", map.get(47L));
   }
-  
-  @Test
-  public void testGrow() {
-    FastByIDMap<String> map = new FastByIDMap<String>(1,1);
-    map.put(500000L, "alpha");
-    map.put(47L, "bang");
-    assertNull(map.get(500000L));
-    assertEquals("bang", map.get(47L));
-  }
    
   @Test
   public void testVersusHashMap() {

@@ -62,10 +62,10 @@ public final class AUCEvaluator extends AbstractEvaluator {
   public EvaluationResult evaluate(MyrrixRecommender recommender,
                                    RescorerProvider provider, // ignored
                                    Multimap<Long,RecommendedItem> testData) throws TasteException {
-    FastByIDMap<FastIDSet> converted = new FastByIDMap<FastIDSet>(testData.size(), 1.25f);
+    FastByIDMap<FastIDSet> converted = new FastByIDMap<FastIDSet>(testData.size());
     for (long userID : testData.keySet()) {
       Collection<RecommendedItem> userTestData = testData.get(userID);
-      FastIDSet itemIDs = new FastIDSet(userTestData.size(), 1.25f);
+      FastIDSet itemIDs = new FastIDSet(userTestData.size());
       converted.put(userID, itemIDs);
       for (RecommendedItem datum : userTestData) {
         itemIDs.add(datum.getItemID());

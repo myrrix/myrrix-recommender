@@ -309,12 +309,12 @@ public final class DelegateGenerationManager implements GenerationManager {
             FastByIDMap<FastIDSet> newKnownItemsIDs =
                 Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))
                     ? null
-                    : new FastByIDMap<FastIDSet>(10000, 1.25f);
+                    : new FastByIDMap<FastIDSet>(10000);
             theCurrentGeneration = new Generation(newKnownItemsIDs,
-                                                  new FastByIDMap<float[]>(10000, 1.25f),
-                                                  new FastByIDMap<float[]>(10000, 1.25f),
-                                                  new FastIDSet(1000, 1.25f),
-                                                  new FastIDSet(1000, 1.25f));
+                                                  new FastByIDMap<float[]>(10000),
+                                                  new FastByIDMap<float[]>(10000),
+                                                  new FastIDSet(1000),
+                                                  new FastIDSet(1000));
           }
           
             
@@ -324,12 +324,12 @@ public final class DelegateGenerationManager implements GenerationManager {
           if (Boolean.valueOf(System.getProperty(Generation.NO_KNOWN_ITEMS_KEY))) {
             knownItemIDs = null;
           } else {
-            knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
+            knownItemIDs = new FastByIDMap<FastIDSet>(10000);
           }
-          FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-          FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-          FastIDSet itemTagIDs = new FastIDSet(1000, 1.25f);
-          FastIDSet userTagIDs = new FastIDSet(1000, 1.25f);
+          FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000);
+          FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000);
+          FastIDSet itemTagIDs = new FastIDSet(1000);
+          FastIDSet userTagIDs = new FastIDSet(1000);
           InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, itemTagIDs, userTagIDs, inputDir);
       
           if (!RbyRow.isEmpty() && !RbyColumn.isEmpty()) {

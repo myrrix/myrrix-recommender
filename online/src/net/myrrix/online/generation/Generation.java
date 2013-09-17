@@ -83,7 +83,7 @@ public final class Generation {
   public Generation(FastByIDMap<FastIDSet> knownItemIDs, 
                     FastByIDMap<float[]> X, 
                     FastByIDMap<float[]> Y) {
-    this(knownItemIDs, X, Y, new FastIDSet(1000, 1.25f), new FastIDSet(1000, 1.25f));
+    this(knownItemIDs, X, Y, new FastIDSet(1000), new FastIDSet(1000));
   }
 
   public Generation(FastByIDMap<FastIDSet> knownItemIDs, 

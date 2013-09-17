@@ -65,11 +65,11 @@ public final class UnreducedModel {
     Preconditions.checkArgument(inputDir.exists());
     Preconditions.checkArgument(inputDir.isDirectory());
     
-    FastByIDMap<FastIDSet> knownItemIDs = new FastByIDMap<FastIDSet>(10000, 1.25f);
-    FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-    FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000, 1.25f);
-    FastIDSet itemTagIDs = new FastIDSet(1000, 1.25f);
-    FastIDSet userTagIDs = new FastIDSet(1000, 1.25f);
+    FastByIDMap<FastIDSet> knownItemIDs = new FastByIDMap<FastIDSet>(10000);
+    FastByIDMap<FastByIDFloatMap> RbyRow = new FastByIDMap<FastByIDFloatMap>(10000);
+    FastByIDMap<FastByIDFloatMap> RbyColumn = new FastByIDMap<FastByIDFloatMap>(10000);
+    FastIDSet itemTagIDs = new FastIDSet(1000);
+    FastIDSet userTagIDs = new FastIDSet(1000);
     InputFilesReader.readInputFiles(knownItemIDs, RbyRow, RbyColumn, itemTagIDs, userTagIDs, inputDir);
 
     int numUsers = RbyRow.size();

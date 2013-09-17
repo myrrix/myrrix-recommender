@@ -38,14 +38,15 @@ import net.myrrix.common.random.RandomUtils;
  */
 public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> {
   
-  private static final float DEFAULT_LOAD_FACTOR = 1.5f;
-  
+  private static final double DEFAULT_LOAD_FACTOR = 1.25;
+  private static final int MAX_SIZE =
+      (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / DEFAULT_LOAD_FACTOR);
+
   /** Dummy object used to represent a key that has been removed. */
   private static final long REMOVED = Long.MAX_VALUE;
   private static final long NULL = Long.MIN_VALUE;
   
   private long[] keys;
-  private final float loadFactor;
   private int numEntries;
   private int numSlotsUsed;
   
@@ -60,16 +61,9 @@ public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> 
   }
 
   public FastIDSet(int size) {
-    this(size, DEFAULT_LOAD_FACTOR);
-  }
-
-  public FastIDSet(int size, float loadFactor) {
     Preconditions.checkArgument(size >= 0, "size must be at least 0");
-    Preconditions.checkArgument(loadFactor >= 1.0f, "loadFactor must be at least 1.0");
-    this.loadFactor = loadFactor;
-    int max = (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / loadFactor);
-    Preconditions.checkArgument(size < max, "size must be less than %d", max);
-    int hashSize = RandomUtils.nextTwinPrime((int) (loadFactor * size));
+    Preconditions.checkArgument(size < MAX_SIZE, "size must be less than %d", MAX_SIZE);
+    int hashSize = RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * size) + 1);
     keys = new long[hashSize];
     Arrays.fill(keys, NULL);
   }
@@ -133,9 +127,9 @@ public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> 
     Preconditions.checkArgument(key != NULL && key != REMOVED);
 
     // If less than half the slots are open, let's clear it up
-    if (numSlotsUsed * loadFactor >= keys.length) {
+    if (numSlotsUsed * DEFAULT_LOAD_FACTOR >= keys.length) {
       // If over half the slots used are actual entries, let's grow
-      if (numEntries * loadFactor >= numSlotsUsed) {
+      if (numEntries * DEFAULT_LOAD_FACTOR >= numSlotsUsed) {
         growAndRehash();
       } else {
         // Otherwise just rehash to clear REMOVED entries and don't grow
@@ -246,14 +240,13 @@ public final class FastIDSet implements Serializable, Cloneable, Iterable<Long> 
   }
   
   private void growAndRehash() {
-    if (keys.length * loadFactor >= RandomUtils.MAX_INT_SMALLER_TWIN_PRIME) {
-      throw new IllegalStateException("Can't grow any more");
-    }
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * keys.length)));
+    Preconditions.checkState(keys.length * DEFAULT_LOAD_FACTOR < RandomUtils.MAX_INT_SMALLER_TWIN_PRIME,
+                             "Can't grow any more");
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * keys.length) + 1));
   }
   
   public void rehash() {
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * numEntries)));
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * numEntries) + 1));
   }
   
   private void rehash(int newHashSize) {

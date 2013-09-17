@@ -534,7 +534,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
 
     float[] anonymousUserFeatures = buildAnonymousUserFeatures(itemIDs, values);
 
-    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length, 1.25f);
+    FastIDSet userKnownItemIDs = new FastIDSet(itemIDs.length);
     for (long itemID : itemIDs) {
       userKnownItemIDs.add(itemID);
     }
@@ -1354,7 +1354,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
       }
       FastByIDMap<float[]> toFeatures;
       synchronized (userKnownItemIDs) {
-        toFeatures = new FastByIDMap<float[]>(userKnownItemIDs.size(), 1.25f);
+        toFeatures = new FastByIDMap<float[]>(userKnownItemIDs.size());
         LongPrimitiveIterator it = userKnownItemIDs.iterator();
         while (it.hasNext()) {
           long fromItemID = it.nextLong();
@@ -1420,7 +1420,7 @@ public final class ServerRecommender implements MyrrixRecommender, Closeable {
   private static FastIDSet getIDsFromKeys(FastByIDMap<float[]> map, Lock readLock, FastIDSet tagIDs) {
     readLock.lock();
     try {
-      FastIDSet ids = new FastIDSet(map.size(), 1.25f);
+      FastIDSet ids = new FastIDSet(map.size());
       LongPrimitiveIterator it = map.keySetIterator();
       while (it.hasNext()) {
         long id = it.nextLong();

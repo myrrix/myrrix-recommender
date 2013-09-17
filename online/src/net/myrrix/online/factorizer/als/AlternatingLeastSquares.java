@@ -176,7 +176,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
   @Override
   public Void call() throws ExecutionException, InterruptedException {
 
-    X = new FastByIDMap<float[]>(RbyRow.size(), 1.25f);
+    X = new FastByIDMap<float[]>(RbyRow.size());
 
     boolean randomY = previousY == null || previousY.isEmpty();
     Y = constructInitialY(previousY);
@@ -269,7 +269,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
     if (previousY == null || previousY.isEmpty()) {
       // Common case: have to start from scratch
       log.info("Starting from new, random Y matrix");      
-      randomY = new FastByIDMap<float[]>(RbyColumn.size(), 1.25f);
+      randomY = new FastByIDMap<float[]>(RbyColumn.size());
       
     } else {
       
@@ -277,7 +277,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
       if (oldFeatureCount > features) {
         // Fewer features, use some dimensions from prior larger number of features as-is
         log.info("Feature count has decreased to {}, projecting down previous generation's Y matrix", features);                
-        randomY = new FastByIDMap<float[]>(previousY.size(), 1.25f);
+        randomY = new FastByIDMap<float[]>(previousY.size());
         for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
           float[] oldLargerVector = entry.getValue();
           float[] newSmallerVector = new float[features];
@@ -288,7 +288,7 @@ public final class AlternatingLeastSquares implements MatrixFactorizer {
         
       } else if (oldFeatureCount < features) {
         log.info("Feature count has increased to {}, using previous generation's Y matrix as subspace", features);        
-        randomY = new FastByIDMap<float[]>(previousY.size(), 1.25f);
+        randomY = new FastByIDMap<float[]>(previousY.size());
         for (FastByIDMap.MapEntry<float[]> entry : previousY.entrySet()) {
           float[] oldSmallerVector = entry.getValue();
           float[] newLargerVector = new float[features];

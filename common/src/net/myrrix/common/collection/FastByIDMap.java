@@ -43,9 +43,10 @@ import net.myrrix.common.random.RandomUtils;
  */
 public final class FastByIDMap<V> implements Serializable, Cloneable {
   
-  public static final int NO_MAX_SIZE = Integer.MAX_VALUE;
-  private static final float DEFAULT_LOAD_FACTOR = 1.5f;
-  
+  private static final double DEFAULT_LOAD_FACTOR = 1.25;
+  private static final int MAX_SIZE =
+      (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / DEFAULT_LOAD_FACTOR);
+
   /** Dummy object used to represent a key that has been removed. */
   private static final long REMOVED = Long.MAX_VALUE;
   private static final long NULL = Long.MIN_VALUE;
@@ -53,59 +54,33 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
   // For faster access
   long[] keys;
   V[] values;
-  private final float loadFactor;
   private int numEntries;
   private int numSlotsUsed;
-  private final int maxSize;
-  private BitSet recentlyAccessed;
-  private final boolean countingAccesses;
-  
+
   /** Creates a new  with default capacity. */
   public FastByIDMap() {
-    this(2, NO_MAX_SIZE);
-  }
-  
-  public FastByIDMap(int size) {
-    this(size, NO_MAX_SIZE);
-  }
-
-  public FastByIDMap(int size, float loadFactor) {
-    this(size, NO_MAX_SIZE, loadFactor);
-  }
-
-  public FastByIDMap(int size, int maxSize) {
-    this(size, maxSize, DEFAULT_LOAD_FACTOR);
+    this(2);
   }
 
   /**
    * Creates a new  whose capacity can accommodate the given number of entries without
    * rehash.
-   * 
+   *
    * @param size desired capacity
-   * @param maxSize max capacity
-   * @param loadFactor ratio of internal hash table size to current size
    * @throws IllegalArgumentException if size is less than 0, maxSize is less than 1
    *  or at least half of {@link RandomUtils#MAX_INT_SMALLER_TWIN_PRIME}, or
    *  loadFactor is less than 1
    */
-  public FastByIDMap(int size, int maxSize, float loadFactor) {
+  public FastByIDMap(int size) {
     Preconditions.checkArgument(size >= 0, "size must be at least 0");
-    Preconditions.checkArgument(loadFactor >= 1.0f, "loadFactor must be at least 1.0");
-    this.loadFactor = loadFactor;
-    int max = (int) (RandomUtils.MAX_INT_SMALLER_TWIN_PRIME / loadFactor);
-    Preconditions.checkArgument(size < max, "size must be less than " + max);
-    Preconditions.checkArgument(maxSize >= 1, "maxSize must be at least 1");
-    int hashSize = RandomUtils.nextTwinPrime((int) (loadFactor * size));
+    Preconditions.checkArgument(size < MAX_SIZE, "size must be less than " + MAX_SIZE);
+    int hashSize = RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * size) + 1);
     keys = new long[hashSize];
     Arrays.fill(keys, NULL);
 
     @SuppressWarnings("unchecked")
     V[] theValues = (V[]) new Object[hashSize];
     values = theValues;
-
-    this.maxSize = maxSize;
-    this.countingAccesses = maxSize != Integer.MAX_VALUE;
-    this.recentlyAccessed = countingAccesses ? new BitSet(hashSize) : null;
   }
   
   /**
@@ -156,9 +131,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       return null;
     }
     int index = find(key);
-    if (countingAccesses) {
-      recentlyAccessed.set(index);
-    }
     return values[index];
   }
   
@@ -187,12 +159,11 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
   }
   
   public V put(long key, V value) {
-    Preconditions.checkArgument(key != NULL && key != REMOVED);
-    Preconditions.checkArgument(value != null);
+    Preconditions.checkArgument(key != NULL && key != REMOVED && value != null);
     // If less than half the slots are open, let's clear it up
-    if (numSlotsUsed * loadFactor >= keys.length) {
+    if (numSlotsUsed * DEFAULT_LOAD_FACTOR >= keys.length) {
       // If over half the slots used are actual entries, let's grow
-      if (numEntries * loadFactor >= numSlotsUsed) {
+      if (numEntries * DEFAULT_LOAD_FACTOR >= numSlotsUsed) {
         growAndRehash();
       } else {
         // Otherwise just rehash to clear REMOVED entries and don't grow
@@ -207,11 +178,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       values[index] = value;
       return oldValue;
     }
-    // If size is limited,
-    if (countingAccesses && numEntries >= maxSize) {
-      // and we're too large, clear some old-ish entry
-      clearStaleEntry(index);
-    }
     keys[index] = key;
     values[index] = value;
     numEntries++;
@@ -219,29 +185,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
       numSlotsUsed++;
     }
     return null;
-  }
-  
-  private void clearStaleEntry(int index) {
-    while (true) {
-      long currentKey;
-      do {
-        if (index == 0) {
-          index = keys.length - 1;
-        } else {
-          index--;
-        }
-        currentKey = keys[index];
-      } while (currentKey == NULL || currentKey == REMOVED);
-      if (recentlyAccessed.get(index)) {
-        recentlyAccessed.clear(index);
-      } else {
-        break;
-      }
-    }
-    // Delete the entry
-    keys[index] = REMOVED;
-    numEntries--;
-    values[index] = null;
   }
   
   public V remove(long key) {
@@ -267,9 +210,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     numSlotsUsed = 0;
     Arrays.fill(keys, NULL);
     Arrays.fill(values, null);
-    if (countingAccesses) {
-      recentlyAccessed.clear();
-    }
   }
   
   public LongPrimitiveIterator keySetIterator() {
@@ -285,12 +225,13 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
   }
   
   public void rehash() {
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * numEntries)));
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * numEntries) + 1));
   }
   
   private void growAndRehash() {
-    Preconditions.checkState(keys.length * loadFactor < RandomUtils.MAX_INT_SMALLER_TWIN_PRIME, "Can't grow any more");
-    rehash(RandomUtils.nextTwinPrime((int) (loadFactor * keys.length)));
+    Preconditions.checkState(keys.length * DEFAULT_LOAD_FACTOR < RandomUtils.MAX_INT_SMALLER_TWIN_PRIME,
+                             "Can't grow any more");
+    rehash(RandomUtils.nextTwinPrime((int) (DEFAULT_LOAD_FACTOR * keys.length) + 1));
   }
   
   private void rehash(int newHashSize) {
@@ -298,9 +239,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     V[] oldValues = values;
     numEntries = 0;
     numSlotsUsed = 0;
-    if (countingAccesses) {
-      recentlyAccessed = new BitSet(newHashSize);
-    }
     keys = new long[newHashSize];
     Arrays.fill(keys, NULL);
 
@@ -339,7 +277,6 @@ public final class FastByIDMap<V> implements Serializable, Cloneable {
     }
     clone.keys = keys.clone();
     clone.values = values.clone();
-    clone.recentlyAccessed = countingAccesses ? new BitSet(keys.length) : null;
     return clone;
   }
   

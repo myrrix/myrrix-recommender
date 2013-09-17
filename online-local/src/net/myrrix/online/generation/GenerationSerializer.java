@@ -131,11 +131,11 @@ public final class GenerationSerializer implements Serializable {
     if (knownItemIDsCount == NULL_COUNT) { // Want to be able to record 'null'
       return null;
     }
-    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount, 1.25f);
+    FastByIDMap<FastIDSet> newKnownItemIDs = new FastByIDMap<FastIDSet>(knownItemIDsCount);
     for (int i = 0; i < knownItemIDsCount; i++) {
       long id = in.readLong();
       int setCount = in.readInt();
-      FastIDSet set = new FastIDSet(setCount, 1.25f);
+      FastIDSet set = new FastIDSet(setCount);
       for (int j = 0; j < setCount; j++) {
         set.add(in.readLong());
       }
@@ -166,7 +166,7 @@ public final class GenerationSerializer implements Serializable {
    */
   private static FastByIDMap<float[]> readMatrix(ObjectInputStream in) throws IOException {
     int count = in.readInt();
-    FastByIDMap<float[]> matrix = new FastByIDMap<float[]>(count, 1.25f);
+    FastByIDMap<float[]> matrix = new FastByIDMap<float[]>(count);
     for (int i = 0; i < count; i++) {
       long id = in.readLong();
       float[] features = new float[in.readInt()];
@@ -202,7 +202,7 @@ public final class GenerationSerializer implements Serializable {
   
   private static FastIDSet readIDSet(ObjectInputStream in) throws IOException {
     int count = in.readInt();
-    FastIDSet ids = new FastIDSet(count, 1.25f);
+    FastIDSet ids = new FastIDSet(count);
     for (int i = 0; i < count; i++) {
       ids.add(in.readLong());
     }
