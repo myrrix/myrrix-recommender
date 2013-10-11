@@ -454,7 +454,9 @@ public final class Runner implements Callable<Boolean>, Closeable {
       if (protocol != null) {
         connector.setAttribute("sslProtocol", protocol);
       }
-      connector.setAttribute("keystoreFile", keystoreFile.getAbsoluteFile());
+      if (keystoreFile != null) {
+        connector.setAttribute("keystoreFile", keystoreFile.getAbsoluteFile());
+      }
       connector.setAttribute("keystorePass", keystorePassword);
     }
 

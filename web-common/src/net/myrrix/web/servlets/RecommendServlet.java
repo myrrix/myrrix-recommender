@@ -57,7 +57,8 @@ public final class RecommendServlet extends AbstractMyrrixServlet {
 
     CharSequence pathInfo = request.getPathInfo();
     if (pathInfo == null) {
-      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");      
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No path");
+      return;
     }
     Iterator<String> pathComponents = SLASH.split(pathInfo).iterator();
     long userID;
